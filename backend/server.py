@@ -1932,6 +1932,209 @@ async def arena_battle(username: str, team_id: str):
         "win_streak": user_record["win_streak"] + 1 if victory else 0
     }
 
+# ==================== CHAT SYSTEM ====================
+@api_router.post("/chat/send")
+async def send_chat_message(
+    username: str,
+    channel_type: str,
+    message: str,
+    language: str = "en",
+    channel_id: Optional[str] = None,
+    server_region: str = "global"
+):
+    """Send a chat message"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Validate channel type
+    if channel_type not in ["world", "local", "guild", "private"]:
+        raise HTTPException(status_code=400, detail="Invalid channel type")
+    
+    # Validate language
+    if language not in SUPPORTED_LANGUAGES:
+        language = "en"  # Default to English
+    
+    # No photos or emojis allowed - check for special characters
+    if any(char in message for char in ['📷', '🖼️', '📸']):
+        raise HTTPException(status_code=400, detail="Photos not allowed in chat")
+    
+    # Limit message length
+    if len(message) > 500:
+        raise HTTPException(status_code=400, detail="Message too long (max 500 characters)")
+    
+    # Censor profanity
+    censored_message = censor_message(message)
+    
+    # Create chat message
+    chat_msg = ChatMessage(
+        sender_id=user["id"],
+        sender_username=username,
+        channel_type=channel_type,
+        channel_id=channel_id,
+        message=censored_message,
+        language=language,
+        server_region=server_region
+    )
+    
+    await db.chat_messages.insert_one(chat_msg.dict())
+    
+    return convert_objectid(chat_msg.dict())
+
+@api_router.get("/chat/messages")
+async def get_chat_messages(
+    channel_type: str,
+    channel_id: Optional[str] = None,
+    server_region: str = "global",
+    limit: int = 50,
+    before_timestamp: Optional[str] = None
+):
+    """Get chat messages for a channel"""
+    query = {"channel_type": channel_type}
+    
+    if channel_type == "local":
+        query["server_region"] = server_region
+    elif channel_type in ["guild", "private"]:
+        if not channel_id:
+            raise HTTPException(status_code=400, detail="channel_id required for guild/private chat")
+        query["channel_id"] = channel_id
+    
+    # Pagination support
+    if before_timestamp:
+        query["timestamp"] = {"$lt": datetime.fromisoformat(before_timestamp)}
+    
+    messages = await db.chat_messages.find(query).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    # Reverse to show oldest first
+    messages.reverse()
+    
+    return [convert_objectid(msg) for msg in messages]
+
+@api_router.get("/chat/translate")
+async def translate_message(message: str, from_lang: str, to_lang: str):
+    """Simple translation API - returns original message with language codes
+    In production, integrate with Google Translate API or similar"""
+    
+    # Basic translation map for common phrases (MVP)
+    translations = {
+        ("en", "es"): {
+            "hello": "hola",
+            "goodbye": "adiós",
+            "thank you": "gracias",
+            "yes": "sí",
+            "no": "no"
+        },
+        ("en", "fr"): {
+            "hello": "bonjour",
+            "goodbye": "au revoir",
+            "thank you": "merci",
+            "yes": "oui",
+            "no": "non"
+        },
+        ("en", "zh-CN"): {
+            "hello": "你好",
+            "goodbye": "再见",
+            "thank you": "谢谢",
+            "yes": "是",
+            "no": "不"
+        }
+    }
+    
+    # For MVP, return original with note
+    # In production, use proper translation API
+    translated = message.lower()
+    translation_key = (from_lang, to_lang)
+    
+    if translation_key in translations:
+        for eng, target in translations[translation_key].items():
+            translated = translated.replace(eng, target)
+    
+    return {
+        "original": message,
+        "translated": translated,
+        "from_language": from_lang,
+        "to_language": to_lang,
+        "note": "Using basic translation. Integrate Google Translate API for production."
+    }
+
+# ==================== GUILD SYSTEM ====================
+@api_router.post("/guild/create")
+async def create_guild(username: str, guild_name: str):
+    """Create a new guild"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user already in a guild
+    existing_guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if existing_guild:
+        raise HTTPException(status_code=400, detail="Already in a guild")
+    
+    # Check if guild name exists
+    existing_name = await db.guilds.find_one({"name": guild_name})
+    if existing_name:
+        raise HTTPException(status_code=400, detail="Guild name already taken")
+    
+    guild = Guild(
+        name=guild_name,
+        leader_id=user["id"],
+        member_ids=[user["id"]]
+    )
+    
+    await db.guilds.insert_one(guild.dict())
+    
+    return convert_objectid(guild.dict())
+
+@api_router.post("/guild/join")
+async def join_guild(username: str, guild_id: str):
+    """Join a guild"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"id": guild_id})
+    if not guild:
+        raise HTTPException(status_code=404, detail="Guild not found")
+    
+    if user["id"] in guild.get("member_ids", []):
+        raise HTTPException(status_code=400, detail="Already in this guild")
+    
+    await db.guilds.update_one(
+        {"id": guild_id},
+        {"$addToSet": {"member_ids": user["id"]}}
+    )
+    
+    return {"message": "Joined guild successfully"}
+
+@api_router.get("/guild/{username}")
+async def get_user_guild(username: str):
+    """Get user's guild"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    
+    if not guild:
+        return None
+    
+    # Enrich with member details
+    members = []
+    for member_id in guild.get("member_ids", []):
+        member = await db.users.find_one({"id": member_id})
+        if member:
+            members.append({
+                "username": member["username"],
+                "user_id": member["id"],
+                "vip_level": member.get("vip_level", 0)
+            })
+    
+    guild_data = convert_objectid(guild)
+    guild_data["members"] = members
+    guild_data["member_count"] = len(members)
+    
+    return guild_data
+
 # Include the router in the main app
 app.include_router(api_router)
 

@@ -416,6 +416,26 @@ async def user_login(username: str):
     
     return reward
 
+@api_router.post("/user/{username}/profile-picture")
+async def update_profile_picture(username: str, hero_id: str):
+    """Update user's profile picture to a hero they own"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify user owns this hero
+    user_hero = await db.user_heroes.find_one({"user_id": user_data["id"], "hero_id": hero_id})
+    if not user_hero:
+        raise HTTPException(status_code=400, detail="You don't own this hero")
+    
+    # Update profile picture
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"profile_picture_hero_id": hero_id}}
+    )
+    
+    return {"message": "Profile picture updated successfully", "hero_id": hero_id}
+
 @api_router.post("/gacha/pull")
 async def pull_gacha(username: str, request: PullRequest):
     """Perform gacha pull"""

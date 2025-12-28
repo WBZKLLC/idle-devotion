@@ -24,7 +24,7 @@ interface SidebarProps {
 
 export default function Sidebar({ visible, onClose }: SidebarProps) {
   const { user, userHeroes } = useGameStore();
-  const [slideAnim] = useState(new Animated.Value(-width * 0.8));
+  const [slideAnim] = useState(new Animated.Value(width * 0.8));
   const [heroShards, setHeroShards] = useState<any[]>([]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function Sidebar({ visible, onClose }: SidebarProps) {
       loadHeroShards();
     } else {
       Animated.timing(slideAnim, {
-        toValue: -width * 0.8,
+        toValue: width * 0.8,
         duration: 250,
         useNativeDriver: true,
       }).start();
@@ -57,7 +57,7 @@ export default function Sidebar({ visible, onClose }: SidebarProps) {
     setHeroShards(shards);
   };
 
-  if (!visible && slideAnim._value === -width * 0.8) return null;
+  if (!visible && slideAnim._value === width * 0.8) return null;
 
   return (
     <Modal

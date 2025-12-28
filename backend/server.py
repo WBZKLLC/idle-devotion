@@ -1642,7 +1642,7 @@ async def battle_abyss(username: str, level: int, team_ids: List[str]):
         rewards = {
             "coins": level * 100,
             "gold": level * 50,
-            "gems": level // 10 if level % 10 == 0 else 0  # Gems every 10 levels
+            "crystals": level // 10 if level % 10 == 0 else 0  # Crystals every 10 levels
         }
         
         # Update user resources
@@ -1652,7 +1652,7 @@ async def battle_abyss(username: str, level: int, team_ids: List[str]):
                 "$inc": {
                     "coins": rewards["coins"],
                     "gold": rewards["gold"],
-                    "gems": rewards["gems"]
+                    "crystals": rewards["crystals"]
                 }
             }
         )

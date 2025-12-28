@@ -95,6 +95,7 @@ class User(BaseModel):
     login_days: int = 0
     last_login: Optional[datetime] = None
     daily_summons_claimed: int = 0  # Track daily free summons
+    profile_picture_hero_id: Optional[str] = None  # Hero ID for profile picture
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Team(BaseModel):

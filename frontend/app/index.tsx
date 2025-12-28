@@ -149,7 +149,7 @@ export default function HomeScreen() {
             colors={['#9400D3', '#4B0082']}
             style={styles.sidebarButtonGradient}
           >
-            <Ionicons name=\"menu\" size={28} color=\"#FFF\" />
+            <Ionicons name="menu" size={28} color="#FFF" />
           </LinearGradient>
         </TouchableOpacity>
 

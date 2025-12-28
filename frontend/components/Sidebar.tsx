@@ -188,6 +188,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
   backdrop: {
     flex: 1,
@@ -196,6 +197,10 @@ const styles = StyleSheet.create({
   sidebar: {
     width: width * 0.8,
     maxWidth: 350,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   sidebarContent: {
     flex: 1,

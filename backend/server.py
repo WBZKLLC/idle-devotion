@@ -814,8 +814,9 @@ async def claim_idle_rewards(username: str):
     max_seconds = idle_cap_hours * 3600
     time_away = min(time_away, max_seconds)
     
-    # Calculate gold earned (100 gold per minute)
-    gold_per_second = 100 / 60
+    # Calculate gold earned with VIP rate bonus
+    gold_per_minute = get_idle_gold_rate(vip_level)
+    gold_per_second = gold_per_minute / 60
     gold_earned = int(gold_per_second * time_away)
     
     # Update user gold and restart collection

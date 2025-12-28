@@ -264,6 +264,115 @@ def get_idle_cap_hours(vip_level: int) -> int:
     """Get idle collection cap hours for VIP level"""
     return VIP_TIERS.get(vip_level, VIP_TIERS[0])["idle_hours"]
 
+def get_idle_gold_rate(vip_level: int) -> float:
+    """Get idle gold generation rate per minute based on VIP level"""
+    base_rate = 100.0  # 100 gold per minute at VIP 0
+    bonus_multiplier = 1.0 + (vip_level * 0.10)  # +10% per VIP level
+    return base_rate * bonus_multiplier
+
+def get_avatar_frame(vip_level: int) -> str:
+    """Get avatar frame based on VIP level"""
+    if vip_level >= 15:
+        return "divine"
+    elif vip_level >= 14:
+        return "legendary"
+    elif vip_level >= 13:
+        return "rainbow"
+    elif vip_level >= 12:
+        return "diamond"
+    elif vip_level >= 8:
+        return "gold"
+    else:
+        return "default"
+
+# VIP Package configurations - can be purchased with gems
+VIP_PACKAGES = {
+    # VIP 0-3: Early game packages
+    0: {
+        "basic": {"gem_cost": 200, "rewards": {"coins": 5000, "gold": 2500}},
+        "premium": {"gem_cost": 500, "rewards": {"coins": 15000, "gold": 7500}},
+        "elite": {"gem_cost": 1000, "rewards": {"coins": 35000, "gold": 17500, "gems": 100}}
+    },
+    1: {
+        "basic": {"gem_cost": 300, "rewards": {"coins": 8000, "gold": 4000}},
+        "premium": {"gem_cost": 750, "rewards": {"coins": 25000, "gold": 12500}},
+        "elite": {"gem_cost": 1500, "rewards": {"coins": 60000, "gold": 30000, "gems": 200}}
+    },
+    2: {
+        "basic": {"gem_cost": 400, "rewards": {"coins": 12000, "gold": 6000}},
+        "premium": {"gem_cost": 1000, "rewards": {"coins": 40000, "gold": 20000}},
+        "elite": {"gem_cost": 2000, "rewards": {"coins": 90000, "gold": 45000, "gems": 300}}
+    },
+    3: {
+        "basic": {"gem_cost": 500, "rewards": {"coins": 18000, "gold": 9000}},
+        "premium": {"gem_cost": 1250, "rewards": {"coins": 60000, "gold": 30000}},
+        "elite": {"gem_cost": 2500, "rewards": {"coins": 135000, "gold": 67500, "gems": 400}}
+    },
+    # VIP 4-7: Mid game packages
+    4: {
+        "basic": {"gem_cost": 600, "rewards": {"coins": 25000, "gold": 12500}},
+        "premium": {"gem_cost": 1500, "rewards": {"coins": 80000, "gold": 40000}},
+        "elite": {"gem_cost": 3000, "rewards": {"coins": 180000, "gold": 90000, "gems": 500}}
+    },
+    5: {
+        "basic": {"gem_cost": 750, "rewards": {"coins": 35000, "gold": 17500}},
+        "premium": {"gem_cost": 1875, "rewards": {"coins": 110000, "gold": 55000}},
+        "elite": {"gem_cost": 3750, "rewards": {"coins": 250000, "gold": 125000, "gems": 650}}
+    },
+    6: {
+        "basic": {"gem_cost": 900, "rewards": {"coins": 50000, "gold": 25000}},
+        "premium": {"gem_cost": 2250, "rewards": {"coins": 150000, "gold": 75000}},
+        "elite": {"gem_cost": 4500, "rewards": {"coins": 350000, "gold": 175000, "gems": 800}}
+    },
+    7: {
+        "basic": {"gem_cost": 1100, "rewards": {"coins": 70000, "gold": 35000}},
+        "premium": {"gem_cost": 2750, "rewards": {"coins": 200000, "gold": 100000}},
+        "elite": {"gem_cost": 5500, "rewards": {"coins": 480000, "gold": 240000, "gems": 1000}}
+    },
+    # VIP 8-11: High tier packages
+    8: {
+        "basic": {"gem_cost": 1300, "rewards": {"coins": 100000, "gold": 50000}},
+        "premium": {"gem_cost": 3250, "rewards": {"coins": 280000, "gold": 140000}},
+        "elite": {"gem_cost": 6500, "rewards": {"coins": 650000, "gold": 325000, "gems": 1200}}
+    },
+    9: {
+        "basic": {"gem_cost": 1500, "rewards": {"coins": 140000, "gold": 70000}},
+        "premium": {"gem_cost": 3750, "rewards": {"coins": 380000, "gold": 190000}},
+        "elite": {"gem_cost": 7500, "rewards": {"coins": 850000, "gold": 425000, "gems": 1400}}
+    },
+    10: {
+        "basic": {"gem_cost": 1750, "rewards": {"coins": 200000, "gold": 100000}},
+        "premium": {"gem_cost": 4375, "rewards": {"coins": 520000, "gold": 260000}},
+        "elite": {"gem_cost": 8750, "rewards": {"coins": 1150000, "gold": 575000, "gems": 1600}}
+    },
+    11: {
+        "basic": {"gem_cost": 2000, "rewards": {"coins": 280000, "gold": 140000}},
+        "premium": {"gem_cost": 5000, "rewards": {"coins": 700000, "gold": 350000}},
+        "elite": {"gem_cost": 10000, "rewards": {"coins": 1500000, "gold": 750000, "gems": 1800}}
+    },
+    # VIP 12-15: Endgame whale packages
+    12: {
+        "basic": {"gem_cost": 2500, "rewards": {"coins": 400000, "gold": 200000}},
+        "premium": {"gem_cost": 6250, "rewards": {"coins": 950000, "gold": 475000}},
+        "elite": {"gem_cost": 12500, "rewards": {"coins": 2000000, "gold": 1000000, "gems": 2000}}
+    },
+    13: {
+        "basic": {"gem_cost": 3000, "rewards": {"coins": 550000, "gold": 275000}},
+        "premium": {"gem_cost": 7500, "rewards": {"coins": 1250000, "gold": 625000}},
+        "elite": {"gem_cost": 15000, "rewards": {"coins": 2600000, "gold": 1300000, "gems": 2500}}
+    },
+    14: {
+        "basic": {"gem_cost": 3500, "rewards": {"coins": 750000, "gold": 375000}},
+        "premium": {"gem_cost": 8750, "rewards": {"coins": 1600000, "gold": 800000}},
+        "elite": {"gem_cost": 17500, "rewards": {"coins": 3300000, "gold": 1650000, "gems": 3000}}
+    },
+    15: {
+        "basic": {"gem_cost": 4000, "rewards": {"coins": 1000000, "gold": 500000}},
+        "premium": {"gem_cost": 10000, "rewards": {"coins": 2100000, "gold": 1050000}},
+        "elite": {"gem_cost": 20000, "rewards": {"coins": 4200000, "gold": 2100000, "gems": 3500}}
+    }
+}
+
 # Gacha rates configuration
 GACHA_RATES = {
     "SR": 60.0,   # 60%

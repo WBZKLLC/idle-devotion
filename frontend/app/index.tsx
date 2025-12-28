@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   sidebarButton: {
     position: 'absolute',
-    top: 50,
+    top: 100,
     right: 16,
     zIndex: 100,
     shadowColor: '#000',

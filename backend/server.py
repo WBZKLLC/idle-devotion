@@ -156,6 +156,45 @@ class BattleResult(BaseModel):
     damage_dealt: int
     damage_taken: int
 
+class SupportTicket(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    username: str
+    subject: str
+    message: str
+    status: str = "open"  # open, in_progress, resolved
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class FriendRequest(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    from_user_id: str
+    to_user_id: str
+    status: str = "pending"  # pending, accepted, rejected
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Friendship(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    friend_id: str
+    last_collected: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PlayerCharacter(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    name: str = "Divine Avatar"
+    level: int = 1
+    exp: int = 0
+    # Buff percentages (0.05 = 5% buff)
+    atk_buff: float = 0.0
+    def_buff: float = 0.0
+    hp_buff: float = 0.0
+    crit_buff: float = 0.0
+    # Upgrade costs increase with level
+    upgrade_cost_gems: int = 100
+    upgrade_time_hours: int = 24
+
 # Gacha rates configuration
 GACHA_RATES = {
     "SR": 60.0,   # 60%

@@ -214,5 +214,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  fetchCR: async () => {
+    const { user } = get();
+    if (!user) throw new Error('No user found');
+    
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/api/user/${user.username}/cr`
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch CR:', error);
+      return { cr: 0, hero_count: 0 };
+    }
+  },
+
   setUser: (user: User | null) => set({ user }),
 }));

@@ -1,1876 +1,1898 @@
+diff --git a/backend/server.py b/backend/server.py
+index 1cc57c5..6f74810 100644
+--- a/backend/server.py
++++ b/backend/server.py
+@@ -96,6 +96,12 @@ class User(BaseModel):
+     last_login: Optional[datetime] = None
+     daily_summons_claimed: int = 0  # Track daily free summons
+     profile_picture_hero_id: Optional[str] = None  # Hero ID for profile picture
++    # VIP System
++    vip_level: int = 0  # 0-15
++    total_spent: float = 0.0  # Total USD spent
++    # Idle Collection
++    idle_collection_started_at: Optional[datetime] = None
++    idle_collection_last_claimed: Optional[datetime] = None
+     created_at: datetime = Field(default_factory=datetime.utcnow)
+ 
+ class Team(BaseModel):
 diff --git a/model.patch b/model.patch
-index d3c7ab3..e69de29 100644
+index 0ecc25a..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,1871 +0,0 @@
--diff --git a/backend/server.py b/backend/server.py
--index db3c492..1cc57c5 100644
----- a/backend/server.py
--+++ b/backend/server.py
--@@ -95,6 +95,7 @@ class User(BaseModel):
--     login_days: int = 0
--     last_login: Optional[datetime] = None
--     daily_summons_claimed: int = 0  # Track daily free summons
--+    profile_picture_hero_id: Optional[str] = None  # Hero ID for profile picture
--     created_at: datetime = Field(default_factory=datetime.utcnow)
-- 
-- class Team(BaseModel):
--@@ -415,6 +416,26 @@ async def user_login(username: str):
--     
--     return reward
-- 
--+@api_router.post("/user/{username}/profile-picture")
--+async def update_profile_picture(username: str, hero_id: str):
--+    """Update user's profile picture to a hero they own"""
--+    user_data = await db.users.find_one({"username": username})
--+    if not user_data:
--+        raise HTTPException(status_code=404, detail="User not found")
--+    
--+    # Verify user owns this hero
--+    user_hero = await db.user_heroes.find_one({"user_id": user_data["id"], "hero_id": hero_id})
--+    if not user_hero:
--+        raise HTTPException(status_code=400, detail="You don't own this hero")
--+    
--+    # Update profile picture
--+    await db.users.update_one(
--+        {"username": username},
--+        {"$set": {"profile_picture_hero_id": hero_id}}
--+    )
--+    
--+    return {"message": "Profile picture updated successfully", "hero_id": hero_id}
--+
-- @api_router.post("/gacha/pull")
-- async def pull_gacha(username: str, request: PullRequest):
--     """Perform gacha pull"""
--diff --git a/frontend/app/_layout.tsx b/frontend/app/_layout.tsx
--index 06391a5..942523f 100644
----- a/frontend/app/_layout.tsx
--+++ b/frontend/app/_layout.tsx
--@@ -40,6 +40,24 @@ export default function Layout() {
--           ),
--         }}
--       />
--+      <Tabs.Screen
--+        name="abyss"
--+        options={{
--+          title: 'Abyss',
--+          tabBarIcon: ({ color, size }) => (
--+            <Ionicons name="flame" size={size} color={color} />
--+          ),
--+        }}
--+      />
--+      <Tabs.Screen
--+        name="arena"
--+        options={{
--+          title: 'Arena',
--+          tabBarIcon: ({ color, size }) => (
--+            <Ionicons name="trophy" size={size} color={color} />
--+          ),
--+        }}
--+      />
--       <Tabs.Screen
--         name="heroes"
--         options={{
--diff --git a/frontend/app/abyss.tsx b/frontend/app/abyss.tsx
--new file mode 100644
--index 0000000..1ea453b
----- /dev/null
--+++ b/frontend/app/abyss.tsx
--@@ -0,0 +1,289 @@
--+import React, { useEffect, useState } from 'react';
--+import {
--+  View,
--+  Text,
--+  StyleSheet,
--+  SafeAreaView,
--+  TouchableOpacity,
--+  ScrollView,
--+  ActivityIndicator,
--+  Alert,
--+} from 'react-native';
--+import { useGameStore } from '../stores/gameStore';
--+import { Ionicons } from '@expo/vector-icons';
--+import { LinearGradient } from 'expo-linear-gradient';
--+
--+export default function AbyssScreen() {
--+  const { user } = useGameStore();
--+  const [progress, setProgress] = useState<any>(null);
--+  const [isLoading, setIsLoading] = useState(false);
--+
--+  useEffect(() => {
--+    if (user) {
--+      loadAbyssProgress();
--+    }
--+  }, [user]);
--+
--+  const loadAbyssProgress = async () => {
--+    try {
--+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/abyss/progress/${user.username}`);
--+      const data = await response.json();
--+      setProgress(data);
--+    } catch (error) {
--+      console.error('Failed to load abyss progress:', error);
--+    }
--+  };
--+
--+  const battleLevel = async (level: number) => {
--+    setIsLoading(true);
--+    try {
--+      // For now, use a simple team setup - this would be enhanced later
--+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/abyss/battle/${user.username}/${level}`, {
--+        method: 'POST',
--+        headers: { 'Content-Type': 'application/json' },
--+        body: JSON.stringify({ team_ids: [] }) // Empty for now
--+      });
--+      
--+      const result = await response.json();
--+      
--+      if (response.ok) {
--+        Alert.alert(
--+          result.victory ? '🎉 Victory!' : '💀 Defeat',
--+          `Level ${level}\n\n` +
--+          `Your Power: ${result.user_power.toLocaleString()}\n` +
--+          `Enemy Power: ${result.enemy_power.toLocaleString()}\n\n` +
--+          (result.victory ? 
--+            `Rewards:\n💰 Coins: +${result.rewards.coins}\n⭐ Gold: +${result.rewards.gold}\n${result.rewards.gems > 0 ? `💎 Gems: +${result.rewards.gems}` : ''}` :
--+            'Try again with stronger heroes!')
--+        );
--+        
--+        if (result.victory) {
--+          loadAbyssProgress();
--+        }
--+      } else {
--+        Alert.alert('Error', result.detail || 'Battle failed');
--+      }
--+    } catch (error) {
--+      Alert.alert('Error', 'Failed to battle');
--+    } finally {
--+      setIsLoading(false);
--+    }
--+  };
--+
--+  if (!user) {
--+    return (
--+      <LinearGradient colors={['#4B0082', '#8B008B', '#FF1493']} style={styles.container}>
--+        <SafeAreaView style={styles.container}>
--+          <Text style={styles.errorText}>Please log in first</Text>
--+        </SafeAreaView>
--+      </LinearGradient>
--+    );
--+  }
--+
--+  return (
--+    <LinearGradient colors={['#4B0082', '#8B008B', '#FF1493']} style={styles.container}>
--+      <SafeAreaView style={styles.container}>
--+        <ScrollView contentContainerStyle={styles.content}>
--+          <Text style={styles.title}>🔥 Endless Abyss</Text>
--+          <Text style={styles.subtitle}>Test your might against infinite challenges</Text>
--+
--+          {progress && (
--+            <LinearGradient
--+              colors={['#FF6347', '#FF1493']}
--+              style={styles.progressCard}
--+            >
--+              <View style={styles.progressRow}>
--+                <View style={styles.progressItem}>
--+                  <Text style={styles.progressLabel}>Current Level</Text>
--+                  <Text style={styles.progressValue}>{progress.current_level}</Text>
--+                </View>
--+                <View style={styles.progressItem}>
--+                  <Text style={styles.progressLabel}>Highest Level</Text>
--+                  <Text style={styles.progressValue}>{progress.highest_level}</Text>
--+                </View>
--+                <View style={styles.progressItem}>
--+                  <Text style={styles.progressLabel}>Total Clears</Text>
--+                  <Text style={styles.progressValue}>{progress.total_clears}</Text>
--+                </View>
--+              </View>
--+            </LinearGradient>
--+          )}
--+
--+          <View style={styles.levelsContainer}>
--+            <Text style={styles.sectionTitle}>Available Levels</Text>
--+            
--+            {progress && Array.from({ length: Math.min(progress.current_level + 2, progress.current_level + 10) }, (_, i) => {
--+              const level = Math.max(1, progress.current_level - 5 + i);
--+              const isUnlocked = level <= progress.current_level || level <= progress.highest_level;
--+              const isCurrent = level === progress.current_level;
--+              
--+              return (
--+                <TouchableOpacity
--+                  key={level}
--+                  style={[styles.levelButton, !isUnlocked && styles.levelButtonLocked]}
--+                  onPress={() => isUnlocked ? battleLevel(level) : null}
--+                  disabled={!isUnlocked || isLoading}
--+                >
--+                  <LinearGradient
--+                    colors={
--+                      !isUnlocked ? ['#666', '#444'] :
--+                      isCurrent ? ['#FF1493', '#9400D3'] :
--+                      ['#32CD32', '#00CED1']
--+                    }
--+                    style={styles.levelButtonGradient}
--+                  >
--+                    <View style={styles.levelInfo}>
--+                      <Text style={styles.levelNumber}>Level {level}</Text>
--+                      <Text style={styles.levelDifficulty}>
--+                        {level > 1000 ? 'Nightmare' : level > 200 ? 'Hard' : 'Normal'}
--+                      </Text>
--+                    </View>
--+                    <View style={styles.levelRewards}>
--+                      <Text style={styles.rewardText}>💰 {level * 100}</Text>
--+                      <Text style={styles.rewardText}>⭐ {level * 50}</Text>
--+                      {level % 10 === 0 && <Text style={styles.rewardText}>💎 {level / 10}</Text>}
--+                    </View>
--+                    {!isUnlocked && <Ionicons name="lock-closed" size={24} color="#FFF" />}
--+                    {isCurrent && <Ionicons name="play" size={24} color="#FFF" />}
--+                  </LinearGradient>
--+                </TouchableOpacity>
--+              );
--+            })}
--+          </View>
--+
--+          {isLoading && (
--+            <View style={styles.loadingOverlay}>
--+              <ActivityIndicator size="large" color="#FFF" />
--+              <Text style={styles.loadingText}>Battling...</Text>
--+            </View>
--+          )}
--+        </ScrollView>
--+      </SafeAreaView>
--+    </LinearGradient>
--+  );
--+}
--+
--+const styles = StyleSheet.create({
--+  container: {
--+    flex: 1,
--+  },
--+  content: {
--+    padding: 16,
--+    paddingTop: 60,
--+  },
--+  title: {
--+    fontSize: 32,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 8,
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 2, height: 2 },
--+    textShadowRadius: 5,
--+  },
--+  subtitle: {
--+    fontSize: 16,
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 24,
--+    opacity: 0.9,
--+  },
--+  progressCard: {
--+    borderRadius: 16,
--+    padding: 20,
--+    marginBottom: 24,
--+    shadowColor: '#000',
--+    shadowOffset: { width: 0, height: 4 },
--+    shadowOpacity: 0.3,
--+    shadowRadius: 8,
--+    elevation: 8,
--+  },
--+  progressRow: {
--+    flexDirection: 'row',
--+    justifyContent: 'space-around',
--+  },
--+  progressItem: {
--+    alignItems: 'center',
--+  },
--+  progressLabel: {
--+    fontSize: 12,
--+    color: '#FFF',
--+    opacity: 0.8,
--+    marginBottom: 4,
--+  },
--+  progressValue: {
--+    fontSize: 24,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+  },
--+  levelsContainer: {
--+    marginBottom: 24,
--+  },
--+  sectionTitle: {
--+    fontSize: 20,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    marginBottom: 16,
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 1, height: 1 },
--+    textShadowRadius: 3,
--+  },
--+  levelButton: {
--+    marginBottom: 12,
--+    borderRadius: 16,
--+    overflow: 'hidden',
--+  },
--+  levelButtonLocked: {
--+    opacity: 0.6,
--+  },
--+  levelButtonGradient: {
--+    padding: 16,
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    justifyContent: 'space-between',
--+  },
--+  levelInfo: {
--+    flex: 1,
--+  },
--+  levelNumber: {
--+    fontSize: 18,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    marginBottom: 4,
--+  },
--+  levelDifficulty: {
--+    fontSize: 12,
--+    color: '#FFF',
--+    opacity: 0.8,
--+  },
--+  levelRewards: {
--+    alignItems: 'flex-end',
--+    marginRight: 16,
--+  },
--+  rewardText: {
--+    fontSize: 12,
--+    color: '#FFF',
--+    marginBottom: 2,
--+  },
--+  loadingOverlay: {
--+    position: 'absolute',
--+    top: 0,
--+    left: 0,
--+    right: 0,
--+    bottom: 0,
--+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
--+    alignItems: 'center',
--+    justifyContent: 'center',
--+  },
--+  loadingText: {
--+    color: '#FFF',
--+    fontSize: 16,
--+    marginTop: 12,
--+  },
--+  errorText: {
--+    color: '#FFF',
--+    fontSize: 18,
--+    textAlign: 'center',
--+    marginTop: 100,
--+  },
--+});
--\ No newline at end of file
--diff --git a/frontend/app/arena.tsx b/frontend/app/arena.tsx
--new file mode 100644
--index 0000000..599cc18
----- /dev/null
--+++ b/frontend/app/arena.tsx
--@@ -0,0 +1,371 @@
--+import React, { useEffect, useState } from 'react';
--+import {
--+  View,
--+  Text,
--+  StyleSheet,
--+  SafeAreaView,
--+  TouchableOpacity,
--+  ScrollView,
--+  ActivityIndicator,
--+  Alert,
--+} from 'react-native';
--+import { useGameStore } from '../stores/gameStore';
--+import { Ionicons } from '@expo/vector-icons';
--+import { LinearGradient } from 'expo-linear-gradient';
--+
--+export default function ArenaScreen() {
--+  const { user } = useGameStore();
--+  const [record, setRecord] = useState<any>(null);
--+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
--+  const [isLoading, setIsLoading] = useState(false);
--+
--+  useEffect(() => {
--+    if (user) {
--+      loadArenaData();
--+    }
--+  }, [user]);
--+
--+  const loadArenaData = async () => {
--+    try {
--+      const [recordResponse, leaderboardResponse] = await Promise.all([
--+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/arena/record/${user.username}`),
--+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/leaderboard/arena?limit=10`)
--+      ]);
--+      
--+      const recordData = await recordResponse.json();
--+      const leaderboardData = await leaderboardResponse.json();
--+      
--+      setRecord(recordData);
--+      setLeaderboard(leaderboardData);
--+    } catch (error) {
--+      console.error('Failed to load arena data:', error);
--+    }
--+  };
--+
--+  const battle = async () => {
--+    setIsLoading(true);
--+    try {
--+      // For now, use a simple team setup - this would be enhanced later
--+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/arena/battle/${user.username}`, {
--+        method: 'POST',
--+        headers: { 'Content-Type': 'application/json' },
--+        body: JSON.stringify({ team_id: 'default' }) // Placeholder
--+      });
--+      
--+      const result = await response.json();
--+      
--+      if (response.ok) {
--+        Alert.alert(
--+          result.victory ? '🏆 Victory!' : '💀 Defeat',
--+          `vs ${result.opponent_username}\n\n` +
--+          `Your Power: ${result.user_power.toLocaleString()}\n` +
--+          `Opponent Power: ${result.opponent_power.toLocaleString()}\n\n` +
--+          `Rating Change: ${result.rating_change > 0 ? '+' : ''}${result.rating_change}\n` +
--+          `New Rating: ${result.new_rating}\n` +
--+          `Win Streak: ${result.win_streak}`
--+        );
--+        
--+        loadArenaData();
--+      } else {
--+        Alert.alert('Error', result.detail || 'Battle failed');
--+      }
--+    } catch (error) {
--+      Alert.alert('Error', 'Failed to battle');
--+    } finally {
--+      setIsLoading(false);
--+    }
--+  };
--+
--+  const getRankColor = (rank: number) => {
--+    if (rank === 1) return '#FFD700'; // Gold
--+    if (rank <= 3) return '#C0C0C0'; // Silver
--+    if (rank <= 10) return '#CD7F32'; // Bronze
--+    return '#FFF';
--+  };
--+
--+  if (!user) {
--+    return (
--+      <LinearGradient colors={['#FF6347', '#FF1493', '#9400D3']} style={styles.container}>
--+        <SafeAreaView style={styles.container}>
--+          <Text style={styles.errorText}>Please log in first</Text>
--+        </SafeAreaView>
--+      </LinearGradient>
--+    );
--+  }
--+
--+  return (
--+    <LinearGradient colors={['#FF6347', '#FF1493', '#9400D3']} style={styles.container}>
--+      <SafeAreaView style={styles.container}>
--+        <ScrollView contentContainerStyle={styles.content}>
--+          <Text style={styles.title}>🏆 PvP Arena</Text>
--+          <Text style={styles.subtitle}>Battle other players for glory and rewards</Text>
--+
--+          {record && (
--+            <LinearGradient
--+              colors={['#FFD700', '#FFA500']}
--+              style={styles.recordCard}
--+            >
--+              <View style={styles.recordHeader}>
--+                <Text style={styles.recordTitle}>Your Arena Record</Text>
--+                <View style={styles.ratingBadge}>
--+                  <Text style={styles.ratingValue}>{record.rating}</Text>
--+                  <Text style={styles.ratingLabel}>Rating</Text>
--+                </View>
--+              </View>
--+              
--+              <View style={styles.statsRow}>
--+                <View style={styles.statItem}>
--+                  <Text style={styles.statValue}>{record.wins}</Text>
--+                  <Text style={styles.statLabel}>Wins</Text>
--+                </View>
--+                <View style={styles.statItem}>
--+                  <Text style={styles.statValue}>{record.losses}</Text>
--+                  <Text style={styles.statLabel}>Losses</Text>
--+                </View>
--+                <View style={styles.statItem}>
--+                  <Text style={styles.statValue}>{record.win_streak}</Text>
--+                  <Text style={styles.statLabel}>Streak</Text>
--+                </View>
--+                <View style={styles.statItem}>
--+                  <Text style={styles.statValue}>{record.highest_rating}</Text>
--+                  <Text style={styles.statLabel}>Best</Text>
--+                </View>
--+              </View>
--+            </LinearGradient>
--+          )}
--+
--+          <TouchableOpacity
--+            style={styles.battleButton}
--+            onPress={battle}
--+            disabled={isLoading}
--+          >
--+            <LinearGradient
--+              colors={['#FF1493', '#9400D3']}
--+              style={styles.battleButtonGradient}
--+            >
--+              {isLoading ? (
--+                <ActivityIndicator color="#FFF" size="large" />
--+              ) : (
--+                <>
--+                  <Ionicons name="sword" size={32} color="#FFF" />
--+                  <Text style={styles.battleButtonText}>Find Match</Text>
--+                </>
--+              )}
--+            </LinearGradient>
--+          </TouchableOpacity>
--+
--+          <View style={styles.leaderboardContainer}>
--+            <Text style={styles.sectionTitle}>🏅 Top Players</Text>
--+            
--+            {leaderboard.map((player, index) => (
--+              <View key={player.user_id} style={styles.leaderboardItem}>
--+                <LinearGradient
--+                  colors={
--+                    index === 0 ? ['#FFD700', '#FFA500'] :
--+                    index === 1 ? ['#C0C0C0', '#A0A0A0'] :
--+                    index === 2 ? ['#CD7F32', '#B8860B'] :
--+                    ['#FFFFFF', '#F0F0F0']
--+                  }
--+                  style={styles.leaderboardGradient}
--+                >
--+                  <View style={styles.rankSection}>
--+                    <Text style={[styles.rankText, { color: getRankColor(player.rank) }]}>
--+                      #{player.rank}
--+                    </Text>
--+                    {index < 3 && (
--+                      <Ionicons 
--+                        name={index === 0 ? "trophy" : index === 1 ? "medal" : "ribbon"} 
--+                        size={20} 
--+                        color={getRankColor(player.rank)} 
--+                      />
--+                    )}
--+                  </View>
--+                  
--+                  <View style={styles.playerInfo}>
--+                    <Text style={styles.playerName}>{player.username}</Text>
--+                    <Text style={styles.playerStats}>
--+                      {player.rating} • {player.wins}W/{player.losses}L • {player.win_rate.toFixed(1)}%
--+                    </Text>
--+                  </View>
--+                  
--+                  <View style={styles.streakBadge}>
--+                    <Text style={styles.streakText}>{player.win_streak}</Text>
--+                    <Text style={styles.streakLabel}>streak</Text>
--+                  </View>
--+                </LinearGradient>
--+              </View>
--+            ))}
--+          </View>
--+        </ScrollView>
--+      </SafeAreaView>
--+    </LinearGradient>
--+  );
--+}
--+
--+const styles = StyleSheet.create({
--+  container: {
--+    flex: 1,
--+  },
--+  content: {
--+    padding: 16,
--+    paddingTop: 60,
--+  },
--+  title: {
--+    fontSize: 32,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 8,
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 2, height: 2 },
--+    textShadowRadius: 5,
--+  },
--+  subtitle: {
--+    fontSize: 16,
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 24,
--+    opacity: 0.9,
--+  },
--+  recordCard: {
--+    borderRadius: 16,
--+    padding: 20,
--+    marginBottom: 24,
--+    shadowColor: '#000',
--+    shadowOffset: { width: 0, height: 4 },
--+    shadowOpacity: 0.3,
--+    shadowRadius: 8,
--+    elevation: 8,
--+  },
--+  recordHeader: {
--+    flexDirection: 'row',
--+    justifyContent: 'space-between',
--+    alignItems: 'center',
--+    marginBottom: 16,
--+  },
--+  recordTitle: {
--+    fontSize: 18,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+  },
--+  ratingBadge: {
--+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
--+    paddingHorizontal: 12,
--+    paddingVertical: 8,
--+    borderRadius: 12,
--+    alignItems: 'center',
--+  },
--+  ratingValue: {
--+    fontSize: 20,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+  },
--+  ratingLabel: {
--+    fontSize: 12,
--+    color: '#FFF',
--+    opacity: 0.8,
--+  },
--+  statsRow: {
--+    flexDirection: 'row',
--+    justifyContent: 'space-around',
--+  },
--+  statItem: {
--+    alignItems: 'center',
--+  },
--+  statValue: {
--+    fontSize: 18,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    marginBottom: 4,
--+  },
--+  statLabel: {
--+    fontSize: 12,
--+    color: '#FFF',
--+    opacity: 0.8,
--+  },
--+  battleButton: {
--+    marginBottom: 24,
--+    borderRadius: 16,
--+    overflow: 'hidden',
--+  },
--+  battleButtonGradient: {
--+    padding: 20,
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    justifyContent: 'center',
--+    gap: 12,
--+  },
--+  battleButtonText: {
--+    fontSize: 20,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+  },
--+  leaderboardContainer: {
--+    marginBottom: 24,
--+  },
--+  sectionTitle: {
--+    fontSize: 20,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    marginBottom: 16,
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 1, height: 1 },
--+    textShadowRadius: 3,
--+  },
--+  leaderboardItem: {
--+    marginBottom: 8,
--+    borderRadius: 12,
--+    overflow: 'hidden',
--+  },
--+  leaderboardGradient: {
--+    padding: 12,
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+  },
--+  rankSection: {
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    width: 60,
--+    gap: 4,
--+  },
--+  rankText: {
--+    fontSize: 16,
--+    fontWeight: 'bold',
--+  },
--+  playerInfo: {
--+    flex: 1,
--+    marginLeft: 12,
--+  },
--+  playerName: {
--+    fontSize: 16,
--+    fontWeight: 'bold',
--+    color: '#333',
--+    marginBottom: 2,
--+  },
--+  playerStats: {
--+    fontSize: 12,
--+    color: '#666',
--+  },
--+  streakBadge: {
--+    backgroundColor: 'rgba(255, 20, 147, 0.2)',
--+    paddingHorizontal: 8,
--+    paddingVertical: 4,
--+    borderRadius: 8,
--+    alignItems: 'center',
--+  },
--+  streakText: {
--+    fontSize: 14,
--+    fontWeight: 'bold',
--+    color: '#FF1493',
--+  },
--+  streakLabel: {
--+    fontSize: 10,
--+    color: '#FF1493',
--+  },
--+  errorText: {
--+    color: '#FFF',
--+    fontSize: 18,
--+    textAlign: 'center',
--+    marginTop: 100,
--+  },
--+});
--\ No newline at end of file
--diff --git a/frontend/app/heroes.tsx b/frontend/app/heroes.tsx
--index aec4168..02fb24d 100644
----- a/frontend/app/heroes.tsx
--+++ b/frontend/app/heroes.tsx
--@@ -31,7 +31,7 @@ const ELEMENT_COLORS: { [key: string]: string } = {
-- };
-- 
-- export default function HeroesScreen() {
---  const { user, userHeroes, fetchUserHeroes, upgradeHero, isLoading } = useGameStore();
--+  const { user, userHeroes, fetchUserHeroes, upgradeHero, updateProfilePicture, isLoading } = useGameStore();
--   const [selectedHero, setSelectedHero] = useState<any>(null);
--   const [showDetail, setShowDetail] = useState(false);
--   const [filterRarity, setFilterRarity] = useState<string | null>(null);
--@@ -70,6 +70,18 @@ export default function HeroesScreen() {
--     }
--   };
-- 
--+  const handleSetProfilePicture = async () => {
--+    if (!selectedHero) return;
--+
--+    try {
--+      await updateProfilePicture(selectedHero.hero_data.id);
--+      Alert.alert('Success!', `${selectedHero.hero_data.name} is now your profile picture!`);
--+      setShowDetail(false);
--+    } catch (error: any) {
--+      Alert.alert('Error', error.response?.data?.detail || 'Failed to set profile picture');
--+    }
--+  };
--+
--   const filteredHeroes = filterRarity
--     ? userHeroes.filter((h) => h.hero_data?.rarity === filterRarity)
--     : userHeroes;
--@@ -308,6 +320,26 @@ export default function HeroesScreen() {
--                   </TouchableOpacity>
--                 )}
-- 
--+                <TouchableOpacity
--+                  style={[
--+                    styles.profilePictureButton,
--+                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonActive
--+                  ]}
--+                  onPress={handleSetProfilePicture}
--+                >
--+                  <Ionicons 
--+                    name={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "checkmark-circle" : "person-circle"} 
--+                    size={20} 
--+                    color={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "#4CAF50" : "#FFF"} 
--+                  />
--+                  <Text style={[
--+                    styles.profilePictureButtonText,
--+                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonTextActive
--+                  ]}>
--+                    {user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "Current Profile Picture" : "Set as Profile Picture"}
--+                  </Text>
--+                </TouchableOpacity>
--+
--                 {selectedHero.rank === 10 && (
--                   <View style={styles.maxRankBadge}>
--                     <Ionicons name="trophy" size={24} color="#FFD700" />
--@@ -577,6 +609,27 @@ const styles = StyleSheet.create({
--     fontSize: 16,
--     fontWeight: 'bold',
--   },
--+  profilePictureButton: {
--+    backgroundColor: '#9C27B0',
--+    borderRadius: 8,
--+    padding: 12,
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    justifyContent: 'center',
--+    gap: 8,
--+    marginTop: 8,
--+  },
--+  profilePictureButtonActive: {
--+    backgroundColor: '#4CAF50',
--+  },
--+  profilePictureButtonText: {
--+    color: '#FFF',
--+    fontSize: 14,
--+    fontWeight: 'bold',
--+  },
--+  profilePictureButtonTextActive: {
--+    color: '#FFF',
--+  },
--   noUserText: {
--     color: '#fff',
--     fontSize: 18,
--diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
--index 87fdc2c..fd17c15 100644
----- a/frontend/app/index.tsx
--+++ b/frontend/app/index.tsx
--@@ -153,64 +153,37 @@ export default function HomeScreen() {
--           </LinearGradient>
--         </TouchableOpacity>
-- 
---        <ScrollView contentContainerStyle={styles.content}>
---          {/* Header with CR */}
---          <LinearGradient
---            colors={['#FF6347', '#FF1493', '#8B008B']}
---            start={{ x: 0, y: 0 }}
---            end={{ x: 1, y: 1 }}
---            style={styles.headerCard}
---          >
---            <View style={styles.headerTop}>
---              <View>
---                <Text style={styles.welcomeText}>Welcome, {user.username}!</Text>
---                <View style={styles.dayBadge}>
---                  <Ionicons name="calendar" size={16} color="#FFD700" />
---                  <Text style={styles.dayText}>Day {user.login_days}</Text>
---                </View>
---              </View>
---              <View style={styles.crBadge}>
---                <Text style={styles.crLabel}>CR</Text>
---                <Text style={styles.crValue}>{cr.toLocaleString()}</Text>
---              </View>
--+        {/* Top Header with Welcome and Resources */}
--+        <View style={styles.topHeader}>
--+          <View style={styles.welcomeSection}>
--+            <Text style={styles.compactWelcomeText}>Welcome, {user.username}!</Text>
--+            <View style={styles.dayBadgeCompact}>
--+              <Ionicons name="calendar" size={12} color="#FFD700" />
--+              <Text style={styles.dayTextCompact}>Day {user.login_days}</Text>
--+            </View>
--+          </View>
--+          
--+          <View style={styles.resourcesSection}>
--+            <View style={styles.compactResource}>
--+              <Ionicons name="diamond" size={16} color="#FF1493" />
--+              <Text style={styles.compactResourceValue}>{user.gems}</Text>
--+            </View>
--+            <View style={styles.compactResource}>
--+              <Ionicons name="cash" size={16} color="#FFD700" />
--+              <Text style={styles.compactResourceValue}>{user.coins}</Text>
--+            </View>
--+            <View style={styles.compactResource}>
--+              <Ionicons name="star" size={16} color="#32CD32" />
--+              <Text style={styles.compactResourceValue}>{user.gold}</Text>
--+            </View>
--+            <View style={styles.compactCR}>
--+              <Text style={styles.compactCRLabel}>CR</Text>
--+              <Text style={styles.compactCRValue}>{cr.toLocaleString()}</Text>
--             </View>
---          </LinearGradient>
---
---          {/* Currency Display */}
---          <View style={styles.currencyContainer}>
---            <LinearGradient
---              colors={['#FF1493', '#FF69B4']}
---              style={styles.currencyCard}
---            >
---              <Ionicons name="diamond" size={32} color="#FFF" />
---              <View style={styles.currencyInfo}>
---                <Text style={styles.currencyLabel}>Gems</Text>
---                <Text style={styles.currencyValue}>{user.gems}</Text>
---              </View>
---            </LinearGradient>
---
---            <LinearGradient
---              colors={['#FFD700', '#FFA500']}
---              style={styles.currencyCard}
---            >
---              <Ionicons name="cash" size={32} color="#FFF" />
---              <View style={styles.currencyInfo}>
---                <Text style={styles.currencyLabel}>Coins</Text>
---                <Text style={styles.currencyValue}>{user.coins}</Text>
---              </View>
---            </LinearGradient>
---
---            <LinearGradient
---              colors={['#32CD32', '#00CED1']}
---              style={styles.currencyCard}
---            >
---              <Ionicons name="star" size={32} color="#FFF" />
---              <View style={styles.currencyInfo}>
---                <Text style={styles.currencyLabel}>Gold</Text>
---                <Text style={styles.currencyValue}>{user.gold}</Text>
---              </View>
---            </LinearGradient>
--           </View>
--+        </View>
--+
--+        <ScrollView contentContainerStyle={styles.content}>
-- 
--           {/* Idle Rewards */}
--           {idleRewards && idleRewards.gold_earned > 0 && (
--@@ -590,4 +563,78 @@ const styles = StyleSheet.create({
--   pityFill: {
--     height: '100%',
--   },
--+  topHeader: {
--+    flexDirection: 'row',
--+    justifyContent: 'space-between',
--+    alignItems: 'flex-start',
--+    paddingHorizontal: 16,
--+    paddingTop: 60,
--+    paddingBottom: 12,
--+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
--+  },
--+  welcomeSection: {
--+    flex: 1,
--+  },
--+  compactWelcomeText: {
--+    fontSize: 16,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 1, height: 1 },
--+    textShadowRadius: 2,
--+  },
--+  dayBadgeCompact: {
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
--+    paddingHorizontal: 8,
--+    paddingVertical: 4,
--+    borderRadius: 12,
--+    gap: 4,
--+    marginTop: 4,
--+    alignSelf: 'flex-start',
--+  },
--+  dayTextCompact: {
--+    color: '#FFD700',
--+    fontWeight: 'bold',
--+    fontSize: 12,
--+  },
--+  resourcesSection: {
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    gap: 8,
--+  },
--+  compactResource: {
--+    flexDirection: 'row',
--+    alignItems: 'center',
--+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
--+    paddingHorizontal: 8,
--+    paddingVertical: 4,
--+    borderRadius: 12,
--+    gap: 4,
--+  },
--+  compactResourceValue: {
--+    color: '#FFF',
--+    fontWeight: 'bold',
--+    fontSize: 12,
--+  },
--+  compactCR: {
--+    backgroundColor: 'rgba(255, 215, 0, 0.3)',
--+    paddingHorizontal: 8,
--+    paddingVertical: 4,
--+    borderRadius: 12,
--+    alignItems: 'center',
--+    borderWidth: 1,
--+    borderColor: '#FFD700',
--+  },
--+  compactCRLabel: {
--+    fontSize: 10,
--+    color: '#FFD700',
--+    fontWeight: 'bold',
--+  },
--+  compactCRValue: {
--+    fontSize: 12,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+  },
-- });
--diff --git a/frontend/app/story.tsx b/frontend/app/story.tsx
--new file mode 100644
--index 0000000..401e8aa
----- /dev/null
--+++ b/frontend/app/story.tsx
--@@ -0,0 +1,60 @@
--+import React from 'react';
--+import {
--+  View,
--+  Text,
--+  StyleSheet,
--+  SafeAreaView,
--+} from 'react-native';
--+import { LinearGradient } from 'expo-linear-gradient';
--+
--+export default function StoryScreen() {
--+  return (
--+    <LinearGradient colors={['#9370DB', '#8B008B', '#FF1493']} style={styles.container}>
--+      <SafeAreaView style={styles.container}>
--+        <View style={styles.content}>
--+          <Text style={styles.title}>📖 Story Mode</Text>
--+          <Text style={styles.subtitle}>Coming Soon!</Text>
--+          <Text style={styles.description}>
--+            Embark on epic adventures through mystical realms and uncover the secrets of the Divine Heroes.
--+          </Text>
--+        </View>
--+      </SafeAreaView>
--+    </LinearGradient>
--+  );
--+}
--+
--+const styles = StyleSheet.create({
--+  container: {
--+    flex: 1,
--+  },
--+  content: {
--+    flex: 1,
--+    alignItems: 'center',
--+    justifyContent: 'center',
--+    padding: 24,
--+  },
--+  title: {
--+    fontSize: 32,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 16,
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 2, height: 2 },
--+    textShadowRadius: 5,
--+  },
--+  subtitle: {
--+    fontSize: 24,
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 24,
--+    opacity: 0.9,
--+  },
--+  description: {
--+    fontSize: 16,
--+    color: '#FFF',
--+    textAlign: 'center',
--+    lineHeight: 24,
--+    opacity: 0.8,
--+  },
--+});
--\ No newline at end of file
--diff --git a/frontend/app/summon-hub.tsx b/frontend/app/summon-hub.tsx
--new file mode 100644
--index 0000000..743068d
----- /dev/null
--+++ b/frontend/app/summon-hub.tsx
--@@ -0,0 +1,114 @@
--+import React from 'react';
--+import {
--+  View,
--+  Text,
--+  StyleSheet,
--+  SafeAreaView,
--+  TouchableOpacity,
--+} from 'react-native';
--+import { LinearGradient } from 'expo-linear-gradient';
--+import { Ionicons } from '@expo/vector-icons';
--+import { router } from 'expo-router';
--+
--+export default function SummonHubScreen() {
--+  return (
--+    <LinearGradient colors={['#FF1493', '#FF69B4', '#FFB6C1']} style={styles.container}>
--+      <SafeAreaView style={styles.container}>
--+        <View style={styles.content}>
--+          <Text style={styles.title}>🎁 Summon Hub</Text>
--+          <Text style={styles.subtitle}>Choose your summoning method</Text>
--+          
--+          <View style={styles.summonOptions}>
--+            <TouchableOpacity 
--+              style={styles.summonButton}
--+              onPress={() => router.push('/gacha')}
--+            >
--+              <LinearGradient
--+                colors={['#FF1493', '#9400D3']}
--+                style={styles.summonButtonGradient}
--+              >
--+                <Ionicons name="diamond" size={40} color="#FFF" />
--+                <Text style={styles.summonButtonTitle}>Gem Summon</Text>
--+                <Text style={styles.summonButtonSubtitle}>Premium Heroes</Text>
--+              </LinearGradient>
--+            </TouchableOpacity>
--+
--+            <TouchableOpacity 
--+              style={styles.summonButton}
--+              onPress={() => router.push('/gacha')}
--+            >
--+              <LinearGradient
--+                colors={['#FFD700', '#FFA500']}
--+                style={styles.summonButtonGradient}
--+              >
--+                <Ionicons name="cash" size={40} color="#FFF" />
--+                <Text style={styles.summonButtonTitle}>Coin Summon</Text>
--+                <Text style={styles.summonButtonSubtitle}>Standard Heroes</Text>
--+              </LinearGradient>
--+            </TouchableOpacity>
--+          </View>
--+        </View>
--+      </SafeAreaView>
--+    </LinearGradient>
--+  );
--+}
--+
--+const styles = StyleSheet.create({
--+  container: {
--+    flex: 1,
--+  },
--+  content: {
--+    flex: 1,
--+    alignItems: 'center',
--+    justifyContent: 'center',
--+    padding: 24,
--+  },
--+  title: {
--+    fontSize: 32,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 16,
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 2, height: 2 },
--+    textShadowRadius: 5,
--+  },
--+  subtitle: {
--+    fontSize: 18,
--+    color: '#FFF',
--+    textAlign: 'center',
--+    marginBottom: 48,
--+    opacity: 0.9,
--+  },
--+  summonOptions: {
--+    width: '100%',
--+    gap: 24,
--+  },
--+  summonButton: {
--+    borderRadius: 20,
--+    overflow: 'hidden',
--+    shadowColor: '#000',
--+    shadowOffset: { width: 0, height: 4 },
--+    shadowOpacity: 0.3,
--+    shadowRadius: 8,
--+    elevation: 8,
--+  },
--+  summonButtonGradient: {
--+    padding: 32,
--+    alignItems: 'center',
--+    gap: 8,
--+  },
--+  summonButtonTitle: {
--+    fontSize: 24,
--+    fontWeight: 'bold',
--+    color: '#FFF',
--+    textShadowColor: '#000',
--+    textShadowOffset: { width: 1, height: 1 },
--+    textShadowRadius: 3,
--+  },
--+  summonButtonSubtitle: {
--+    fontSize: 16,
--+    color: '#FFF',
--+    opacity: 0.9,
--+  },
--+});
--\ No newline at end of file
--diff --git a/frontend/stores/gameStore.ts b/frontend/stores/gameStore.ts
--index d7f6ad8..c8f9add 100644
----- a/frontend/stores/gameStore.ts
--+++ b/frontend/stores/gameStore.ts
--@@ -15,6 +15,7 @@ interface User {
--   login_days: number;
--   last_login: string | null;
--   daily_summons_claimed: number;
--+  profile_picture_hero_id: string | null;
-- }
-- 
-- interface Hero {
--@@ -61,6 +62,7 @@ interface GameState {
--   upgradeHero: (heroInstanceId: string) => Promise<void>;
--   claimIdleRewards: () => Promise<any>;
--   fetchCR: () => Promise<{cr: number; hero_count: number}>;
--+  updateProfilePicture: (heroId: string) => Promise<void>;
--   setUser: (user: User | null) => void;
-- }
-- 
--@@ -229,5 +231,24 @@ export const useGameStore = create<GameState>((set, get) => ({
--     }
--   },
-- 
--+  updateProfilePicture: async (heroId: string) => {
--+    const { user } = get();
--+    if (!user) throw new Error('No user found');
--+    
--+    set({ isLoading: true });
--+    try {
--+      await axios.post(
--+        `${BACKEND_URL}/api/user/${user.username}/profile-picture?hero_id=${heroId}`
--+      );
--+      
--+      // Refresh user data
--+      await get().fetchUser();
--+      set({ isLoading: false });
--+    } catch (error: any) {
--+      set({ error: error.response?.data?.detail || 'Failed to update profile picture', isLoading: false });
--+      throw error;
--+    }
--+  },
--+
--   setUser: (user: User | null) => set({ user }),
-- }));
+@@ -1,1876 +0,0 @@
 -diff --git a/model.patch b/model.patch
--index 22a8d3f..aba9637 100644
+-index d3c7ab3..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,627 +0,0 @@
+-@@ -1,1871 +0,0 @@
+--diff --git a/backend/server.py b/backend/server.py
+--index db3c492..1cc57c5 100644
+----- a/backend/server.py
+--+++ b/backend/server.py
+--@@ -95,6 +95,7 @@ class User(BaseModel):
+--     login_days: int = 0
+--     last_login: Optional[datetime] = None
+--     daily_summons_claimed: int = 0  # Track daily free summons
+--+    profile_picture_hero_id: Optional[str] = None  # Hero ID for profile picture
+--     created_at: datetime = Field(default_factory=datetime.utcnow)
+-- 
+-- class Team(BaseModel):
+--@@ -415,6 +416,26 @@ async def user_login(username: str):
+--     
+--     return reward
+-- 
+--+@api_router.post("/user/{username}/profile-picture")
+--+async def update_profile_picture(username: str, hero_id: str):
+--+    """Update user's profile picture to a hero they own"""
+--+    user_data = await db.users.find_one({"username": username})
+--+    if not user_data:
+--+        raise HTTPException(status_code=404, detail="User not found")
+--+    
+--+    # Verify user owns this hero
+--+    user_hero = await db.user_heroes.find_one({"user_id": user_data["id"], "hero_id": hero_id})
+--+    if not user_hero:
+--+        raise HTTPException(status_code=400, detail="You don't own this hero")
+--+    
+--+    # Update profile picture
+--+    await db.users.update_one(
+--+        {"username": username},
+--+        {"$set": {"profile_picture_hero_id": hero_id}}
+--+    )
+--+    
+--+    return {"message": "Profile picture updated successfully", "hero_id": hero_id}
+--+
+-- @api_router.post("/gacha/pull")
+-- async def pull_gacha(username: str, request: PullRequest):
+--     """Perform gacha pull"""
+--diff --git a/frontend/app/_layout.tsx b/frontend/app/_layout.tsx
+--index 06391a5..942523f 100644
+----- a/frontend/app/_layout.tsx
+--+++ b/frontend/app/_layout.tsx
+--@@ -40,6 +40,24 @@ export default function Layout() {
+--           ),
+--         }}
+--       />
+--+      <Tabs.Screen
+--+        name="abyss"
+--+        options={{
+--+          title: 'Abyss',
+--+          tabBarIcon: ({ color, size }) => (
+--+            <Ionicons name="flame" size={size} color={color} />
+--+          ),
+--+        }}
+--+      />
+--+      <Tabs.Screen
+--+        name="arena"
+--+        options={{
+--+          title: 'Arena',
+--+          tabBarIcon: ({ color, size }) => (
+--+            <Ionicons name="trophy" size={size} color={color} />
+--+          ),
+--+        }}
+--+      />
+--       <Tabs.Screen
+--         name="heroes"
+--         options={{
+--diff --git a/frontend/app/abyss.tsx b/frontend/app/abyss.tsx
+--new file mode 100644
+--index 0000000..1ea453b
+----- /dev/null
+--+++ b/frontend/app/abyss.tsx
+--@@ -0,0 +1,289 @@
+--+import React, { useEffect, useState } from 'react';
+--+import {
+--+  View,
+--+  Text,
+--+  StyleSheet,
+--+  SafeAreaView,
+--+  TouchableOpacity,
+--+  ScrollView,
+--+  ActivityIndicator,
+--+  Alert,
+--+} from 'react-native';
+--+import { useGameStore } from '../stores/gameStore';
+--+import { Ionicons } from '@expo/vector-icons';
+--+import { LinearGradient } from 'expo-linear-gradient';
+--+
+--+export default function AbyssScreen() {
+--+  const { user } = useGameStore();
+--+  const [progress, setProgress] = useState<any>(null);
+--+  const [isLoading, setIsLoading] = useState(false);
+--+
+--+  useEffect(() => {
+--+    if (user) {
+--+      loadAbyssProgress();
+--+    }
+--+  }, [user]);
+--+
+--+  const loadAbyssProgress = async () => {
+--+    try {
+--+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/abyss/progress/${user.username}`);
+--+      const data = await response.json();
+--+      setProgress(data);
+--+    } catch (error) {
+--+      console.error('Failed to load abyss progress:', error);
+--+    }
+--+  };
+--+
+--+  const battleLevel = async (level: number) => {
+--+    setIsLoading(true);
+--+    try {
+--+      // For now, use a simple team setup - this would be enhanced later
+--+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/abyss/battle/${user.username}/${level}`, {
+--+        method: 'POST',
+--+        headers: { 'Content-Type': 'application/json' },
+--+        body: JSON.stringify({ team_ids: [] }) // Empty for now
+--+      });
+--+      
+--+      const result = await response.json();
+--+      
+--+      if (response.ok) {
+--+        Alert.alert(
+--+          result.victory ? '🎉 Victory!' : '💀 Defeat',
+--+          `Level ${level}\n\n` +
+--+          `Your Power: ${result.user_power.toLocaleString()}\n` +
+--+          `Enemy Power: ${result.enemy_power.toLocaleString()}\n\n` +
+--+          (result.victory ? 
+--+            `Rewards:\n💰 Coins: +${result.rewards.coins}\n⭐ Gold: +${result.rewards.gold}\n${result.rewards.gems > 0 ? `💎 Gems: +${result.rewards.gems}` : ''}` :
+--+            'Try again with stronger heroes!')
+--+        );
+--+        
+--+        if (result.victory) {
+--+          loadAbyssProgress();
+--+        }
+--+      } else {
+--+        Alert.alert('Error', result.detail || 'Battle failed');
+--+      }
+--+    } catch (error) {
+--+      Alert.alert('Error', 'Failed to battle');
+--+    } finally {
+--+      setIsLoading(false);
+--+    }
+--+  };
+--+
+--+  if (!user) {
+--+    return (
+--+      <LinearGradient colors={['#4B0082', '#8B008B', '#FF1493']} style={styles.container}>
+--+        <SafeAreaView style={styles.container}>
+--+          <Text style={styles.errorText}>Please log in first</Text>
+--+        </SafeAreaView>
+--+      </LinearGradient>
+--+    );
+--+  }
+--+
+--+  return (
+--+    <LinearGradient colors={['#4B0082', '#8B008B', '#FF1493']} style={styles.container}>
+--+      <SafeAreaView style={styles.container}>
+--+        <ScrollView contentContainerStyle={styles.content}>
+--+          <Text style={styles.title}>🔥 Endless Abyss</Text>
+--+          <Text style={styles.subtitle}>Test your might against infinite challenges</Text>
+--+
+--+          {progress && (
+--+            <LinearGradient
+--+              colors={['#FF6347', '#FF1493']}
+--+              style={styles.progressCard}
+--+            >
+--+              <View style={styles.progressRow}>
+--+                <View style={styles.progressItem}>
+--+                  <Text style={styles.progressLabel}>Current Level</Text>
+--+                  <Text style={styles.progressValue}>{progress.current_level}</Text>
+--+                </View>
+--+                <View style={styles.progressItem}>
+--+                  <Text style={styles.progressLabel}>Highest Level</Text>
+--+                  <Text style={styles.progressValue}>{progress.highest_level}</Text>
+--+                </View>
+--+                <View style={styles.progressItem}>
+--+                  <Text style={styles.progressLabel}>Total Clears</Text>
+--+                  <Text style={styles.progressValue}>{progress.total_clears}</Text>
+--+                </View>
+--+              </View>
+--+            </LinearGradient>
+--+          )}
+--+
+--+          <View style={styles.levelsContainer}>
+--+            <Text style={styles.sectionTitle}>Available Levels</Text>
+--+            
+--+            {progress && Array.from({ length: Math.min(progress.current_level + 2, progress.current_level + 10) }, (_, i) => {
+--+              const level = Math.max(1, progress.current_level - 5 + i);
+--+              const isUnlocked = level <= progress.current_level || level <= progress.highest_level;
+--+              const isCurrent = level === progress.current_level;
+--+              
+--+              return (
+--+                <TouchableOpacity
+--+                  key={level}
+--+                  style={[styles.levelButton, !isUnlocked && styles.levelButtonLocked]}
+--+                  onPress={() => isUnlocked ? battleLevel(level) : null}
+--+                  disabled={!isUnlocked || isLoading}
+--+                >
+--+                  <LinearGradient
+--+                    colors={
+--+                      !isUnlocked ? ['#666', '#444'] :
+--+                      isCurrent ? ['#FF1493', '#9400D3'] :
+--+                      ['#32CD32', '#00CED1']
+--+                    }
+--+                    style={styles.levelButtonGradient}
+--+                  >
+--+                    <View style={styles.levelInfo}>
+--+                      <Text style={styles.levelNumber}>Level {level}</Text>
+--+                      <Text style={styles.levelDifficulty}>
+--+                        {level > 1000 ? 'Nightmare' : level > 200 ? 'Hard' : 'Normal'}
+--+                      </Text>
+--+                    </View>
+--+                    <View style={styles.levelRewards}>
+--+                      <Text style={styles.rewardText}>💰 {level * 100}</Text>
+--+                      <Text style={styles.rewardText}>⭐ {level * 50}</Text>
+--+                      {level % 10 === 0 && <Text style={styles.rewardText}>💎 {level / 10}</Text>}
+--+                    </View>
+--+                    {!isUnlocked && <Ionicons name="lock-closed" size={24} color="#FFF" />}
+--+                    {isCurrent && <Ionicons name="play" size={24} color="#FFF" />}
+--+                  </LinearGradient>
+--+                </TouchableOpacity>
+--+              );
+--+            })}
+--+          </View>
+--+
+--+          {isLoading && (
+--+            <View style={styles.loadingOverlay}>
+--+              <ActivityIndicator size="large" color="#FFF" />
+--+              <Text style={styles.loadingText}>Battling...</Text>
+--+            </View>
+--+          )}
+--+        </ScrollView>
+--+      </SafeAreaView>
+--+    </LinearGradient>
+--+  );
+--+}
+--+
+--+const styles = StyleSheet.create({
+--+  container: {
+--+    flex: 1,
+--+  },
+--+  content: {
+--+    padding: 16,
+--+    paddingTop: 60,
+--+  },
+--+  title: {
+--+    fontSize: 32,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 8,
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 2, height: 2 },
+--+    textShadowRadius: 5,
+--+  },
+--+  subtitle: {
+--+    fontSize: 16,
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 24,
+--+    opacity: 0.9,
+--+  },
+--+  progressCard: {
+--+    borderRadius: 16,
+--+    padding: 20,
+--+    marginBottom: 24,
+--+    shadowColor: '#000',
+--+    shadowOffset: { width: 0, height: 4 },
+--+    shadowOpacity: 0.3,
+--+    shadowRadius: 8,
+--+    elevation: 8,
+--+  },
+--+  progressRow: {
+--+    flexDirection: 'row',
+--+    justifyContent: 'space-around',
+--+  },
+--+  progressItem: {
+--+    alignItems: 'center',
+--+  },
+--+  progressLabel: {
+--+    fontSize: 12,
+--+    color: '#FFF',
+--+    opacity: 0.8,
+--+    marginBottom: 4,
+--+  },
+--+  progressValue: {
+--+    fontSize: 24,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+  },
+--+  levelsContainer: {
+--+    marginBottom: 24,
+--+  },
+--+  sectionTitle: {
+--+    fontSize: 20,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    marginBottom: 16,
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 1, height: 1 },
+--+    textShadowRadius: 3,
+--+  },
+--+  levelButton: {
+--+    marginBottom: 12,
+--+    borderRadius: 16,
+--+    overflow: 'hidden',
+--+  },
+--+  levelButtonLocked: {
+--+    opacity: 0.6,
+--+  },
+--+  levelButtonGradient: {
+--+    padding: 16,
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    justifyContent: 'space-between',
+--+  },
+--+  levelInfo: {
+--+    flex: 1,
+--+  },
+--+  levelNumber: {
+--+    fontSize: 18,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    marginBottom: 4,
+--+  },
+--+  levelDifficulty: {
+--+    fontSize: 12,
+--+    color: '#FFF',
+--+    opacity: 0.8,
+--+  },
+--+  levelRewards: {
+--+    alignItems: 'flex-end',
+--+    marginRight: 16,
+--+  },
+--+  rewardText: {
+--+    fontSize: 12,
+--+    color: '#FFF',
+--+    marginBottom: 2,
+--+  },
+--+  loadingOverlay: {
+--+    position: 'absolute',
+--+    top: 0,
+--+    left: 0,
+--+    right: 0,
+--+    bottom: 0,
+--+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+--+    alignItems: 'center',
+--+    justifyContent: 'center',
+--+  },
+--+  loadingText: {
+--+    color: '#FFF',
+--+    fontSize: 16,
+--+    marginTop: 12,
+--+  },
+--+  errorText: {
+--+    color: '#FFF',
+--+    fontSize: 18,
+--+    textAlign: 'center',
+--+    marginTop: 100,
+--+  },
+--+});
+--\ No newline at end of file
+--diff --git a/frontend/app/arena.tsx b/frontend/app/arena.tsx
+--new file mode 100644
+--index 0000000..599cc18
+----- /dev/null
+--+++ b/frontend/app/arena.tsx
+--@@ -0,0 +1,371 @@
+--+import React, { useEffect, useState } from 'react';
+--+import {
+--+  View,
+--+  Text,
+--+  StyleSheet,
+--+  SafeAreaView,
+--+  TouchableOpacity,
+--+  ScrollView,
+--+  ActivityIndicator,
+--+  Alert,
+--+} from 'react-native';
+--+import { useGameStore } from '../stores/gameStore';
+--+import { Ionicons } from '@expo/vector-icons';
+--+import { LinearGradient } from 'expo-linear-gradient';
+--+
+--+export default function ArenaScreen() {
+--+  const { user } = useGameStore();
+--+  const [record, setRecord] = useState<any>(null);
+--+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+--+  const [isLoading, setIsLoading] = useState(false);
+--+
+--+  useEffect(() => {
+--+    if (user) {
+--+      loadArenaData();
+--+    }
+--+  }, [user]);
+--+
+--+  const loadArenaData = async () => {
+--+    try {
+--+      const [recordResponse, leaderboardResponse] = await Promise.all([
+--+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/arena/record/${user.username}`),
+--+        fetch(`${process.env.EXPO_PUBLIC_API_URL}/leaderboard/arena?limit=10`)
+--+      ]);
+--+      
+--+      const recordData = await recordResponse.json();
+--+      const leaderboardData = await leaderboardResponse.json();
+--+      
+--+      setRecord(recordData);
+--+      setLeaderboard(leaderboardData);
+--+    } catch (error) {
+--+      console.error('Failed to load arena data:', error);
+--+    }
+--+  };
+--+
+--+  const battle = async () => {
+--+    setIsLoading(true);
+--+    try {
+--+      // For now, use a simple team setup - this would be enhanced later
+--+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/arena/battle/${user.username}`, {
+--+        method: 'POST',
+--+        headers: { 'Content-Type': 'application/json' },
+--+        body: JSON.stringify({ team_id: 'default' }) // Placeholder
+--+      });
+--+      
+--+      const result = await response.json();
+--+      
+--+      if (response.ok) {
+--+        Alert.alert(
+--+          result.victory ? '🏆 Victory!' : '💀 Defeat',
+--+          `vs ${result.opponent_username}\n\n` +
+--+          `Your Power: ${result.user_power.toLocaleString()}\n` +
+--+          `Opponent Power: ${result.opponent_power.toLocaleString()}\n\n` +
+--+          `Rating Change: ${result.rating_change > 0 ? '+' : ''}${result.rating_change}\n` +
+--+          `New Rating: ${result.new_rating}\n` +
+--+          `Win Streak: ${result.win_streak}`
+--+        );
+--+        
+--+        loadArenaData();
+--+      } else {
+--+        Alert.alert('Error', result.detail || 'Battle failed');
+--+      }
+--+    } catch (error) {
+--+      Alert.alert('Error', 'Failed to battle');
+--+    } finally {
+--+      setIsLoading(false);
+--+    }
+--+  };
+--+
+--+  const getRankColor = (rank: number) => {
+--+    if (rank === 1) return '#FFD700'; // Gold
+--+    if (rank <= 3) return '#C0C0C0'; // Silver
+--+    if (rank <= 10) return '#CD7F32'; // Bronze
+--+    return '#FFF';
+--+  };
+--+
+--+  if (!user) {
+--+    return (
+--+      <LinearGradient colors={['#FF6347', '#FF1493', '#9400D3']} style={styles.container}>
+--+        <SafeAreaView style={styles.container}>
+--+          <Text style={styles.errorText}>Please log in first</Text>
+--+        </SafeAreaView>
+--+      </LinearGradient>
+--+    );
+--+  }
+--+
+--+  return (
+--+    <LinearGradient colors={['#FF6347', '#FF1493', '#9400D3']} style={styles.container}>
+--+      <SafeAreaView style={styles.container}>
+--+        <ScrollView contentContainerStyle={styles.content}>
+--+          <Text style={styles.title}>🏆 PvP Arena</Text>
+--+          <Text style={styles.subtitle}>Battle other players for glory and rewards</Text>
+--+
+--+          {record && (
+--+            <LinearGradient
+--+              colors={['#FFD700', '#FFA500']}
+--+              style={styles.recordCard}
+--+            >
+--+              <View style={styles.recordHeader}>
+--+                <Text style={styles.recordTitle}>Your Arena Record</Text>
+--+                <View style={styles.ratingBadge}>
+--+                  <Text style={styles.ratingValue}>{record.rating}</Text>
+--+                  <Text style={styles.ratingLabel}>Rating</Text>
+--+                </View>
+--+              </View>
+--+              
+--+              <View style={styles.statsRow}>
+--+                <View style={styles.statItem}>
+--+                  <Text style={styles.statValue}>{record.wins}</Text>
+--+                  <Text style={styles.statLabel}>Wins</Text>
+--+                </View>
+--+                <View style={styles.statItem}>
+--+                  <Text style={styles.statValue}>{record.losses}</Text>
+--+                  <Text style={styles.statLabel}>Losses</Text>
+--+                </View>
+--+                <View style={styles.statItem}>
+--+                  <Text style={styles.statValue}>{record.win_streak}</Text>
+--+                  <Text style={styles.statLabel}>Streak</Text>
+--+                </View>
+--+                <View style={styles.statItem}>
+--+                  <Text style={styles.statValue}>{record.highest_rating}</Text>
+--+                  <Text style={styles.statLabel}>Best</Text>
+--+                </View>
+--+              </View>
+--+            </LinearGradient>
+--+          )}
+--+
+--+          <TouchableOpacity
+--+            style={styles.battleButton}
+--+            onPress={battle}
+--+            disabled={isLoading}
+--+          >
+--+            <LinearGradient
+--+              colors={['#FF1493', '#9400D3']}
+--+              style={styles.battleButtonGradient}
+--+            >
+--+              {isLoading ? (
+--+                <ActivityIndicator color="#FFF" size="large" />
+--+              ) : (
+--+                <>
+--+                  <Ionicons name="sword" size={32} color="#FFF" />
+--+                  <Text style={styles.battleButtonText}>Find Match</Text>
+--+                </>
+--+              )}
+--+            </LinearGradient>
+--+          </TouchableOpacity>
+--+
+--+          <View style={styles.leaderboardContainer}>
+--+            <Text style={styles.sectionTitle}>🏅 Top Players</Text>
+--+            
+--+            {leaderboard.map((player, index) => (
+--+              <View key={player.user_id} style={styles.leaderboardItem}>
+--+                <LinearGradient
+--+                  colors={
+--+                    index === 0 ? ['#FFD700', '#FFA500'] :
+--+                    index === 1 ? ['#C0C0C0', '#A0A0A0'] :
+--+                    index === 2 ? ['#CD7F32', '#B8860B'] :
+--+                    ['#FFFFFF', '#F0F0F0']
+--+                  }
+--+                  style={styles.leaderboardGradient}
+--+                >
+--+                  <View style={styles.rankSection}>
+--+                    <Text style={[styles.rankText, { color: getRankColor(player.rank) }]}>
+--+                      #{player.rank}
+--+                    </Text>
+--+                    {index < 3 && (
+--+                      <Ionicons 
+--+                        name={index === 0 ? "trophy" : index === 1 ? "medal" : "ribbon"} 
+--+                        size={20} 
+--+                        color={getRankColor(player.rank)} 
+--+                      />
+--+                    )}
+--+                  </View>
+--+                  
+--+                  <View style={styles.playerInfo}>
+--+                    <Text style={styles.playerName}>{player.username}</Text>
+--+                    <Text style={styles.playerStats}>
+--+                      {player.rating} • {player.wins}W/{player.losses}L • {player.win_rate.toFixed(1)}%
+--+                    </Text>
+--+                  </View>
+--+                  
+--+                  <View style={styles.streakBadge}>
+--+                    <Text style={styles.streakText}>{player.win_streak}</Text>
+--+                    <Text style={styles.streakLabel}>streak</Text>
+--+                  </View>
+--+                </LinearGradient>
+--+              </View>
+--+            ))}
+--+          </View>
+--+        </ScrollView>
+--+      </SafeAreaView>
+--+    </LinearGradient>
+--+  );
+--+}
+--+
+--+const styles = StyleSheet.create({
+--+  container: {
+--+    flex: 1,
+--+  },
+--+  content: {
+--+    padding: 16,
+--+    paddingTop: 60,
+--+  },
+--+  title: {
+--+    fontSize: 32,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 8,
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 2, height: 2 },
+--+    textShadowRadius: 5,
+--+  },
+--+  subtitle: {
+--+    fontSize: 16,
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 24,
+--+    opacity: 0.9,
+--+  },
+--+  recordCard: {
+--+    borderRadius: 16,
+--+    padding: 20,
+--+    marginBottom: 24,
+--+    shadowColor: '#000',
+--+    shadowOffset: { width: 0, height: 4 },
+--+    shadowOpacity: 0.3,
+--+    shadowRadius: 8,
+--+    elevation: 8,
+--+  },
+--+  recordHeader: {
+--+    flexDirection: 'row',
+--+    justifyContent: 'space-between',
+--+    alignItems: 'center',
+--+    marginBottom: 16,
+--+  },
+--+  recordTitle: {
+--+    fontSize: 18,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+  },
+--+  ratingBadge: {
+--+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+--+    paddingHorizontal: 12,
+--+    paddingVertical: 8,
+--+    borderRadius: 12,
+--+    alignItems: 'center',
+--+  },
+--+  ratingValue: {
+--+    fontSize: 20,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+  },
+--+  ratingLabel: {
+--+    fontSize: 12,
+--+    color: '#FFF',
+--+    opacity: 0.8,
+--+  },
+--+  statsRow: {
+--+    flexDirection: 'row',
+--+    justifyContent: 'space-around',
+--+  },
+--+  statItem: {
+--+    alignItems: 'center',
+--+  },
+--+  statValue: {
+--+    fontSize: 18,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    marginBottom: 4,
+--+  },
+--+  statLabel: {
+--+    fontSize: 12,
+--+    color: '#FFF',
+--+    opacity: 0.8,
+--+  },
+--+  battleButton: {
+--+    marginBottom: 24,
+--+    borderRadius: 16,
+--+    overflow: 'hidden',
+--+  },
+--+  battleButtonGradient: {
+--+    padding: 20,
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    justifyContent: 'center',
+--+    gap: 12,
+--+  },
+--+  battleButtonText: {
+--+    fontSize: 20,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+  },
+--+  leaderboardContainer: {
+--+    marginBottom: 24,
+--+  },
+--+  sectionTitle: {
+--+    fontSize: 20,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    marginBottom: 16,
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 1, height: 1 },
+--+    textShadowRadius: 3,
+--+  },
+--+  leaderboardItem: {
+--+    marginBottom: 8,
+--+    borderRadius: 12,
+--+    overflow: 'hidden',
+--+  },
+--+  leaderboardGradient: {
+--+    padding: 12,
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+  },
+--+  rankSection: {
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    width: 60,
+--+    gap: 4,
+--+  },
+--+  rankText: {
+--+    fontSize: 16,
+--+    fontWeight: 'bold',
+--+  },
+--+  playerInfo: {
+--+    flex: 1,
+--+    marginLeft: 12,
+--+  },
+--+  playerName: {
+--+    fontSize: 16,
+--+    fontWeight: 'bold',
+--+    color: '#333',
+--+    marginBottom: 2,
+--+  },
+--+  playerStats: {
+--+    fontSize: 12,
+--+    color: '#666',
+--+  },
+--+  streakBadge: {
+--+    backgroundColor: 'rgba(255, 20, 147, 0.2)',
+--+    paddingHorizontal: 8,
+--+    paddingVertical: 4,
+--+    borderRadius: 8,
+--+    alignItems: 'center',
+--+  },
+--+  streakText: {
+--+    fontSize: 14,
+--+    fontWeight: 'bold',
+--+    color: '#FF1493',
+--+  },
+--+  streakLabel: {
+--+    fontSize: 10,
+--+    color: '#FF1493',
+--+  },
+--+  errorText: {
+--+    color: '#FFF',
+--+    fontSize: 18,
+--+    textAlign: 'center',
+--+    marginTop: 100,
+--+  },
+--+});
+--\ No newline at end of file
+--diff --git a/frontend/app/heroes.tsx b/frontend/app/heroes.tsx
+--index aec4168..02fb24d 100644
+----- a/frontend/app/heroes.tsx
+--+++ b/frontend/app/heroes.tsx
+--@@ -31,7 +31,7 @@ const ELEMENT_COLORS: { [key: string]: string } = {
+-- };
+-- 
+-- export default function HeroesScreen() {
+---  const { user, userHeroes, fetchUserHeroes, upgradeHero, isLoading } = useGameStore();
+--+  const { user, userHeroes, fetchUserHeroes, upgradeHero, updateProfilePicture, isLoading } = useGameStore();
+--   const [selectedHero, setSelectedHero] = useState<any>(null);
+--   const [showDetail, setShowDetail] = useState(false);
+--   const [filterRarity, setFilterRarity] = useState<string | null>(null);
+--@@ -70,6 +70,18 @@ export default function HeroesScreen() {
+--     }
+--   };
+-- 
+--+  const handleSetProfilePicture = async () => {
+--+    if (!selectedHero) return;
+--+
+--+    try {
+--+      await updateProfilePicture(selectedHero.hero_data.id);
+--+      Alert.alert('Success!', `${selectedHero.hero_data.name} is now your profile picture!`);
+--+      setShowDetail(false);
+--+    } catch (error: any) {
+--+      Alert.alert('Error', error.response?.data?.detail || 'Failed to set profile picture');
+--+    }
+--+  };
+--+
+--   const filteredHeroes = filterRarity
+--     ? userHeroes.filter((h) => h.hero_data?.rarity === filterRarity)
+--     : userHeroes;
+--@@ -308,6 +320,26 @@ export default function HeroesScreen() {
+--                   </TouchableOpacity>
+--                 )}
+-- 
+--+                <TouchableOpacity
+--+                  style={[
+--+                    styles.profilePictureButton,
+--+                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonActive
+--+                  ]}
+--+                  onPress={handleSetProfilePicture}
+--+                >
+--+                  <Ionicons 
+--+                    name={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "checkmark-circle" : "person-circle"} 
+--+                    size={20} 
+--+                    color={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "#4CAF50" : "#FFF"} 
+--+                  />
+--+                  <Text style={[
+--+                    styles.profilePictureButtonText,
+--+                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonTextActive
+--+                  ]}>
+--+                    {user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "Current Profile Picture" : "Set as Profile Picture"}
+--+                  </Text>
+--+                </TouchableOpacity>
+--+
+--                 {selectedHero.rank === 10 && (
+--                   <View style={styles.maxRankBadge}>
+--                     <Ionicons name="trophy" size={24} color="#FFD700" />
+--@@ -577,6 +609,27 @@ const styles = StyleSheet.create({
+--     fontSize: 16,
+--     fontWeight: 'bold',
+--   },
+--+  profilePictureButton: {
+--+    backgroundColor: '#9C27B0',
+--+    borderRadius: 8,
+--+    padding: 12,
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    justifyContent: 'center',
+--+    gap: 8,
+--+    marginTop: 8,
+--+  },
+--+  profilePictureButtonActive: {
+--+    backgroundColor: '#4CAF50',
+--+  },
+--+  profilePictureButtonText: {
+--+    color: '#FFF',
+--+    fontSize: 14,
+--+    fontWeight: 'bold',
+--+  },
+--+  profilePictureButtonTextActive: {
+--+    color: '#FFF',
+--+  },
+--   noUserText: {
+--     color: '#fff',
+--     fontSize: 18,
+--diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+--index 87fdc2c..fd17c15 100644
+----- a/frontend/app/index.tsx
+--+++ b/frontend/app/index.tsx
+--@@ -153,64 +153,37 @@ export default function HomeScreen() {
+--           </LinearGradient>
+--         </TouchableOpacity>
+-- 
+---        <ScrollView contentContainerStyle={styles.content}>
+---          {/* Header with CR */}
+---          <LinearGradient
+---            colors={['#FF6347', '#FF1493', '#8B008B']}
+---            start={{ x: 0, y: 0 }}
+---            end={{ x: 1, y: 1 }}
+---            style={styles.headerCard}
+---          >
+---            <View style={styles.headerTop}>
+---              <View>
+---                <Text style={styles.welcomeText}>Welcome, {user.username}!</Text>
+---                <View style={styles.dayBadge}>
+---                  <Ionicons name="calendar" size={16} color="#FFD700" />
+---                  <Text style={styles.dayText}>Day {user.login_days}</Text>
+---                </View>
+---              </View>
+---              <View style={styles.crBadge}>
+---                <Text style={styles.crLabel}>CR</Text>
+---                <Text style={styles.crValue}>{cr.toLocaleString()}</Text>
+---              </View>
+--+        {/* Top Header with Welcome and Resources */}
+--+        <View style={styles.topHeader}>
+--+          <View style={styles.welcomeSection}>
+--+            <Text style={styles.compactWelcomeText}>Welcome, {user.username}!</Text>
+--+            <View style={styles.dayBadgeCompact}>
+--+              <Ionicons name="calendar" size={12} color="#FFD700" />
+--+              <Text style={styles.dayTextCompact}>Day {user.login_days}</Text>
+--+            </View>
+--+          </View>
+--+          
+--+          <View style={styles.resourcesSection}>
+--+            <View style={styles.compactResource}>
+--+              <Ionicons name="diamond" size={16} color="#FF1493" />
+--+              <Text style={styles.compactResourceValue}>{user.gems}</Text>
+--+            </View>
+--+            <View style={styles.compactResource}>
+--+              <Ionicons name="cash" size={16} color="#FFD700" />
+--+              <Text style={styles.compactResourceValue}>{user.coins}</Text>
+--+            </View>
+--+            <View style={styles.compactResource}>
+--+              <Ionicons name="star" size={16} color="#32CD32" />
+--+              <Text style={styles.compactResourceValue}>{user.gold}</Text>
+--+            </View>
+--+            <View style={styles.compactCR}>
+--+              <Text style={styles.compactCRLabel}>CR</Text>
+--+              <Text style={styles.compactCRValue}>{cr.toLocaleString()}</Text>
+--             </View>
+---          </LinearGradient>
+---
+---          {/* Currency Display */}
+---          <View style={styles.currencyContainer}>
+---            <LinearGradient
+---              colors={['#FF1493', '#FF69B4']}
+---              style={styles.currencyCard}
+---            >
+---              <Ionicons name="diamond" size={32} color="#FFF" />
+---              <View style={styles.currencyInfo}>
+---                <Text style={styles.currencyLabel}>Gems</Text>
+---                <Text style={styles.currencyValue}>{user.gems}</Text>
+---              </View>
+---            </LinearGradient>
+---
+---            <LinearGradient
+---              colors={['#FFD700', '#FFA500']}
+---              style={styles.currencyCard}
+---            >
+---              <Ionicons name="cash" size={32} color="#FFF" />
+---              <View style={styles.currencyInfo}>
+---                <Text style={styles.currencyLabel}>Coins</Text>
+---                <Text style={styles.currencyValue}>{user.coins}</Text>
+---              </View>
+---            </LinearGradient>
+---
+---            <LinearGradient
+---              colors={['#32CD32', '#00CED1']}
+---              style={styles.currencyCard}
+---            >
+---              <Ionicons name="star" size={32} color="#FFF" />
+---              <View style={styles.currencyInfo}>
+---                <Text style={styles.currencyLabel}>Gold</Text>
+---                <Text style={styles.currencyValue}>{user.gold}</Text>
+---              </View>
+---            </LinearGradient>
+--           </View>
+--+        </View>
+--+
+--+        <ScrollView contentContainerStyle={styles.content}>
+-- 
+--           {/* Idle Rewards */}
+--           {idleRewards && idleRewards.gold_earned > 0 && (
+--@@ -590,4 +563,78 @@ const styles = StyleSheet.create({
+--   pityFill: {
+--     height: '100%',
+--   },
+--+  topHeader: {
+--+    flexDirection: 'row',
+--+    justifyContent: 'space-between',
+--+    alignItems: 'flex-start',
+--+    paddingHorizontal: 16,
+--+    paddingTop: 60,
+--+    paddingBottom: 12,
+--+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+--+  },
+--+  welcomeSection: {
+--+    flex: 1,
+--+  },
+--+  compactWelcomeText: {
+--+    fontSize: 16,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 1, height: 1 },
+--+    textShadowRadius: 2,
+--+  },
+--+  dayBadgeCompact: {
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+--+    paddingHorizontal: 8,
+--+    paddingVertical: 4,
+--+    borderRadius: 12,
+--+    gap: 4,
+--+    marginTop: 4,
+--+    alignSelf: 'flex-start',
+--+  },
+--+  dayTextCompact: {
+--+    color: '#FFD700',
+--+    fontWeight: 'bold',
+--+    fontSize: 12,
+--+  },
+--+  resourcesSection: {
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    gap: 8,
+--+  },
+--+  compactResource: {
+--+    flexDirection: 'row',
+--+    alignItems: 'center',
+--+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+--+    paddingHorizontal: 8,
+--+    paddingVertical: 4,
+--+    borderRadius: 12,
+--+    gap: 4,
+--+  },
+--+  compactResourceValue: {
+--+    color: '#FFF',
+--+    fontWeight: 'bold',
+--+    fontSize: 12,
+--+  },
+--+  compactCR: {
+--+    backgroundColor: 'rgba(255, 215, 0, 0.3)',
+--+    paddingHorizontal: 8,
+--+    paddingVertical: 4,
+--+    borderRadius: 12,
+--+    alignItems: 'center',
+--+    borderWidth: 1,
+--+    borderColor: '#FFD700',
+--+  },
+--+  compactCRLabel: {
+--+    fontSize: 10,
+--+    color: '#FFD700',
+--+    fontWeight: 'bold',
+--+  },
+--+  compactCRValue: {
+--+    fontSize: 12,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+  },
+-- });
+--diff --git a/frontend/app/story.tsx b/frontend/app/story.tsx
+--new file mode 100644
+--index 0000000..401e8aa
+----- /dev/null
+--+++ b/frontend/app/story.tsx
+--@@ -0,0 +1,60 @@
+--+import React from 'react';
+--+import {
+--+  View,
+--+  Text,
+--+  StyleSheet,
+--+  SafeAreaView,
+--+} from 'react-native';
+--+import { LinearGradient } from 'expo-linear-gradient';
+--+
+--+export default function StoryScreen() {
+--+  return (
+--+    <LinearGradient colors={['#9370DB', '#8B008B', '#FF1493']} style={styles.container}>
+--+      <SafeAreaView style={styles.container}>
+--+        <View style={styles.content}>
+--+          <Text style={styles.title}>📖 Story Mode</Text>
+--+          <Text style={styles.subtitle}>Coming Soon!</Text>
+--+          <Text style={styles.description}>
+--+            Embark on epic adventures through mystical realms and uncover the secrets of the Divine Heroes.
+--+          </Text>
+--+        </View>
+--+      </SafeAreaView>
+--+    </LinearGradient>
+--+  );
+--+}
+--+
+--+const styles = StyleSheet.create({
+--+  container: {
+--+    flex: 1,
+--+  },
+--+  content: {
+--+    flex: 1,
+--+    alignItems: 'center',
+--+    justifyContent: 'center',
+--+    padding: 24,
+--+  },
+--+  title: {
+--+    fontSize: 32,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 16,
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 2, height: 2 },
+--+    textShadowRadius: 5,
+--+  },
+--+  subtitle: {
+--+    fontSize: 24,
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 24,
+--+    opacity: 0.9,
+--+  },
+--+  description: {
+--+    fontSize: 16,
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    lineHeight: 24,
+--+    opacity: 0.8,
+--+  },
+--+});
+--\ No newline at end of file
+--diff --git a/frontend/app/summon-hub.tsx b/frontend/app/summon-hub.tsx
+--new file mode 100644
+--index 0000000..743068d
+----- /dev/null
+--+++ b/frontend/app/summon-hub.tsx
+--@@ -0,0 +1,114 @@
+--+import React from 'react';
+--+import {
+--+  View,
+--+  Text,
+--+  StyleSheet,
+--+  SafeAreaView,
+--+  TouchableOpacity,
+--+} from 'react-native';
+--+import { LinearGradient } from 'expo-linear-gradient';
+--+import { Ionicons } from '@expo/vector-icons';
+--+import { router } from 'expo-router';
+--+
+--+export default function SummonHubScreen() {
+--+  return (
+--+    <LinearGradient colors={['#FF1493', '#FF69B4', '#FFB6C1']} style={styles.container}>
+--+      <SafeAreaView style={styles.container}>
+--+        <View style={styles.content}>
+--+          <Text style={styles.title}>🎁 Summon Hub</Text>
+--+          <Text style={styles.subtitle}>Choose your summoning method</Text>
+--+          
+--+          <View style={styles.summonOptions}>
+--+            <TouchableOpacity 
+--+              style={styles.summonButton}
+--+              onPress={() => router.push('/gacha')}
+--+            >
+--+              <LinearGradient
+--+                colors={['#FF1493', '#9400D3']}
+--+                style={styles.summonButtonGradient}
+--+              >
+--+                <Ionicons name="diamond" size={40} color="#FFF" />
+--+                <Text style={styles.summonButtonTitle}>Gem Summon</Text>
+--+                <Text style={styles.summonButtonSubtitle}>Premium Heroes</Text>
+--+              </LinearGradient>
+--+            </TouchableOpacity>
+--+
+--+            <TouchableOpacity 
+--+              style={styles.summonButton}
+--+              onPress={() => router.push('/gacha')}
+--+            >
+--+              <LinearGradient
+--+                colors={['#FFD700', '#FFA500']}
+--+                style={styles.summonButtonGradient}
+--+              >
+--+                <Ionicons name="cash" size={40} color="#FFF" />
+--+                <Text style={styles.summonButtonTitle}>Coin Summon</Text>
+--+                <Text style={styles.summonButtonSubtitle}>Standard Heroes</Text>
+--+              </LinearGradient>
+--+            </TouchableOpacity>
+--+          </View>
+--+        </View>
+--+      </SafeAreaView>
+--+    </LinearGradient>
+--+  );
+--+}
+--+
+--+const styles = StyleSheet.create({
+--+  container: {
+--+    flex: 1,
+--+  },
+--+  content: {
+--+    flex: 1,
+--+    alignItems: 'center',
+--+    justifyContent: 'center',
+--+    padding: 24,
+--+  },
+--+  title: {
+--+    fontSize: 32,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 16,
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 2, height: 2 },
+--+    textShadowRadius: 5,
+--+  },
+--+  subtitle: {
+--+    fontSize: 18,
+--+    color: '#FFF',
+--+    textAlign: 'center',
+--+    marginBottom: 48,
+--+    opacity: 0.9,
+--+  },
+--+  summonOptions: {
+--+    width: '100%',
+--+    gap: 24,
+--+  },
+--+  summonButton: {
+--+    borderRadius: 20,
+--+    overflow: 'hidden',
+--+    shadowColor: '#000',
+--+    shadowOffset: { width: 0, height: 4 },
+--+    shadowOpacity: 0.3,
+--+    shadowRadius: 8,
+--+    elevation: 8,
+--+  },
+--+  summonButtonGradient: {
+--+    padding: 32,
+--+    alignItems: 'center',
+--+    gap: 8,
+--+  },
+--+  summonButtonTitle: {
+--+    fontSize: 24,
+--+    fontWeight: 'bold',
+--+    color: '#FFF',
+--+    textShadowColor: '#000',
+--+    textShadowOffset: { width: 1, height: 1 },
+--+    textShadowRadius: 3,
+--+  },
+--+  summonButtonSubtitle: {
+--+    fontSize: 16,
+--+    color: '#FFF',
+--+    opacity: 0.9,
+--+  },
+--+});
+--\ No newline at end of file
+--diff --git a/frontend/stores/gameStore.ts b/frontend/stores/gameStore.ts
+--index d7f6ad8..c8f9add 100644
+----- a/frontend/stores/gameStore.ts
+--+++ b/frontend/stores/gameStore.ts
+--@@ -15,6 +15,7 @@ interface User {
+--   login_days: number;
+--   last_login: string | null;
+--   daily_summons_claimed: number;
+--+  profile_picture_hero_id: string | null;
+-- }
+-- 
+-- interface Hero {
+--@@ -61,6 +62,7 @@ interface GameState {
+--   upgradeHero: (heroInstanceId: string) => Promise<void>;
+--   claimIdleRewards: () => Promise<any>;
+--   fetchCR: () => Promise<{cr: number; hero_count: number}>;
+--+  updateProfilePicture: (heroId: string) => Promise<void>;
+--   setUser: (user: User | null) => void;
+-- }
+-- 
+--@@ -229,5 +231,24 @@ export const useGameStore = create<GameState>((set, get) => ({
+--     }
+--   },
+-- 
+--+  updateProfilePicture: async (heroId: string) => {
+--+    const { user } = get();
+--+    if (!user) throw new Error('No user found');
+--+    
+--+    set({ isLoading: true });
+--+    try {
+--+      await axios.post(
+--+        `${BACKEND_URL}/api/user/${user.username}/profile-picture?hero_id=${heroId}`
+--+      );
+--+      
+--+      // Refresh user data
+--+      await get().fetchUser();
+--+      set({ isLoading: false });
+--+    } catch (error: any) {
+--+      set({ error: error.response?.data?.detail || 'Failed to update profile picture', isLoading: false });
+--+      throw error;
+--+    }
+--+  },
+--+
+--   setUser: (user: User | null) => set({ user }),
+-- }));
 --diff --git a/model.patch b/model.patch
---index a2d9ad1..e69de29 100644
+--index 22a8d3f..aba9637 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,622 +0,0 @@
----diff --git a/backend/server.py b/backend/server.py
----index 7b0d9be..97ece9d 100644
------- a/backend/server.py
----+++ b/backend/server.py
----@@ -89,6 +89,7 @@ class User(BaseModel):
----     gems: int = 300  # Premium currency
----     coins: int = 10000  # Regular currency
----     gold: int = 5000  # Idle resource
----+    friendship_points: int = 0  # Friend currency
----     pity_counter: int = 0  # Counts towards guaranteed SSR at 50
----     total_pulls: int = 0
----     login_days: int = 0
+--@@ -1,627 +0,0 @@
 ---diff --git a/model.patch b/model.patch
----index f57a87e..e69de29 100644
+---index a2d9ad1..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,605 +0,0 @@
-----diff --git a/frontend/stores/gameStore.ts b/frontend/stores/gameStore.ts
-----index 0bacd43..d7f6ad8 100644
-------- a/frontend/stores/gameStore.ts
-----+++ b/frontend/stores/gameStore.ts
-----@@ -214,5 +214,20 @@ export const useGameStore = create<GameState>((set, get) => ({
-----     }
-----   },
----- 
-----+  fetchCR: async () => {
-----+    const { user } = get();
-----+    if (!user) throw new Error('No user found');
-----+    
-----+    try {
-----+      const response = await axios.get(
-----+        `${BACKEND_URL}/api/user/${user.username}/cr`
-----+      );
-----+      return response.data;
-----+    } catch (error) {
-----+      console.error('Failed to fetch CR:', error);
-----+      return { cr: 0, hero_count: 0 };
-----+    }
-----+  },
-----+
-----   setUser: (user: User | null) => set({ user }),
----- }));
+---@@ -1,622 +0,0 @@
+----diff --git a/backend/server.py b/backend/server.py
+----index 7b0d9be..97ece9d 100644
+------- a/backend/server.py
+----+++ b/backend/server.py
+----@@ -89,6 +89,7 @@ class User(BaseModel):
+----     gems: int = 300  # Premium currency
+----     coins: int = 10000  # Regular currency
+----     gold: int = 5000  # Idle resource
+----+    friendship_points: int = 0  # Friend currency
+----     pity_counter: int = 0  # Counts towards guaranteed SSR at 50
+----     total_pulls: int = 0
+----     login_days: int = 0
 ----diff --git a/model.patch b/model.patch
-----index e4c1506..e69de29 100644
+----index f57a87e..e69de29 100644
 ------- a/model.patch
 ----+++ b/model.patch
-----@@ -1,575 +0,0 @@
------diff --git a/backend/server.py b/backend/server.py
------index 91afb59..5356b13 100644
--------- a/backend/server.py
------+++ b/backend/server.py
------@@ -568,6 +568,170 @@ async def claim_idle_rewards(username: str):
------     
------     return IdleRewards(gold_earned=gold_earned, time_away=int(time_away))
+----@@ -1,605 +0,0 @@
+-----diff --git a/frontend/stores/gameStore.ts b/frontend/stores/gameStore.ts
+-----index 0bacd43..d7f6ad8 100644
+-------- a/frontend/stores/gameStore.ts
+-----+++ b/frontend/stores/gameStore.ts
+-----@@ -214,5 +214,20 @@ export const useGameStore = create<GameState>((set, get) => ({
+-----     }
+-----   },
 ----- 
------+@api_router.get("/user/{username}/cr")
------+async def get_character_rating(username: str):
------+    """Calculate and return user's Character Rating (CR)"""
------+    user = await db.users.find_one({"username": username})
------+    if not user:
------+        raise HTTPException(status_code=404, detail="User not found")
+-----+  fetchCR: async () => {
+-----+    const { user } = get();
+-----+    if (!user) throw new Error('No user found');
 -----+    
------+    # Get all user heroes
------+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
------+    
------+    total_cr = 0
------+    for hero in user_heroes:
------+        # CR calculation: HP + (ATK * 2) + DEF + (rank * 500) + (level * 100)
------+        hero_cr = (
------+            hero["current_hp"] + 
------+            (hero["current_atk"] * 2) + 
------+            hero["current_def"] + 
------+            (hero["rank"] * 500) + 
------+            (hero["level"] * 100)
------+        )
------+        total_cr += hero_cr
------+    
------+    return {"cr": total_cr, "hero_count": len(user_heroes)}
+-----+    try {
+-----+      const response = await axios.get(
+-----+        `${BACKEND_URL}/api/user/${user.username}/cr`
+-----+      );
+-----+      return response.data;
+-----+    } catch (error) {
+-----+      console.error('Failed to fetch CR:', error);
+-----+      return { cr: 0, hero_count: 0 };
+-----+    }
+-----+  },
 -----+
------+@api_router.get("/story/islands")
------+async def get_islands():
------+    """Get all story islands"""
------+    islands = await db.islands.find().sort("order", 1).to_list(100)
------+    return [convert_objectid(island) for island in islands]
------+
------+@api_router.get("/story/chapters")
------+async def get_all_chapters():
------+    """Get all story chapters"""
------+    chapters = await db.chapters.find().sort("chapter_number", 1).to_list(100)
------+    return [convert_objectid(chapter) for chapter in chapters]
------+
------+@api_router.get("/story/progress/{username}")
------+async def get_user_progress(username: str):
------+    """Get user's story progress"""
------+    user = await db.users.find_one({"username": username})
------+    if not user:
------+        raise HTTPException(status_code=404, detail="User not found")
------+    
------+    progress = await db.user_progress.find_one({"user_id": user["id"]})
------+    if not progress:
------+        # Create initial progress
------+        progress = UserProgress(user_id=user["id"])
------+        await db.user_progress.insert_one(progress.dict())
------+        progress = await db.user_progress.find_one({"user_id": user["id"]})
------+    
------+    return convert_objectid(progress)
------+
------+@api_router.post("/story/battle/{username}/{chapter_number}")
------+async def battle_chapter(username: str, chapter_number: int):
------+    """Battle a story chapter - server-side combat simulation"""
------+    user = await db.users.find_one({"username": username})
------+    if not user:
------+        raise HTTPException(status_code=404, detail="User not found")
------+    
------+    # Get user progress
------+    progress = await db.user_progress.find_one({"user_id": user["id"]})
------+    if not progress:
------+        progress = UserProgress(user_id=user["id"])
------+        await db.user_progress.insert_one(progress.dict())
------+    
------+    # Check if chapter is unlocked (previous chapter must be completed)
------+    if chapter_number > 1 and (chapter_number - 1) not in progress.get("completed_chapters", []):
------+        raise HTTPException(status_code=400, detail="Previous chapter must be completed first")
------+    
------+    # Get chapter data
------+    chapter = await db.chapters.find_one({"chapter_number": chapter_number})
------+    if not chapter:
------+        raise HTTPException(status_code=404, detail="Chapter not found")
------+    
------+    # Calculate user's team power (CR)
------+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
------+    
------+    # Get user's active team or use top 6 heroes by power
------+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
------+    if team and team.get("hero_ids"):
------+        team_heroes = [h for h in user_heroes if h["id"] in team["hero_ids"]]
------+    else:
------+        # Use top 6 heroes by power
------+        team_heroes = sorted(
------+            user_heroes, 
------+            key=lambda h: h["current_hp"] + h["current_atk"] * 2 + h["current_def"],
------+            reverse=True
------+        )[:6]
------+    
------+    if not team_heroes:
------+        raise HTTPException(status_code=400, detail="You need at least 1 hero to battle")
------+    
------+    # Calculate team power
------+    user_power = sum(
------+        h["current_hp"] + (h["current_atk"] * 2) + h["current_def"] 
------+        for h in team_heroes
------+    )
------+    
------+    enemy_power = chapter["enemy_power"]
------+    
------+    # Combat simulation with RNG
------+    power_ratio = user_power / enemy_power
------+    
------+    # Base win chance based on power ratio
------+    # At equal power (1.0 ratio): 50% win chance
------+    # At 1.5x power: ~85% win chance
------+    # At 0.7x power: ~15% win chance (F2P struggle point)
------+    base_win_chance = min(0.95, max(0.05, 0.5 + (power_ratio - 1.0) * 0.7))
------+    
------+    # Add some RNG
------+    import random
------+    roll = random.random()
------+    victory = roll < base_win_chance
------+    
------+    # Calculate damage
------+    if victory:
------+        damage_dealt = int(enemy_power * 0.9)
------+        damage_taken = int(user_power * random.uniform(0.2, 0.4))
------+    else:
------+        damage_dealt = int(enemy_power * random.uniform(0.4, 0.7))
------+        damage_taken = int(user_power * random.uniform(0.6, 0.9))
------+    
------+    rewards = {}
------+    if victory:
------+        # Check if first clear
------+        is_first_clear = chapter_number not in progress.get("completed_chapters", [])
------+        
------+        # Give rewards
------+        rewards = chapter["rewards"].copy()
------+        if is_first_clear:
------+            # Add first clear bonus
------+            for key, value in chapter["first_clear_bonus"].items():
------+                rewards[key] = rewards.get(key, 0) + value
------+        
------+        # Update user resources
------+        update_dict = {}
------+        if "gems" in rewards:
------+            update_dict["gems"] = user.get("gems", 0) + rewards["gems"]
------+        if "coins" in rewards:
------+            update_dict["coins"] = user.get("coins", 0) + rewards["coins"]
------+        if "gold" in rewards:
------+            update_dict["gold"] = user.get("gold", 0) + rewards["gold"]
------+        
------+        await db.users.update_one({"username": username}, {"$set": update_dict})
------+        
------+        # Update progress
------+        if is_first_clear:
------+            await db.user_progress.update_one(
------+                {"user_id": user["id"]},
------+                {
------+                    "$addToSet": {"completed_chapters": chapter_number},
------+                    "$set": {"current_chapter": max(progress.get("current_chapter", 1), chapter_number + 1)}
------+                }
------+            )
------+    
------+    return BattleResult(
------+        victory=victory,
------+        rewards=rewards,
------+        user_power=user_power,
------+        enemy_power=enemy_power,
------+        damage_dealt=damage_dealt,
------+        damage_taken=damage_taken
------+    )
------+
------ @api_router.get("/")
------ async def root():
------     return {"message": "Gacha Game API", "version": "1.0"}
+-----   setUser: (user: User | null) => set({ user }),
+----- }));
 -----diff --git a/model.patch b/model.patch
------index 58dcdcd..582a2ba 100644
+-----index e4c1506..e69de29 100644
 -------- a/model.patch
 -----+++ b/model.patch
------@@ -1,395 +0,0 @@
+-----@@ -1,575 +0,0 @@
 ------diff --git a/backend/server.py b/backend/server.py
-------index 1b7777c..4cf8b41 100644
+------index 91afb59..5356b13 100644
 --------- a/backend/server.py
 ------+++ b/backend/server.py
-------@@ -12,6 +12,20 @@ from datetime import datetime, timedelta
------- import random
------- from bson import ObjectId
------- 
-------+def convert_objectid(obj):
-------+    """Convert ObjectId to string in MongoDB documents"""
-------+    if isinstance(obj, dict):
-------+        for key, value in obj.items():
-------+            if isinstance(value, ObjectId):
-------+                obj[key] = str(value)
-------+            elif isinstance(value, dict):
-------+                convert_objectid(value)
-------+            elif isinstance(value, list):
-------+                for item in value:
-------+                    if isinstance(item, dict):
-------+                        convert_objectid(item)
-------+    return obj
-------+
------- ROOT_DIR = Path(__file__).parent
------- load_dotenv(ROOT_DIR / '.env')
------- 
-------@@ -212,7 +226,7 @@ async def get_user(username: str):
-------     user = await db.users.find_one({"username": username})
-------     if not user:
-------         raise HTTPException(status_code=404, detail="User not found")
--------    return user
-------+    return convert_objectid(user)
------- 
------- @api_router.post("/user/{username}/login")
------- async def user_login(username: str):
-------@@ -347,7 +361,7 @@ async def pull_gacha(username: str, request: PullRequest):
------- async def get_all_heroes():
-------     """Get all available heroes in the pool"""
-------     heroes = await db.heroes.find().to_list(1000)
--------    return heroes
-------+    return [convert_objectid(hero) for hero in heroes]
------- 
------- @api_router.get("/user/{username}/heroes")
------- async def get_user_heroes(username: str):
-------@@ -364,8 +378,8 @@ async def get_user_heroes(username: str):
-------         hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
-------         if hero_data:
-------             enriched_heroes.append({
--------                **uh,
--------                "hero_data": hero_data
-------+                **convert_objectid(uh),
-------+                "hero_data": convert_objectid(hero_data)
-------             })
+------@@ -568,6 +568,170 @@ async def claim_idle_rewards(username: str):
 ------     
-------     return enriched_heroes
-------@@ -409,7 +423,7 @@ async def upgrade_hero(username: str, hero_instance_id: str):
-------     )
-------     
-------     updated_hero = await db.user_heroes.find_one({"id": hero_instance_id})
--------    return updated_hero
-------+    return convert_objectid(updated_hero)
+------     return IdleRewards(gold_earned=gold_earned, time_away=int(time_away))
 ------ 
------- @api_router.post("/team/create")
------- async def create_team(username: str, team_name: str):
-------@@ -430,7 +444,7 @@ async def get_user_teams(username: str):
-------         raise HTTPException(status_code=404, detail="User not found")
-------     
-------     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
--------    return teams
-------+    return [convert_objectid(team) for team in teams]
------- 
------- @api_router.put("/team/{team_id}/heroes")
------- async def update_team_heroes(team_id: str, hero_ids: List[str]):
-------@@ -444,7 +458,7 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
-------     )
-------     
-------     updated_team = await db.teams.find_one({"id": team_id})
--------    return updated_team
-------+    return convert_objectid(updated_team)
------- 
------- @api_router.post("/idle/claim")
------- async def claim_idle_rewards(username: str):
-------diff --git a/final_backend_test.py b/final_backend_test.py
-------new file mode 100644
-------index 0000000..f4976ca
---------- /dev/null
-------+++ b/final_backend_test.py
-------@@ -0,0 +1,254 @@
-------+#!/usr/bin/env python3
-------+"""
-------+Final Comprehensive Backend API Test for Gacha Game
-------+Tests all endpoints with a fresh user to ensure full functionality
-------+"""
+------+@api_router.get("/user/{username}/cr")
+------+async def get_character_rating(username: str):
+------+    """Calculate and return user's Character Rating (CR)"""
+------+    user = await db.users.find_one({"username": username})
+------+    if not user:
+------+        raise HTTPException(status_code=404, detail="User not found")
+------+    
+------+    # Get all user heroes
+------+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+------+    
+------+    total_cr = 0
+------+    for hero in user_heroes:
+------+        # CR calculation: HP + (ATK * 2) + DEF + (rank * 500) + (level * 100)
+------+        hero_cr = (
+------+            hero["current_hp"] + 
+------+            (hero["current_atk"] * 2) + 
+------+            hero["current_def"] + 
+------+            (hero["rank"] * 500) + 
+------+            (hero["level"] * 100)
+------+        )
+------+        total_cr += hero_cr
+------+    
+------+    return {"cr": total_cr, "hero_count": len(user_heroes)}
 ------+
-------+import requests
-------+import json
-------+import time
-------+from datetime import datetime
-------+import sys
-------+import random
+------+@api_router.get("/story/islands")
+------+async def get_islands():
+------+    """Get all story islands"""
+------+    islands = await db.islands.find().sort("order", 1).to_list(100)
+------+    return [convert_objectid(island) for island in islands]
 ------+
-------+# Configuration
-------+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
-------+TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
+------+@api_router.get("/story/chapters")
+------+async def get_all_chapters():
+------+    """Get all story chapters"""
+------+    chapters = await db.chapters.find().sort("chapter_number", 1).to_list(100)
+------+    return [convert_objectid(chapter) for chapter in chapters]
 ------+
-------+class ComprehensiveGachaTest:
-------+    def __init__(self):
-------+        self.base_url = BASE_URL
-------+        self.username = TEST_USERNAME
-------+        self.user_data = None
-------+        self.user_heroes = []
-------+        self.teams = []
-------+        self.test_results = {
-------+            "passed": 0,
-------+            "failed": 0,
-------+            "errors": []
-------+        }
+------+@api_router.get("/story/progress/{username}")
+------+async def get_user_progress(username: str):
+------+    """Get user's story progress"""
+------+    user = await db.users.find_one({"username": username})
+------+    if not user:
+------+        raise HTTPException(status_code=404, detail="User not found")
 ------+    
-------+    def log_result(self, test_name, success, message=""):
-------+        """Log test result"""
-------+        status = "✅ PASS" if success else "❌ FAIL"
-------+        print(f"{status}: {test_name}")
-------+        if message:
-------+            print(f"   {message}")
-------+        
-------+        if success:
-------+            self.test_results["passed"] += 1
-------+        else:
-------+            self.test_results["failed"] += 1
-------+            self.test_results["errors"].append(f"{test_name}: {message}")
+------+    progress = await db.user_progress.find_one({"user_id": user["id"]})
+------+    if not progress:
+------+        # Create initial progress
+------+        progress = UserProgress(user_id=user["id"])
+------+        await db.user_progress.insert_one(progress.dict())
+------+        progress = await db.user_progress.find_one({"user_id": user["id"]})
 ------+    
-------+    def make_request(self, method, endpoint, **kwargs):
-------+        """Make HTTP request with error handling"""
-------+        url = f"{self.base_url}{endpoint}"
-------+        try:
-------+            response = requests.request(method, url, timeout=30, **kwargs)
-------+            return response
-------+        except requests.exceptions.RequestException as e:
-------+            print(f"❌ Request failed: {e}")
-------+            return None
-------+    
-------+    def test_complete_flow(self):
-------+        """Test the complete gacha game flow"""
-------+        print(f"\n🚀 Testing Complete Gacha Game Flow with user: {self.username}")
-------+        print("=" * 70)
-------+        
-------+        # 1. User Registration
-------+        print("\n1️⃣ Testing User Registration...")
-------+        response = self.make_request("POST", f"/user/register?username={self.username}")
-------+        if response and response.status_code == 200:
-------+            self.user_data = response.json()
-------+            self.log_result("User Registration", True, 
-------+                          f"User created with {self.user_data['gems']} gems, {self.user_data['coins']} coins")
-------+        else:
-------+            self.log_result("User Registration", False, f"Failed: {response.status_code if response else 'No response'}")
-------+            return False
-------+        
-------+        # 2. Get All Heroes
-------+        print("\n2️⃣ Testing Hero Pool...")
-------+        response = self.make_request("GET", "/heroes")
-------+        if response and response.status_code == 200:
-------+            heroes = response.json()
-------+            self.log_result("Get Heroes Pool", True, f"Retrieved {len(heroes)} heroes")
-------+        else:
-------+            self.log_result("Get Heroes Pool", False, "Failed to get heroes")
-------+            return False
-------+        
-------+        # 3. Daily Login
-------+        print("\n3️⃣ Testing Daily Login...")
-------+        response = self.make_request("POST", f"/user/{self.username}/login")
-------+        if response and response.status_code == 200:
-------+            rewards = response.json()
-------+            self.log_result("Daily Login", True, f"Received {rewards['coins']} coins, {rewards['gold']} gold")
-------+        else:
-------+            self.log_result("Daily Login", False, "Failed")
-------+        
-------+        # 4. Gacha Pulls - Test all types
-------+        print("\n4️⃣ Testing Gacha System...")
-------+        
-------+        # Single pull with gems
-------+        pull_data = {"pull_type": "single", "currency_type": "gems"}
-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-------+        if response and response.status_code == 200:
-------+            result = response.json()
-------+            self.log_result("Single Pull (Gems)", True, 
-------+                          f"Pulled {len(result['heroes'])} hero, pity: {result['new_pity_counter']}")
-------+        else:
-------+            self.log_result("Single Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
-------+        
-------+        # Multi pull with gems
-------+        pull_data = {"pull_type": "multi", "currency_type": "gems"}
-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-------+        if response and response.status_code == 200:
-------+            result = response.json()
-------+            self.log_result("Multi Pull (Gems)", True, 
-------+                          f"Pulled {len(result['heroes'])} heroes, pity: {result['new_pity_counter']}")
-------+        else:
-------+            self.log_result("Multi Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
-------+        
-------+        # Single pull with coins
-------+        pull_data = {"pull_type": "single", "currency_type": "coins"}
-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-------+        if response and response.status_code == 200:
-------+            result = response.json()
-------+            self.log_result("Single Pull (Coins)", True, 
-------+                          f"Pulled {len(result['heroes'])} hero")
-------+        else:
-------+            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
-------+        
-------+        # Multi pull with coins
-------+        pull_data = {"pull_type": "multi", "currency_type": "coins"}
-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-------+        if response and response.status_code == 200:
-------+            result = response.json()
-------+            self.log_result("Multi Pull (Coins)", True, 
-------+                          f"Pulled {len(result['heroes'])} heroes")
-------+        else:
-------+            self.log_result("Multi Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
-------+        
-------+        # 5. Get User Heroes
-------+        print("\n5️⃣ Testing Hero Collection...")
-------+        response = self.make_request("GET", f"/user/{self.username}/heroes")
-------+        if response and response.status_code == 200:
-------+            self.user_heroes = response.json()
-------+            self.log_result("Get User Heroes", True, f"User has {len(self.user_heroes)} heroes")
-------+        else:
-------+            self.log_result("Get User Heroes", False, "Failed")
-------+        
-------+        # 6. Team Management
-------+        print("\n6️⃣ Testing Team Management...")
-------+        
-------+        # Create team
-------+        response = self.make_request("POST", f"/team/create?username={self.username}&team_name=MainTeam")
-------+        if response and response.status_code == 200:
-------+            team = response.json()
-------+            self.log_result("Create Team", True, f"Created team: {team['name']}")
-------+            team_id = team['id']
-------+        else:
-------+            self.log_result("Create Team", False, "Failed")
-------+            return False
-------+        
-------+        # Get teams
-------+        response = self.make_request("GET", f"/team/{self.username}")
-------+        if response and response.status_code == 200:
-------+            self.teams = response.json()
-------+            self.log_result("Get Teams", True, f"User has {len(self.teams)} teams")
-------+        else:
-------+            self.log_result("Get Teams", False, "Failed")
-------+        
-------+        # Update team with heroes (if we have any)
-------+        if self.user_heroes and len(self.user_heroes) > 0:
-------+            hero_ids = [hero['id'] for hero in self.user_heroes[:6]]  # Max 6 heroes
-------+            response = self.make_request("PUT", f"/team/{team_id}/heroes", json=hero_ids)
-------+            if response and response.status_code == 200:
-------+                self.log_result("Update Team Heroes", True, f"Added {len(hero_ids)} heroes to team")
-------+            else:
-------+                self.log_result("Update Team Heroes", False, "Failed")
-------+        
-------+        # 7. Hero Upgrade (if possible)
-------+        print("\n7️⃣ Testing Hero Upgrade...")
-------+        if self.user_heroes:
-------+            # Find a hero with duplicates (unlikely for new account)
-------+            hero_to_upgrade = None
-------+            for hero in self.user_heroes:
-------+                if hero.get("duplicates", 0) >= 2:
-------+                    hero_to_upgrade = hero
-------+                    break
-------+            
-------+            if hero_to_upgrade:
-------+                response = self.make_request("POST", f"/user/{self.username}/heroes/{hero_to_upgrade['id']}/upgrade")
-------+                if response and response.status_code == 200:
-------+                    self.log_result("Hero Upgrade", True, "Hero upgraded successfully")
-------+                else:
-------+                    self.log_result("Hero Upgrade", False, f"Failed: {response.text if response else 'No response'}")
-------+            else:
-------+                self.log_result("Hero Upgrade", True, "No heroes with sufficient duplicates (expected)")
-------+        
-------+        # 8. Idle Rewards
-------+        print("\n8️⃣ Testing Idle Rewards...")
-------+        response = self.make_request("POST", f"/idle/claim?username={self.username}")
-------+        if response and response.status_code == 200:
-------+            rewards = response.json()
-------+            self.log_result("Idle Rewards", True, f"Claimed {rewards['gold_earned']} gold")
-------+        else:
-------+            self.log_result("Idle Rewards", False, "Failed")
-------+        
-------+        # 9. Test insufficient funds
-------+        print("\n9️⃣ Testing Error Handling...")
-------+        # Try to pull when out of gems
-------+        for _ in range(10):  # Exhaust gems
-------+            pull_data = {"pull_type": "multi", "currency_type": "gems"}
-------+            response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-------+            if response and response.status_code == 400:
-------+                self.log_result("Insufficient Funds Error", True, "Correctly rejected pull with insufficient gems")
-------+                break
-------+        else:
-------+            self.log_result("Insufficient Funds Error", False, "Did not properly handle insufficient funds")
-------+        
-------+        # 10. Final user state
-------+        print("\n🔟 Final User State...")
-------+        response = self.make_request("GET", f"/user/{self.username}")
-------+        if response and response.status_code == 200:
-------+            final_user = response.json()
-------+            self.log_result("Final User State", True, 
-------+                          f"Gems: {final_user['gems']}, Coins: {final_user['coins']}, Gold: {final_user['gold']}, Pulls: {final_user['total_pulls']}")
-------+        else:
-------+            self.log_result("Final User State", False, "Failed")
-------+        
-------+        return True
-------+    
-------+    def run_test(self):
-------+        """Run the comprehensive test"""
-------+        success = self.test_complete_flow()
-------+        
-------+        # Print summary
-------+        print("\n" + "=" * 70)
-------+        print("🏁 COMPREHENSIVE TEST SUMMARY")
-------+        print("=" * 70)
-------+        print(f"✅ Passed: {self.test_results['passed']}")
-------+        print(f"❌ Failed: {self.test_results['failed']}")
-------+        
-------+        if self.test_results["errors"]:
-------+            print("\n🔍 FAILED TESTS:")
-------+            for error in self.test_results["errors"]:
-------+                print(f"  • {error}")
-------+        
-------+        success_rate = (self.test_results["passed"] / 
-------+                       (self.test_results["passed"] + self.test_results["failed"])) * 100
-------+        print(f"\n📊 Success Rate: {success_rate:.1f}%")
-------+        
-------+        return self.test_results["failed"] == 0
+------+    return convert_objectid(progress)
 ------+
-------+if __name__ == "__main__":
-------+    tester = ComprehensiveGachaTest()
-------+    success = tester.run_test()
+------+@api_router.post("/story/battle/{username}/{chapter_number}")
+------+async def battle_chapter(username: str, chapter_number: int):
+------+    """Battle a story chapter - server-side combat simulation"""
+------+    user = await db.users.find_one({"username": username})
+------+    if not user:
+------+        raise HTTPException(status_code=404, detail="User not found")
 ------+    
-------+    if success:
-------+        print("\n🎉 All tests passed! Backend is fully functional!")
-------+        sys.exit(0)
+------+    # Get user progress
+------+    progress = await db.user_progress.find_one({"user_id": user["id"]})
+------+    if not progress:
+------+        progress = UserProgress(user_id=user["id"])
+------+        await db.user_progress.insert_one(progress.dict())
+------+    
+------+    # Check if chapter is unlocked (previous chapter must be completed)
+------+    if chapter_number > 1 and (chapter_number - 1) not in progress.get("completed_chapters", []):
+------+        raise HTTPException(status_code=400, detail="Previous chapter must be completed first")
+------+    
+------+    # Get chapter data
+------+    chapter = await db.chapters.find_one({"chapter_number": chapter_number})
+------+    if not chapter:
+------+        raise HTTPException(status_code=404, detail="Chapter not found")
+------+    
+------+    # Calculate user's team power (CR)
+------+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+------+    
+------+    # Get user's active team or use top 6 heroes by power
+------+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
+------+    if team and team.get("hero_ids"):
+------+        team_heroes = [h for h in user_heroes if h["id"] in team["hero_ids"]]
 ------+    else:
-------+        print("\n💥 Some tests failed!")
-------+        sys.exit(1)
-------\ No newline at end of file
-------diff --git a/quick_test.py b/quick_test.py
-------new file mode 100644
-------index 0000000..2dbe9e1
---------- /dev/null
-------+++ b/quick_test.py
-------@@ -0,0 +1,46 @@
-------+#!/usr/bin/env python3
-------+"""
-------+Quick Backend API Status Check
-------+"""
+------+        # Use top 6 heroes by power
+------+        team_heroes = sorted(
+------+            user_heroes, 
+------+            key=lambda h: h["current_hp"] + h["current_atk"] * 2 + h["current_def"],
+------+            reverse=True
+------+        )[:6]
+------+    
+------+    if not team_heroes:
+------+        raise HTTPException(status_code=400, detail="You need at least 1 hero to battle")
+------+    
+------+    # Calculate team power
+------+    user_power = sum(
+------+        h["current_hp"] + (h["current_atk"] * 2) + h["current_def"] 
+------+        for h in team_heroes
+------+    )
+------+    
+------+    enemy_power = chapter["enemy_power"]
+------+    
+------+    # Combat simulation with RNG
+------+    power_ratio = user_power / enemy_power
+------+    
+------+    # Base win chance based on power ratio
+------+    # At equal power (1.0 ratio): 50% win chance
+------+    # At 1.5x power: ~85% win chance
+------+    # At 0.7x power: ~15% win chance (F2P struggle point)
+------+    base_win_chance = min(0.95, max(0.05, 0.5 + (power_ratio - 1.0) * 0.7))
+------+    
+------+    # Add some RNG
+------+    import random
+------+    roll = random.random()
+------+    victory = roll < base_win_chance
+------+    
+------+    # Calculate damage
+------+    if victory:
+------+        damage_dealt = int(enemy_power * 0.9)
+------+        damage_taken = int(user_power * random.uniform(0.2, 0.4))
+------+    else:
+------+        damage_dealt = int(enemy_power * random.uniform(0.4, 0.7))
+------+        damage_taken = int(user_power * random.uniform(0.6, 0.9))
+------+    
+------+    rewards = {}
+------+    if victory:
+------+        # Check if first clear
+------+        is_first_clear = chapter_number not in progress.get("completed_chapters", [])
+------+        
+------+        # Give rewards
+------+        rewards = chapter["rewards"].copy()
+------+        if is_first_clear:
+------+            # Add first clear bonus
+------+            for key, value in chapter["first_clear_bonus"].items():
+------+                rewards[key] = rewards.get(key, 0) + value
+------+        
+------+        # Update user resources
+------+        update_dict = {}
+------+        if "gems" in rewards:
+------+            update_dict["gems"] = user.get("gems", 0) + rewards["gems"]
+------+        if "coins" in rewards:
+------+            update_dict["coins"] = user.get("coins", 0) + rewards["coins"]
+------+        if "gold" in rewards:
+------+            update_dict["gold"] = user.get("gold", 0) + rewards["gold"]
+------+        
+------+        await db.users.update_one({"username": username}, {"$set": update_dict})
+------+        
+------+        # Update progress
+------+        if is_first_clear:
+------+            await db.user_progress.update_one(
+------+                {"user_id": user["id"]},
+------+                {
+------+                    "$addToSet": {"completed_chapters": chapter_number},
+------+                    "$set": {"current_chapter": max(progress.get("current_chapter", 1), chapter_number + 1)}
+------+                }
+------+            )
+------+    
+------+    return BattleResult(
+------+        victory=victory,
+------+        rewards=rewards,
+------+        user_power=user_power,
+------+        enemy_power=enemy_power,
+------+        damage_dealt=damage_dealt,
+------+        damage_taken=damage_taken
+------+    )
 ------+
-------+import requests
-------+import json
-------+
-------+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
-------+TEST_USERNAME = "testplayer"
-------+
-------+def test_endpoint(method, endpoint, **kwargs):
-------+    """Test a single endpoint"""
-------+    url = f"{BASE_URL}{endpoint}"
-------+    try:
-------+        response = requests.request(method, url, timeout=10, **kwargs)
-------+        return response.status_code, response.text[:200]
-------+    except Exception as e:
-------+        return None, str(e)
-------+
-------+print("🔍 Quick Backend API Status Check")
-------+print("=" * 50)
-------+
-------+# Test basic endpoints
-------+endpoints = [
-------+    ("GET", "/", {}),
-------+    ("POST", f"/user/register?username=testuser2", {}),
-------+    ("GET", f"/user/{TEST_USERNAME}", {}),
-------+    ("POST", f"/user/{TEST_USERNAME}/login", {}),
-------+    ("GET", "/heroes", {}),
-------+    ("GET", f"/user/{TEST_USERNAME}/heroes", {}),
-------+    ("POST", f"/gacha/pull?username={TEST_USERNAME}", {"json": {"pull_type": "single", "currency_type": "gems"}}),
-------+    ("POST", f"/team/create?username={TEST_USERNAME}&team_name=TestTeam2", {}),
-------+    ("GET", f"/team/{TEST_USERNAME}", {}),
-------+    ("POST", f"/idle/claim?username={TEST_USERNAME}", {})
-------+]
-------+
-------+for method, endpoint, kwargs in endpoints:
-------+    status, response = test_endpoint(method, endpoint, **kwargs)
-------+    status_icon = "✅" if status == 200 else "❌" if status else "💥"
-------+    print(f"{status_icon} {method} {endpoint}: {status} - {response}")
-------+
-------+print("\n🔍 Analysis:")
-------+print("- 520 errors indicate ObjectId serialization issues in backend")
-------+print("- Some endpoints work (registration, login, idle) - these don't return MongoDB docs")
-------+print("- Endpoints that return MongoDB docs fail (get user, heroes, teams)")
-------\ No newline at end of file
+------ @api_router.get("/")
+------ async def root():
+------     return {"message": "Gacha Game API", "version": "1.0"}
+------diff --git a/model.patch b/model.patch
+------index 58dcdcd..582a2ba 100644
+--------- a/model.patch
+------+++ b/model.patch
+------@@ -1,395 +0,0 @@
+-------diff --git a/backend/server.py b/backend/server.py
+-------index 1b7777c..4cf8b41 100644
+---------- a/backend/server.py
+-------+++ b/backend/server.py
+-------@@ -12,6 +12,20 @@ from datetime import datetime, timedelta
+------- import random
+------- from bson import ObjectId
+------- 
+-------+def convert_objectid(obj):
+-------+    """Convert ObjectId to string in MongoDB documents"""
+-------+    if isinstance(obj, dict):
+-------+        for key, value in obj.items():
+-------+            if isinstance(value, ObjectId):
+-------+                obj[key] = str(value)
+-------+            elif isinstance(value, dict):
+-------+                convert_objectid(value)
+-------+            elif isinstance(value, list):
+-------+                for item in value:
+-------+                    if isinstance(item, dict):
+-------+                        convert_objectid(item)
+-------+    return obj
+-------+
+------- ROOT_DIR = Path(__file__).parent
+------- load_dotenv(ROOT_DIR / '.env')
+------- 
+-------@@ -212,7 +226,7 @@ async def get_user(username: str):
+-------     user = await db.users.find_one({"username": username})
+-------     if not user:
+-------         raise HTTPException(status_code=404, detail="User not found")
+--------    return user
+-------+    return convert_objectid(user)
+------- 
+------- @api_router.post("/user/{username}/login")
+------- async def user_login(username: str):
+-------@@ -347,7 +361,7 @@ async def pull_gacha(username: str, request: PullRequest):
+------- async def get_all_heroes():
+-------     """Get all available heroes in the pool"""
+-------     heroes = await db.heroes.find().to_list(1000)
+--------    return heroes
+-------+    return [convert_objectid(hero) for hero in heroes]
+------- 
+------- @api_router.get("/user/{username}/heroes")
+------- async def get_user_heroes(username: str):
+-------@@ -364,8 +378,8 @@ async def get_user_heroes(username: str):
+-------         hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+-------         if hero_data:
+-------             enriched_heroes.append({
+--------                **uh,
+--------                "hero_data": hero_data
+-------+                **convert_objectid(uh),
+-------+                "hero_data": convert_objectid(hero_data)
+-------             })
+-------     
+-------     return enriched_heroes
+-------@@ -409,7 +423,7 @@ async def upgrade_hero(username: str, hero_instance_id: str):
+-------     )
+-------     
+-------     updated_hero = await db.user_heroes.find_one({"id": hero_instance_id})
+--------    return updated_hero
+-------+    return convert_objectid(updated_hero)
+------- 
+------- @api_router.post("/team/create")
+------- async def create_team(username: str, team_name: str):
+-------@@ -430,7 +444,7 @@ async def get_user_teams(username: str):
+-------         raise HTTPException(status_code=404, detail="User not found")
+-------     
+-------     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
+--------    return teams
+-------+    return [convert_objectid(team) for team in teams]
+------- 
+------- @api_router.put("/team/{team_id}/heroes")
+------- async def update_team_heroes(team_id: str, hero_ids: List[str]):
+-------@@ -444,7 +458,7 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
+-------     )
+-------     
+-------     updated_team = await db.teams.find_one({"id": team_id})
+--------    return updated_team
+-------+    return convert_objectid(updated_team)
+------- 
+------- @api_router.post("/idle/claim")
+------- async def claim_idle_rewards(username: str):
+-------diff --git a/final_backend_test.py b/final_backend_test.py
+-------new file mode 100644
+-------index 0000000..f4976ca
+---------- /dev/null
+-------+++ b/final_backend_test.py
+-------@@ -0,0 +1,254 @@
+-------+#!/usr/bin/env python3
+-------+"""
+-------+Final Comprehensive Backend API Test for Gacha Game
+-------+Tests all endpoints with a fresh user to ensure full functionality
+-------+"""
+-------+
+-------+import requests
+-------+import json
+-------+import time
+-------+from datetime import datetime
+-------+import sys
+-------+import random
+-------+
+-------+# Configuration
+-------+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
+-------+TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
+-------+
+-------+class ComprehensiveGachaTest:
+-------+    def __init__(self):
+-------+        self.base_url = BASE_URL
+-------+        self.username = TEST_USERNAME
+-------+        self.user_data = None
+-------+        self.user_heroes = []
+-------+        self.teams = []
+-------+        self.test_results = {
+-------+            "passed": 0,
+-------+            "failed": 0,
+-------+            "errors": []
+-------+        }
+-------+    
+-------+    def log_result(self, test_name, success, message=""):
+-------+        """Log test result"""
+-------+        status = "✅ PASS" if success else "❌ FAIL"
+-------+        print(f"{status}: {test_name}")
+-------+        if message:
+-------+            print(f"   {message}")
+-------+        
+-------+        if success:
+-------+            self.test_results["passed"] += 1
+-------+        else:
+-------+            self.test_results["failed"] += 1
+-------+            self.test_results["errors"].append(f"{test_name}: {message}")
+-------+    
+-------+    def make_request(self, method, endpoint, **kwargs):
+-------+        """Make HTTP request with error handling"""
+-------+        url = f"{self.base_url}{endpoint}"
+-------+        try:
+-------+            response = requests.request(method, url, timeout=30, **kwargs)
+-------+            return response
+-------+        except requests.exceptions.RequestException as e:
+-------+            print(f"❌ Request failed: {e}")
+-------+            return None
+-------+    
+-------+    def test_complete_flow(self):
+-------+        """Test the complete gacha game flow"""
+-------+        print(f"\n🚀 Testing Complete Gacha Game Flow with user: {self.username}")
+-------+        print("=" * 70)
+-------+        
+-------+        # 1. User Registration
+-------+        print("\n1️⃣ Testing User Registration...")
+-------+        response = self.make_request("POST", f"/user/register?username={self.username}")
+-------+        if response and response.status_code == 200:
+-------+            self.user_data = response.json()
+-------+            self.log_result("User Registration", True, 
+-------+                          f"User created with {self.user_data['gems']} gems, {self.user_data['coins']} coins")
+-------+        else:
+-------+            self.log_result("User Registration", False, f"Failed: {response.status_code if response else 'No response'}")
+-------+            return False
+-------+        
+-------+        # 2. Get All Heroes
+-------+        print("\n2️⃣ Testing Hero Pool...")
+-------+        response = self.make_request("GET", "/heroes")
+-------+        if response and response.status_code == 200:
+-------+            heroes = response.json()
+-------+            self.log_result("Get Heroes Pool", True, f"Retrieved {len(heroes)} heroes")
+-------+        else:
+-------+            self.log_result("Get Heroes Pool", False, "Failed to get heroes")
+-------+            return False
+-------+        
+-------+        # 3. Daily Login
+-------+        print("\n3️⃣ Testing Daily Login...")
+-------+        response = self.make_request("POST", f"/user/{self.username}/login")
+-------+        if response and response.status_code == 200:
+-------+            rewards = response.json()
+-------+            self.log_result("Daily Login", True, f"Received {rewards['coins']} coins, {rewards['gold']} gold")
+-------+        else:
+-------+            self.log_result("Daily Login", False, "Failed")
+-------+        
+-------+        # 4. Gacha Pulls - Test all types
+-------+        print("\n4️⃣ Testing Gacha System...")
+-------+        
+-------+        # Single pull with gems
+-------+        pull_data = {"pull_type": "single", "currency_type": "gems"}
+-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+-------+        if response and response.status_code == 200:
+-------+            result = response.json()
+-------+            self.log_result("Single Pull (Gems)", True, 
+-------+                          f"Pulled {len(result['heroes'])} hero, pity: {result['new_pity_counter']}")
+-------+        else:
+-------+            self.log_result("Single Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
+-------+        
+-------+        # Multi pull with gems
+-------+        pull_data = {"pull_type": "multi", "currency_type": "gems"}
+-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+-------+        if response and response.status_code == 200:
+-------+            result = response.json()
+-------+            self.log_result("Multi Pull (Gems)", True, 
+-------+                          f"Pulled {len(result['heroes'])} heroes, pity: {result['new_pity_counter']}")
+-------+        else:
+-------+            self.log_result("Multi Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
+-------+        
+-------+        # Single pull with coins
+-------+        pull_data = {"pull_type": "single", "currency_type": "coins"}
+-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+-------+        if response and response.status_code == 200:
+-------+            result = response.json()
+-------+            self.log_result("Single Pull (Coins)", True, 
+-------+                          f"Pulled {len(result['heroes'])} hero")
+-------+        else:
+-------+            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
+-------+        
+-------+        # Multi pull with coins
+-------+        pull_data = {"pull_type": "multi", "currency_type": "coins"}
+-------+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+-------+        if response and response.status_code == 200:
+-------+            result = response.json()
+-------+            self.log_result("Multi Pull (Coins)", True, 
+-------+                          f"Pulled {len(result['heroes'])} heroes")
+-------+        else:
+-------+            self.log_result("Multi Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
+-------+        
+-------+        # 5. Get User Heroes
+-------+        print("\n5️⃣ Testing Hero Collection...")
+-------+        response = self.make_request("GET", f"/user/{self.username}/heroes")
+-------+        if response and response.status_code == 200:
+-------+            self.user_heroes = response.json()
+-------+            self.log_result("Get User Heroes", True, f"User has {len(self.user_heroes)} heroes")
+-------+        else:
+-------+            self.log_result("Get User Heroes", False, "Failed")
+-------+        
+-------+        # 6. Team Management
+-------+        print("\n6️⃣ Testing Team Management...")
+-------+        
+-------+        # Create team
+-------+        response = self.make_request("POST", f"/team/create?username={self.username}&team_name=MainTeam")
+-------+        if response and response.status_code == 200:
+-------+            team = response.json()
+-------+            self.log_result("Create Team", True, f"Created team: {team['name']}")
+-------+            team_id = team['id']
+-------+        else:
+-------+            self.log_result("Create Team", False, "Failed")
+-------+            return False
+-------+        
+-------+        # Get teams
+-------+        response = self.make_request("GET", f"/team/{self.username}")
+-------+        if response and response.status_code == 200:
+-------+            self.teams = response.json()
+-------+            self.log_result("Get Teams", True, f"User has {len(self.teams)} teams")
+-------+        else:
+-------+            self.log_result("Get Teams", False, "Failed")
+-------+        
+-------+        # Update team with heroes (if we have any)
+-------+        if self.user_heroes and len(self.user_heroes) > 0:
+-------+            hero_ids = [hero['id'] for hero in self.user_heroes[:6]]  # Max 6 heroes
+-------+            response = self.make_request("PUT", f"/team/{team_id}/heroes", json=hero_ids)
+-------+            if response and response.status_code == 200:
+-------+                self.log_result("Update Team Heroes", True, f"Added {len(hero_ids)} heroes to team")
+-------+            else:
+-------+                self.log_result("Update Team Heroes", False, "Failed")
+-------+        
+-------+        # 7. Hero Upgrade (if possible)
+-------+        print("\n7️⃣ Testing Hero Upgrade...")
+-------+        if self.user_heroes:
+-------+            # Find a hero with duplicates (unlikely for new account)
+-------+            hero_to_upgrade = None
+-------+            for hero in self.user_heroes:
+-------+                if hero.get("duplicates", 0) >= 2:
+-------+                    hero_to_upgrade = hero
+-------+                    break
+-------+            
+-------+            if hero_to_upgrade:
+-------+                response = self.make_request("POST", f"/user/{self.username}/heroes/{hero_to_upgrade['id']}/upgrade")
+-------+                if response and response.status_code == 200:
+-------+                    self.log_result("Hero Upgrade", True, "Hero upgraded successfully")
+-------+                else:
+-------+                    self.log_result("Hero Upgrade", False, f"Failed: {response.text if response else 'No response'}")
+-------+            else:
+-------+                self.log_result("Hero Upgrade", True, "No heroes with sufficient duplicates (expected)")
+-------+        
+-------+        # 8. Idle Rewards
+-------+        print("\n8️⃣ Testing Idle Rewards...")
+-------+        response = self.make_request("POST", f"/idle/claim?username={self.username}")
+-------+        if response and response.status_code == 200:
+-------+            rewards = response.json()
+-------+            self.log_result("Idle Rewards", True, f"Claimed {rewards['gold_earned']} gold")
+-------+        else:
+-------+            self.log_result("Idle Rewards", False, "Failed")
+-------+        
+-------+        # 9. Test insufficient funds
+-------+        print("\n9️⃣ Testing Error Handling...")
+-------+        # Try to pull when out of gems
+-------+        for _ in range(10):  # Exhaust gems
+-------+            pull_data = {"pull_type": "multi", "currency_type": "gems"}
+-------+            response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+-------+            if response and response.status_code == 400:
+-------+                self.log_result("Insufficient Funds Error", True, "Correctly rejected pull with insufficient gems")
+-------+                break
+-------+        else:
+-------+            self.log_result("Insufficient Funds Error", False, "Did not properly handle insufficient funds")
+-------+        
+-------+        # 10. Final user state
+-------+        print("\n🔟 Final User State...")
+-------+        response = self.make_request("GET", f"/user/{self.username}")
+-------+        if response and response.status_code == 200:
+-------+            final_user = response.json()
+-------+            self.log_result("Final User State", True, 
+-------+                          f"Gems: {final_user['gems']}, Coins: {final_user['coins']}, Gold: {final_user['gold']}, Pulls: {final_user['total_pulls']}")
+-------+        else:
+-------+            self.log_result("Final User State", False, "Failed")
+-------+        
+-------+        return True
+-------+    
+-------+    def run_test(self):
+-------+        """Run the comprehensive test"""
+-------+        success = self.test_complete_flow()
+-------+        
+-------+        # Print summary
+-------+        print("\n" + "=" * 70)
+-------+        print("🏁 COMPREHENSIVE TEST SUMMARY")
+-------+        print("=" * 70)
+-------+        print(f"✅ Passed: {self.test_results['passed']}")
+-------+        print(f"❌ Failed: {self.test_results['failed']}")
+-------+        
+-------+        if self.test_results["errors"]:
+-------+            print("\n🔍 FAILED TESTS:")
+-------+            for error in self.test_results["errors"]:
+-------+                print(f"  • {error}")
+-------+        
+-------+        success_rate = (self.test_results["passed"] / 
+-------+                       (self.test_results["passed"] + self.test_results["failed"])) * 100
+-------+        print(f"\n📊 Success Rate: {success_rate:.1f}%")
+-------+        
+-------+        return self.test_results["failed"] == 0
+-------+
+-------+if __name__ == "__main__":
+-------+    tester = ComprehensiveGachaTest()
+-------+    success = tester.run_test()
+-------+    
+-------+    if success:
+-------+        print("\n🎉 All tests passed! Backend is fully functional!")
+-------+        sys.exit(0)
+-------+    else:
+-------+        print("\n💥 Some tests failed!")
+-------+        sys.exit(1)
+-------\ No newline at end of file
+-------diff --git a/quick_test.py b/quick_test.py
+-------new file mode 100644
+-------index 0000000..2dbe9e1
+---------- /dev/null
+-------+++ b/quick_test.py
+-------@@ -0,0 +1,46 @@
+-------+#!/usr/bin/env python3
+-------+"""
+-------+Quick Backend API Status Check
+-------+"""
+-------+
+-------+import requests
+-------+import json
+-------+
+-------+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
+-------+TEST_USERNAME = "testplayer"
+-------+
+-------+def test_endpoint(method, endpoint, **kwargs):
+-------+    """Test a single endpoint"""
+-------+    url = f"{BASE_URL}{endpoint}"
+-------+    try:
+-------+        response = requests.request(method, url, timeout=10, **kwargs)
+-------+        return response.status_code, response.text[:200]
+-------+    except Exception as e:
+-------+        return None, str(e)
+-------+
+-------+print("🔍 Quick Backend API Status Check")
+-------+print("=" * 50)
+-------+
+-------+# Test basic endpoints
+-------+endpoints = [
+-------+    ("GET", "/", {}),
+-------+    ("POST", f"/user/register?username=testuser2", {}),
+-------+    ("GET", f"/user/{TEST_USERNAME}", {}),
+-------+    ("POST", f"/user/{TEST_USERNAME}/login", {}),
+-------+    ("GET", "/heroes", {}),
+-------+    ("GET", f"/user/{TEST_USERNAME}/heroes", {}),
+-------+    ("POST", f"/gacha/pull?username={TEST_USERNAME}", {"json": {"pull_type": "single", "currency_type": "gems"}}),
+-------+    ("POST", f"/team/create?username={TEST_USERNAME}&team_name=TestTeam2", {}),
+-------+    ("GET", f"/team/{TEST_USERNAME}", {}),
+-------+    ("POST", f"/idle/claim?username={TEST_USERNAME}", {})
+-------+]
+-------+
+-------+for method, endpoint, kwargs in endpoints:
+-------+    status, response = test_endpoint(method, endpoint, **kwargs)
+-------+    status_icon = "✅" if status == 200 else "❌" if status else "💥"
+-------+    print(f"{status_icon} {method} {endpoint}: {status} - {response}")
+-------+
+-------+print("\n🔍 Analysis:")
+-------+print("- 520 errors indicate ObjectId serialization issues in backend")
+-------+print("- Some endpoints work (registration, login, idle) - these don't return MongoDB docs")
+-------+print("- Endpoints that return MongoDB docs fail (get user, heroes, teams)")
+-------\ No newline at end of file

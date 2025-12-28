@@ -616,8 +616,9 @@ async def get_user_progress(username: str):
         # Create initial progress
         progress = UserProgress(user_id=user["id"])
         await db.user_progress.insert_one(progress.dict())
+        progress = await db.user_progress.find_one({"user_id": user["id"]})
     
-    return progress
+    return convert_objectid(progress)
 
 @api_router.post("/story/battle/{username}/{chapter_number}")
 async def battle_chapter(username: str, chapter_number: int):

@@ -596,13 +596,13 @@ async def get_character_rating(username: str):
 async def get_islands():
     """Get all story islands"""
     islands = await db.islands.find().sort("order", 1).to_list(100)
-    return islands
+    return [convert_objectid(island) for island in islands]
 
 @api_router.get("/story/chapters")
 async def get_all_chapters():
     """Get all story chapters"""
     chapters = await db.chapters.find().sort("chapter_number", 1).to_list(100)
-    return chapters
+    return [convert_objectid(chapter) for chapter in chapters]
 
 @api_router.get("/story/progress/{username}")
 async def get_user_progress(username: str):

@@ -458,7 +458,7 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
     )
     
     updated_team = await db.teams.find_one({"id": team_id})
-    return updated_team
+    return convert_objectid(updated_team)
 
 @api_router.post("/idle/claim")
 async def claim_idle_rewards(username: str):

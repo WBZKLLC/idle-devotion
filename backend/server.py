@@ -129,7 +129,7 @@ class GachaResult(BaseModel):
 
 class PullRequest(BaseModel):
     pull_type: str  # "single" or "multi"
-    currency_type: str  # "gems" or "coins"
+    currency_type: str  # "crystals" or "coins"
 
 class IdleRewards(BaseModel):
     gold_earned: int

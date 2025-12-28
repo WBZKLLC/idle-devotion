@@ -353,24 +353,24 @@ VIP_PACKAGES = {
     },
     # VIP 12-15: Endgame whale packages
     12: {
-        "basic": {"gem_cost": 2500, "rewards": {"coins": 400000, "gold": 200000}},
-        "premium": {"gem_cost": 6250, "rewards": {"coins": 950000, "gold": 475000}},
-        "elite": {"gem_cost": 12500, "rewards": {"coins": 2000000, "gold": 1000000, "gems": 2000}}
+        "basic": {"crystal_cost": 2500, "rewards": {"coins": 400000, "gold": 200000}},
+        "premium": {"crystal_cost": 6250, "rewards": {"coins": 950000, "gold": 475000}},
+        "elite": {"crystal_cost": 12500, "rewards": {"coins": 2000000, "gold": 1000000, "crystals": 2000}}
     },
     13: {
-        "basic": {"gem_cost": 3000, "rewards": {"coins": 550000, "gold": 275000}},
-        "premium": {"gem_cost": 7500, "rewards": {"coins": 1250000, "gold": 625000}},
-        "elite": {"gem_cost": 15000, "rewards": {"coins": 2600000, "gold": 1300000, "gems": 2500}}
+        "basic": {"crystal_cost": 3000, "rewards": {"coins": 550000, "gold": 275000}},
+        "premium": {"crystal_cost": 7500, "rewards": {"coins": 1250000, "gold": 625000}},
+        "elite": {"crystal_cost": 15000, "rewards": {"coins": 2600000, "gold": 1300000, "crystals": 2500}}
     },
     14: {
-        "basic": {"gem_cost": 3500, "rewards": {"coins": 750000, "gold": 375000}},
-        "premium": {"gem_cost": 8750, "rewards": {"coins": 1600000, "gold": 800000}},
-        "elite": {"gem_cost": 17500, "rewards": {"coins": 3300000, "gold": 1650000, "gems": 3000}}
+        "basic": {"crystal_cost": 3500, "rewards": {"coins": 750000, "gold": 375000}},
+        "premium": {"crystal_cost": 8750, "rewards": {"coins": 1600000, "gold": 800000}},
+        "elite": {"crystal_cost": 17500, "rewards": {"coins": 3300000, "gold": 1650000, "crystals": 3000}}
     },
     15: {
-        "basic": {"gem_cost": 4000, "rewards": {"coins": 1000000, "gold": 500000}},
-        "premium": {"gem_cost": 10000, "rewards": {"coins": 2100000, "gold": 1050000}},
-        "elite": {"gem_cost": 20000, "rewards": {"coins": 4200000, "gold": 2100000, "gems": 3500}}
+        "basic": {"crystal_cost": 4000, "rewards": {"coins": 1000000, "gold": 500000}},
+        "premium": {"crystal_cost": 10000, "rewards": {"coins": 2100000, "gold": 1050000}},
+        "elite": {"crystal_cost": 20000, "rewards": {"coins": 4200000, "gold": 2100000, "crystals": 3500}}
     }
 }
 

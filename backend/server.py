@@ -156,7 +156,7 @@ class Chapter(BaseModel):
     name: str
     required_power: int  # Minimum CR to have a chance
     enemy_power: int  # Enemy team power
-    rewards: Dict[str, int]  # {"gems": 50, "coins": 1000, "gold": 500}
+    rewards: Dict[str, int]  # {"crystals": 50, "coins": 1000, "gold": 500}
     first_clear_bonus: Dict[str, int]  # Extra rewards on first clear
 
 class UserProgress(BaseModel):

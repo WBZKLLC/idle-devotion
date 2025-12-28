@@ -670,7 +670,7 @@ async def pull_gacha(username: str, request: PullRequest):
     return GachaResult(
         heroes=pulled_heroes,
         new_pity_counter=user.pity_counter,
-        gems_spent=gems_spent,
+        crystals_spent=crystals_spent,
         coins_spent=coins_spent
     )
 

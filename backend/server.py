@@ -220,9 +220,56 @@ async def init_heroes():
         if not existing:
             await db.heroes.insert_one(hero.dict())
 
+async def init_islands_and_chapters():
+    """Initialize story mode islands and chapters"""
+    islands_data = [
+        {"name": "Celestial Shores", "order": 1, "chapters": [1, 2, 3, 4, 5], "unlock_chapter": 0},
+        {"name": "Infernal Wastelands", "order": 2, "chapters": [6, 7, 8, 9, 10], "unlock_chapter": 5},
+        {"name": "Mystic Peaks", "order": 3, "chapters": [11, 12, 13, 14, 15], "unlock_chapter": 10},
+        {"name": "Void Dimension", "order": 4, "chapters": [16, 17, 18, 19, 20], "unlock_chapter": 15},
+        {"name": "Divine Realm", "order": 5, "chapters": [21, 22, 23, 24, 25], "unlock_chapter": 20},
+    ]
+    
+    for island_data in islands_data:
+        existing = await db.islands.find_one({"name": island_data["name"]})
+        if not existing:
+            island = Island(**island_data)
+            await db.islands.insert_one(island.dict())
+    
+    # Chapter configuration with progressive difficulty
+    chapters_data = []
+    base_power = 1000
+    for i in range(1, 26):
+        island_id = ""
+        for island_data in islands_data:
+            if i in island_data["chapters"]:
+                island_result = await db.islands.find_one({"name": island_data["name"]})
+                island_id = island_result["id"] if island_result else ""
+                break
+        
+        # Progressive difficulty scaling (F2P becomes harder)
+        difficulty_multiplier = 1.0 + (i - 1) * 0.15  # 15% increase per chapter
+        required_power = int(base_power * difficulty_multiplier * 0.7)  # 70% of enemy power
+        enemy_power = int(base_power * difficulty_multiplier)
+        
+        chapter = Chapter(
+            chapter_number=i,
+            island_id=island_id,
+            name=f"Chapter {i}: Trial of Valor",
+            required_power=required_power,
+            enemy_power=enemy_power,
+            rewards={"coins": 500 * i, "gold": 250 * i, "gems": 10 * (i // 5)},
+            first_clear_bonus={"gems": 50, "coins": 2000}
+        )
+        
+        existing = await db.chapters.find_one({"chapter_number": i})
+        if not existing:
+            await db.chapters.insert_one(chapter.dict())
+
 @app.on_event("startup")
 async def startup_event():
     await init_heroes()
+    await init_islands_and_chapters()
 
 def get_random_hero(pity_counter: int) -> Hero:
     """Select a random hero based on gacha rates with pity system"""

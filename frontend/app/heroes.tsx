@@ -31,7 +31,7 @@ const ELEMENT_COLORS: { [key: string]: string } = {
 };
 
 export default function HeroesScreen() {
-  const { user, userHeroes, fetchUserHeroes, upgradeHero, isLoading } = useGameStore();
+  const { user, userHeroes, fetchUserHeroes, upgradeHero, updateProfilePicture, isLoading } = useGameStore();
   const [selectedHero, setSelectedHero] = useState<any>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [filterRarity, setFilterRarity] = useState<string | null>(null);

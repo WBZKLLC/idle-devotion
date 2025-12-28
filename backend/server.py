@@ -124,6 +124,38 @@ class LoginReward(BaseModel):
     free_summons: int = 0
     day_count: int
 
+class Island(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    order: int  # Island sequence
+    chapters: List[int]  # Chapter numbers on this island
+    unlock_chapter: int = 0  # Which chapter unlocks this island
+
+class Chapter(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    chapter_number: int
+    island_id: str
+    name: str
+    required_power: int  # Minimum CR to have a chance
+    enemy_power: int  # Enemy team power
+    rewards: Dict[str, int]  # {"gems": 50, "coins": 1000, "gold": 500}
+    first_clear_bonus: Dict[str, int]  # Extra rewards on first clear
+
+class UserProgress(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    completed_chapters: List[int] = []
+    current_chapter: int = 1
+    total_stars: int = 0  # For future star rating system
+
+class BattleResult(BaseModel):
+    victory: bool
+    rewards: Dict[str, int]
+    user_power: int
+    enemy_power: int
+    damage_dealt: int
+    damage_taken: int
+
 # Gacha rates configuration
 GACHA_RATES = {
     "SR": 60.0,   # 60%

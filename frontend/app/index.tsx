@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import Sidebar from '../components/Sidebar';
 
 export default function HomeScreen() {
   const { user, initUser, login, claimIdleRewards, isLoading, fetchCR } = useGameStore();
@@ -22,6 +23,7 @@ export default function HomeScreen() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [idleRewards, setIdleRewards] = useState<any>(null);
   const [cr, setCR] = useState(0);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   useEffect(() => {
     checkExistingUser();

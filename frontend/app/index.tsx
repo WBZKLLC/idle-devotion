@@ -153,64 +153,37 @@ export default function HomeScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        <ScrollView contentContainerStyle={styles.content}>
-          {/* Header with CR */}
-          <LinearGradient
-            colors={['#FF6347', '#FF1493', '#8B008B']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.headerCard}
-          >
-            <View style={styles.headerTop}>
-              <View>
-                <Text style={styles.welcomeText}>Welcome, {user.username}!</Text>
-                <View style={styles.dayBadge}>
-                  <Ionicons name="calendar" size={16} color="#FFD700" />
-                  <Text style={styles.dayText}>Day {user.login_days}</Text>
-                </View>
-              </View>
-              <View style={styles.crBadge}>
-                <Text style={styles.crLabel}>CR</Text>
-                <Text style={styles.crValue}>{cr.toLocaleString()}</Text>
-              </View>
+        {/* Top Header with Welcome and Resources */}
+        <View style={styles.topHeader}>
+          <View style={styles.welcomeSection}>
+            <Text style={styles.compactWelcomeText}>Welcome, {user.username}!</Text>
+            <View style={styles.dayBadgeCompact}>
+              <Ionicons name="calendar" size={12} color="#FFD700" />
+              <Text style={styles.dayTextCompact}>Day {user.login_days}</Text>
             </View>
-          </LinearGradient>
-
-          {/* Currency Display */}
-          <View style={styles.currencyContainer}>
-            <LinearGradient
-              colors={['#FF1493', '#FF69B4']}
-              style={styles.currencyCard}
-            >
-              <Ionicons name="diamond" size={32} color="#FFF" />
-              <View style={styles.currencyInfo}>
-                <Text style={styles.currencyLabel}>Gems</Text>
-                <Text style={styles.currencyValue}>{user.gems}</Text>
-              </View>
-            </LinearGradient>
-
-            <LinearGradient
-              colors={['#FFD700', '#FFA500']}
-              style={styles.currencyCard}
-            >
-              <Ionicons name="cash" size={32} color="#FFF" />
-              <View style={styles.currencyInfo}>
-                <Text style={styles.currencyLabel}>Coins</Text>
-                <Text style={styles.currencyValue}>{user.coins}</Text>
-              </View>
-            </LinearGradient>
-
-            <LinearGradient
-              colors={['#32CD32', '#00CED1']}
-              style={styles.currencyCard}
-            >
-              <Ionicons name="star" size={32} color="#FFF" />
-              <View style={styles.currencyInfo}>
-                <Text style={styles.currencyLabel}>Gold</Text>
-                <Text style={styles.currencyValue}>{user.gold}</Text>
-              </View>
-            </LinearGradient>
           </View>
+          
+          <View style={styles.resourcesSection}>
+            <View style={styles.compactResource}>
+              <Ionicons name="diamond" size={16} color="#FF1493" />
+              <Text style={styles.compactResourceValue}>{user.gems}</Text>
+            </View>
+            <View style={styles.compactResource}>
+              <Ionicons name="cash" size={16} color="#FFD700" />
+              <Text style={styles.compactResourceValue}>{user.coins}</Text>
+            </View>
+            <View style={styles.compactResource}>
+              <Ionicons name="star" size={16} color="#32CD32" />
+              <Text style={styles.compactResourceValue}>{user.gold}</Text>
+            </View>
+            <View style={styles.compactCR}>
+              <Text style={styles.compactCRLabel}>CR</Text>
+              <Text style={styles.compactCRValue}>{cr.toLocaleString()}</Text>
+            </View>
+          </View>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.content}>
 
           {/* Idle Rewards */}
           {idleRewards && idleRewards.gold_earned > 0 && (

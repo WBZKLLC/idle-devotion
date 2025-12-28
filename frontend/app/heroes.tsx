@@ -320,6 +320,26 @@ export default function HeroesScreen() {
                   </TouchableOpacity>
                 )}
 
+                <TouchableOpacity
+                  style={[
+                    styles.profilePictureButton,
+                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonActive
+                  ]}
+                  onPress={handleSetProfilePicture}
+                >
+                  <Ionicons 
+                    name={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "checkmark-circle" : "person-circle"} 
+                    size={20} 
+                    color={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "#4CAF50" : "#FFF"} 
+                  />
+                  <Text style={[
+                    styles.profilePictureButtonText,
+                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonTextActive
+                  ]}>
+                    {user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "Current Profile Picture" : "Set as Profile Picture"}
+                  </Text>
+                </TouchableOpacity>
+
                 {selectedHero.rank === 10 && (
                   <View style={styles.maxRankBadge}>
                     <Ionicons name="trophy" size={24} color="#FFD700" />

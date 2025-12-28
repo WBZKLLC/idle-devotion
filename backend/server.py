@@ -660,32 +660,171 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
 
 @api_router.post("/idle/claim")
 async def claim_idle_rewards(username: str):
-    """Claim idle rewards based on time away"""
+    """Claim idle rewards - manual collection with VIP-based caps"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Calculate VIP level
+    vip_level = calculate_vip_level(user.get("total_spent", 0))
+    idle_cap_hours = get_idle_cap_hours(vip_level)
+    
+    # Get idle collection start time
+    collection_started = user.get("idle_collection_started_at")
+    if not collection_started:
+        # First time - start collection
+        await db.users.update_one(
+            {"username": username},
+            {"$set": {
+                "idle_collection_started_at": datetime.utcnow(),
+                "vip_level": vip_level
+            }}
+        )
+        return {
+            "gold_earned": 0,
+            "time_away": 0,
+            "collection_started": True,
+            "vip_level": vip_level,
+            "max_hours": idle_cap_hours
+        }
+    
+    # Calculate time since collection started
     now = datetime.utcnow()
-    last_login = user.get("last_login")
+    time_away = (now - collection_started).total_seconds()
     
-    if last_login:
-        time_away = (now - last_login).total_seconds()
-        # Cap at 8 hours
-        time_away = min(time_away, 8 * 3600)
-    else:
-        time_away = 0
+    # Cap at VIP-based hours
+    max_seconds = idle_cap_hours * 3600
+    time_away = min(time_away, max_seconds)
     
-    # Calculate gold earned (100 gold per minute, capped at 8 hours)
+    # Calculate gold earned (100 gold per minute)
     gold_per_second = 100 / 60
     gold_earned = int(gold_per_second * time_away)
     
-    # Update user gold
+    # Update user gold and restart collection
     await db.users.update_one(
         {"username": username},
-        {"$inc": {"gold": gold_earned}}
+        {
+            "$inc": {"gold": gold_earned},
+            "$set": {
+                "idle_collection_started_at": now,
+                "idle_collection_last_claimed": now,
+                "vip_level": vip_level
+            }
+        }
     )
     
-    return IdleRewards(gold_earned=gold_earned, time_away=int(time_away))
+    return {
+        "gold_earned": gold_earned,
+        "time_away": int(time_away),
+        "hours_away": time_away / 3600,
+        "capped": time_away >= max_seconds,
+        "vip_level": vip_level,
+        "max_hours": idle_cap_hours
+    }
+
+@api_router.get("/idle/status/{username}")
+async def get_idle_status(username: str):
+    """Get current idle collection status"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    vip_level = calculate_vip_level(user.get("total_spent", 0))
+    idle_cap_hours = get_idle_cap_hours(vip_level)
+    
+    collection_started = user.get("idle_collection_started_at")
+    if not collection_started:
+        return {
+            "is_collecting": False,
+            "gold_pending": 0,
+            "time_elapsed": 0,
+            "vip_level": vip_level,
+            "max_hours": idle_cap_hours
+        }
+    
+    now = datetime.utcnow()
+    time_elapsed = (now - collection_started).total_seconds()
+    max_seconds = idle_cap_hours * 3600
+    
+    # Calculate pending gold
+    capped_time = min(time_elapsed, max_seconds)
+    gold_per_second = 100 / 60
+    gold_pending = int(gold_per_second * capped_time)
+    
+    return {
+        "is_collecting": True,
+        "gold_pending": gold_pending,
+        "time_elapsed": time_elapsed,
+        "hours_elapsed": time_elapsed / 3600,
+        "is_capped": time_elapsed >= max_seconds,
+        "vip_level": vip_level,
+        "max_hours": idle_cap_hours,
+        "time_until_cap": max(0, max_seconds - time_elapsed)
+    }
+
+@api_router.get("/vip/info/{username}")
+async def get_vip_info(username: str):
+    """Get VIP information and benefits"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    total_spent = user.get("total_spent", 0)
+    current_vip = calculate_vip_level(total_spent)
+    
+    # Get current tier info
+    current_tier = VIP_TIERS[current_vip]
+    
+    # Get next tier info
+    next_vip = min(current_vip + 1, 15)
+    next_tier = VIP_TIERS[next_vip]
+    spend_needed = next_tier["spend"] - total_spent if next_vip > current_vip else 0
+    
+    return {
+        "current_vip_level": current_vip,
+        "total_spent": total_spent,
+        "current_idle_hours": current_tier["idle_hours"],
+        "next_vip_level": next_vip if next_vip > current_vip else None,
+        "next_idle_hours": next_tier["idle_hours"] if next_vip > current_vip else None,
+        "spend_needed_for_next": spend_needed,
+        "all_tiers": VIP_TIERS
+    }
+
+@api_router.post("/vip/purchase")
+async def vip_purchase(username: str, amount_usd: float):
+    """Simulate VIP purchase (in production, integrate with payment processor)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if amount_usd <= 0:
+        raise HTTPException(status_code=400, detail="Invalid purchase amount")
+    
+    # Update total spent and VIP level
+    new_total_spent = user.get("total_spent", 0) + amount_usd
+    new_vip_level = calculate_vip_level(new_total_spent)
+    
+    # Convert USD to gems (example: $1 = 100 gems)
+    gems_purchased = int(amount_usd * 100)
+    
+    await db.users.update_one(
+        {"username": username},
+        {
+            "$set": {
+                "total_spent": new_total_spent,
+                "vip_level": new_vip_level
+            },
+            "$inc": {"gems": gems_purchased}
+        }
+    )
+    
+    return {
+        "purchase_amount": amount_usd,
+        "gems_received": gems_purchased,
+        "new_total_spent": new_total_spent,
+        "new_vip_level": new_vip_level,
+        "new_idle_cap_hours": get_idle_cap_hours(new_vip_level)
+    }
 
 @api_router.get("/user/{username}/cr")
 async def get_character_rating(username: str):

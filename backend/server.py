@@ -226,7 +226,7 @@ async def get_user(username: str):
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return convert_objectid(user)
 
 @api_router.post("/user/{username}/login")
 async def user_login(username: str):

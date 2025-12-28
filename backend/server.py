@@ -626,7 +626,7 @@ async def update_profile_picture(username: str, hero_id: str):
 
 @api_router.post("/gacha/pull")
 async def pull_gacha(username: str, request: PullRequest):
-    """Perform gacha pull"""
+    """Perform gacha pull - Premium (crystals) or Common (coins)"""
     user_data = await db.users.find_one({"username": username})
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
@@ -634,14 +634,18 @@ async def pull_gacha(username: str, request: PullRequest):
     user = User(**user_data)
     num_pulls = 10 if request.pull_type == "multi" else 1
     
+    # Determine if premium or common summon
+    is_premium = request.currency_type == "crystals"
+    
     # Calculate cost
-    if request.currency_type == "crystals":
+    if is_premium:
         cost = CRYSTAL_COST_MULTI if request.pull_type == "multi" else CRYSTAL_COST_SINGLE
         if user.crystals < cost:
             raise HTTPException(status_code=400, detail="Not enough crystals")
         user.crystals -= cost
         crystals_spent = cost
         coins_spent = 0
+        pity_counter = user.pity_counter_premium
     else:
         cost = COIN_COST_MULTI if request.pull_type == "multi" else COIN_COST_SINGLE
         if user.coins < cost:
@@ -649,16 +653,17 @@ async def pull_gacha(username: str, request: PullRequest):
         user.coins -= cost
         crystals_spent = 0
         coins_spent = cost
+        pity_counter = user.pity_counter
     
     # Perform pulls
     pulled_heroes = []
     for _ in range(num_pulls):
-        user.pity_counter += 1
-        hero = get_random_hero(user.pity_counter)
+        pity_counter += 1
+        hero = get_random_hero(pity_counter, is_premium)
         
         # Reset pity if SSR or better
         if hero.rarity in ["SSR", "UR", "UR+"]:
-            user.pity_counter = 0
+            pity_counter = 0
         
         # Create user hero instance
         user_hero = UserHero(
@@ -691,6 +696,12 @@ async def pull_gacha(username: str, request: PullRequest):
     
     user.total_pulls += num_pulls
     
+    # Update user with new pity counter
+    if is_premium:
+        user.pity_counter_premium = pity_counter
+    else:
+        user.pity_counter = pity_counter
+    
     # Update user
     await db.users.update_one(
         {"username": username},
@@ -699,7 +710,7 @@ async def pull_gacha(username: str, request: PullRequest):
     
     return GachaResult(
         heroes=pulled_heroes,
-        new_pity_counter=user.pity_counter,
+        new_pity_counter=pity_counter,
         crystals_spent=crystals_spent,
         coins_spent=coins_spent
     )

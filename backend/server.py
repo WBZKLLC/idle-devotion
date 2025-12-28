@@ -378,8 +378,8 @@ async def get_user_heroes(username: str):
         hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
         if hero_data:
             enriched_heroes.append({
-                **uh,
-                "hero_data": hero_data
+                **convert_objectid(uh),
+                "hero_data": convert_objectid(hero_data)
             })
     
     return enriched_heroes

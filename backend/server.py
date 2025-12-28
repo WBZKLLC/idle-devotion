@@ -1414,7 +1414,7 @@ async def get_player_character(username: str):
 
 @api_router.post("/player-character/upgrade/{username}")
 async def upgrade_player_character(username: str, upgrade_type: str):
-    """Upgrade player character (costs gems, takes time or instant with gems)"""
+    """Upgrade player character (costs crystals, takes time or instant with crystals)"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -1427,13 +1427,13 @@ async def upgrade_player_character(username: str, upgrade_type: str):
     base_cost = 100
     cost = base_cost * (player_char["level"] + 1)
     
-    if user["gems"] < cost:
-        raise HTTPException(status_code=400, detail=f"Not enough gems. Need {cost}")
+    if user["crystals"] < cost:
+        raise HTTPException(status_code=400, detail=f"Not enough crystals. Need {cost}")
     
-    # Deduct gems
+    # Deduct crystals
     await db.users.update_one(
         {"username": username},
-        {"$inc": {"gems": -cost}}
+        {"$inc": {"crystals": -cost}}
     )
     
     # Upgrade buffs based on type

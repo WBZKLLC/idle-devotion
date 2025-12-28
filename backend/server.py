@@ -96,6 +96,12 @@ class User(BaseModel):
     last_login: Optional[datetime] = None
     daily_summons_claimed: int = 0  # Track daily free summons
     profile_picture_hero_id: Optional[str] = None  # Hero ID for profile picture
+    # VIP System
+    vip_level: int = 0  # 0-15
+    total_spent: float = 0.0  # Total USD spent
+    # Idle Collection
+    idle_collection_started_at: Optional[datetime] = None
+    idle_collection_last_claimed: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Team(BaseModel):

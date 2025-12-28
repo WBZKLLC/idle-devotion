@@ -476,8 +476,8 @@ async def init_islands_and_chapters():
             name=f"Chapter {i}: Trial of Valor",
             required_power=required_power,
             enemy_power=enemy_power,
-            rewards={"coins": 500 * i, "gold": 250 * i, "gems": 10 * (i // 5)},
-            first_clear_bonus={"gems": 50, "coins": 2000}
+            rewards={"coins": 500 * i, "gold": 250 * i, "crystals": 10 * (i // 5)},
+            first_clear_bonus={"crystals": 50, "coins": 2000}
         )
         
         existing = await db.chapters.find_one({"chapter_number": i})

@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   sidebarButton: {
     position: 'absolute',
     top: 50,
-    left: 16,
+    right: 16,
     zIndex: 100,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },

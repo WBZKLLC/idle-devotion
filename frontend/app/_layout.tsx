@@ -41,6 +41,24 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
+        name="abyss"
+        options={{
+          title: 'Abyss',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="flame" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="arena"
+        options={{
+          title: 'Arena',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="trophy" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="heroes"
         options={{
           title: 'Heroes',

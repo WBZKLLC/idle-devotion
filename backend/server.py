@@ -124,7 +124,7 @@ class Team(BaseModel):
 class GachaResult(BaseModel):
     heroes: List[UserHero]
     new_pity_counter: int
-    gems_spent: int
+    crystals_spent: int
     coins_spent: int
 
 class PullRequest(BaseModel):

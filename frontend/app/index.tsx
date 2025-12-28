@@ -290,6 +290,9 @@ export default function HomeScreen() {
             </LinearGradient>
           </View>
         </ScrollView>
+
+        {/* Sidebar Component */}
+        <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
       </SafeAreaView>
     </LinearGradient>
   );

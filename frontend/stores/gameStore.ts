@@ -60,6 +60,7 @@ interface GameState {
   pullGacha: (pullType: 'single' | 'multi', currencyType: 'gems' | 'coins') => Promise<any>;
   upgradeHero: (heroInstanceId: string) => Promise<void>;
   claimIdleRewards: () => Promise<any>;
+  fetchCR: () => Promise<{cr: number; hero_count: number}>;
   setUser: (user: User | null) => void;
 }
 

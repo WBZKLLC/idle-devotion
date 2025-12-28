@@ -62,6 +62,7 @@ interface GameState {
   upgradeHero: (heroInstanceId: string) => Promise<void>;
   claimIdleRewards: () => Promise<any>;
   fetchCR: () => Promise<{cr: number; hero_count: number}>;
+  updateProfilePicture: (heroId: string) => Promise<void>;
   setUser: (user: User | null) => void;
 }
 

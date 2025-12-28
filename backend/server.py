@@ -11,10 +11,14 @@ import uuid
 from datetime import datetime, timedelta
 import random
 from bson import ObjectId
-import pydantic
+from pydantic import ConfigDict
+from pydantic.json import pydantic_encoder
 
-# Fix ObjectId serialization issue
-pydantic.json.ENCODERS_BY_TYPE[ObjectId] = str
+# Fix ObjectId serialization issue for Pydantic v2
+def custom_encoder(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    return pydantic_encoder(obj)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

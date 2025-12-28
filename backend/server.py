@@ -99,10 +99,19 @@ class User(BaseModel):
     # VIP System
     vip_level: int = 0  # 0-15
     total_spent: float = 0.0  # Total USD spent
+    avatar_frame: str = "default"  # Avatar frame (default, gold, diamond, rainbow, legendary, divine)
     # Idle Collection
     idle_collection_started_at: Optional[datetime] = None
     idle_collection_last_claimed: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class VIPPackage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    vip_level: int
+    package_tier: str  # "basic", "premium", "elite"
+    gem_cost: int
+    rewards: Dict[str, int]  # {"coins": 1000, "gold": 500, etc}
+    daily_limit: int = 3  # Can buy 3 times per day
 
 class Team(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

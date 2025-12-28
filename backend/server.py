@@ -375,11 +375,18 @@ VIP_PACKAGES = {
 }
 
 # Gacha rates configuration
-GACHA_RATES = {
-    "SR": 60.0,   # 60%
+# Common Summons (coins) - NO UR/UR+ heroes
+GACHA_RATES_COMMON = {
+    "SR": 70.0,   # 70%
     "SSR": 30.0,  # 30%
-    "UR": 9.0,    # 9%
-    "UR+": 1.0    # 1%
+}
+
+# Premium Summons (crystals) - ALL rarities with better rates
+GACHA_RATES_PREMIUM = {
+    "SR": 45.0,   # 45%
+    "SSR": 40.0,  # 40%
+    "UR": 13.0,   # 13%
+    "UR+": 2.0    # 2%
 }
 
 PITY_THRESHOLD = 50

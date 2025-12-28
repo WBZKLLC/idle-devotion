@@ -140,6 +140,19 @@ export default function HomeScreen() {
   return (
     <LinearGradient colors={['#FFB6C1', '#FF69B4', '#FF1493']} style={styles.container}>
       <SafeAreaView style={styles.container}>
+        {/* Sidebar Button */}
+        <TouchableOpacity
+          style={styles.sidebarButton}
+          onPress={() => setSidebarVisible(true)}
+        >
+          <LinearGradient
+            colors={['#9400D3', '#4B0082']}
+            style={styles.sidebarButtonGradient}
+          >
+            <Ionicons name=\"menu\" size={28} color=\"#FFF\" />
+          </LinearGradient>
+        </TouchableOpacity>
+
         <ScrollView contentContainerStyle={styles.content}>
           {/* Header with CR */}
           <LinearGradient

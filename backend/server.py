@@ -423,7 +423,7 @@ async def upgrade_hero(username: str, hero_instance_id: str):
     )
     
     updated_hero = await db.user_heroes.find_one({"id": hero_instance_id})
-    return updated_hero
+    return convert_objectid(updated_hero)
 
 @api_router.post("/team/create")
 async def create_team(username: str, team_name: str):

@@ -231,5 +231,24 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  updateProfilePicture: async (heroId: string) => {
+    const { user } = get();
+    if (!user) throw new Error('No user found');
+    
+    set({ isLoading: true });
+    try {
+      await axios.post(
+        `${BACKEND_URL}/api/user/${user.username}/profile-picture?hero_id=${heroId}`
+      );
+      
+      // Refresh user data
+      await get().fetchUser();
+      set({ isLoading: false });
+    } catch (error: any) {
+      set({ error: error.response?.data?.detail || 'Failed to update profile picture', isLoading: false });
+      throw error;
+    }
+  },
+
   setUser: (user: User | null) => set({ user }),
 }));

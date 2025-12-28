@@ -210,7 +210,7 @@ class PlayerCharacter(BaseModel):
     hp_buff: float = 0.0
     crit_buff: float = 0.0
     # Upgrade costs increase with level
-    upgrade_cost_gems: int = 100
+    upgrade_cost_crystals: int = 100
     upgrade_time_hours: int = 24
 
 class AbyssProgress(BaseModel):

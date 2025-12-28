@@ -361,7 +361,7 @@ async def pull_gacha(username: str, request: PullRequest):
 async def get_all_heroes():
     """Get all available heroes in the pool"""
     heroes = await db.heroes.find().to_list(1000)
-    return heroes
+    return [convert_objectid(hero) for hero in heroes]
 
 @api_router.get("/user/{username}/heroes")
 async def get_user_heroes(username: str):

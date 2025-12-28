@@ -222,6 +222,39 @@ class ArenaRecord(BaseModel):
     highest_rating: int = 1000
     season_rank: int = 0
 
+# VIP tier thresholds (spending in USD)
+VIP_TIERS = {
+    0: {"spend": 0, "idle_hours": 8},
+    1: {"spend": 10, "idle_hours": 10},
+    2: {"spend": 25, "idle_hours": 12},
+    3: {"spend": 50, "idle_hours": 14},
+    4: {"spend": 100, "idle_hours": 16},
+    5: {"spend": 250, "idle_hours": 18},
+    6: {"spend": 500, "idle_hours": 20},
+    7: {"spend": 1000, "idle_hours": 22},
+    8: {"spend": 2000, "idle_hours": 24},
+    9: {"spend": 3500, "idle_hours": 30},
+    10: {"spend": 5000, "idle_hours": 36},
+    11: {"spend": 7500, "idle_hours": 48},
+    12: {"spend": 10000, "idle_hours": 60},
+    13: {"spend": 15000, "idle_hours": 72},
+    14: {"spend": 20000, "idle_hours": 96},
+    15: {"spend": 25000, "idle_hours": 168},  # 7 days
+}
+
+def calculate_vip_level(total_spent: float) -> int:
+    """Calculate VIP level based on total spent"""
+    vip_level = 0
+    for level in range(15, -1, -1):
+        if total_spent >= VIP_TIERS[level]["spend"]:
+            vip_level = level
+            break
+    return vip_level
+
+def get_idle_cap_hours(vip_level: int) -> int:
+    """Get idle collection cap hours for VIP level"""
+    return VIP_TIERS.get(vip_level, VIP_TIERS[0])["idle_hours"]
+
 # Gacha rates configuration
 GACHA_RATES = {
     "SR": 60.0,   # 60%

@@ -106,7 +106,20 @@ class User(BaseModel):
     # Idle Collection
     idle_collection_started_at: Optional[datetime] = None
     idle_collection_last_claimed: Optional[datetime] = None
+    # Chat unlock system
+    tutorial_completed: bool = False
+    chat_unlock_time: Optional[datetime] = None  # When chat becomes available
+    chat_unlocked: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class MarqueeNotification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    server_id: str
+    username: str
+    hero_name: str
+    hero_rarity: str  # UR or UR+
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    message: str  # e.g., "Player123 obtained UR+ Raphael the Eternal!"
 
 class VIPPackage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

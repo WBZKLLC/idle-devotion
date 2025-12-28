@@ -609,6 +609,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  profilePictureButton: {
+    backgroundColor: '#9C27B0',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  profilePictureButtonActive: {
+    backgroundColor: '#4CAF50',
+  },
+  profilePictureButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  profilePictureButtonTextActive: {
+    color: '#FFF',
+  },
   noUserText: {
     color: '#fff',
     fontSize: 18,

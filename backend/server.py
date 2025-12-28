@@ -286,28 +286,28 @@ def get_avatar_frame(vip_level: int) -> str:
     else:
         return "default"
 
-# VIP Package configurations - can be purchased with gems
+# VIP Package configurations - can be purchased with crystals
 VIP_PACKAGES = {
     # VIP 0-3: Early game packages
     0: {
-        "basic": {"gem_cost": 200, "rewards": {"coins": 5000, "gold": 2500}},
-        "premium": {"gem_cost": 500, "rewards": {"coins": 15000, "gold": 7500}},
-        "elite": {"gem_cost": 1000, "rewards": {"coins": 35000, "gold": 17500, "gems": 100}}
+        "basic": {"crystal_cost": 200, "rewards": {"coins": 5000, "gold": 2500}},
+        "premium": {"crystal_cost": 500, "rewards": {"coins": 15000, "gold": 7500}},
+        "elite": {"crystal_cost": 1000, "rewards": {"coins": 35000, "gold": 17500, "crystals": 100}}
     },
     1: {
-        "basic": {"gem_cost": 300, "rewards": {"coins": 8000, "gold": 4000}},
-        "premium": {"gem_cost": 750, "rewards": {"coins": 25000, "gold": 12500}},
-        "elite": {"gem_cost": 1500, "rewards": {"coins": 60000, "gold": 30000, "gems": 200}}
+        "basic": {"crystal_cost": 300, "rewards": {"coins": 8000, "gold": 4000}},
+        "premium": {"crystal_cost": 750, "rewards": {"coins": 25000, "gold": 12500}},
+        "elite": {"crystal_cost": 1500, "rewards": {"coins": 60000, "gold": 30000, "crystals": 200}}
     },
     2: {
-        "basic": {"gem_cost": 400, "rewards": {"coins": 12000, "gold": 6000}},
-        "premium": {"gem_cost": 1000, "rewards": {"coins": 40000, "gold": 20000}},
-        "elite": {"gem_cost": 2000, "rewards": {"coins": 90000, "gold": 45000, "gems": 300}}
+        "basic": {"crystal_cost": 400, "rewards": {"coins": 12000, "gold": 6000}},
+        "premium": {"crystal_cost": 1000, "rewards": {"coins": 40000, "gold": 20000}},
+        "elite": {"crystal_cost": 2000, "rewards": {"coins": 90000, "gold": 45000, "crystals": 300}}
     },
     3: {
-        "basic": {"gem_cost": 500, "rewards": {"coins": 18000, "gold": 9000}},
-        "premium": {"gem_cost": 1250, "rewards": {"coins": 60000, "gold": 30000}},
-        "elite": {"gem_cost": 2500, "rewards": {"coins": 135000, "gold": 67500, "gems": 400}}
+        "basic": {"crystal_cost": 500, "rewards": {"coins": 18000, "gold": 9000}},
+        "premium": {"crystal_cost": 1250, "rewards": {"coins": 60000, "gold": 30000}},
+        "elite": {"crystal_cost": 2500, "rewards": {"coins": 135000, "gold": 67500, "crystals": 400}}
     },
     # VIP 4-7: Mid game packages
     4: {

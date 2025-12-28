@@ -239,7 +239,22 @@ class Guild(BaseModel):
     leader_id: str
     member_ids: List[str] = []
     level: int = 1
+    server_id: str  # Server-specific guilds
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Server(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # e.g., "Server 1", "Server Alpha"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    account_count: int = 0
+    status: str = "active"  # active, full, merged
+    merged_into_id: Optional[str] = None  # If merged, which server
+    merge_date: Optional[datetime] = None
+
+SERVER_CAPACITY = 220
+SERVER_MAX_AFTER_MERGE = 440
+SERVER_LIFETIME_DAYS = 14
+SERVER_MERGE_INTERVAL_DAYS = 90  # 3 months
 
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

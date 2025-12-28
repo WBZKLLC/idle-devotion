@@ -865,9 +865,10 @@ async def get_idle_status(username: str):
     time_elapsed = (now - collection_started).total_seconds()
     max_seconds = idle_cap_hours * 3600
     
-    # Calculate pending gold
+    # Calculate pending gold with VIP rate bonus
     capped_time = min(time_elapsed, max_seconds)
-    gold_per_second = 100 / 60
+    gold_per_minute = get_idle_gold_rate(vip_level)
+    gold_per_second = gold_per_minute / 60
     gold_pending = int(gold_per_second * capped_time)
     
     return {

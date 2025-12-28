@@ -776,6 +776,272 @@ async def battle_chapter(username: str, chapter_number: int):
 async def root():
     return {"message": "Gacha Game API", "version": "1.0"}
 
+# ==================== SUPPORT SYSTEM ====================
+@api_router.post("/support/ticket")
+async def create_support_ticket(username: str, subject: str, message: str):
+    """Create a support ticket"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    ticket = SupportTicket(
+        user_id=user["id"],
+        username=username,
+        subject=subject,
+        message=message
+    )
+    
+    await db.support_tickets.insert_one(ticket.dict())
+    return convert_objectid(ticket.dict())
+
+@api_router.get("/support/tickets/{username}")
+async def get_user_tickets(username: str):
+    """Get all support tickets for a user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    tickets = await db.support_tickets.find({"user_id": user["id"]}).sort("created_at", -1).to_list(100)
+    return [convert_objectid(ticket) for ticket in tickets]
+
+# ==================== FRIENDS SYSTEM ====================
+@api_router.post("/friends/request")
+async def send_friend_request(from_username: str, to_username: str):
+    """Send a friend request"""
+    from_user = await db.users.find_one({"username": from_username})
+    to_user = await db.users.find_one({"username": to_username})
+    
+    if not from_user or not to_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if from_user["id"] == to_user["id"]:
+        raise HTTPException(status_code=400, detail="Cannot add yourself as friend")
+    
+    # Check if already friends
+    existing_friendship = await db.friendships.find_one({
+        "$or": [
+            {"user_id": from_user["id"], "friend_id": to_user["id"]},
+            {"user_id": to_user["id"], "friend_id": from_user["id"]}
+        ]
+    })
+    
+    if existing_friendship:
+        raise HTTPException(status_code=400, detail="Already friends")
+    
+    # Check if request already exists
+    existing_request = await db.friend_requests.find_one({
+        "from_user_id": from_user["id"],
+        "to_user_id": to_user["id"],
+        "status": "pending"
+    })
+    
+    if existing_request:
+        raise HTTPException(status_code=400, detail="Friend request already sent")
+    
+    friend_request = FriendRequest(
+        from_user_id=from_user["id"],
+        to_user_id=to_user["id"]
+    )
+    
+    await db.friend_requests.insert_one(friend_request.dict())
+    return convert_objectid(friend_request.dict())
+
+@api_router.get("/friends/requests/{username}")
+async def get_friend_requests(username: str):
+    """Get pending friend requests for a user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    requests = await db.friend_requests.find({
+        "to_user_id": user["id"],
+        "status": "pending"
+    }).to_list(100)
+    
+    # Enrich with sender info
+    enriched = []
+    for req in requests:
+        sender = await db.users.find_one({"id": req["from_user_id"]})
+        if sender:
+            enriched.append({
+                **convert_objectid(req),
+                "from_username": sender["username"]
+            })
+    
+    return enriched
+
+@api_router.post("/friends/accept/{request_id}")
+async def accept_friend_request(request_id: str, username: str):
+    """Accept a friend request"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    friend_request = await db.friend_requests.find_one({"id": request_id})
+    if not friend_request:
+        raise HTTPException(status_code=404, detail="Friend request not found")
+    
+    if friend_request["to_user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your friend request")
+    
+    # Update request status
+    await db.friend_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": "accepted"}}
+    )
+    
+    # Create friendship
+    friendship = Friendship(
+        user_id=friend_request["from_user_id"],
+        friend_id=friend_request["to_user_id"]
+    )
+    
+    await db.friendships.insert_one(friendship.dict())
+    
+    return {"message": "Friend request accepted"}
+
+@api_router.get("/friends/list/{username}")
+async def get_friends_list(username: str):
+    """Get list of friends with collection status"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get all friendships
+    friendships = await db.friendships.find({
+        "$or": [
+            {"user_id": user["id"]},
+            {"friend_id": user["id"]}
+        ]
+    }).to_list(1000)
+    
+    friends_list = []
+    for friendship in friendships:
+        friend_id = friendship["friend_id"] if friendship["user_id"] == user["id"] else friendship["user_id"]
+        friend = await db.users.find_one({"id": friend_id})
+        
+        if friend:
+            # Check if can collect (24 hour cooldown)
+            can_collect = True
+            if friendship.get("last_collected"):
+                time_since_collect = (datetime.utcnow() - friendship["last_collected"]).total_seconds()
+                can_collect = time_since_collect >= 86400  # 24 hours
+            
+            friends_list.append({
+                "friend_id": friend["id"],
+                "friend_username": friend["username"],
+                "friendship_id": friendship["id"],
+                "can_collect": can_collect,
+                "last_collected": friendship.get("last_collected")
+            })
+    
+    return friends_list
+
+@api_router.post("/friends/collect/{friendship_id}")
+async def collect_friend_currency(friendship_id: str, username: str):
+    """Collect friendship points from a friend (24hr cooldown)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    friendship = await db.friendships.find_one({"id": friendship_id})
+    if not friendship:
+        raise HTTPException(status_code=404, detail="Friendship not found")
+    
+    # Verify user is part of this friendship
+    if friendship["user_id"] != user["id"] and friendship["friend_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your friendship")
+    
+    # Check cooldown
+    if friendship.get("last_collected"):
+        time_since_collect = (datetime.utcnow() - friendship["last_collected"]).total_seconds()
+        if time_since_collect < 86400:  # 24 hours
+            remaining = 86400 - time_since_collect
+            raise HTTPException(status_code=400, detail=f"Cooldown active. {int(remaining/3600)} hours remaining")
+    
+    # Award friendship points
+    friendship_points_gained = 50
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"friendship_points": friendship_points_gained}}
+    )
+    
+    await db.friendships.update_one(
+        {"id": friendship_id},
+        {"$set": {"last_collected": datetime.utcnow()}}
+    )
+    
+    return {"friendship_points_gained": friendship_points_gained}
+
+# ==================== PLAYER CHARACTER SYSTEM ====================
+@api_router.get("/player-character/{username}")
+async def get_player_character(username: str):
+    """Get or create player character"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    player_char = await db.player_characters.find_one({"user_id": user["id"]})
+    
+    if not player_char:
+        # Create default player character
+        player_char = PlayerCharacter(user_id=user["id"])
+        await db.player_characters.insert_one(player_char.dict())
+        player_char = await db.player_characters.find_one({"user_id": user["id"]})
+    
+    return convert_objectid(player_char)
+
+@api_router.post("/player-character/upgrade/{username}")
+async def upgrade_player_character(username: str, upgrade_type: str):
+    """Upgrade player character (costs gems, takes time or instant with gems)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    player_char = await db.player_characters.find_one({"user_id": user["id"]})
+    if not player_char:
+        raise HTTPException(status_code=404, detail="Player character not found")
+    
+    # Calculate upgrade cost
+    base_cost = 100
+    cost = base_cost * (player_char["level"] + 1)
+    
+    if user["gems"] < cost:
+        raise HTTPException(status_code=400, detail=f"Not enough gems. Need {cost}")
+    
+    # Deduct gems
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"gems": -cost}}
+    )
+    
+    # Upgrade buffs based on type
+    buff_increase = 0.02  # 2% per upgrade
+    update_dict = {"level": player_char["level"] + 1}
+    
+    if upgrade_type == "atk":
+        update_dict["atk_buff"] = player_char.get("atk_buff", 0.0) + buff_increase
+    elif upgrade_type == "def":
+        update_dict["def_buff"] = player_char.get("def_buff", 0.0) + buff_increase
+    elif upgrade_type == "hp":
+        update_dict["hp_buff"] = player_char.get("hp_buff", 0.0) + buff_increase
+    elif upgrade_type == "crit":
+        update_dict["crit_buff"] = player_char.get("crit_buff", 0.0) + buff_increase
+    else:
+        # General upgrade - increase all buffs slightly
+        update_dict["atk_buff"] = player_char.get("atk_buff", 0.0) + buff_increase * 0.5
+        update_dict["def_buff"] = player_char.get("def_buff", 0.0) + buff_increase * 0.5
+        update_dict["hp_buff"] = player_char.get("hp_buff", 0.0) + buff_increase * 0.5
+    
+    await db.player_characters.update_one(
+        {"user_id": user["id"]},
+        {"$set": update_dict}
+    )
+    
+    updated_char = await db.player_characters.find_one({"user_id": user["id"]})
+    return convert_objectid(updated_char)
+
 # Include the router in the main app
 app.include_router(api_router)
 

@@ -930,8 +930,8 @@ async def vip_purchase(username: str, amount_usd: float):
     new_vip_level = calculate_vip_level(new_total_spent)
     new_avatar_frame = get_avatar_frame(new_vip_level)
     
-    # Convert USD to gems (example: $1 = 100 gems)
-    gems_purchased = int(amount_usd * 100)
+    # Convert USD to crystals (example: $1 = 100 crystals)
+    crystals_purchased = int(amount_usd * 100)
     
     await db.users.update_one(
         {"username": username},
@@ -941,13 +941,13 @@ async def vip_purchase(username: str, amount_usd: float):
                 "vip_level": new_vip_level,
                 "avatar_frame": new_avatar_frame
             },
-            "$inc": {"gems": gems_purchased}
+            "$inc": {"crystals": crystals_purchased}
         }
     )
     
     return {
         "purchase_amount": amount_usd,
-        "gems_received": gems_purchased,
+        "crystals_received": crystals_purchased,
         "new_total_spent": new_total_spent,
         "new_vip_level": new_vip_level,
         "new_idle_cap_hours": get_idle_cap_hours(new_vip_level),

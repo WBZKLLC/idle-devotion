@@ -15,6 +15,7 @@ interface User {
   login_days: number;
   last_login: string | null;
   daily_summons_claimed: number;
+  profile_picture_hero_id: string | null;
 }
 
 interface Hero {

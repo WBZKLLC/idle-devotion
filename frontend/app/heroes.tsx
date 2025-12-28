@@ -70,6 +70,18 @@ export default function HeroesScreen() {
     }
   };
 
+  const handleSetProfilePicture = async () => {
+    if (!selectedHero) return;
+
+    try {
+      await updateProfilePicture(selectedHero.hero_data.id);
+      Alert.alert('Success!', `${selectedHero.hero_data.name} is now your profile picture!`);
+      setShowDetail(false);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to set profile picture');
+    }
+  };
+
   const filteredHeroes = filterRarity
     ? userHeroes.filter((h) => h.hero_data?.rarity === filterRarity)
     : userHeroes;

@@ -311,24 +311,24 @@ VIP_PACKAGES = {
     },
     # VIP 4-7: Mid game packages
     4: {
-        "basic": {"gem_cost": 600, "rewards": {"coins": 25000, "gold": 12500}},
-        "premium": {"gem_cost": 1500, "rewards": {"coins": 80000, "gold": 40000}},
-        "elite": {"gem_cost": 3000, "rewards": {"coins": 180000, "gold": 90000, "gems": 500}}
+        "basic": {"crystal_cost": 600, "rewards": {"coins": 25000, "gold": 12500}},
+        "premium": {"crystal_cost": 1500, "rewards": {"coins": 80000, "gold": 40000}},
+        "elite": {"crystal_cost": 3000, "rewards": {"coins": 180000, "gold": 90000, "crystals": 500}}
     },
     5: {
-        "basic": {"gem_cost": 750, "rewards": {"coins": 35000, "gold": 17500}},
-        "premium": {"gem_cost": 1875, "rewards": {"coins": 110000, "gold": 55000}},
-        "elite": {"gem_cost": 3750, "rewards": {"coins": 250000, "gold": 125000, "gems": 650}}
+        "basic": {"crystal_cost": 750, "rewards": {"coins": 35000, "gold": 17500}},
+        "premium": {"crystal_cost": 1875, "rewards": {"coins": 110000, "gold": 55000}},
+        "elite": {"crystal_cost": 3750, "rewards": {"coins": 250000, "gold": 125000, "crystals": 650}}
     },
     6: {
-        "basic": {"gem_cost": 900, "rewards": {"coins": 50000, "gold": 25000}},
-        "premium": {"gem_cost": 2250, "rewards": {"coins": 150000, "gold": 75000}},
-        "elite": {"gem_cost": 4500, "rewards": {"coins": 350000, "gold": 175000, "gems": 800}}
+        "basic": {"crystal_cost": 900, "rewards": {"coins": 50000, "gold": 25000}},
+        "premium": {"crystal_cost": 2250, "rewards": {"coins": 150000, "gold": 75000}},
+        "elite": {"crystal_cost": 4500, "rewards": {"coins": 350000, "gold": 175000, "crystals": 800}}
     },
     7: {
-        "basic": {"gem_cost": 1100, "rewards": {"coins": 70000, "gold": 35000}},
-        "premium": {"gem_cost": 2750, "rewards": {"coins": 200000, "gold": 100000}},
-        "elite": {"gem_cost": 5500, "rewards": {"coins": 480000, "gold": 240000, "gems": 1000}}
+        "basic": {"crystal_cost": 1100, "rewards": {"coins": 70000, "gold": 35000}},
+        "premium": {"crystal_cost": 2750, "rewards": {"coins": 200000, "gold": 100000}},
+        "elite": {"crystal_cost": 5500, "rewards": {"coins": 480000, "gold": 240000, "crystals": 1000}}
     },
     # VIP 8-11: High tier packages
     8: {

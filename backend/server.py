@@ -89,6 +89,7 @@ class User(BaseModel):
     gems: int = 300  # Premium currency
     coins: int = 10000  # Regular currency
     gold: int = 5000  # Idle resource
+    friendship_points: int = 0  # Friend currency
     pity_counter: int = 0  # Counts towards guaranteed SSR at 50
     total_pulls: int = 0
     login_days: int = 0

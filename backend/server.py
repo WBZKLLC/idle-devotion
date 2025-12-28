@@ -196,6 +196,25 @@ class PlayerCharacter(BaseModel):
     upgrade_cost_gems: int = 100
     upgrade_time_hours: int = 24
 
+class AbyssProgress(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    current_level: int = 1
+    highest_level: int = 1
+    total_clears: int = 0
+    last_attempt: Optional[datetime] = None
+
+class ArenaRecord(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    username: str
+    rating: int = 1000  # ELO-style rating
+    wins: int = 0
+    losses: int = 0
+    win_streak: int = 0
+    highest_rating: int = 1000
+    season_rank: int = 0
+
 # Gacha rates configuration
 GACHA_RATES = {
     "SR": 60.0,   # 60%

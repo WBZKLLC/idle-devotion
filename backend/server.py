@@ -605,19 +605,19 @@ async def pull_gacha(username: str, request: PullRequest):
     num_pulls = 10 if request.pull_type == "multi" else 1
     
     # Calculate cost
-    if request.currency_type == "gems":
-        cost = GEM_COST_MULTI if request.pull_type == "multi" else GEM_COST_SINGLE
-        if user.gems < cost:
-            raise HTTPException(status_code=400, detail="Not enough gems")
-        user.gems -= cost
-        gems_spent = cost
+    if request.currency_type == "crystals":
+        cost = CRYSTAL_COST_MULTI if request.pull_type == "multi" else CRYSTAL_COST_SINGLE
+        if user.crystals < cost:
+            raise HTTPException(status_code=400, detail="Not enough crystals")
+        user.crystals -= cost
+        crystals_spent = cost
         coins_spent = 0
     else:
         cost = COIN_COST_MULTI if request.pull_type == "multi" else COIN_COST_SINGLE
         if user.coins < cost:
             raise HTTPException(status_code=400, detail="Not enough coins")
         user.coins -= cost
-        gems_spent = 0
+        crystals_spent = 0
         coins_spent = cost
     
     # Perform pulls

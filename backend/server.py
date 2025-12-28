@@ -927,6 +927,7 @@ async def vip_purchase(username: str, amount_usd: float):
     # Update total spent and VIP level
     new_total_spent = user.get("total_spent", 0) + amount_usd
     new_vip_level = calculate_vip_level(new_total_spent)
+    new_avatar_frame = get_avatar_frame(new_vip_level)
     
     # Convert USD to gems (example: $1 = 100 gems)
     gems_purchased = int(amount_usd * 100)
@@ -936,7 +937,8 @@ async def vip_purchase(username: str, amount_usd: float):
         {
             "$set": {
                 "total_spent": new_total_spent,
-                "vip_level": new_vip_level
+                "vip_level": new_vip_level,
+                "avatar_frame": new_avatar_frame
             },
             "$inc": {"gems": gems_purchased}
         }
@@ -947,7 +949,9 @@ async def vip_purchase(username: str, amount_usd: float):
         "gems_received": gems_purchased,
         "new_total_spent": new_total_spent,
         "new_vip_level": new_vip_level,
-        "new_idle_cap_hours": get_idle_cap_hours(new_vip_level)
+        "new_idle_cap_hours": get_idle_cap_hours(new_vip_level),
+        "new_idle_rate": get_idle_gold_rate(new_vip_level),
+        "new_avatar_frame": new_avatar_frame
     }
 
 @api_router.get("/user/{username}/cr")

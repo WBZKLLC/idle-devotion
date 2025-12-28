@@ -11,14 +11,20 @@ import uuid
 from datetime import datetime, timedelta
 import random
 from bson import ObjectId
-from pydantic import ConfigDict
-from pydantic.json import pydantic_encoder
 
-# Fix ObjectId serialization issue for Pydantic v2
-def custom_encoder(obj):
-    if isinstance(obj, ObjectId):
-        return str(obj)
-    return pydantic_encoder(obj)
+def convert_objectid(obj):
+    """Convert ObjectId to string in MongoDB documents"""
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, ObjectId):
+                obj[key] = str(value)
+            elif isinstance(value, dict):
+                convert_objectid(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        convert_objectid(item)
+    return obj
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

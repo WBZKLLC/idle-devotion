@@ -86,11 +86,12 @@ class UserHero(BaseModel):
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
-    gems: int = 300  # Premium currency
+    crystals: int = 300  # Premium currency (renamed from gems)
     coins: int = 10000  # Regular currency
     gold: int = 5000  # Idle resource
     friendship_points: int = 0  # Friend currency
     pity_counter: int = 0  # Counts towards guaranteed SSR at 50
+    pity_counter_premium: int = 0  # Separate pity for premium summons
     total_pulls: int = 0
     login_days: int = 0
     last_login: Optional[datetime] = None

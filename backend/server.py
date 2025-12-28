@@ -985,7 +985,7 @@ async def get_vip_packages(username: str):
 
 @api_router.post("/vip/package/purchase")
 async def purchase_vip_package(username: str, package_tier: str):
-    """Purchase a VIP package with gems"""
+    """Purchase a VIP package with crystals"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -999,20 +999,20 @@ async def purchase_vip_package(username: str, package_tier: str):
         raise HTTPException(status_code=404, detail="Package tier not found")
     
     package = VIP_PACKAGES[vip_level][package_tier]
-    gem_cost = package["gem_cost"]
+    crystal_cost = package["crystal_cost"]
     rewards = package["rewards"]
     
-    # Check if user has enough gems
-    if user.get("gems", 0) < gem_cost:
-        raise HTTPException(status_code=400, detail=f"Not enough gems. Need {gem_cost}")
+    # Check if user has enough crystals
+    if user.get("crystals", 0) < crystal_cost:
+        raise HTTPException(status_code=400, detail=f"Not enough crystals. Need {crystal_cost}")
     
     # TODO: Check daily purchase limit (for now, allow unlimited)
     
-    # Deduct gems and give rewards
-    update_dict = {"gems": user.get("gems", 0) - gem_cost}
+    # Deduct crystals and give rewards
+    update_dict = {"crystals": user.get("crystals", 0) - crystal_cost}
     
     for reward_type, amount in rewards.items():
-        if reward_type in ["coins", "gold", "gems"]:
+        if reward_type in ["coins", "gold", "crystals"]:
             current_amount = user.get(reward_type, 0)
             update_dict[reward_type] = current_amount + amount
     
@@ -1023,9 +1023,9 @@ async def purchase_vip_package(username: str, package_tier: str):
     
     return {
         "package_tier": package_tier,
-        "gem_cost": gem_cost,
+        "crystal_cost": crystal_cost,
         "rewards": rewards,
-        "remaining_gems": update_dict["gems"]
+        "remaining_crystals": update_dict["crystals"]
     }
 
 @api_router.get("/user/{username}/cr")

@@ -11,6 +11,10 @@ import uuid
 from datetime import datetime, timedelta
 import random
 from bson import ObjectId
+import pydantic
+
+# Fix ObjectId serialization issue
+pydantic.json.ENCODERS_BY_TYPE[ObjectId] = str
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

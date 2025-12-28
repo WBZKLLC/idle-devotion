@@ -1,622 +1,627 @@
-diff --git a/backend/server.py b/backend/server.py
-index 7b0d9be..97ece9d 100644
---- a/backend/server.py
-+++ b/backend/server.py
-@@ -89,6 +89,7 @@ class User(BaseModel):
-     gems: int = 300  # Premium currency
-     coins: int = 10000  # Regular currency
-     gold: int = 5000  # Idle resource
-+    friendship_points: int = 0  # Friend currency
-     pity_counter: int = 0  # Counts towards guaranteed SSR at 50
-     total_pulls: int = 0
-     login_days: int = 0
 diff --git a/model.patch b/model.patch
-index f57a87e..e69de29 100644
+index a2d9ad1..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,605 +0,0 @@
--diff --git a/frontend/stores/gameStore.ts b/frontend/stores/gameStore.ts
--index 0bacd43..d7f6ad8 100644
----- a/frontend/stores/gameStore.ts
--+++ b/frontend/stores/gameStore.ts
--@@ -214,5 +214,20 @@ export const useGameStore = create<GameState>((set, get) => ({
--     }
--   },
-- 
--+  fetchCR: async () => {
--+    const { user } = get();
--+    if (!user) throw new Error('No user found');
--+    
--+    try {
--+      const response = await axios.get(
--+        `${BACKEND_URL}/api/user/${user.username}/cr`
--+      );
--+      return response.data;
--+    } catch (error) {
--+      console.error('Failed to fetch CR:', error);
--+      return { cr: 0, hero_count: 0 };
--+    }
--+  },
--+
--   setUser: (user: User | null) => set({ user }),
-- }));
+@@ -1,622 +0,0 @@
+-diff --git a/backend/server.py b/backend/server.py
+-index 7b0d9be..97ece9d 100644
+---- a/backend/server.py
+-+++ b/backend/server.py
+-@@ -89,6 +89,7 @@ class User(BaseModel):
+-     gems: int = 300  # Premium currency
+-     coins: int = 10000  # Regular currency
+-     gold: int = 5000  # Idle resource
+-+    friendship_points: int = 0  # Friend currency
+-     pity_counter: int = 0  # Counts towards guaranteed SSR at 50
+-     total_pulls: int = 0
+-     login_days: int = 0
 -diff --git a/model.patch b/model.patch
--index e4c1506..e69de29 100644
+-index f57a87e..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,575 +0,0 @@
---diff --git a/backend/server.py b/backend/server.py
---index 91afb59..5356b13 100644
------ a/backend/server.py
---+++ b/backend/server.py
---@@ -568,6 +568,170 @@ async def claim_idle_rewards(username: str):
---     
---     return IdleRewards(gold_earned=gold_earned, time_away=int(time_away))
+-@@ -1,605 +0,0 @@
+--diff --git a/frontend/stores/gameStore.ts b/frontend/stores/gameStore.ts
+--index 0bacd43..d7f6ad8 100644
+----- a/frontend/stores/gameStore.ts
+--+++ b/frontend/stores/gameStore.ts
+--@@ -214,5 +214,20 @@ export const useGameStore = create<GameState>((set, get) => ({
+--     }
+--   },
 -- 
---+@api_router.get("/user/{username}/cr")
---+async def get_character_rating(username: str):
---+    """Calculate and return user's Character Rating (CR)"""
---+    user = await db.users.find_one({"username": username})
---+    if not user:
---+        raise HTTPException(status_code=404, detail="User not found")
+--+  fetchCR: async () => {
+--+    const { user } = get();
+--+    if (!user) throw new Error('No user found');
 --+    
---+    # Get all user heroes
---+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
---+    
---+    total_cr = 0
---+    for hero in user_heroes:
---+        # CR calculation: HP + (ATK * 2) + DEF + (rank * 500) + (level * 100)
---+        hero_cr = (
---+            hero["current_hp"] + 
---+            (hero["current_atk"] * 2) + 
---+            hero["current_def"] + 
---+            (hero["rank"] * 500) + 
---+            (hero["level"] * 100)
---+        )
---+        total_cr += hero_cr
---+    
---+    return {"cr": total_cr, "hero_count": len(user_heroes)}
+--+    try {
+--+      const response = await axios.get(
+--+        `${BACKEND_URL}/api/user/${user.username}/cr`
+--+      );
+--+      return response.data;
+--+    } catch (error) {
+--+      console.error('Failed to fetch CR:', error);
+--+      return { cr: 0, hero_count: 0 };
+--+    }
+--+  },
 --+
---+@api_router.get("/story/islands")
---+async def get_islands():
---+    """Get all story islands"""
---+    islands = await db.islands.find().sort("order", 1).to_list(100)
---+    return [convert_objectid(island) for island in islands]
---+
---+@api_router.get("/story/chapters")
---+async def get_all_chapters():
---+    """Get all story chapters"""
---+    chapters = await db.chapters.find().sort("chapter_number", 1).to_list(100)
---+    return [convert_objectid(chapter) for chapter in chapters]
---+
---+@api_router.get("/story/progress/{username}")
---+async def get_user_progress(username: str):
---+    """Get user's story progress"""
---+    user = await db.users.find_one({"username": username})
---+    if not user:
---+        raise HTTPException(status_code=404, detail="User not found")
---+    
---+    progress = await db.user_progress.find_one({"user_id": user["id"]})
---+    if not progress:
---+        # Create initial progress
---+        progress = UserProgress(user_id=user["id"])
---+        await db.user_progress.insert_one(progress.dict())
---+        progress = await db.user_progress.find_one({"user_id": user["id"]})
---+    
---+    return convert_objectid(progress)
---+
---+@api_router.post("/story/battle/{username}/{chapter_number}")
---+async def battle_chapter(username: str, chapter_number: int):
---+    """Battle a story chapter - server-side combat simulation"""
---+    user = await db.users.find_one({"username": username})
---+    if not user:
---+        raise HTTPException(status_code=404, detail="User not found")
---+    
---+    # Get user progress
---+    progress = await db.user_progress.find_one({"user_id": user["id"]})
---+    if not progress:
---+        progress = UserProgress(user_id=user["id"])
---+        await db.user_progress.insert_one(progress.dict())
---+    
---+    # Check if chapter is unlocked (previous chapter must be completed)
---+    if chapter_number > 1 and (chapter_number - 1) not in progress.get("completed_chapters", []):
---+        raise HTTPException(status_code=400, detail="Previous chapter must be completed first")
---+    
---+    # Get chapter data
---+    chapter = await db.chapters.find_one({"chapter_number": chapter_number})
---+    if not chapter:
---+        raise HTTPException(status_code=404, detail="Chapter not found")
---+    
---+    # Calculate user's team power (CR)
---+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
---+    
---+    # Get user's active team or use top 6 heroes by power
---+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
---+    if team and team.get("hero_ids"):
---+        team_heroes = [h for h in user_heroes if h["id"] in team["hero_ids"]]
---+    else:
---+        # Use top 6 heroes by power
---+        team_heroes = sorted(
---+            user_heroes, 
---+            key=lambda h: h["current_hp"] + h["current_atk"] * 2 + h["current_def"],
---+            reverse=True
---+        )[:6]
---+    
---+    if not team_heroes:
---+        raise HTTPException(status_code=400, detail="You need at least 1 hero to battle")
---+    
---+    # Calculate team power
---+    user_power = sum(
---+        h["current_hp"] + (h["current_atk"] * 2) + h["current_def"] 
---+        for h in team_heroes
---+    )
---+    
---+    enemy_power = chapter["enemy_power"]
---+    
---+    # Combat simulation with RNG
---+    power_ratio = user_power / enemy_power
---+    
---+    # Base win chance based on power ratio
---+    # At equal power (1.0 ratio): 50% win chance
---+    # At 1.5x power: ~85% win chance
---+    # At 0.7x power: ~15% win chance (F2P struggle point)
---+    base_win_chance = min(0.95, max(0.05, 0.5 + (power_ratio - 1.0) * 0.7))
---+    
---+    # Add some RNG
---+    import random
---+    roll = random.random()
---+    victory = roll < base_win_chance
---+    
---+    # Calculate damage
---+    if victory:
---+        damage_dealt = int(enemy_power * 0.9)
---+        damage_taken = int(user_power * random.uniform(0.2, 0.4))
---+    else:
---+        damage_dealt = int(enemy_power * random.uniform(0.4, 0.7))
---+        damage_taken = int(user_power * random.uniform(0.6, 0.9))
---+    
---+    rewards = {}
---+    if victory:
---+        # Check if first clear
---+        is_first_clear = chapter_number not in progress.get("completed_chapters", [])
---+        
---+        # Give rewards
---+        rewards = chapter["rewards"].copy()
---+        if is_first_clear:
---+            # Add first clear bonus
---+            for key, value in chapter["first_clear_bonus"].items():
---+                rewards[key] = rewards.get(key, 0) + value
---+        
---+        # Update user resources
---+        update_dict = {}
---+        if "gems" in rewards:
---+            update_dict["gems"] = user.get("gems", 0) + rewards["gems"]
---+        if "coins" in rewards:
---+            update_dict["coins"] = user.get("coins", 0) + rewards["coins"]
---+        if "gold" in rewards:
---+            update_dict["gold"] = user.get("gold", 0) + rewards["gold"]
---+        
---+        await db.users.update_one({"username": username}, {"$set": update_dict})
---+        
---+        # Update progress
---+        if is_first_clear:
---+            await db.user_progress.update_one(
---+                {"user_id": user["id"]},
---+                {
---+                    "$addToSet": {"completed_chapters": chapter_number},
---+                    "$set": {"current_chapter": max(progress.get("current_chapter", 1), chapter_number + 1)}
---+                }
---+            )
---+    
---+    return BattleResult(
---+        victory=victory,
---+        rewards=rewards,
---+        user_power=user_power,
---+        enemy_power=enemy_power,
---+        damage_dealt=damage_dealt,
---+        damage_taken=damage_taken
---+    )
---+
--- @api_router.get("/")
--- async def root():
---     return {"message": "Gacha Game API", "version": "1.0"}
+--   setUser: (user: User | null) => set({ user }),
+-- }));
 --diff --git a/model.patch b/model.patch
---index 58dcdcd..582a2ba 100644
+--index e4c1506..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,395 +0,0 @@
+--@@ -1,575 +0,0 @@
 ---diff --git a/backend/server.py b/backend/server.py
----index 1b7777c..4cf8b41 100644
+---index 91afb59..5356b13 100644
 ------ a/backend/server.py
 ---+++ b/backend/server.py
----@@ -12,6 +12,20 @@ from datetime import datetime, timedelta
---- import random
---- from bson import ObjectId
---- 
----+def convert_objectid(obj):
----+    """Convert ObjectId to string in MongoDB documents"""
----+    if isinstance(obj, dict):
----+        for key, value in obj.items():
----+            if isinstance(value, ObjectId):
----+                obj[key] = str(value)
----+            elif isinstance(value, dict):
----+                convert_objectid(value)
----+            elif isinstance(value, list):
----+                for item in value:
----+                    if isinstance(item, dict):
----+                        convert_objectid(item)
----+    return obj
----+
---- ROOT_DIR = Path(__file__).parent
---- load_dotenv(ROOT_DIR / '.env')
---- 
----@@ -212,7 +226,7 @@ async def get_user(username: str):
----     user = await db.users.find_one({"username": username})
----     if not user:
----         raise HTTPException(status_code=404, detail="User not found")
-----    return user
----+    return convert_objectid(user)
---- 
---- @api_router.post("/user/{username}/login")
---- async def user_login(username: str):
----@@ -347,7 +361,7 @@ async def pull_gacha(username: str, request: PullRequest):
---- async def get_all_heroes():
----     """Get all available heroes in the pool"""
----     heroes = await db.heroes.find().to_list(1000)
-----    return heroes
----+    return [convert_objectid(hero) for hero in heroes]
---- 
---- @api_router.get("/user/{username}/heroes")
---- async def get_user_heroes(username: str):
----@@ -364,8 +378,8 @@ async def get_user_heroes(username: str):
----         hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
----         if hero_data:
----             enriched_heroes.append({
-----                **uh,
-----                "hero_data": hero_data
----+                **convert_objectid(uh),
----+                "hero_data": convert_objectid(hero_data)
----             })
+---@@ -568,6 +568,170 @@ async def claim_idle_rewards(username: str):
 ---     
----     return enriched_heroes
----@@ -409,7 +423,7 @@ async def upgrade_hero(username: str, hero_instance_id: str):
----     )
----     
----     updated_hero = await db.user_heroes.find_one({"id": hero_instance_id})
-----    return updated_hero
----+    return convert_objectid(updated_hero)
+---     return IdleRewards(gold_earned=gold_earned, time_away=int(time_away))
 --- 
---- @api_router.post("/team/create")
---- async def create_team(username: str, team_name: str):
----@@ -430,7 +444,7 @@ async def get_user_teams(username: str):
----         raise HTTPException(status_code=404, detail="User not found")
----     
----     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
-----    return teams
----+    return [convert_objectid(team) for team in teams]
---- 
---- @api_router.put("/team/{team_id}/heroes")
---- async def update_team_heroes(team_id: str, hero_ids: List[str]):
----@@ -444,7 +458,7 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
----     )
----     
----     updated_team = await db.teams.find_one({"id": team_id})
-----    return updated_team
----+    return convert_objectid(updated_team)
---- 
---- @api_router.post("/idle/claim")
---- async def claim_idle_rewards(username: str):
----diff --git a/final_backend_test.py b/final_backend_test.py
----new file mode 100644
----index 0000000..f4976ca
------- /dev/null
----+++ b/final_backend_test.py
----@@ -0,0 +1,254 @@
----+#!/usr/bin/env python3
----+"""
----+Final Comprehensive Backend API Test for Gacha Game
----+Tests all endpoints with a fresh user to ensure full functionality
----+"""
+---+@api_router.get("/user/{username}/cr")
+---+async def get_character_rating(username: str):
+---+    """Calculate and return user's Character Rating (CR)"""
+---+    user = await db.users.find_one({"username": username})
+---+    if not user:
+---+        raise HTTPException(status_code=404, detail="User not found")
+---+    
+---+    # Get all user heroes
+---+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+---+    
+---+    total_cr = 0
+---+    for hero in user_heroes:
+---+        # CR calculation: HP + (ATK * 2) + DEF + (rank * 500) + (level * 100)
+---+        hero_cr = (
+---+            hero["current_hp"] + 
+---+            (hero["current_atk"] * 2) + 
+---+            hero["current_def"] + 
+---+            (hero["rank"] * 500) + 
+---+            (hero["level"] * 100)
+---+        )
+---+        total_cr += hero_cr
+---+    
+---+    return {"cr": total_cr, "hero_count": len(user_heroes)}
 ---+
----+import requests
----+import json
----+import time
----+from datetime import datetime
----+import sys
----+import random
+---+@api_router.get("/story/islands")
+---+async def get_islands():
+---+    """Get all story islands"""
+---+    islands = await db.islands.find().sort("order", 1).to_list(100)
+---+    return [convert_objectid(island) for island in islands]
 ---+
----+# Configuration
----+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
----+TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
+---+@api_router.get("/story/chapters")
+---+async def get_all_chapters():
+---+    """Get all story chapters"""
+---+    chapters = await db.chapters.find().sort("chapter_number", 1).to_list(100)
+---+    return [convert_objectid(chapter) for chapter in chapters]
 ---+
----+class ComprehensiveGachaTest:
----+    def __init__(self):
----+        self.base_url = BASE_URL
----+        self.username = TEST_USERNAME
----+        self.user_data = None
----+        self.user_heroes = []
----+        self.teams = []
----+        self.test_results = {
----+            "passed": 0,
----+            "failed": 0,
----+            "errors": []
----+        }
+---+@api_router.get("/story/progress/{username}")
+---+async def get_user_progress(username: str):
+---+    """Get user's story progress"""
+---+    user = await db.users.find_one({"username": username})
+---+    if not user:
+---+        raise HTTPException(status_code=404, detail="User not found")
 ---+    
----+    def log_result(self, test_name, success, message=""):
----+        """Log test result"""
----+        status = "✅ PASS" if success else "❌ FAIL"
----+        print(f"{status}: {test_name}")
----+        if message:
----+            print(f"   {message}")
----+        
----+        if success:
----+            self.test_results["passed"] += 1
----+        else:
----+            self.test_results["failed"] += 1
----+            self.test_results["errors"].append(f"{test_name}: {message}")
+---+    progress = await db.user_progress.find_one({"user_id": user["id"]})
+---+    if not progress:
+---+        # Create initial progress
+---+        progress = UserProgress(user_id=user["id"])
+---+        await db.user_progress.insert_one(progress.dict())
+---+        progress = await db.user_progress.find_one({"user_id": user["id"]})
 ---+    
----+    def make_request(self, method, endpoint, **kwargs):
----+        """Make HTTP request with error handling"""
----+        url = f"{self.base_url}{endpoint}"
----+        try:
----+            response = requests.request(method, url, timeout=30, **kwargs)
----+            return response
----+        except requests.exceptions.RequestException as e:
----+            print(f"❌ Request failed: {e}")
----+            return None
----+    
----+    def test_complete_flow(self):
----+        """Test the complete gacha game flow"""
----+        print(f"\n🚀 Testing Complete Gacha Game Flow with user: {self.username}")
----+        print("=" * 70)
----+        
----+        # 1. User Registration
----+        print("\n1️⃣ Testing User Registration...")
----+        response = self.make_request("POST", f"/user/register?username={self.username}")
----+        if response and response.status_code == 200:
----+            self.user_data = response.json()
----+            self.log_result("User Registration", True, 
----+                          f"User created with {self.user_data['gems']} gems, {self.user_data['coins']} coins")
----+        else:
----+            self.log_result("User Registration", False, f"Failed: {response.status_code if response else 'No response'}")
----+            return False
----+        
----+        # 2. Get All Heroes
----+        print("\n2️⃣ Testing Hero Pool...")
----+        response = self.make_request("GET", "/heroes")
----+        if response and response.status_code == 200:
----+            heroes = response.json()
----+            self.log_result("Get Heroes Pool", True, f"Retrieved {len(heroes)} heroes")
----+        else:
----+            self.log_result("Get Heroes Pool", False, "Failed to get heroes")
----+            return False
----+        
----+        # 3. Daily Login
----+        print("\n3️⃣ Testing Daily Login...")
----+        response = self.make_request("POST", f"/user/{self.username}/login")
----+        if response and response.status_code == 200:
----+            rewards = response.json()
----+            self.log_result("Daily Login", True, f"Received {rewards['coins']} coins, {rewards['gold']} gold")
----+        else:
----+            self.log_result("Daily Login", False, "Failed")
----+        
----+        # 4. Gacha Pulls - Test all types
----+        print("\n4️⃣ Testing Gacha System...")
----+        
----+        # Single pull with gems
----+        pull_data = {"pull_type": "single", "currency_type": "gems"}
----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
----+        if response and response.status_code == 200:
----+            result = response.json()
----+            self.log_result("Single Pull (Gems)", True, 
----+                          f"Pulled {len(result['heroes'])} hero, pity: {result['new_pity_counter']}")
----+        else:
----+            self.log_result("Single Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
----+        
----+        # Multi pull with gems
----+        pull_data = {"pull_type": "multi", "currency_type": "gems"}
----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
----+        if response and response.status_code == 200:
----+            result = response.json()
----+            self.log_result("Multi Pull (Gems)", True, 
----+                          f"Pulled {len(result['heroes'])} heroes, pity: {result['new_pity_counter']}")
----+        else:
----+            self.log_result("Multi Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
----+        
----+        # Single pull with coins
----+        pull_data = {"pull_type": "single", "currency_type": "coins"}
----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
----+        if response and response.status_code == 200:
----+            result = response.json()
----+            self.log_result("Single Pull (Coins)", True, 
----+                          f"Pulled {len(result['heroes'])} hero")
----+        else:
----+            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
----+        
----+        # Multi pull with coins
----+        pull_data = {"pull_type": "multi", "currency_type": "coins"}
----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
----+        if response and response.status_code == 200:
----+            result = response.json()
----+            self.log_result("Multi Pull (Coins)", True, 
----+                          f"Pulled {len(result['heroes'])} heroes")
----+        else:
----+            self.log_result("Multi Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
----+        
----+        # 5. Get User Heroes
----+        print("\n5️⃣ Testing Hero Collection...")
----+        response = self.make_request("GET", f"/user/{self.username}/heroes")
----+        if response and response.status_code == 200:
----+            self.user_heroes = response.json()
----+            self.log_result("Get User Heroes", True, f"User has {len(self.user_heroes)} heroes")
----+        else:
----+            self.log_result("Get User Heroes", False, "Failed")
----+        
----+        # 6. Team Management
----+        print("\n6️⃣ Testing Team Management...")
----+        
----+        # Create team
----+        response = self.make_request("POST", f"/team/create?username={self.username}&team_name=MainTeam")
----+        if response and response.status_code == 200:
----+            team = response.json()
----+            self.log_result("Create Team", True, f"Created team: {team['name']}")
----+            team_id = team['id']
----+        else:
----+            self.log_result("Create Team", False, "Failed")
----+            return False
----+        
----+        # Get teams
----+        response = self.make_request("GET", f"/team/{self.username}")
----+        if response and response.status_code == 200:
----+            self.teams = response.json()
----+            self.log_result("Get Teams", True, f"User has {len(self.teams)} teams")
----+        else:
----+            self.log_result("Get Teams", False, "Failed")
----+        
----+        # Update team with heroes (if we have any)
----+        if self.user_heroes and len(self.user_heroes) > 0:
----+            hero_ids = [hero['id'] for hero in self.user_heroes[:6]]  # Max 6 heroes
----+            response = self.make_request("PUT", f"/team/{team_id}/heroes", json=hero_ids)
----+            if response and response.status_code == 200:
----+                self.log_result("Update Team Heroes", True, f"Added {len(hero_ids)} heroes to team")
----+            else:
----+                self.log_result("Update Team Heroes", False, "Failed")
----+        
----+        # 7. Hero Upgrade (if possible)
----+        print("\n7️⃣ Testing Hero Upgrade...")
----+        if self.user_heroes:
----+            # Find a hero with duplicates (unlikely for new account)
----+            hero_to_upgrade = None
----+            for hero in self.user_heroes:
----+                if hero.get("duplicates", 0) >= 2:
----+                    hero_to_upgrade = hero
----+                    break
----+            
----+            if hero_to_upgrade:
----+                response = self.make_request("POST", f"/user/{self.username}/heroes/{hero_to_upgrade['id']}/upgrade")
----+                if response and response.status_code == 200:
----+                    self.log_result("Hero Upgrade", True, "Hero upgraded successfully")
----+                else:
----+                    self.log_result("Hero Upgrade", False, f"Failed: {response.text if response else 'No response'}")
----+            else:
----+                self.log_result("Hero Upgrade", True, "No heroes with sufficient duplicates (expected)")
----+        
----+        # 8. Idle Rewards
----+        print("\n8️⃣ Testing Idle Rewards...")
----+        response = self.make_request("POST", f"/idle/claim?username={self.username}")
----+        if response and response.status_code == 200:
----+            rewards = response.json()
----+            self.log_result("Idle Rewards", True, f"Claimed {rewards['gold_earned']} gold")
----+        else:
----+            self.log_result("Idle Rewards", False, "Failed")
----+        
----+        # 9. Test insufficient funds
----+        print("\n9️⃣ Testing Error Handling...")
----+        # Try to pull when out of gems
----+        for _ in range(10):  # Exhaust gems
----+            pull_data = {"pull_type": "multi", "currency_type": "gems"}
----+            response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
----+            if response and response.status_code == 400:
----+                self.log_result("Insufficient Funds Error", True, "Correctly rejected pull with insufficient gems")
----+                break
----+        else:
----+            self.log_result("Insufficient Funds Error", False, "Did not properly handle insufficient funds")
----+        
----+        # 10. Final user state
----+        print("\n🔟 Final User State...")
----+        response = self.make_request("GET", f"/user/{self.username}")
----+        if response and response.status_code == 200:
----+            final_user = response.json()
----+            self.log_result("Final User State", True, 
----+                          f"Gems: {final_user['gems']}, Coins: {final_user['coins']}, Gold: {final_user['gold']}, Pulls: {final_user['total_pulls']}")
----+        else:
----+            self.log_result("Final User State", False, "Failed")
----+        
----+        return True
----+    
----+    def run_test(self):
----+        """Run the comprehensive test"""
----+        success = self.test_complete_flow()
----+        
----+        # Print summary
----+        print("\n" + "=" * 70)
----+        print("🏁 COMPREHENSIVE TEST SUMMARY")
----+        print("=" * 70)
----+        print(f"✅ Passed: {self.test_results['passed']}")
----+        print(f"❌ Failed: {self.test_results['failed']}")
----+        
----+        if self.test_results["errors"]:
----+            print("\n🔍 FAILED TESTS:")
----+            for error in self.test_results["errors"]:
----+                print(f"  • {error}")
----+        
----+        success_rate = (self.test_results["passed"] / 
----+                       (self.test_results["passed"] + self.test_results["failed"])) * 100
----+        print(f"\n📊 Success Rate: {success_rate:.1f}%")
----+        
----+        return self.test_results["failed"] == 0
+---+    return convert_objectid(progress)
 ---+
----+if __name__ == "__main__":
----+    tester = ComprehensiveGachaTest()
----+    success = tester.run_test()
+---+@api_router.post("/story/battle/{username}/{chapter_number}")
+---+async def battle_chapter(username: str, chapter_number: int):
+---+    """Battle a story chapter - server-side combat simulation"""
+---+    user = await db.users.find_one({"username": username})
+---+    if not user:
+---+        raise HTTPException(status_code=404, detail="User not found")
 ---+    
----+    if success:
----+        print("\n🎉 All tests passed! Backend is fully functional!")
----+        sys.exit(0)
+---+    # Get user progress
+---+    progress = await db.user_progress.find_one({"user_id": user["id"]})
+---+    if not progress:
+---+        progress = UserProgress(user_id=user["id"])
+---+        await db.user_progress.insert_one(progress.dict())
+---+    
+---+    # Check if chapter is unlocked (previous chapter must be completed)
+---+    if chapter_number > 1 and (chapter_number - 1) not in progress.get("completed_chapters", []):
+---+        raise HTTPException(status_code=400, detail="Previous chapter must be completed first")
+---+    
+---+    # Get chapter data
+---+    chapter = await db.chapters.find_one({"chapter_number": chapter_number})
+---+    if not chapter:
+---+        raise HTTPException(status_code=404, detail="Chapter not found")
+---+    
+---+    # Calculate user's team power (CR)
+---+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+---+    
+---+    # Get user's active team or use top 6 heroes by power
+---+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
+---+    if team and team.get("hero_ids"):
+---+        team_heroes = [h for h in user_heroes if h["id"] in team["hero_ids"]]
 ---+    else:
----+        print("\n💥 Some tests failed!")
----+        sys.exit(1)
----\ No newline at end of file
----diff --git a/quick_test.py b/quick_test.py
----new file mode 100644
----index 0000000..2dbe9e1
------- /dev/null
----+++ b/quick_test.py
----@@ -0,0 +1,46 @@
----+#!/usr/bin/env python3
----+"""
----+Quick Backend API Status Check
----+"""
+---+        # Use top 6 heroes by power
+---+        team_heroes = sorted(
+---+            user_heroes, 
+---+            key=lambda h: h["current_hp"] + h["current_atk"] * 2 + h["current_def"],
+---+            reverse=True
+---+        )[:6]
+---+    
+---+    if not team_heroes:
+---+        raise HTTPException(status_code=400, detail="You need at least 1 hero to battle")
+---+    
+---+    # Calculate team power
+---+    user_power = sum(
+---+        h["current_hp"] + (h["current_atk"] * 2) + h["current_def"] 
+---+        for h in team_heroes
+---+    )
+---+    
+---+    enemy_power = chapter["enemy_power"]
+---+    
+---+    # Combat simulation with RNG
+---+    power_ratio = user_power / enemy_power
+---+    
+---+    # Base win chance based on power ratio
+---+    # At equal power (1.0 ratio): 50% win chance
+---+    # At 1.5x power: ~85% win chance
+---+    # At 0.7x power: ~15% win chance (F2P struggle point)
+---+    base_win_chance = min(0.95, max(0.05, 0.5 + (power_ratio - 1.0) * 0.7))
+---+    
+---+    # Add some RNG
+---+    import random
+---+    roll = random.random()
+---+    victory = roll < base_win_chance
+---+    
+---+    # Calculate damage
+---+    if victory:
+---+        damage_dealt = int(enemy_power * 0.9)
+---+        damage_taken = int(user_power * random.uniform(0.2, 0.4))
+---+    else:
+---+        damage_dealt = int(enemy_power * random.uniform(0.4, 0.7))
+---+        damage_taken = int(user_power * random.uniform(0.6, 0.9))
+---+    
+---+    rewards = {}
+---+    if victory:
+---+        # Check if first clear
+---+        is_first_clear = chapter_number not in progress.get("completed_chapters", [])
+---+        
+---+        # Give rewards
+---+        rewards = chapter["rewards"].copy()
+---+        if is_first_clear:
+---+            # Add first clear bonus
+---+            for key, value in chapter["first_clear_bonus"].items():
+---+                rewards[key] = rewards.get(key, 0) + value
+---+        
+---+        # Update user resources
+---+        update_dict = {}
+---+        if "gems" in rewards:
+---+            update_dict["gems"] = user.get("gems", 0) + rewards["gems"]
+---+        if "coins" in rewards:
+---+            update_dict["coins"] = user.get("coins", 0) + rewards["coins"]
+---+        if "gold" in rewards:
+---+            update_dict["gold"] = user.get("gold", 0) + rewards["gold"]
+---+        
+---+        await db.users.update_one({"username": username}, {"$set": update_dict})
+---+        
+---+        # Update progress
+---+        if is_first_clear:
+---+            await db.user_progress.update_one(
+---+                {"user_id": user["id"]},
+---+                {
+---+                    "$addToSet": {"completed_chapters": chapter_number},
+---+                    "$set": {"current_chapter": max(progress.get("current_chapter", 1), chapter_number + 1)}
+---+                }
+---+            )
+---+    
+---+    return BattleResult(
+---+        victory=victory,
+---+        rewards=rewards,
+---+        user_power=user_power,
+---+        enemy_power=enemy_power,
+---+        damage_dealt=damage_dealt,
+---+        damage_taken=damage_taken
+---+    )
 ---+
----+import requests
----+import json
----+
----+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
----+TEST_USERNAME = "testplayer"
----+
----+def test_endpoint(method, endpoint, **kwargs):
----+    """Test a single endpoint"""
----+    url = f"{BASE_URL}{endpoint}"
----+    try:
----+        response = requests.request(method, url, timeout=10, **kwargs)
----+        return response.status_code, response.text[:200]
----+    except Exception as e:
----+        return None, str(e)
----+
----+print("🔍 Quick Backend API Status Check")
----+print("=" * 50)
----+
----+# Test basic endpoints
----+endpoints = [
----+    ("GET", "/", {}),
----+    ("POST", f"/user/register?username=testuser2", {}),
----+    ("GET", f"/user/{TEST_USERNAME}", {}),
----+    ("POST", f"/user/{TEST_USERNAME}/login", {}),
----+    ("GET", "/heroes", {}),
----+    ("GET", f"/user/{TEST_USERNAME}/heroes", {}),
----+    ("POST", f"/gacha/pull?username={TEST_USERNAME}", {"json": {"pull_type": "single", "currency_type": "gems"}}),
----+    ("POST", f"/team/create?username={TEST_USERNAME}&team_name=TestTeam2", {}),
----+    ("GET", f"/team/{TEST_USERNAME}", {}),
----+    ("POST", f"/idle/claim?username={TEST_USERNAME}", {})
----+]
----+
----+for method, endpoint, kwargs in endpoints:
----+    status, response = test_endpoint(method, endpoint, **kwargs)
----+    status_icon = "✅" if status == 200 else "❌" if status else "💥"
----+    print(f"{status_icon} {method} {endpoint}: {status} - {response}")
----+
----+print("\n🔍 Analysis:")
----+print("- 520 errors indicate ObjectId serialization issues in backend")
----+print("- Some endpoints work (registration, login, idle) - these don't return MongoDB docs")
----+print("- Endpoints that return MongoDB docs fail (get user, heroes, teams)")
----\ No newline at end of file
+--- @api_router.get("/")
+--- async def root():
+---     return {"message": "Gacha Game API", "version": "1.0"}
+---diff --git a/model.patch b/model.patch
+---index 58dcdcd..582a2ba 100644
+------ a/model.patch
+---+++ b/model.patch
+---@@ -1,395 +0,0 @@
+----diff --git a/backend/server.py b/backend/server.py
+----index 1b7777c..4cf8b41 100644
+------- a/backend/server.py
+----+++ b/backend/server.py
+----@@ -12,6 +12,20 @@ from datetime import datetime, timedelta
+---- import random
+---- from bson import ObjectId
+---- 
+----+def convert_objectid(obj):
+----+    """Convert ObjectId to string in MongoDB documents"""
+----+    if isinstance(obj, dict):
+----+        for key, value in obj.items():
+----+            if isinstance(value, ObjectId):
+----+                obj[key] = str(value)
+----+            elif isinstance(value, dict):
+----+                convert_objectid(value)
+----+            elif isinstance(value, list):
+----+                for item in value:
+----+                    if isinstance(item, dict):
+----+                        convert_objectid(item)
+----+    return obj
+----+
+---- ROOT_DIR = Path(__file__).parent
+---- load_dotenv(ROOT_DIR / '.env')
+---- 
+----@@ -212,7 +226,7 @@ async def get_user(username: str):
+----     user = await db.users.find_one({"username": username})
+----     if not user:
+----         raise HTTPException(status_code=404, detail="User not found")
+-----    return user
+----+    return convert_objectid(user)
+---- 
+---- @api_router.post("/user/{username}/login")
+---- async def user_login(username: str):
+----@@ -347,7 +361,7 @@ async def pull_gacha(username: str, request: PullRequest):
+---- async def get_all_heroes():
+----     """Get all available heroes in the pool"""
+----     heroes = await db.heroes.find().to_list(1000)
+-----    return heroes
+----+    return [convert_objectid(hero) for hero in heroes]
+---- 
+---- @api_router.get("/user/{username}/heroes")
+---- async def get_user_heroes(username: str):
+----@@ -364,8 +378,8 @@ async def get_user_heroes(username: str):
+----         hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+----         if hero_data:
+----             enriched_heroes.append({
+-----                **uh,
+-----                "hero_data": hero_data
+----+                **convert_objectid(uh),
+----+                "hero_data": convert_objectid(hero_data)
+----             })
+----     
+----     return enriched_heroes
+----@@ -409,7 +423,7 @@ async def upgrade_hero(username: str, hero_instance_id: str):
+----     )
+----     
+----     updated_hero = await db.user_heroes.find_one({"id": hero_instance_id})
+-----    return updated_hero
+----+    return convert_objectid(updated_hero)
+---- 
+---- @api_router.post("/team/create")
+---- async def create_team(username: str, team_name: str):
+----@@ -430,7 +444,7 @@ async def get_user_teams(username: str):
+----         raise HTTPException(status_code=404, detail="User not found")
+----     
+----     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
+-----    return teams
+----+    return [convert_objectid(team) for team in teams]
+---- 
+---- @api_router.put("/team/{team_id}/heroes")
+---- async def update_team_heroes(team_id: str, hero_ids: List[str]):
+----@@ -444,7 +458,7 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
+----     )
+----     
+----     updated_team = await db.teams.find_one({"id": team_id})
+-----    return updated_team
+----+    return convert_objectid(updated_team)
+---- 
+---- @api_router.post("/idle/claim")
+---- async def claim_idle_rewards(username: str):
+----diff --git a/final_backend_test.py b/final_backend_test.py
+----new file mode 100644
+----index 0000000..f4976ca
+------- /dev/null
+----+++ b/final_backend_test.py
+----@@ -0,0 +1,254 @@
+----+#!/usr/bin/env python3
+----+"""
+----+Final Comprehensive Backend API Test for Gacha Game
+----+Tests all endpoints with a fresh user to ensure full functionality
+----+"""
+----+
+----+import requests
+----+import json
+----+import time
+----+from datetime import datetime
+----+import sys
+----+import random
+----+
+----+# Configuration
+----+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
+----+TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
+----+
+----+class ComprehensiveGachaTest:
+----+    def __init__(self):
+----+        self.base_url = BASE_URL
+----+        self.username = TEST_USERNAME
+----+        self.user_data = None
+----+        self.user_heroes = []
+----+        self.teams = []
+----+        self.test_results = {
+----+            "passed": 0,
+----+            "failed": 0,
+----+            "errors": []
+----+        }
+----+    
+----+    def log_result(self, test_name, success, message=""):
+----+        """Log test result"""
+----+        status = "✅ PASS" if success else "❌ FAIL"
+----+        print(f"{status}: {test_name}")
+----+        if message:
+----+            print(f"   {message}")
+----+        
+----+        if success:
+----+            self.test_results["passed"] += 1
+----+        else:
+----+            self.test_results["failed"] += 1
+----+            self.test_results["errors"].append(f"{test_name}: {message}")
+----+    
+----+    def make_request(self, method, endpoint, **kwargs):
+----+        """Make HTTP request with error handling"""
+----+        url = f"{self.base_url}{endpoint}"
+----+        try:
+----+            response = requests.request(method, url, timeout=30, **kwargs)
+----+            return response
+----+        except requests.exceptions.RequestException as e:
+----+            print(f"❌ Request failed: {e}")
+----+            return None
+----+    
+----+    def test_complete_flow(self):
+----+        """Test the complete gacha game flow"""
+----+        print(f"\n🚀 Testing Complete Gacha Game Flow with user: {self.username}")
+----+        print("=" * 70)
+----+        
+----+        # 1. User Registration
+----+        print("\n1️⃣ Testing User Registration...")
+----+        response = self.make_request("POST", f"/user/register?username={self.username}")
+----+        if response and response.status_code == 200:
+----+            self.user_data = response.json()
+----+            self.log_result("User Registration", True, 
+----+                          f"User created with {self.user_data['gems']} gems, {self.user_data['coins']} coins")
+----+        else:
+----+            self.log_result("User Registration", False, f"Failed: {response.status_code if response else 'No response'}")
+----+            return False
+----+        
+----+        # 2. Get All Heroes
+----+        print("\n2️⃣ Testing Hero Pool...")
+----+        response = self.make_request("GET", "/heroes")
+----+        if response and response.status_code == 200:
+----+            heroes = response.json()
+----+            self.log_result("Get Heroes Pool", True, f"Retrieved {len(heroes)} heroes")
+----+        else:
+----+            self.log_result("Get Heroes Pool", False, "Failed to get heroes")
+----+            return False
+----+        
+----+        # 3. Daily Login
+----+        print("\n3️⃣ Testing Daily Login...")
+----+        response = self.make_request("POST", f"/user/{self.username}/login")
+----+        if response and response.status_code == 200:
+----+            rewards = response.json()
+----+            self.log_result("Daily Login", True, f"Received {rewards['coins']} coins, {rewards['gold']} gold")
+----+        else:
+----+            self.log_result("Daily Login", False, "Failed")
+----+        
+----+        # 4. Gacha Pulls - Test all types
+----+        print("\n4️⃣ Testing Gacha System...")
+----+        
+----+        # Single pull with gems
+----+        pull_data = {"pull_type": "single", "currency_type": "gems"}
+----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+----+        if response and response.status_code == 200:
+----+            result = response.json()
+----+            self.log_result("Single Pull (Gems)", True, 
+----+                          f"Pulled {len(result['heroes'])} hero, pity: {result['new_pity_counter']}")
+----+        else:
+----+            self.log_result("Single Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
+----+        
+----+        # Multi pull with gems
+----+        pull_data = {"pull_type": "multi", "currency_type": "gems"}
+----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+----+        if response and response.status_code == 200:
+----+            result = response.json()
+----+            self.log_result("Multi Pull (Gems)", True, 
+----+                          f"Pulled {len(result['heroes'])} heroes, pity: {result['new_pity_counter']}")
+----+        else:
+----+            self.log_result("Multi Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
+----+        
+----+        # Single pull with coins
+----+        pull_data = {"pull_type": "single", "currency_type": "coins"}
+----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+----+        if response and response.status_code == 200:
+----+            result = response.json()
+----+            self.log_result("Single Pull (Coins)", True, 
+----+                          f"Pulled {len(result['heroes'])} hero")
+----+        else:
+----+            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
+----+        
+----+        # Multi pull with coins
+----+        pull_data = {"pull_type": "multi", "currency_type": "coins"}
+----+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+----+        if response and response.status_code == 200:
+----+            result = response.json()
+----+            self.log_result("Multi Pull (Coins)", True, 
+----+                          f"Pulled {len(result['heroes'])} heroes")
+----+        else:
+----+            self.log_result("Multi Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
+----+        
+----+        # 5. Get User Heroes
+----+        print("\n5️⃣ Testing Hero Collection...")
+----+        response = self.make_request("GET", f"/user/{self.username}/heroes")
+----+        if response and response.status_code == 200:
+----+            self.user_heroes = response.json()
+----+            self.log_result("Get User Heroes", True, f"User has {len(self.user_heroes)} heroes")
+----+        else:
+----+            self.log_result("Get User Heroes", False, "Failed")
+----+        
+----+        # 6. Team Management
+----+        print("\n6️⃣ Testing Team Management...")
+----+        
+----+        # Create team
+----+        response = self.make_request("POST", f"/team/create?username={self.username}&team_name=MainTeam")
+----+        if response and response.status_code == 200:
+----+            team = response.json()
+----+            self.log_result("Create Team", True, f"Created team: {team['name']}")
+----+            team_id = team['id']
+----+        else:
+----+            self.log_result("Create Team", False, "Failed")
+----+            return False
+----+        
+----+        # Get teams
+----+        response = self.make_request("GET", f"/team/{self.username}")
+----+        if response and response.status_code == 200:
+----+            self.teams = response.json()
+----+            self.log_result("Get Teams", True, f"User has {len(self.teams)} teams")
+----+        else:
+----+            self.log_result("Get Teams", False, "Failed")
+----+        
+----+        # Update team with heroes (if we have any)
+----+        if self.user_heroes and len(self.user_heroes) > 0:
+----+            hero_ids = [hero['id'] for hero in self.user_heroes[:6]]  # Max 6 heroes
+----+            response = self.make_request("PUT", f"/team/{team_id}/heroes", json=hero_ids)
+----+            if response and response.status_code == 200:
+----+                self.log_result("Update Team Heroes", True, f"Added {len(hero_ids)} heroes to team")
+----+            else:
+----+                self.log_result("Update Team Heroes", False, "Failed")
+----+        
+----+        # 7. Hero Upgrade (if possible)
+----+        print("\n7️⃣ Testing Hero Upgrade...")
+----+        if self.user_heroes:
+----+            # Find a hero with duplicates (unlikely for new account)
+----+            hero_to_upgrade = None
+----+            for hero in self.user_heroes:
+----+                if hero.get("duplicates", 0) >= 2:
+----+                    hero_to_upgrade = hero
+----+                    break
+----+            
+----+            if hero_to_upgrade:
+----+                response = self.make_request("POST", f"/user/{self.username}/heroes/{hero_to_upgrade['id']}/upgrade")
+----+                if response and response.status_code == 200:
+----+                    self.log_result("Hero Upgrade", True, "Hero upgraded successfully")
+----+                else:
+----+                    self.log_result("Hero Upgrade", False, f"Failed: {response.text if response else 'No response'}")
+----+            else:
+----+                self.log_result("Hero Upgrade", True, "No heroes with sufficient duplicates (expected)")
+----+        
+----+        # 8. Idle Rewards
+----+        print("\n8️⃣ Testing Idle Rewards...")
+----+        response = self.make_request("POST", f"/idle/claim?username={self.username}")
+----+        if response and response.status_code == 200:
+----+            rewards = response.json()
+----+            self.log_result("Idle Rewards", True, f"Claimed {rewards['gold_earned']} gold")
+----+        else:
+----+            self.log_result("Idle Rewards", False, "Failed")
+----+        
+----+        # 9. Test insufficient funds
+----+        print("\n9️⃣ Testing Error Handling...")
+----+        # Try to pull when out of gems
+----+        for _ in range(10):  # Exhaust gems
+----+            pull_data = {"pull_type": "multi", "currency_type": "gems"}
+----+            response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+----+            if response and response.status_code == 400:
+----+                self.log_result("Insufficient Funds Error", True, "Correctly rejected pull with insufficient gems")
+----+                break
+----+        else:
+----+            self.log_result("Insufficient Funds Error", False, "Did not properly handle insufficient funds")
+----+        
+----+        # 10. Final user state
+----+        print("\n🔟 Final User State...")
+----+        response = self.make_request("GET", f"/user/{self.username}")
+----+        if response and response.status_code == 200:
+----+            final_user = response.json()
+----+            self.log_result("Final User State", True, 
+----+                          f"Gems: {final_user['gems']}, Coins: {final_user['coins']}, Gold: {final_user['gold']}, Pulls: {final_user['total_pulls']}")
+----+        else:
+----+            self.log_result("Final User State", False, "Failed")
+----+        
+----+        return True
+----+    
+----+    def run_test(self):
+----+        """Run the comprehensive test"""
+----+        success = self.test_complete_flow()
+----+        
+----+        # Print summary
+----+        print("\n" + "=" * 70)
+----+        print("🏁 COMPREHENSIVE TEST SUMMARY")
+----+        print("=" * 70)
+----+        print(f"✅ Passed: {self.test_results['passed']}")
+----+        print(f"❌ Failed: {self.test_results['failed']}")
+----+        
+----+        if self.test_results["errors"]:
+----+            print("\n🔍 FAILED TESTS:")
+----+            for error in self.test_results["errors"]:
+----+                print(f"  • {error}")
+----+        
+----+        success_rate = (self.test_results["passed"] / 
+----+                       (self.test_results["passed"] + self.test_results["failed"])) * 100
+----+        print(f"\n📊 Success Rate: {success_rate:.1f}%")
+----+        
+----+        return self.test_results["failed"] == 0
+----+
+----+if __name__ == "__main__":
+----+    tester = ComprehensiveGachaTest()
+----+    success = tester.run_test()
+----+    
+----+    if success:
+----+        print("\n🎉 All tests passed! Backend is fully functional!")
+----+        sys.exit(0)
+----+    else:
+----+        print("\n💥 Some tests failed!")
+----+        sys.exit(1)
+----\ No newline at end of file
+----diff --git a/quick_test.py b/quick_test.py
+----new file mode 100644
+----index 0000000..2dbe9e1
+------- /dev/null
+----+++ b/quick_test.py
+----@@ -0,0 +1,46 @@
+----+#!/usr/bin/env python3
+----+"""
+----+Quick Backend API Status Check
+----+"""
+----+
+----+import requests
+----+import json
+----+
+----+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
+----+TEST_USERNAME = "testplayer"
+----+
+----+def test_endpoint(method, endpoint, **kwargs):
+----+    """Test a single endpoint"""
+----+    url = f"{BASE_URL}{endpoint}"
+----+    try:
+----+        response = requests.request(method, url, timeout=10, **kwargs)
+----+        return response.status_code, response.text[:200]
+----+    except Exception as e:
+----+        return None, str(e)
+----+
+----+print("🔍 Quick Backend API Status Check")
+----+print("=" * 50)
+----+
+----+# Test basic endpoints
+----+endpoints = [
+----+    ("GET", "/", {}),
+----+    ("POST", f"/user/register?username=testuser2", {}),
+----+    ("GET", f"/user/{TEST_USERNAME}", {}),
+----+    ("POST", f"/user/{TEST_USERNAME}/login", {}),
+----+    ("GET", "/heroes", {}),
+----+    ("GET", f"/user/{TEST_USERNAME}/heroes", {}),
+----+    ("POST", f"/gacha/pull?username={TEST_USERNAME}", {"json": {"pull_type": "single", "currency_type": "gems"}}),
+----+    ("POST", f"/team/create?username={TEST_USERNAME}&team_name=TestTeam2", {}),
+----+    ("GET", f"/team/{TEST_USERNAME}", {}),
+----+    ("POST", f"/idle/claim?username={TEST_USERNAME}", {})
+----+]
+----+
+----+for method, endpoint, kwargs in endpoints:
+----+    status, response = test_endpoint(method, endpoint, **kwargs)
+----+    status_icon = "✅" if status == 200 else "❌" if status else "💥"
+----+    print(f"{status_icon} {method} {endpoint}: {status} - {response}")
+----+
+----+print("\n🔍 Analysis:")
+----+print("- 520 errors indicate ObjectId serialization issues in backend")
+----+print("- Some endpoints work (registration, login, idle) - these don't return MongoDB docs")
+----+print("- Endpoints that return MongoDB docs fail (get user, heroes, teams)")
+----\ No newline at end of file

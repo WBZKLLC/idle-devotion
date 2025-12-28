@@ -954,6 +954,79 @@ async def vip_purchase(username: str, amount_usd: float):
         "new_avatar_frame": new_avatar_frame
     }
 
+@api_router.get("/vip/packages/{username}")
+async def get_vip_packages(username: str):
+    """Get available VIP packages for user's current VIP level"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    vip_level = calculate_vip_level(user.get("total_spent", 0))
+    
+    if vip_level not in VIP_PACKAGES:
+        raise HTTPException(status_code=404, detail="No packages available for this VIP level")
+    
+    packages = VIP_PACKAGES[vip_level]
+    
+    # Add package IDs and daily purchase tracking
+    result = {}
+    for tier, package_data in packages.items():
+        result[tier] = {
+            **package_data,
+            "daily_limit": 3,
+            "purchases_today": 0  # TODO: Track daily purchases in database
+        }
+    
+    return {
+        "vip_level": vip_level,
+        "packages": result
+    }
+
+@api_router.post("/vip/package/purchase")
+async def purchase_vip_package(username: str, package_tier: str):
+    """Purchase a VIP package with gems"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    vip_level = calculate_vip_level(user.get("total_spent", 0))
+    
+    if vip_level not in VIP_PACKAGES:
+        raise HTTPException(status_code=404, detail="No packages available for this VIP level")
+    
+    if package_tier not in VIP_PACKAGES[vip_level]:
+        raise HTTPException(status_code=404, detail="Package tier not found")
+    
+    package = VIP_PACKAGES[vip_level][package_tier]
+    gem_cost = package["gem_cost"]
+    rewards = package["rewards"]
+    
+    # Check if user has enough gems
+    if user.get("gems", 0) < gem_cost:
+        raise HTTPException(status_code=400, detail=f"Not enough gems. Need {gem_cost}")
+    
+    # TODO: Check daily purchase limit (for now, allow unlimited)
+    
+    # Deduct gems and give rewards
+    update_dict = {"gems": user.get("gems", 0) - gem_cost}
+    
+    for reward_type, amount in rewards.items():
+        if reward_type in ["coins", "gold", "gems"]:
+            current_amount = user.get(reward_type, 0)
+            update_dict[reward_type] = current_amount + amount
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": update_dict}
+    )
+    
+    return {
+        "package_tier": package_tier,
+        "gem_cost": gem_cost,
+        "rewards": rewards,
+        "remaining_gems": update_dict["gems"]
+    }
+
 @api_router.get("/user/{username}/cr")
 async def get_character_rating(username: str):
     """Calculate and return user's Character Rating (CR)"""

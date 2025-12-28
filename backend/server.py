@@ -103,9 +103,12 @@ class User(BaseModel):
     vip_level: int = 0  # 0-15
     total_spent: float = 0.0  # Total USD spent
     avatar_frame: str = "default"  # Avatar frame (default, gold, diamond, rainbow, legendary, divine)
-    # Idle Collection
+    # Idle Collection System
     idle_collection_started_at: Optional[datetime] = None
     idle_collection_last_claimed: Optional[datetime] = None
+    # Active Button System (instant 120min collection)
+    active_uses_today: int = 0
+    active_last_reset: Optional[datetime] = None  # Last daily reset
     # Chat unlock system
     tutorial_completed: bool = False
     chat_unlock_time: Optional[datetime] = None  # When chat becomes available

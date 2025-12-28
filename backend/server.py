@@ -1164,8 +1164,8 @@ async def battle_chapter(username: str, chapter_number: int):
         
         # Update user resources
         update_dict = {}
-        if "gems" in rewards:
-            update_dict["gems"] = user.get("gems", 0) + rewards["gems"]
+        if "crystals" in rewards:
+            update_dict["crystals"] = user.get("crystals", 0) + rewards["crystals"]
         if "coins" in rewards:
             update_dict["coins"] = user.get("coins", 0) + rewards["coins"]
         if "gold" in rewards:

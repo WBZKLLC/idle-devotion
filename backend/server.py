@@ -136,7 +136,7 @@ class IdleRewards(BaseModel):
     time_away: int  # seconds
 
 class LoginReward(BaseModel):
-    gems: int = 0
+    crystals: int = 0
     coins: int = 0
     gold: int = 0
     free_summons: int = 0

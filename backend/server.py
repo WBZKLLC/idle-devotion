@@ -1061,6 +1061,386 @@ async def upgrade_player_character(username: str, upgrade_type: str):
     updated_char = await db.player_characters.find_one({"user_id": user["id"]})
     return convert_objectid(updated_char)
 
+# ==================== LEADERBOARDS ====================
+@api_router.get("/leaderboard/cr")
+async def get_cr_leaderboard(limit: int = 100):
+    """Get CR leaderboard - top players by total character rating"""
+    # Get all users with their heroes
+    users = await db.users.find().to_list(1000)
+    
+    leaderboard = []
+    for user in users:
+        user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+        
+        total_cr = 0
+        for hero in user_heroes:
+            hero_cr = (
+                hero["current_hp"] + 
+                (hero["current_atk"] * 2) + 
+                hero["current_def"] + 
+                (hero["rank"] * 500) + 
+                (hero["level"] * 100)
+            )
+            total_cr += hero_cr
+        
+        if total_cr > 0:
+            leaderboard.append({
+                "username": user["username"],
+                "user_id": user["id"],
+                "cr": total_cr,
+                "hero_count": len(user_heroes)
+            })
+    
+    # Sort by CR descending
+    leaderboard.sort(key=lambda x: x["cr"], reverse=True)
+    
+    # Add rank
+    for i, entry in enumerate(leaderboard[:limit]):
+        entry["rank"] = i + 1
+    
+    return leaderboard[:limit]
+
+@api_router.get("/leaderboard/arena")
+async def get_arena_leaderboard(limit: int = 100):
+    """Get Arena leaderboard - top players by rating"""
+    arena_records = await db.arena_records.find().sort("rating", -1).limit(limit).to_list(limit)
+    
+    leaderboard = []
+    for i, record in enumerate(arena_records):
+        leaderboard.append({
+            **convert_objectid(record),
+            "rank": i + 1,
+            "win_rate": (record["wins"] / max(record["wins"] + record["losses"], 1)) * 100
+        })
+    
+    return leaderboard
+
+@api_router.get("/leaderboard/abyss")
+async def get_abyss_leaderboard(limit: int = 100):
+    """Get Abyss leaderboard - top players by highest level"""
+    abyss_records = await db.abyss_progress.find().sort("highest_level", -1).limit(limit).to_list(limit)
+    
+    leaderboard = []
+    for i, record in enumerate(abyss_records):
+        user = await db.users.find_one({"id": record["user_id"]})
+        if user:
+            leaderboard.append({
+                "rank": i + 1,
+                "username": user["username"],
+                "user_id": record["user_id"],
+                "highest_level": record["highest_level"],
+                "current_level": record["current_level"],
+                "total_clears": record["total_clears"]
+            })
+    
+    return leaderboard
+
+# ==================== ABYSS MODE ====================
+@api_router.get("/abyss/progress/{username}")
+async def get_abyss_progress(username: str):
+    """Get user's abyss progress"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        # Create initial progress
+        progress = AbyssProgress(user_id=user["id"])
+        await db.abyss_progress.insert_one(progress.dict())
+        progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    
+    return convert_objectid(progress)
+
+@api_router.post("/abyss/battle/{username}/{level}")
+async def battle_abyss(username: str, level: int, team_ids: List[str]):
+    """Battle an abyss level - requires multiple teams for higher levels"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get abyss progress
+    progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        progress = AbyssProgress(user_id=user["id"])
+        await db.abyss_progress.insert_one(progress.dict())
+        progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    
+    # Check if level is unlocked (must be current level or replay cleared level)
+    if level > progress["current_level"] and level > progress["highest_level"]:
+        raise HTTPException(status_code=400, detail="Level not unlocked")
+    
+    # Determine required teams based on level
+    required_teams = 1
+    if level > 1000:
+        required_teams = 3
+    elif level > 200:
+        required_teams = 2
+    
+    if len(team_ids) != required_teams:
+        raise HTTPException(status_code=400, detail=f"Level {level} requires exactly {required_teams} teams")
+    
+    # Get all user heroes
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+    
+    # Collect all heroes from teams
+    all_team_heroes = []
+    for team_id in team_ids:
+        team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
+        if not team:
+            raise HTTPException(status_code=404, detail=f"Team {team_id} not found")
+        
+        team_heroes = [h for h in user_heroes if h["id"] in team.get("hero_ids", [])]
+        all_team_heroes.extend(team_heroes)
+    
+    if len(all_team_heroes) < required_teams * 6:
+        raise HTTPException(status_code=400, detail=f"Not enough heroes. Need {required_teams * 6} heroes in {required_teams} teams")
+    
+    # Get player character buffs
+    player_char = await db.player_characters.find_one({"user_id": user["id"]})
+    
+    # Calculate total team power with buffs
+    user_power = 0
+    for hero in all_team_heroes:
+        base_power = hero["current_hp"] + (hero["current_atk"] * 2) + hero["current_def"]
+        
+        # Apply player character buffs
+        if player_char:
+            base_power *= (1 + player_char.get("hp_buff", 0))
+            base_power *= (1 + player_char.get("atk_buff", 0) * 2)  # ATK weighted 2x
+            base_power *= (1 + player_char.get("def_buff", 0))
+        
+        user_power += base_power
+    
+    # Calculate enemy power - scales exponentially with level
+    base_enemy_power = 5000
+    # Exponential scaling: harder as you progress
+    level_multiplier = 1.0 + (level * 0.05)  # 5% increase per level
+    
+    # Additional difficulty spikes at team requirement thresholds
+    if level > 1000:
+        level_multiplier *= 3.0  # 3x harder at 3-team levels
+    elif level > 200:
+        level_multiplier *= 2.0  # 2x harder at 2-team levels
+    
+    enemy_power = int(base_enemy_power * level_multiplier)
+    
+    # Combat simulation
+    power_ratio = user_power / enemy_power
+    
+    # Win chance calculation (harder than story mode)
+    base_win_chance = min(0.90, max(0.01, 0.4 + (power_ratio - 1.0) * 0.6))
+    
+    import random
+    roll = random.random()
+    victory = roll < base_win_chance
+    
+    # Calculate rewards based on level
+    rewards = {}
+    if victory:
+        rewards = {
+            "coins": level * 100,
+            "gold": level * 50,
+            "gems": level // 10 if level % 10 == 0 else 0  # Gems every 10 levels
+        }
+        
+        # Update user resources
+        await db.users.update_one(
+            {"username": username},
+            {
+                "$inc": {
+                    "coins": rewards["coins"],
+                    "gold": rewards["gold"],
+                    "gems": rewards["gems"]
+                }
+            }
+        )
+        
+        # Update progress
+        new_current = level + 1 if level == progress["current_level"] else progress["current_level"]
+        new_highest = max(progress["highest_level"], level)
+        
+        await db.abyss_progress.update_one(
+            {"user_id": user["id"]},
+            {
+                "$set": {
+                    "current_level": new_current,
+                    "highest_level": new_highest,
+                    "last_attempt": datetime.utcnow()
+                },
+                "$inc": {"total_clears": 1}
+            }
+        )
+    
+    return {
+        "victory": victory,
+        "level": level,
+        "user_power": int(user_power),
+        "enemy_power": enemy_power,
+        "power_ratio": power_ratio,
+        "required_teams": required_teams,
+        "rewards": rewards,
+        "next_level": level + 1 if victory else level
+    }
+
+# ==================== ARENA MODE ====================
+@api_router.get("/arena/record/{username}")
+async def get_arena_record(username: str):
+    """Get user's arena record"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    record = await db.arena_records.find_one({"user_id": user["id"]})
+    if not record:
+        # Create initial record
+        record = ArenaRecord(user_id=user["id"], username=username)
+        await db.arena_records.insert_one(record.dict())
+        record = await db.arena_records.find_one({"user_id": user["id"]})
+    
+    return convert_objectid(record)
+
+@api_router.post("/arena/battle/{username}")
+async def arena_battle(username: str, team_id: str):
+    """Battle in arena against another player"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user's arena record
+    user_record = await db.arena_records.find_one({"user_id": user["id"]})
+    if not user_record:
+        user_record = ArenaRecord(user_id=user["id"], username=username)
+        await db.arena_records.insert_one(user_record.dict())
+        user_record = await db.arena_records.find_one({"user_id": user["id"]})
+    
+    # Get user's team
+    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+    team_heroes = [h for h in user_heroes if h["id"] in team.get("hero_ids", [])]
+    
+    if len(team_heroes) == 0:
+        raise HTTPException(status_code=400, detail="Team has no heroes")
+    
+    # Calculate user power with player buffs
+    player_char = await db.player_characters.find_one({"user_id": user["id"]})
+    user_power = 0
+    for hero in team_heroes:
+        base_power = hero["current_hp"] + (hero["current_atk"] * 2) + hero["current_def"]
+        if player_char:
+            base_power *= (1 + player_char.get("hp_buff", 0))
+            base_power *= (1 + player_char.get("atk_buff", 0) * 2)
+            base_power *= (1 + player_char.get("def_buff", 0))
+        user_power += base_power
+    
+    # Find opponent with similar rating
+    rating_range = 200
+    opponents = await db.arena_records.find({
+        "user_id": {"$ne": user["id"]},
+        "rating": {
+            "$gte": user_record["rating"] - rating_range,
+            "$lte": user_record["rating"] + rating_range
+        }
+    }).to_list(10)
+    
+    if not opponents:
+        # Fallback to any opponent
+        opponents = await db.arena_records.find({"user_id": {"$ne": user["id"]}}).limit(10).to_list(10)
+    
+    if not opponents:
+        raise HTTPException(status_code=404, detail="No opponents available")
+    
+    import random
+    opponent_record = random.choice(opponents)
+    
+    # Calculate opponent power (simplified - use their CR)
+    opponent_heroes = await db.user_heroes.find({"user_id": opponent_record["user_id"]}).to_list(1000)
+    opponent_power = sum(
+        h["current_hp"] + (h["current_atk"] * 2) + h["current_def"]
+        for h in opponent_heroes[:6]  # Use top 6 heroes
+    )
+    
+    # Combat simulation
+    power_ratio = user_power / max(opponent_power, 1)
+    base_win_chance = min(0.85, max(0.15, 0.5 + (power_ratio - 1.0) * 0.5))
+    
+    roll = random.random()
+    victory = roll < base_win_chance
+    
+    # Calculate rating change (ELO-style)
+    k_factor = 32
+    expected_score = 1 / (1 + 10 ** ((opponent_record["rating"] - user_record["rating"]) / 400))
+    actual_score = 1 if victory else 0
+    rating_change = int(k_factor * (actual_score - expected_score))
+    
+    # Update records
+    if victory:
+        new_rating = user_record["rating"] + rating_change
+        new_streak = user_record["win_streak"] + 1
+        
+        await db.arena_records.update_one(
+            {"user_id": user["id"]},
+            {
+                "$set": {
+                    "rating": new_rating,
+                    "win_streak": new_streak,
+                    "highest_rating": max(user_record.get("highest_rating", 1000), new_rating)
+                },
+                "$inc": {"wins": 1}
+            }
+        )
+        
+        # Opponent loses rating
+        await db.arena_records.update_one(
+            {"user_id": opponent_record["user_id"]},
+            {
+                "$set": {"win_streak": 0},
+                "$inc": {
+                    "rating": -abs(rating_change) // 2,  # Lose half
+                    "losses": 1
+                }
+            }
+        )
+    else:
+        new_rating = max(0, user_record["rating"] + rating_change)
+        
+        await db.arena_records.update_one(
+            {"user_id": user["id"]},
+            {
+                "$set": {
+                    "rating": new_rating,
+                    "win_streak": 0
+                },
+                "$inc": {"losses": 1}
+            }
+        )
+        
+        # Opponent gains rating
+        await db.arena_records.update_one(
+            {"user_id": opponent_record["user_id"]},
+            {
+                "$inc": {
+                    "rating": abs(rating_change) // 2,
+                    "wins": 1
+                },
+                "$set": {"win_streak": opponent_record.get("win_streak", 0) + 1}
+            }
+        )
+    
+    return {
+        "victory": victory,
+        "opponent_username": opponent_record["username"],
+        "opponent_rating": opponent_record["rating"],
+        "user_power": int(user_power),
+        "opponent_power": int(opponent_power),
+        "rating_change": rating_change,
+        "new_rating": user_record["rating"] + rating_change if victory else max(0, user_record["rating"] + rating_change),
+        "win_streak": user_record["win_streak"] + 1 if victory else 0
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

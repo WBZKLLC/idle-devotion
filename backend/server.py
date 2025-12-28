@@ -496,20 +496,43 @@ async def startup_event():
     await init_heroes()
     await init_islands_and_chapters()
 
-def get_random_hero(pity_counter: int) -> Hero:
-    """Select a random hero based on gacha rates with pity system"""
+def get_random_hero(pity_counter: int, is_premium: bool = False) -> Hero:
+    """Select a random hero based on gacha rates with pity system
+    
+    Args:
+        pity_counter: Number of pulls since last SSR+
+        is_premium: If True, use premium pool (includes UR/UR+), else common pool (SR/SSR only)
+    """
+    # Determine which pool and rates to use
+    if is_premium:
+        available_heroes = HERO_POOL  # All heroes available
+        rates = GACHA_RATES_PREMIUM
+    else:
+        # Common pool: Only SR and SSR heroes
+        available_heroes = [h for h in HERO_POOL if h.rarity in ["SR", "SSR"]]
+        rates = GACHA_RATES_COMMON
+    
     # Pity system: guarantee SSR at 50 pulls
     if pity_counter >= PITY_THRESHOLD:
-        rarities = ["SSR", "UR", "UR+"]
-        weights = [85, 13, 2]  # Weighted towards SSR but can still get better
+        if is_premium:
+            rarities = ["SSR", "UR", "UR+"]
+            weights = [70, 25, 5]  # Weighted towards SSR but can still get UR+
+        else:
+            rarities = ["SSR"]
+            weights = [100]  # Guaranteed SSR in common pool
     else:
-        rarities = list(GACHA_RATES.keys())
-        weights = list(GACHA_RATES.values())
+        rarities = list(rates.keys())
+        weights = list(rates.values())
     
     selected_rarity = random.choices(rarities, weights=weights)[0]
     
-    # Get all heroes of selected rarity
-    rarity_heroes = [h for h in HERO_POOL if h.rarity == selected_rarity]
+    # Get all heroes of selected rarity from available pool
+    rarity_heroes = [h for h in available_heroes if h.rarity == selected_rarity]
+    
+    if not rarity_heroes:
+        # Fallback to SR if no heroes found (shouldn't happen)
+        rarity_heroes = [h for h in available_heroes if h.rarity == "SR"]
+    
     return random.choice(rarity_heroes)
 
 # API Routes

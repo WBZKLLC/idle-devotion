@@ -568,6 +568,169 @@ async def claim_idle_rewards(username: str):
     
     return IdleRewards(gold_earned=gold_earned, time_away=int(time_away))
 
+@api_router.get("/user/{username}/cr")
+async def get_character_rating(username: str):
+    """Calculate and return user's Character Rating (CR)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get all user heroes
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+    
+    total_cr = 0
+    for hero in user_heroes:
+        # CR calculation: HP + (ATK * 2) + DEF + (rank * 500) + (level * 100)
+        hero_cr = (
+            hero["current_hp"] + 
+            (hero["current_atk"] * 2) + 
+            hero["current_def"] + 
+            (hero["rank"] * 500) + 
+            (hero["level"] * 100)
+        )
+        total_cr += hero_cr
+    
+    return {"cr": total_cr, "hero_count": len(user_heroes)}
+
+@api_router.get("/story/islands")
+async def get_islands():
+    """Get all story islands"""
+    islands = await db.islands.find().sort("order", 1).to_list(100)
+    return islands
+
+@api_router.get("/story/chapters")
+async def get_all_chapters():
+    """Get all story chapters"""
+    chapters = await db.chapters.find().sort("chapter_number", 1).to_list(100)
+    return chapters
+
+@api_router.get("/story/progress/{username}")
+async def get_user_progress(username: str):
+    """Get user's story progress"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    progress = await db.user_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        # Create initial progress
+        progress = UserProgress(user_id=user["id"])
+        await db.user_progress.insert_one(progress.dict())
+    
+    return progress
+
+@api_router.post("/story/battle/{username}/{chapter_number}")
+async def battle_chapter(username: str, chapter_number: int):
+    """Battle a story chapter - server-side combat simulation"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user progress
+    progress = await db.user_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        progress = UserProgress(user_id=user["id"])
+        await db.user_progress.insert_one(progress.dict())
+    
+    # Check if chapter is unlocked (previous chapter must be completed)
+    if chapter_number > 1 and (chapter_number - 1) not in progress.get("completed_chapters", []):
+        raise HTTPException(status_code=400, detail="Previous chapter must be completed first")
+    
+    # Get chapter data
+    chapter = await db.chapters.find_one({"chapter_number": chapter_number})
+    if not chapter:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+    
+    # Calculate user's team power (CR)
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+    
+    # Get user's active team or use top 6 heroes by power
+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
+    if team and team.get("hero_ids"):
+        team_heroes = [h for h in user_heroes if h["id"] in team["hero_ids"]]
+    else:
+        # Use top 6 heroes by power
+        team_heroes = sorted(
+            user_heroes, 
+            key=lambda h: h["current_hp"] + h["current_atk"] * 2 + h["current_def"],
+            reverse=True
+        )[:6]
+    
+    if not team_heroes:
+        raise HTTPException(status_code=400, detail="You need at least 1 hero to battle")
+    
+    # Calculate team power
+    user_power = sum(
+        h["current_hp"] + (h["current_atk"] * 2) + h["current_def"] 
+        for h in team_heroes
+    )
+    
+    enemy_power = chapter["enemy_power"]
+    
+    # Combat simulation with RNG
+    power_ratio = user_power / enemy_power
+    
+    # Base win chance based on power ratio
+    # At equal power (1.0 ratio): 50% win chance
+    # At 1.5x power: ~85% win chance
+    # At 0.7x power: ~15% win chance (F2P struggle point)
+    base_win_chance = min(0.95, max(0.05, 0.5 + (power_ratio - 1.0) * 0.7))
+    
+    # Add some RNG
+    import random
+    roll = random.random()
+    victory = roll < base_win_chance
+    
+    # Calculate damage
+    if victory:
+        damage_dealt = int(enemy_power * 0.9)
+        damage_taken = int(user_power * random.uniform(0.2, 0.4))
+    else:
+        damage_dealt = int(enemy_power * random.uniform(0.4, 0.7))
+        damage_taken = int(user_power * random.uniform(0.6, 0.9))
+    
+    rewards = {}
+    if victory:
+        # Check if first clear
+        is_first_clear = chapter_number not in progress.get("completed_chapters", [])
+        
+        # Give rewards
+        rewards = chapter["rewards"].copy()
+        if is_first_clear:
+            # Add first clear bonus
+            for key, value in chapter["first_clear_bonus"].items():
+                rewards[key] = rewards.get(key, 0) + value
+        
+        # Update user resources
+        update_dict = {}
+        if "gems" in rewards:
+            update_dict["gems"] = user.get("gems", 0) + rewards["gems"]
+        if "coins" in rewards:
+            update_dict["coins"] = user.get("coins", 0) + rewards["coins"]
+        if "gold" in rewards:
+            update_dict["gold"] = user.get("gold", 0) + rewards["gold"]
+        
+        await db.users.update_one({"username": username}, {"$set": update_dict})
+        
+        # Update progress
+        if is_first_clear:
+            await db.user_progress.update_one(
+                {"user_id": user["id"]},
+                {
+                    "$addToSet": {"completed_chapters": chapter_number},
+                    "$set": {"current_chapter": max(progress.get("current_chapter", 1), chapter_number + 1)}
+                }
+            )
+    
+    return BattleResult(
+        victory=victory,
+        rewards=rewards,
+        user_power=user_power,
+        enemy_power=enemy_power,
+        damage_dealt=damage_dealt,
+        damage_taken=damage_taken
+    )
+
 @api_router.get("/")
 async def root():
     return {"message": "Gacha Game API", "version": "1.0"}

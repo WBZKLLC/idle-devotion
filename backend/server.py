@@ -87,6 +87,7 @@ class UserHero(BaseModel):
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
+    server_id: str  # Server assignment
     crystals: int = 300  # Premium currency (renamed from gems)
     coins: int = 10000  # Regular currency
     gold: int = 5000  # Idle resource

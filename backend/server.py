@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timedelta
 import random
 from bson import ObjectId
+import re
 
 def convert_objectid(obj):
     """Convert ObjectId to string in MongoDB documents"""

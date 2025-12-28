@@ -232,6 +232,54 @@ class ArenaRecord(BaseModel):
     highest_rating: int = 1000
     season_rank: int = 0
 
+class Guild(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    leader_id: str
+    member_ids: List[str] = []
+    level: int = 1
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ChatMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    sender_id: str
+    sender_username: str
+    channel_type: str  # "world", "local", "guild", "private"
+    channel_id: Optional[str] = None  # guild_id for guild chat, friend_id for private
+    message: str
+    language: str = "en"  # User's language
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    server_region: str = "global"  # For local chat
+
+# Supported languages for translation
+SUPPORTED_LANGUAGES = [
+    "en",  # English
+    "fr",  # French
+    "es",  # Spanish
+    "zh-CN",  # Simplified Chinese
+    "zh-TW",  # Traditional Chinese
+    "ms",  # Malay
+    "fil",  # Filipino
+    "ru",  # Russian
+    "id"   # Indonesian
+]
+
+# Profanity filter - basic word list (expand as needed)
+PROFANITY_LIST = [
+    "fuck", "shit", "ass", "bitch", "damn", "hell", "crap",
+    "bastard", "dick", "pussy", "cock", "fag", "nigger", "cunt",
+    # Add more as needed for different languages
+]
+
+def censor_message(message: str) -> str:
+    """Censor profanity in message"""
+    censored = message
+    for word in PROFANITY_LIST:
+        # Case insensitive replacement
+        pattern = re.compile(re.escape(word), re.IGNORECASE)
+        censored = pattern.sub("***", censored)
+    return censored
+
 # VIP tier thresholds (spending in USD)
 VIP_TIERS = {
     0: {"spend": 0, "idle_hours": 8},

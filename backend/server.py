@@ -553,7 +553,7 @@ async def user_login(username: str):
     
     # Milestone rewards
     if user.login_days % 7 == 0:
-        reward.gems = 50
+        reward.crystals = 50
     
     # Free summons schedule (10-15 per day over 250 days)
     # This gives roughly 3000 free summons over 250 days
@@ -564,7 +564,7 @@ async def user_login(username: str):
     # Apply rewards
     user.coins += reward.coins
     user.gold += reward.gold
-    user.gems += reward.gems
+    user.crystals += reward.crystals
     user.last_login = now
     
     await db.users.update_one(

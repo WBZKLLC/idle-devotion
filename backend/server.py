@@ -110,7 +110,7 @@ class VIPPackage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     vip_level: int
     package_tier: str  # "basic", "premium", "elite"
-    gem_cost: int
+    crystal_cost: int
     rewards: Dict[str, int]  # {"coins": 1000, "gold": 500, etc}
     daily_limit: int = 3  # Can buy 3 times per day
 

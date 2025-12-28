@@ -444,7 +444,7 @@ async def get_user_teams(username: str):
         raise HTTPException(status_code=404, detail="User not found")
     
     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
-    return teams
+    return [convert_objectid(team) for team in teams]
 
 @api_router.put("/team/{team_id}/heroes")
 async def update_team_heroes(team_id: str, hero_ids: List[str]):

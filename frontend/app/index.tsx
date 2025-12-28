@@ -302,6 +302,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  sidebarButton: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  sidebarButtonGradient: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',

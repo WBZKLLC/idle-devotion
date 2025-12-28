@@ -904,8 +904,12 @@ async def get_vip_info(username: str):
         "current_vip_level": current_vip,
         "total_spent": total_spent,
         "current_idle_hours": current_tier["idle_hours"],
+        "current_idle_rate": get_idle_gold_rate(current_vip),
+        "current_avatar_frame": get_avatar_frame(current_vip),
         "next_vip_level": next_vip if next_vip > current_vip else None,
         "next_idle_hours": next_tier["idle_hours"] if next_vip > current_vip else None,
+        "next_idle_rate": get_idle_gold_rate(next_vip) if next_vip > current_vip else None,
+        "next_avatar_frame": get_avatar_frame(next_vip) if next_vip > current_vip else None,
         "spend_needed_for_next": spend_needed,
         "all_tiers": VIP_TIERS
     }

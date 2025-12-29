@@ -91,9 +91,11 @@ class User(BaseModel):
     crystals: int = 300  # Premium currency (renamed from gems)
     coins: int = 10000  # Regular currency
     gold: int = 5000  # Idle resource
+    divine_essence: int = 0  # Ultra-rare currency for UR+ summons
     friendship_points: int = 0  # Friend currency
-    pity_counter: int = 0  # Counts towards guaranteed SSR at 50
-    pity_counter_premium: int = 0  # Separate pity for premium summons
+    pity_counter: int = 0  # Counts towards guaranteed SSR at 50 (common)
+    pity_counter_premium: int = 0  # Separate pity for premium summons (UR)
+    pity_counter_divine: int = 0  # Pity for divine summons (UR+) - 40 pity
     total_pulls: int = 0
     login_days: int = 0
     last_login: Optional[datetime] = None
@@ -104,6 +106,10 @@ class User(BaseModel):
     total_spent: float = 0.0  # Total USD spent
     avatar_frame: str = "default"  # Avatar frame (default, gold, diamond, rainbow, legendary, divine)
     first_purchase_used: bool = False  # Track if first purchase bonus claimed
+    # Divine Package Purchase Tracking (resets monthly)
+    divine_pack_49_purchased: int = 0  # How many $49.99 packs purchased this month (max 3)
+    divine_pack_99_purchased: int = 0  # How many $99.99 packs purchased this month (max 3)
+    divine_pack_last_reset: Optional[datetime] = None  # Last monthly reset
     # Idle Collection System
     idle_collection_started_at: Optional[datetime] = None
     idle_collection_last_claimed: Optional[datetime] = None

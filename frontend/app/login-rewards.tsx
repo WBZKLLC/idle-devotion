@@ -13,19 +13,23 @@ import { useGameStore } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+import { router } from 'expo-router';
 
 export default function LoginRewardsScreen() {
-  const { user, fetchUser } = useGameStore();
+  const { user, fetchUser, _hasHydrated } = useGameStore();
   const [rewards, setRewards] = useState<any[]>([]);
   const [loginDays, setLoginDays] = useState(0);
+  const [currentMonth, setCurrentMonth] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (_hasHydrated && user) {
       loadRewards();
+    } else if (_hasHydrated && !user) {
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [_hasHydrated, user]);
 
   const loadRewards = async () => {
     try {

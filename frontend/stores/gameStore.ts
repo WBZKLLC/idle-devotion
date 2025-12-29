@@ -264,5 +264,23 @@ export const useGameStore = create<GameState>()(
     }
   },
 
+  logout: async () => {
+    await AsyncStorage.removeItem('divine_heroes_username');
+    set({ user: null, userHeroes: [], allHeroes: [] });
+  },
+
   setUser: (user: User | null) => set({ user }),
-}));
+    }),
+    {
+      name: 'divine-heroes-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ 
+        user: state.user,
+        // Only persist user data, not loading states or heroes cache
+      }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    }
+  )
+);

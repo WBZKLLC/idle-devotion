@@ -307,11 +307,12 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: 'divine-heroes-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createSafeStorage(),
       partialize: (state) => ({ 
         user: state.user,
         // Only persist user data, not loading states or heroes cache
       }),
+      skipHydration: typeof window === 'undefined', // Skip hydration during SSR
       onRehydrateStorage: () => (state, error) => {
         if (error) {
           console.error('Error rehydrating state:', error);
@@ -330,6 +331,12 @@ export const useHydration = () => {
   const [hydrated, setHydrated] = useState(false);
   
   useEffect(() => {
+    // In SSR, just mark as hydrated immediately
+    if (typeof window === 'undefined') {
+      setHydrated(true);
+      return;
+    }
+    
     // Manual check for hydration
     const unsubFinishHydration = useGameStore.persist.onFinishHydration(() => {
       setHydrated(true);
@@ -339,6 +346,9 @@ export const useHydration = () => {
     if (useGameStore.persist.hasHydrated()) {
       setHydrated(true);
     }
+    
+    // Force hydration to start if not started
+    useGameStore.persist.rehydrate();
     
     return () => {
       unsubFinishHydration();

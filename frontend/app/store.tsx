@@ -358,7 +358,7 @@ export default function StoreScreen() {
                   <View style={styles.vipHeader}>
                     <View>
                       <Text style={styles.vipTitle}>VIP Level {vipInfo.current_vip_level}</Text>
-                      <Text style={styles.vipSpent}>Total Spent: ${vipInfo.total_spent?.toFixed(2) || '0.00'}</Text>
+                      <Text style={styles.vipSpent}>VIP XP: {Math.floor((vipInfo.total_spent || 0) * 100).toLocaleString()}</Text>
                     </View>
                     <View style={[styles.avatarFrame, { borderColor: getFrameColor(vipInfo.current_avatar_frame || 'default') }]}>
                       <Ionicons name="person" size={30} color={getFrameColor(vipInfo.current_avatar_frame || 'default')} />
@@ -389,7 +389,7 @@ export default function StoreScreen() {
                   {vipInfo.current_vip_level < 15 && (
                     <View style={styles.progressSection}>
                       <Text style={styles.progressLabel}>
-                        Next VIP: ${vipInfo.spend_needed_for_next?.toFixed(2) || '0'} more
+                        Next VIP: {Math.floor((vipInfo.spend_needed_for_next || 0) * 100).toLocaleString()} XP needed
                       </Text>
                       <View style={styles.progressBar}>
                         <View 

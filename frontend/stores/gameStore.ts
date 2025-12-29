@@ -1,10 +1,43 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
+// Safe storage that handles SSR gracefully
+const createSafeStorage = (): StateStorage => {
+  const isBrowser = typeof window !== 'undefined';
+  
+  return {
+    getItem: async (name: string) => {
+      if (!isBrowser) return null;
+      try {
+        return await AsyncStorage.getItem(name);
+      } catch {
+        return null;
+      }
+    },
+    setItem: async (name: string, value: string) => {
+      if (!isBrowser) return;
+      try {
+        await AsyncStorage.setItem(name, value);
+      } catch {
+        // Ignore storage errors
+      }
+    },
+    removeItem: async (name: string) => {
+      if (!isBrowser) return;
+      try {
+        await AsyncStorage.removeItem(name);
+      } catch {
+        // Ignore storage errors
+      }
+    },
+  };
+};
 
 interface User {
   id: string;

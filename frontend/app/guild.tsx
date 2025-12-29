@@ -11,13 +11,15 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+import { router } from 'expo-router';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();
+  const hydrated = useHydration();
   const [guildData, setGuildData] = useState<any>(null);
   const [availableGuilds, setAvailableGuilds] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,10 +30,12 @@ export default function GuildScreen() {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (hydrated && user) {
       loadGuildData();
+    } else if (hydrated && !user) {
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [hydrated, user]);
 
   const loadGuildData = async () => {
     setIsLoading(true);

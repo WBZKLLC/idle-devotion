@@ -15,6 +15,7 @@ import {
 import { useGameStore } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import COLORS from '../theme/colors';
 
 interface ChatMessage {
   id: string;
@@ -25,10 +26,10 @@ interface ChatMessage {
 }
 
 const CHANNELS = [
-  { id: 'world', name: 'World', icon: 'globe', color: '#3498db' },
-  { id: 'local', name: 'Local', icon: 'location', color: '#2ecc71' },
-  { id: 'guild', name: 'Guild', icon: 'shield', color: '#9b59b6' },
-  { id: 'private', name: 'Friends', icon: 'people', color: '#e74c3c' },
+  { id: 'world', name: 'World', icon: 'globe', color: COLORS.gold.primary },
+  { id: 'local', name: 'Local', icon: 'location', color: COLORS.success },
+  { id: 'guild', name: 'Guild', icon: 'shield', color: COLORS.rarity.UR },
+  { id: 'private', name: 'Friends', icon: 'people', color: COLORS.rarity['UR+'] },
 ];
 
 const LANGUAGES = [
@@ -65,7 +66,6 @@ export default function ChatScreen() {
   useEffect(() => {
     if (chatUnlocked) {
       loadMessages();
-      // Poll for new messages every 5 seconds
       const interval = setInterval(loadMessages, 5000);
       return () => clearInterval(interval);
     }
@@ -78,7 +78,6 @@ export default function ChatScreen() {
       );
       const userData = await response.json();
       
-      // Chat unlocks after completing chapters 1 & 2 and waiting 32 hours
       const hasCompletedTutorial = userData.tutorial_completed || false;
       const chatUnlockTime = userData.chat_unlock_time;
       
@@ -102,14 +101,11 @@ export default function ChatScreen() {
         });
       }
       
-      // For demo purposes, allow chat if user has played for a while
-      // In production, this would be strictly enforced
       if (userData.login_days > 0) {
         setChatUnlocked(true);
       }
     } catch (error) {
       console.error('Failed to check chat unlock:', error);
-      // Allow chat for demo
       setChatUnlocked(true);
     }
   };
@@ -122,7 +118,6 @@ export default function ChatScreen() {
       const data = await response.json();
       setMessages(data.reverse());
       
-      // Auto scroll to bottom
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -170,11 +165,8 @@ export default function ChatScreen() {
 
   const renderLockedChat = () => (
     <View style={styles.lockedContainer}>
-      <LinearGradient
-        colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.8)']}
-        style={styles.lockedOverlay}
-      >
-        <Ionicons name="lock-closed" size={64} color="#FFD700" />
+      <View style={styles.lockedOverlay}>
+        <Ionicons name="lock-closed" size={64} color={COLORS.gold.primary} />
         <Text style={styles.lockedTitle}>Chat Locked</Text>
         <Text style={styles.lockedText}>
           {!unlockInfo?.tutorialCompleted 
@@ -187,7 +179,7 @@ export default function ChatScreen() {
             <Ionicons 
               name={unlockInfo?.tutorialCompleted ? 'checkmark-circle' : 'ellipse-outline'} 
               size={20} 
-              color={unlockInfo?.tutorialCompleted ? '#32CD32' : '#666'} 
+              color={unlockInfo?.tutorialCompleted ? COLORS.success : COLORS.navy.light} 
             />
             <Text style={styles.requirementText}>Complete Chapters 1 & 2</Text>
           </View>
@@ -195,19 +187,19 @@ export default function ChatScreen() {
             <Ionicons 
               name={chatUnlocked ? 'checkmark-circle' : 'ellipse-outline'} 
               size={20} 
-              color={chatUnlocked ? '#32CD32' : '#666'} 
+              color={chatUnlocked ? COLORS.success : COLORS.navy.light} 
             />
             <Text style={styles.requirementText}>Wait 32 hours after tutorial</Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
     </View>
   );
 
   if (!user) {
     return (
-      <LinearGradient colors={['#2C3E50', '#3498db']} style={styles.container}>
-        <SafeAreaView style={styles.container}>
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
           <Text style={styles.errorText}>Please log in first</Text>
         </SafeAreaView>
       </LinearGradient>
@@ -215,7 +207,7 @@ export default function ChatScreen() {
   }
 
   return (
-    <LinearGradient colors={['#2C3E50', '#3498db']} style={styles.container}>
+    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView 
           style={styles.container}
@@ -223,7 +215,7 @@ export default function ChatScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>💬 Chat</Text>
+            <Text style={styles.title}>Chat</Text>
             
             {/* Channel Tabs */}
             <ScrollView 
@@ -237,18 +229,17 @@ export default function ChatScreen() {
                   style={[
                     styles.channelTab,
                     selectedChannel === channel.id && styles.channelTabActive,
-                    { borderColor: channel.color }
                   ]}
                   onPress={() => setSelectedChannel(channel.id)}
                 >
                   <Ionicons 
                     name={channel.icon as any} 
                     size={16} 
-                    color={selectedChannel === channel.id ? channel.color : '#FFF'} 
+                    color={selectedChannel === channel.id ? COLORS.navy.darkest : channel.color} 
                   />
                   <Text style={[
                     styles.channelText,
-                    selectedChannel === channel.id && { color: channel.color }
+                    selectedChannel === channel.id && styles.channelTextActive
                   ]}>
                     {channel.name}
                   </Text>
@@ -269,7 +260,7 @@ export default function ChatScreen() {
               >
                 {messages.length === 0 ? (
                   <View style={styles.emptyMessages}>
-                    <Ionicons name="chatbubbles-outline" size={48} color="rgba(255,255,255,0.5)" />
+                    <Ionicons name="chatbubbles-outline" size={48} color={COLORS.navy.light} />
                     <Text style={styles.emptyText}>No messages yet</Text>
                     <Text style={styles.emptySubtext}>Be the first to say hello!</Text>
                   </View>
@@ -341,7 +332,7 @@ export default function ChatScreen() {
                   style={styles.languageButton}
                   onPress={() => setShowLanguageSelector(!showLanguageSelector)}
                 >
-                  <Ionicons name="language" size={20} color="#FFF" />
+                  <Ionicons name="language" size={20} color={COLORS.gold.light} />
                   <Text style={styles.languageButtonText}>
                     {LANGUAGES.find(l => l.code === selectedLanguage)?.name.slice(0, 2).toUpperCase()}
                   </Text>
@@ -352,7 +343,7 @@ export default function ChatScreen() {
                   value={newMessage}
                   onChangeText={setNewMessage}
                   placeholder="Type a message..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={COLORS.navy.light}
                   multiline
                   maxLength={500}
                 />
@@ -362,11 +353,16 @@ export default function ChatScreen() {
                   onPress={sendMessage}
                   disabled={!newMessage.trim() || isSending}
                 >
-                  {isSending ? (
-                    <ActivityIndicator size="small" color="#FFF" />
-                  ) : (
-                    <Ionicons name="send" size={20} color="#FFF" />
-                  )}
+                  <LinearGradient
+                    colors={[COLORS.gold.primary, COLORS.gold.dark]}
+                    style={styles.sendButtonGradient}
+                  >
+                    {isSending ? (
+                      <ActivityIndicator size="small" color={COLORS.navy.darkest} />
+                    ) : (
+                      <Ionicons name="send" size={20} color={COLORS.navy.darkest} />
+                    )}
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </>
@@ -378,220 +374,48 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 12,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  channelContainer: {
-    flexDirection: 'row',
-  },
-  channelTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 2,
-    marginRight: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    gap: 6,
-  },
-  channelTabActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  channelText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    padding: 16,
-    paddingBottom: 20,
-  },
-  emptyMessages: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginTop: 12,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginTop: 4,
-  },
-  messageRow: {
-    marginBottom: 12,
-    alignItems: 'flex-start',
-  },
-  messageRowOwn: {
-    alignItems: 'flex-end',
-  },
-  messageBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 16,
-    borderTopLeftRadius: 4,
-    padding: 12,
-    maxWidth: '80%',
-  },
-  messageBubbleOwn: {
-    backgroundColor: '#FF1493',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 4,
-  },
-  messageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-    gap: 12,
-  },
-  messageSender: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  messageSenderOwn: {
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
-  messageTime: {
-    fontSize: 10,
-    color: '#999',
-  },
-  messageText: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
-  messageTextOwn: {
-    color: '#FFF',
-  },
-  languageSelector: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  languageOption: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  languageOptionActive: {
-    backgroundColor: '#FF1493',
-  },
-  languageText: {
-    fontSize: 12,
-    color: '#FFF',
-  },
-  languageTextActive: {
-    fontWeight: 'bold',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: 12,
-    paddingBottom: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    gap: 8,
-  },
-  languageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 4,
-  },
-  languageButtonText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 14,
-    maxHeight: 100,
-    color: '#333',
-  },
-  sendButton: {
-    backgroundColor: '#FF1493',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
-  },
-  lockedContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lockedOverlay: {
-    alignItems: 'center',
-    padding: 40,
-    borderRadius: 20,
-    margin: 20,
-  },
-  lockedTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  lockedText: {
-    fontSize: 16,
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  unlockRequirements: {
-    alignSelf: 'stretch',
-  },
-  requirementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
-  },
-  requirementText: {
-    fontSize: 14,
-    color: '#FFF',
-  },
-  errorText: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-  },
+  container: { flex: 1 },
+  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12 },
+  title: { fontSize: 28, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center', marginBottom: 12, letterSpacing: 1 },
+  channelContainer: { flexDirection: 'row' },
+  channelTab: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: COLORS.gold.dark + '40', marginRight: 8, backgroundColor: COLORS.navy.medium, gap: 6 },
+  channelTabActive: { backgroundColor: COLORS.gold.primary, borderColor: COLORS.gold.primary },
+  channelText: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.soft },
+  channelTextActive: { color: COLORS.navy.darkest },
+  messagesContainer: { flex: 1 },
+  messagesContent: { padding: 16, paddingBottom: 20 },
+  emptyMessages: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  emptyText: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 12 },
+  emptySubtext: { fontSize: 14, color: COLORS.cream.dark, marginTop: 4 },
+  messageRow: { marginBottom: 12, alignItems: 'flex-start' },
+  messageRowOwn: { alignItems: 'flex-end' },
+  messageBubble: { backgroundColor: COLORS.navy.medium, borderRadius: 16, borderTopLeftRadius: 4, padding: 12, maxWidth: '80%', borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  messageBubbleOwn: { backgroundColor: COLORS.gold.primary, borderTopLeftRadius: 16, borderTopRightRadius: 4, borderColor: COLORS.gold.dark },
+  messageHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4, gap: 12 },
+  messageSender: { fontSize: 12, fontWeight: 'bold', color: COLORS.gold.light },
+  messageSenderOwn: { color: COLORS.navy.darkest },
+  messageTime: { fontSize: 10, color: COLORS.cream.dark },
+  messageText: { fontSize: 14, color: COLORS.cream.pure, lineHeight: 20 },
+  messageTextOwn: { color: COLORS.navy.darkest },
+  languageSelector: { backgroundColor: COLORS.navy.medium, paddingVertical: 8, paddingHorizontal: 16 },
+  languageOption: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, marginRight: 8, backgroundColor: COLORS.navy.dark },
+  languageOptionActive: { backgroundColor: COLORS.gold.primary },
+  languageText: { fontSize: 12, color: COLORS.cream.soft },
+  languageTextActive: { fontWeight: 'bold', color: COLORS.navy.darkest },
+  inputContainer: { flexDirection: 'row', alignItems: 'flex-end', padding: 12, paddingBottom: 24, backgroundColor: COLORS.navy.medium, gap: 8, borderTopWidth: 1, borderTopColor: COLORS.gold.dark + '30' },
+  languageButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.dark, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 20, gap: 4, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
+  languageButtonText: { fontSize: 10, fontWeight: 'bold', color: COLORS.gold.light },
+  input: { flex: 1, backgroundColor: COLORS.navy.dark, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, maxHeight: 100, color: COLORS.cream.pure, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
+  sendButton: { borderRadius: 22, overflow: 'hidden' },
+  sendButtonGradient: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  sendButtonDisabled: { opacity: 0.5 },
+  lockedContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  lockedOverlay: { alignItems: 'center', padding: 40, borderRadius: 20, margin: 20, backgroundColor: COLORS.navy.medium, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
+  lockedTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary, marginTop: 16, marginBottom: 8 },
+  lockedText: { fontSize: 16, color: COLORS.cream.soft, textAlign: 'center', marginBottom: 20 },
+  unlockRequirements: { alignSelf: 'stretch' },
+  requirementRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
+  requirementText: { fontSize: 14, color: COLORS.cream.soft },
+  errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
 });

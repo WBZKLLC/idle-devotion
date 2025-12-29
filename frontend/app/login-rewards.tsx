@@ -137,7 +137,6 @@ export default function LoginRewardsScreen() {
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
-  };
 
   const getRewardIcon = (type: string) => {
     switch (type) {

@@ -357,7 +357,7 @@ class GachaGameTester:
             response = self.make_request("POST", f"/gacha/pull?username={self.username}", 
                                        json=pull_data)
             if response and response.status_code == 400:
-                self.log_result("Insufficient Funds", True, "Correctly rejected pull with insufficient gems")
+                self.log_result("Insufficient Funds", True, "Correctly rejected pull with insufficient crystals")
                 return True
         
         self.log_result("Insufficient Funds", False, "Did not properly handle insufficient funds")

@@ -256,7 +256,7 @@ class GachaGameTester:
                 heroes = result["heroes"]
                 if len(heroes) == 10:
                     self.log_result("Multi Pull (Gems)", True, 
-                                  f"Pulled 10 heroes, spent 900 gems, pity: {result['new_pity_counter']}")
+                                  f"Pulled 10 heroes, spent 900 crystals, pity: {result['new_pity_counter']}")
                     return True
                 else:
                     self.log_result("Multi Pull (Gems)", False, f"Expected 10 heroes, got {len(heroes)}")

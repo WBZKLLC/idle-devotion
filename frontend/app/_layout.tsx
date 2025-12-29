@@ -24,6 +24,15 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
+        name="story"
+        options={{
+          title: 'Story',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="map" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="summon-hub"
         options={{
           title: 'Summon',
@@ -33,60 +42,57 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="heroes"
+        name="abyss"
         options={{
-          title: 'Heroes',
+          title: 'Abyss',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+            <Ionicons name="flame" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="leaderboard"
+        name="arena"
         options={{
-          title: 'Ranks',
+          title: 'Arena',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="podium" size={size} color={color} />
+            <Ionicons name="trophy" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="store"
+        name="chat"
         options={{
-          title: 'Store',
+          title: 'Chat',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart" size={size} color={color} />
+            <Ionicons name="chatbubbles" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
           ),
         }}
       />
       
       {/* Hidden screens (accessible via navigation) */}
       <Tabs.Screen
-        name="story"
+        name="heroes"
         options={{
           href: null,
         }}
       />
       <Tabs.Screen
-        name="abyss"
+        name="leaderboard"
         options={{
           href: null,
         }}
       />
       <Tabs.Screen
-        name="arena"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
+        name="store"
         options={{
           href: null,
         }}

@@ -11,7 +11,6 @@ import {
   Alert,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -25,7 +24,7 @@ const COLORS = {
 };
 
 export default function HomeScreen() {
-  const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();
+  const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser, _hasHydrated } = useGameStore();
   const [username, setUsername] = useState('');
   const [isInitializing, setIsInitializing] = useState(true);
   const [idleStatus, setIdleStatus] = useState<any>(null);
@@ -34,9 +33,12 @@ export default function HomeScreen() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Wait for hydration before showing UI
   useEffect(() => {
-    checkExistingUser();
-  }, []);
+    if (_hasHydrated) {
+      setIsInitializing(false);
+    }
+  }, [_hasHydrated]);
 
   useEffect(() => {
     if (user) {

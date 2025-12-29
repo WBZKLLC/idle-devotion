@@ -640,4 +640,71 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  
+  // Claim Modal
+  claimModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  claimModalContent: {
+    width: '80%',
+    maxWidth: 320,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  claimModalGradient: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  claimModalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.navy.darkest,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  claimIconContainer: {
+    marginBottom: 20,
+  },
+  claimIconBg: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: COLORS.cream.pure,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  claimAmount: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: COLORS.navy.darkest,
+  },
+  claimType: {
+    fontSize: 16,
+    color: COLORS.navy.dark,
+    marginBottom: 8,
+  },
+  claimDay: {
+    fontSize: 14,
+    color: COLORS.navy.medium,
+    marginBottom: 20,
+  },
+  claimButton: {
+    backgroundColor: COLORS.navy.darkest,
+    paddingHorizontal: 40,
+    paddingVertical: 14,
+    borderRadius: 25,
+  },
+  claimButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.cream.pure,
+  },
 });

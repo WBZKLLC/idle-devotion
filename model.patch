@@ -2595,7 +2595,7 @@ index 8a59977..96b0f81 100644
 -------------+import random
 -------------+
 -------------+# Configuration
--------------+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
+-------------+BASE_URL = "https://divine-heroes.preview.emergentagent.com/api"
 -------------+TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
 -------------+
 -------------+class ComprehensiveGachaTest:
@@ -2850,7 +2850,7 @@ index 8a59977..96b0f81 100644
 -------------+import requests
 -------------+import json
 -------------+
--------------+BASE_URL = "https://gacha-heroes-2.preview.emergentagent.com/api"
+-------------+BASE_URL = "https://divine-heroes.preview.emergentagent.com/api"
 -------------+TEST_USERNAME = "testplayer"
 -------------+
 -------------+def test_endpoint(method, endpoint, **kwargs):

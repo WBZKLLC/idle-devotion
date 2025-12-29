@@ -103,6 +103,7 @@ class User(BaseModel):
     vip_level: int = 0  # 0-15
     total_spent: float = 0.0  # Total USD spent
     avatar_frame: str = "default"  # Avatar frame (default, gold, diamond, rainbow, legendary, divine)
+    first_purchase_used: bool = False  # Track if first purchase bonus claimed
     # Idle Collection System
     idle_collection_started_at: Optional[datetime] = None
     idle_collection_last_claimed: Optional[datetime] = None
@@ -114,6 +115,52 @@ class User(BaseModel):
     chat_unlock_time: Optional[datetime] = None  # When chat becomes available
     chat_unlocked: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Crystal Store Packages
+CRYSTAL_PACKAGES = {
+    "starter": {
+        "id": "starter",
+        "price_usd": 0.99,
+        "crystals": 100,
+        "display_name": "Starter Pack",
+        "bonus": 0
+    },
+    "small": {
+        "id": "small",
+        "price_usd": 4.99,
+        "crystals": 500,
+        "display_name": "Small Pack",
+        "bonus": 0
+    },
+    "medium": {
+        "id": "medium",
+        "price_usd": 9.99,
+        "crystals": 1000,
+        "display_name": "Medium Pack",
+        "bonus": 0
+    },
+    "large": {
+        "id": "large",
+        "price_usd": 19.99,
+        "crystals": 2000,
+        "display_name": "Large Pack",
+        "bonus": 0
+    },
+    "premium": {
+        "id": "premium",
+        "price_usd": 49.99,
+        "crystals": 3440,
+        "display_name": "Premium Pack",
+        "bonus": 440  # 3000 base + 440 bonus
+    },
+    "ultimate": {
+        "id": "ultimate",
+        "price_usd": 99.99,
+        "crystals": 6880,
+        "display_name": "Ultimate Pack",
+        "bonus": 880  # 6000 base + 880 bonus
+    }
+}
 
 class MarqueeNotification(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

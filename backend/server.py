@@ -57,32 +57,118 @@ class PyObjectId(ObjectId):
     def __get_pydantic_json_schema__(cls, field_schema):
         field_schema.update(type="string")
 
+class HeroSkill(BaseModel):
+    id: str
+    name: str
+    description: str
+    skill_type: str  # "active" or "passive"
+    damage_multiplier: float = 1.0
+    heal_percent: float = 0.0
+    buff_type: Optional[str] = None  # "atk", "def", "speed", etc.
+    buff_percent: float = 0.0
+    cooldown: int = 0  # turns
+    unlock_level: int = 1
+    unlock_stars: int = 0
+
 class HeroBase(BaseModel):
     name: str
-    rarity: str  # SR, SSR, UR, UR+
+    rarity: str  # N, R, SR, SSR, SSR+, UR, UR+
     element: str  # Fire, Water, Earth, Wind, Light, Dark
-    hero_class: str  # Warrior, Mage, Healer, Tank, Assassin, Support
+    hero_class: str  # Warrior, Mage, Archer (triangle system)
     base_hp: int
     base_atk: int
     base_def: int
+    base_speed: int = 100
     image_url: str
     description: str
+    # Skills - defined per hero
+    skills: List[HeroSkill] = []
+    # Position preference
+    position: str = "back"  # "front" or "back"
 
 class Hero(HeroBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+class Equipment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    slot: str  # "weapon", "armor", "helmet", "boots", "ring", "necklace"
+    rarity: str  # "common", "uncommon", "rare", "epic", "legendary"
+    level: int = 1
+    max_level: int = 20
+    stat_type: str  # "atk", "def", "hp", "speed", "crit"
+    stat_value: int
+    set_name: Optional[str] = None  # For set bonuses
 
 class UserHero(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     hero_id: str
     level: int = 1
-    rank: int = 1  # 1-10
-    star_level: int = 0  # After rank 10, star chart progression
-    duplicates: int = 0
+    max_level: int = 100
+    exp: int = 0
+    rank: int = 1  # 1-10 (star promotion)
+    stars: int = 0  # 0-6 stars per rank
+    awakening_level: int = 0  # 0-5 awakening stages
+    duplicates: int = 0  # Shards for promotion
+    # Current stats (calculated from base + upgrades)
     current_hp: int
     current_atk: int
     current_def: int
+    current_speed: int = 100
+    # Equipment slots
+    equipment: Dict[str, Optional[str]] = {
+        "weapon": None, "armor": None, "helmet": None,
+        "boots": None, "ring": None, "necklace": None
+    }
+    # Skill levels
+    skill_levels: Dict[str, int] = {}
+    # Team position
+    team_position: Optional[int] = None  # 1-6 position in team
     acquired_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Class advantage system (rock-paper-scissors)
+CLASS_ADVANTAGES = {
+    "Warrior": {"strong_against": "Archer", "weak_against": "Mage"},
+    "Mage": {"strong_against": "Warrior", "weak_against": "Archer"},
+    "Archer": {"strong_against": "Mage", "weak_against": "Warrior"},
+}
+
+# Element advantage system
+ELEMENT_ADVANTAGES = {
+    "Fire": {"strong_against": "Wind", "weak_against": "Water"},
+    "Water": {"strong_against": "Fire", "weak_against": "Earth"},
+    "Earth": {"strong_against": "Water", "weak_against": "Wind"},
+    "Wind": {"strong_against": "Earth", "weak_against": "Fire"},
+    "Light": {"strong_against": "Dark", "weak_against": "Dark"},
+    "Dark": {"strong_against": "Light", "weak_against": "Light"},
+}
+
+# Rarity stat multipliers
+RARITY_MULTIPLIERS = {
+    "N": 1.0, "R": 1.2, "SR": 1.5, "SSR": 2.0, 
+    "SSR+": 2.5, "UR": 3.0, "UR+": 4.0
+}
+
+# Level up costs (gold per level)
+def get_level_up_cost(current_level: int) -> int:
+    return 100 * current_level * current_level
+
+# EXP required per level
+def get_exp_required(level: int) -> int:
+    return 100 * level * level
+
+# Star promotion shard requirements
+STAR_SHARD_COSTS = {1: 10, 2: 20, 3: 40, 4: 80, 5: 160, 6: 320}
+
+# Awakening costs
+AWAKENING_COSTS = {
+    1: {"shards": 50, "gold": 10000},
+    2: {"shards": 100, "gold": 25000},
+    3: {"shards": 200, "gold": 50000},
+    4: {"shards": 400, "gold": 100000},
+    5: {"shards": 800, "gold": 250000},
+}
 
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

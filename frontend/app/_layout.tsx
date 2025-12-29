@@ -116,6 +116,42 @@ export default function Layout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="login-rewards"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="battle-pass"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="guild"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="team-builder"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="hero-upgrade"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

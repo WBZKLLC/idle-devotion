@@ -1,43 +1,9 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useState, useEffect, useCallback } from 'react';
-import { Platform } from 'react-native';
+import { useState, useEffect } from 'react';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
-
-// Safe storage that handles SSR gracefully
-const createSafeStorage = (): StateStorage => {
-  const isBrowser = typeof window !== 'undefined';
-  
-  return {
-    getItem: async (name: string) => {
-      if (!isBrowser) return null;
-      try {
-        return await AsyncStorage.getItem(name);
-      } catch {
-        return null;
-      }
-    },
-    setItem: async (name: string, value: string) => {
-      if (!isBrowser) return;
-      try {
-        await AsyncStorage.setItem(name, value);
-      } catch {
-        // Ignore storage errors
-      }
-    },
-    removeItem: async (name: string) => {
-      if (!isBrowser) return;
-      try {
-        await AsyncStorage.removeItem(name);
-      } catch {
-        // Ignore storage errors
-      }
-    },
-  };
-};
 
 interface User {
   id: string;
@@ -89,10 +55,11 @@ interface GameState {
   allHeroes: Hero[];
   isLoading: boolean;
   error: string | null;
-  _hasHydrated: boolean;
+  isHydrated: boolean;
   
   // Actions
   initUser: (username: string) => Promise<void>;
+  restoreSession: () => Promise<void>;
   login: () => Promise<any>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -104,30 +71,57 @@ interface GameState {
   fetchCR: () => Promise<{cr: number; hero_count: number}>;
   updateProfilePicture: (heroId: string) => Promise<void>;
   setUser: (user: User | null) => void;
-  setHasHydrated: (state: boolean) => void;
+  setHydrated: (value: boolean) => void;
 }
 
-export const useGameStore = create<GameState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      userHeroes: [],
-      allHeroes: [],
-      isLoading: false,
-      error: null,
-      _hasHydrated: false,
+export const useGameStore = create<GameState>((set, get) => ({
+  user: null,
+  userHeroes: [],
+  allHeroes: [],
+  isLoading: false,
+  error: null,
+  isHydrated: false,
 
-      setHasHydrated: (state: boolean) => {
-        set({ _hasHydrated: state });
-      },
+  setHydrated: (value: boolean) => set({ isHydrated: value }),
 
-      initUser: async (username: string) => {
+  restoreSession: async () => {
+    try {
+      // Check if we're in a browser/client environment
+      if (typeof window === 'undefined') {
+        set({ isHydrated: true });
+        return;
+      }
+      
+      const savedUsername = await AsyncStorage.getItem('divine_heroes_username');
+      if (savedUsername) {
+        // Try to fetch user data
+        try {
+          const response = await axios.get(`${BACKEND_URL}/api/user/${savedUsername}`);
+          set({ user: response.data, isHydrated: true });
+        } catch (error) {
+          // User doesn't exist anymore, clear storage
+          await AsyncStorage.removeItem('divine_heroes_username');
+          set({ isHydrated: true });
+        }
+      } else {
+        set({ isHydrated: true });
+      }
+    } catch (error) {
+      console.error('Error restoring session:', error);
+      set({ isHydrated: true });
+    }
+  },
+
+  initUser: async (username: string) => {
     set({ isLoading: true, error: null });
     try {
       // Try to get existing user
       const response = await axios.get(`${BACKEND_URL}/api/user/${username}`);
       set({ user: response.data, isLoading: false });
-      await AsyncStorage.setItem('username', username);
+      // Save to storage
+      if (typeof window !== 'undefined') {
+        await AsyncStorage.setItem('divine_heroes_username', username);
+      }
     } catch (error: any) {
       if (error.response?.status === 404) {
         // Register new user
@@ -135,7 +129,10 @@ export const useGameStore = create<GameState>()(
           `${BACKEND_URL}/api/user/register?username=${username}`
         );
         set({ user: registerResponse.data, isLoading: false });
-        await AsyncStorage.setItem('username', username);
+        // Save to storage
+        if (typeof window !== 'undefined') {
+          await AsyncStorage.setItem('divine_heroes_username', username);
+        }
       } else {
         set({ error: 'Failed to initialize user', isLoading: false });
         throw error;
@@ -160,6 +157,13 @@ export const useGameStore = create<GameState>()(
       set({ error: 'Failed to login', isLoading: false });
       throw error;
     }
+  },
+
+  logout: async () => {
+    if (typeof window !== 'undefined') {
+      await AsyncStorage.removeItem('divine_heroes_username');
+    }
+    set({ user: null, userHeroes: [], allHeroes: [] });
   },
 
   fetchUser: async () => {
@@ -298,62 +302,18 @@ export const useGameStore = create<GameState>()(
     }
   },
 
-  logout: async () => {
-    await AsyncStorage.removeItem('divine_heroes_username');
-    set({ user: null, userHeroes: [], allHeroes: [] });
-  },
-
   setUser: (user: User | null) => set({ user }),
-    }),
-    {
-      name: 'divine-heroes-storage',
-      storage: createSafeStorage(),
-      partialize: (state) => ({ 
-        user: state.user,
-        // Only persist user data, not loading states or heroes cache
-      }),
-      skipHydration: typeof window === 'undefined', // Skip hydration during SSR
-      onRehydrateStorage: () => (state, error) => {
-        if (error) {
-          console.error('Error rehydrating state:', error);
-        }
-        // Always set hydrated to true, even if there's an error
-        if (state) {
-          state.setHasHydrated(true);
-        }
-      },
-    }
-  )
-);
+}));
 
-// Helper hook to ensure hydration
+// Hook to handle session restoration
 export const useHydration = () => {
-  const [hydrated, setHydrated] = useState(false);
+  const { isHydrated, restoreSession } = useGameStore();
   
   useEffect(() => {
-    // In SSR, just mark as hydrated immediately
-    if (typeof window === 'undefined') {
-      setHydrated(true);
-      return;
+    if (!isHydrated) {
+      restoreSession();
     }
-    
-    // Manual check for hydration
-    const unsubFinishHydration = useGameStore.persist.onFinishHydration(() => {
-      setHydrated(true);
-    });
-    
-    // Check if already hydrated
-    if (useGameStore.persist.hasHydrated()) {
-      setHydrated(true);
-    }
-    
-    // Force hydration to start if not started
-    useGameStore.persist.rehydrate();
-    
-    return () => {
-      unsubFinishHydration();
-    };
   }, []);
   
-  return hydrated;
+  return isHydrated;
 };

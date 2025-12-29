@@ -11,13 +11,15 @@ import {
   Image,
   Modal,
 } from 'react-native';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+import { router } from 'expo-router';
 
 export default function EventsScreen() {
   const { user, fetchUser } = useGameStore();
+  const hydrated = useHydration();
   const [banners, setBanners] = useState<any[]>([]);
   const [selectedBanner, setSelectedBanner] = useState<any>(null);
   const [bannerDetails, setBannerDetails] = useState<any>(null);
@@ -27,8 +29,10 @@ export default function EventsScreen() {
   const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
-    loadBanners();
-  }, []);
+    if (hydrated) {
+      loadBanners();
+    }
+  }, [hydrated]);
 
   const loadBanners = async () => {
     try {

@@ -370,9 +370,27 @@ export default function HomeScreen() {
               </View>
 
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Pity Counter</Text>
+                <Text style={styles.statLabel}>🪙 Common Pity</Text>
                 <View style={styles.pityContainer}>
-                  <Text style={styles.statValue}>{user.pity_counter}/50</Text>
+                  <Text style={styles.statValue}>{user.pity_counter || 0}/50</Text>
+                  <View style={styles.pityBar}>
+                    <LinearGradient
+                      colors={['#FFD700', '#FFA500']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[
+                        styles.pityFill,
+                        { width: `${((user.pity_counter || 0) / 50) * 100}%` },
+                      ]}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>💎 Premium Pity</Text>
+                <View style={styles.pityContainer}>
+                  <Text style={styles.statValue}>{user.pity_counter_premium || 0}/50</Text>
                   <View style={styles.pityBar}>
                     <LinearGradient
                       colors={['#FF1493', '#9400D3']}
@@ -380,7 +398,7 @@ export default function HomeScreen() {
                       end={{ x: 1, y: 0 }}
                       style={[
                         styles.pityFill,
-                        { width: `${(user.pity_counter / 50) * 100}%` },
+                        { width: `${((user.pity_counter_premium || 0) / 50) * 100}%` },
                       ]}
                     />
                   </View>

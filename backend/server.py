@@ -557,7 +557,17 @@ HERO_POOL = [
          image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499073.jpg",
          description="A demonic guardian with impenetrable defense"),
     
-    # UR Heroes
+    # SSR+ Heroes (Common Summon Exclusive - Top tier for free players)
+    Hero(name="Orion the Mystic", rarity="SSR+", element="Water", hero_class="Mage",
+         base_hp=1700, base_atk=210, base_def=130,
+         image_url="https://img.freepik.com/free-photo/anime-character-with-blue-hair_23-2151499092.jpg",
+         description="A rare sorcerer who commands the tides"),
+    Hero(name="Phoenix the Reborn", rarity="SSR+", element="Fire", hero_class="Support",
+         base_hp=1600, base_atk=190, base_def=150,
+         image_url="https://img.freepik.com/free-photo/anime-character-portrait-illustration_23-2151499104.jpg",
+         description="Rising from ashes, granting power to allies"),
+    
+    # UR Heroes (Premium Crystal Exclusive)
     Hero(name="Seraphiel the Radiant", rarity="UR", element="Light", hero_class="Support",
          base_hp=1600, base_atk=200, base_def=140,
          image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499067.jpg",
@@ -567,7 +577,7 @@ HERO_POOL = [
          image_url="https://img.freepik.com/free-photo/anime-japanese-character_23-2151478202.jpg",
          description="A god of war who revels in destruction"),
     
-    # UR+ Heroes  
+    # UR+ Heroes (Premium Crystal Exclusive - Rarest)
     Hero(name="Raphael the Eternal", rarity="UR+", element="Light", hero_class="Mage",
          base_hp=2200, base_atk=300, base_def=160,
          image_url="https://img.itch.zone/aW1nLzgyOTQ5NTMucG5n/original/jCtJlk.png",

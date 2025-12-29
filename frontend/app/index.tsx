@@ -33,13 +33,6 @@ export default function HomeScreen() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Wait for hydration before showing UI
-  useEffect(() => {
-    if (_hasHydrated) {
-      setIsInitializing(false);
-    }
-  }, [_hasHydrated]);
-
   useEffect(() => {
     if (user) {
       handleLogin();

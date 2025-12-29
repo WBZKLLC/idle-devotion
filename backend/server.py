@@ -679,38 +679,45 @@ async def startup_event():
     await init_heroes()
     await init_islands_and_chapters()
 
-def get_random_hero(pity_counter: int, is_premium: bool = False) -> Hero:
+def get_random_hero(pity_counter: int, summon_type: str = "common") -> Hero:
     """Select a random hero based on gacha rates with pity system
     
     Args:
         pity_counter: Number of pulls since last high-tier hero
-        is_premium: If True, use premium pool (includes UR/UR+), else common pool (SR/SSR/SSR+)
+        summon_type: "common" (coins), "premium" (crystals/UR), or "divine" (divine essence/UR+)
     """
-    # Determine which pool and rates to use
-    if is_premium:
-        # Premium pool: All rarities including UR and UR+ (exclusive to premium)
-        available_heroes = HERO_POOL
+    if summon_type == "divine":
+        # Divine pool: UR+ heroes ONLY - guaranteed UR+
+        available_heroes = [h for h in HERO_POOL if h.rarity == "UR+"]
+        return random.choice(available_heroes)
+    
+    elif summon_type == "premium":
+        # Premium pool: SR, SSR, UR (no UR+ - moved to divine)
+        available_heroes = [h for h in HERO_POOL if h.rarity in ["SR", "SSR", "UR"]]
         rates = GACHA_RATES_PREMIUM
         pity_threshold = PITY_THRESHOLD_PREMIUM
-    else:
+        
+        # Pity system: guarantee UR at threshold
+        if pity_counter >= pity_threshold:
+            rarities = ["SSR", "UR"]
+            weights = [30, 70]  # High UR chance at pity
+        else:
+            rarities = list(rates.keys())
+            weights = list(rates.values())
+    
+    else:  # common
         # Common pool: SR, SSR, and SSR+ heroes only (no UR/UR+)
         available_heroes = [h for h in HERO_POOL if h.rarity in ["SR", "SSR", "SSR+"]]
         rates = GACHA_RATES_COMMON
         pity_threshold = PITY_THRESHOLD_COMMON
-    
-    # Pity system: guarantee high tier at threshold
-    if pity_counter >= pity_threshold:
-        if is_premium:
-            # Premium pity: weighted chance at SSR, UR, or UR+
-            rarities = ["SSR", "UR", "UR+"]
-            weights = [60, 30, 10]  # Better UR/UR+ chances at pity
-        else:
-            # Common pity: guaranteed SSR or SSR+
+        
+        # Common pity: guaranteed SSR or SSR+
+        if pity_counter >= pity_threshold:
             rarities = ["SSR", "SSR+"]
             weights = [70, 30]  # SSR+ is rarer even at pity
-    else:
-        rarities = list(rates.keys())
-        weights = list(rates.values())
+        else:
+            rarities = list(rates.keys())
+            weights = list(rates.values())
     
     selected_rarity = random.choices(rarities, weights=weights)[0]
     

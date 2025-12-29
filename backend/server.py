@@ -1197,6 +1197,60 @@ async def purchase_vip_package(username: str, package_tier: str):
         "remaining_crystals": update_dict["crystals"]
     }
 
+@api_router.get("/store/crystal-packages")
+async def get_crystal_packages():
+    """Get all available crystal packages"""
+    return {"packages": CRYSTAL_PACKAGES}
+
+@api_router.post("/store/purchase-crystals")
+async def purchase_crystals(username: str, package_id: str):
+    """Purchase crystal package with real money (simulated)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if package_id not in CRYSTAL_PACKAGES:
+        raise HTTPException(status_code=404, detail="Package not found")
+    
+    package = CRYSTAL_PACKAGES[package_id]
+    crystals_to_award = package["crystals"]
+    
+    # Check if this is the user's first purchase
+    is_first_purchase = not user.get("first_purchase_used", False)
+    
+    if is_first_purchase:
+        # Double crystals for first purchase
+        crystals_to_award *= 2
+    
+    # Update user
+    update_dict = {
+        "crystals": user.get("crystals", 0) + crystals_to_award,
+        "total_spent": user.get("total_spent", 0.0) + package["price_usd"],
+        "first_purchase_used": True
+    }
+    
+    # Recalculate VIP level
+    new_vip_level = calculate_vip_level(update_dict["total_spent"])
+    update_dict["vip_level"] = new_vip_level
+    update_dict["avatar_frame"] = get_avatar_frame(new_vip_level)
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": update_dict}
+    )
+    
+    return {
+        "package_id": package_id,
+        "package_name": package["display_name"],
+        "price_usd": package["price_usd"],
+        "crystals_received": crystals_to_award,
+        "was_first_purchase": is_first_purchase,
+        "bonus_applied": is_first_purchase,
+        "new_crystal_total": update_dict["crystals"],
+        "new_vip_level": new_vip_level,
+        "new_total_spent": update_dict["total_spent"]
+    }
+
 @api_router.get("/user/{username}/cr")
 async def get_character_rating(username: str):
     """Calculate and return user's Character Rating (CR)"""

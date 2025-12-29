@@ -54,10 +54,11 @@ const VIP_TIERS: VIPTier[] = [
 export default function StoreScreen() {
   const { user, fetchUser } = useGameStore();
   const [packages, setPackages] = useState<CrystalPackage[]>([]);
+  const [divinePackages, setDivinePackages] = useState<any>(null);
   const [vipInfo, setVipInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showVIPModal, setShowVIPModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'crystals' | 'vip'>('crystals');
+  const [selectedTab, setSelectedTab] = useState<'crystals' | 'divine' | 'vip'>('crystals');
 
   useEffect(() => {
     if (user) {
@@ -68,18 +69,21 @@ export default function StoreScreen() {
   const loadStoreData = async () => {
     setIsLoading(true);
     try {
-      const [packagesRes, vipRes] = await Promise.all([
+      const [packagesRes, divineRes, vipRes] = await Promise.all([
         fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/store/crystal-packages`),
+        fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/store/divine-packages?username=${user?.username}`),
         fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/vip/info/${user?.username}`)
       ]);
       
       const packagesData = await packagesRes.json();
+      const divineData = await divineRes.json();
       const vipData = await vipRes.json();
       
       // Convert packages object to array
       const packagesObj = packagesData.packages || packagesData;
       const packagesArray = Object.values(packagesObj) as CrystalPackage[];
       setPackages(packagesArray);
+      setDivinePackages(divineData);
       setVipInfo(vipData);
     } catch (error) {
       console.error('Failed to load store data:', error);

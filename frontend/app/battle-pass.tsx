@@ -9,22 +9,26 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+import { router } from 'expo-router';
 
 export default function BattlePassScreen() {
   const { user, fetchUser } = useGameStore();
+  const hydrated = useHydration();
   const [passData, setPassData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (hydrated && user) {
       loadBattlePass();
+    } else if (hydrated && !user) {
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [hydrated, user]);
 
   const loadBattlePass = async () => {
     try {

@@ -89,14 +89,6 @@ export default function HomeScreen() {
     finally { setIsClaiming(false); }
   };
 
-  const checkExistingUser = async () => {
-    try {
-      const savedUsername = await AsyncStorage.getItem('divine_heroes_username');
-      if (savedUsername) { await initUser(savedUsername); }
-    } catch (error) { console.error('Error checking existing user:', error); }
-    finally { setIsInitializing(false); }
-  };
-
   const handleLogin = async () => {
     try {
       const loginReward = await login();
@@ -116,7 +108,6 @@ export default function HomeScreen() {
   const handleStartGame = async () => {
     if (!username.trim()) { Alert.alert('Enter Username', 'Please enter a username to begin'); return; }
     try {
-      await AsyncStorage.setItem('divine_heroes_username', username.trim());
       await initUser(username.trim());
     } catch (error) { Alert.alert('Error', 'Failed to create account'); }
   };

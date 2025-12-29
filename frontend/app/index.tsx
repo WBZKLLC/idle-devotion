@@ -36,8 +36,92 @@ export default function HomeScreen() {
     if (user) {
       handleLogin();
       loadCR();
+      loadIdleStatus();
+      
+      // Start idle timer update every second
+      timerRef.current = setInterval(() => {
+        updateIdleTimer();
+      }, 1000);
+      
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+      };
     }
   }, [user?.username]);
+
+  const loadIdleStatus = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/idle/status/${user?.username}`
+      );
+      const data = await response.json();
+      setIdleStatus(data);
+    } catch (error) {
+      console.error('Failed to load idle status:', error);
+    }
+  };
+
+  const updateIdleTimer = () => {
+    setIdleStatus((prev: any) => {
+      if (!prev) return prev;
+      const newTimeElapsed = prev.time_elapsed + 1;
+      const maxSeconds = prev.max_hours * 3600;
+      const cappedTime = Math.min(newTimeElapsed, maxSeconds);
+      return {
+        ...prev,
+        time_elapsed: newTimeElapsed,
+        gold_pending: Math.floor(cappedTime / 60) * 10, // Approximate pending gold
+        is_capped: newTimeElapsed >= maxSeconds,
+      };
+    });
+  };
+
+  const formatIdleTime = (seconds: number, maxHours: number) => {
+    const maxSeconds = maxHours * 3600;
+    const cappedSeconds = Math.min(seconds, maxSeconds);
+    const hours = Math.floor(cappedSeconds / 3600);
+    const minutes = Math.floor((cappedSeconds % 3600) / 60);
+    const secs = Math.floor(cappedSeconds % 60);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleClaimIdle = async () => {
+    if (isClaiming) return;
+    
+    setIsClaiming(true);
+    try {
+      const rewards = await claimIdleRewards();
+      
+      // Show reward notification
+      if (rewards.gold_earned > 0) {
+        Alert.alert(
+          '💰 Idle Rewards Claimed!',
+          `+${rewards.gold_earned} Gold\n` +
+          `Time: ${Math.floor(rewards.time_away / 60)} minutes`,
+          [{ text: 'Great!', style: 'default' }]
+        );
+      }
+      
+      // Refresh user data to update top counters
+      await fetchUser();
+      loadCR();
+      
+      // Reset idle status
+      setIdleStatus({
+        ...idleStatus,
+        time_elapsed: 0,
+        gold_pending: 0,
+        is_capped: false,
+      });
+    } catch (error) {
+      console.error('Failed to claim idle rewards:', error);
+      Alert.alert('Error', 'Failed to claim rewards');
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   const loadCR = async () => {
     try {

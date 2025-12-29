@@ -3363,7 +3363,7 @@ DAILY_LOGIN_REWARDS = generate_daily_login_rewards()
 
 @api_router.get("/login-rewards/{username}")
 async def get_login_rewards(username: str):
-    """Get daily login reward status for user"""
+    """Get daily login reward status for user (6-month / 180-day system)"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -3388,7 +3388,7 @@ async def get_login_rewards(username: str):
     # Check if can claim today
     can_claim_today = last_claim_date != today and login_days > 0
     
-    # Build rewards calendar
+    # Build rewards calendar (all 180 days)
     rewards = []
     for reward in DAILY_LOGIN_REWARDS:
         day = reward["day"]
@@ -3404,7 +3404,8 @@ async def get_login_rewards(username: str):
         "rewards": rewards,
         "can_claim_today": can_claim_today,
         "last_claim_date": last_claim_date,
-        "current_streak": login_data.get("current_streak", 0)
+        "current_streak": login_data.get("current_streak", 0),
+        "total_days": 180
     }
 
 @api_router.post("/login-rewards/{username}/claim/{day}")
@@ -3419,8 +3420,8 @@ async def claim_login_reward(username: str, day: int):
     if day > login_days:
         raise HTTPException(status_code=400, detail="Day not yet reached")
     
-    if day < 1 or day > 28:
-        raise HTTPException(status_code=400, detail="Invalid day")
+    if day < 1 or day > 180:
+        raise HTTPException(status_code=400, detail="Invalid day (must be 1-180)")
     
     login_data = await db.login_rewards.find_one({"user_id": user["id"]})
     if not login_data:
@@ -3430,7 +3431,7 @@ async def claim_login_reward(username: str, day: int):
     if day in login_data.get("claimed_days", []):
         raise HTTPException(status_code=400, detail="Already claimed this day")
     
-    # Get reward
+    # Get reward from the generated list
     reward = DAILY_LOGIN_REWARDS[day - 1]
     
     # Grant reward

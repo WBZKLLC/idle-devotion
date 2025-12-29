@@ -122,20 +122,15 @@ export default function Layout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#FFFFFF',
-    borderTopColor: '#FF1493',
-    borderTopWidth: 2,
-    paddingTop: 8,
-    paddingBottom: 8,
+    backgroundColor: COLORS.navy.darkest,
+    borderTopColor: COLORS.gold.primary + '30',
+    borderTopWidth: 1,
     height: 60,
-    shadowColor: '#FF1493',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 10,
+    paddingBottom: 6,
+    paddingTop: 6,
   },
   tabLabel: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
   },
 });

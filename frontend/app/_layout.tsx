@@ -88,18 +88,6 @@ export default function Layout() {
           href: null,
         }}
       />
-      <Tabs.Screen
-        name="gem-summon"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="coin-summon"
-        options={{
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }

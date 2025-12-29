@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Modal,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +29,13 @@ export default function LoginRewardsScreen() {
   const [currentMonth, setCurrentMonth] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [claimedReward, setClaimedReward] = useState<any>(null);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  
+  // Animation values
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (hydrated && user) {

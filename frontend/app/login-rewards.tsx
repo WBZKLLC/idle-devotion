@@ -128,7 +128,7 @@ export default function LoginRewardsScreen() {
   // Count available rewards
   const availableCount = rewards.filter(r => r.available).length;
 
-  if (!_hasHydrated) {
+  if (!hydrated) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>

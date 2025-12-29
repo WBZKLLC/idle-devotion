@@ -539,16 +539,16 @@ VIP_PACKAGES = {
 # Gacha rates configuration
 # Common Summons (coins) - NO UR/UR+ heroes
 GACHA_RATES_COMMON = {
-    "SR": 65.0,    # 65%
-    "SSR": 32.0,   # 32%
-    "SSR+": 3.0,   # 3% - New tier exclusive to common summons
+    "SR": 90.8,    # 90.8%
+    "SSR": 8.0,    # 8%
+    "SSR+": 1.2,   # 1.2% - Rare tier exclusive to common summons
 }
 
-# Premium Summons (crystals) - UR is highest tier here (UR+ removed)
+# Premium Summons (crystals) - UR is highest tier here (UR+ moved to divine)
 GACHA_RATES_PREMIUM = {
-    "SR": 50.0,   # 50%
-    "SSR": 40.0,  # 40%
-    "UR": 10.0,   # 10% - Premium exclusive (UR+ moved to divine)
+    "SR": 66.8,   # 66.8%
+    "SSR": 32.0,  # 32%
+    "UR": 1.2,    # 1.2% - Premium exclusive (very rare)
 }
 
 # Divine Summons (Divine Essence) - UR+ ONLY

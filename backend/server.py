@@ -1999,8 +1999,9 @@ async def get_arena_record(username: str):
     return convert_objectid(record)
 
 @api_router.post("/arena/battle/{username}")
-async def arena_battle(username: str, team_id: str):
+async def arena_battle(username: str, request: ArenaBattleRequest):
     """Battle in arena against another player"""
+    team_id = request.team_id
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

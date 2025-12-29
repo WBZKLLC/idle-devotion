@@ -3294,6 +3294,731 @@ async def claim_daily_quest(username: str, quest_id: str):
         "reward_amount": reward_amount
     }
 
+# ==================== DAILY LOGIN REWARDS ====================
+
+DAILY_LOGIN_REWARDS = [
+    {"day": 1, "reward_type": "coins", "reward_amount": 5000, "bonus": False},
+    {"day": 2, "reward_type": "crystals", "reward_amount": 50, "bonus": False},
+    {"day": 3, "reward_type": "gold", "reward_amount": 3000, "bonus": False},
+    {"day": 4, "reward_type": "coins", "reward_amount": 8000, "bonus": False},
+    {"day": 5, "reward_type": "crystals", "reward_amount": 100, "bonus": False},
+    {"day": 6, "reward_type": "gold", "reward_amount": 5000, "bonus": False},
+    {"day": 7, "reward_type": "crystals", "reward_amount": 200, "bonus": True},  # Weekly bonus
+    {"day": 8, "reward_type": "coins", "reward_amount": 10000, "bonus": False},
+    {"day": 9, "reward_type": "crystals", "reward_amount": 80, "bonus": False},
+    {"day": 10, "reward_type": "gold", "reward_amount": 8000, "bonus": False},
+    {"day": 11, "reward_type": "coins", "reward_amount": 12000, "bonus": False},
+    {"day": 12, "reward_type": "crystals", "reward_amount": 120, "bonus": False},
+    {"day": 13, "reward_type": "gold", "reward_amount": 10000, "bonus": False},
+    {"day": 14, "reward_type": "crystals", "reward_amount": 300, "bonus": True},  # 2-week bonus
+    {"day": 15, "reward_type": "coins", "reward_amount": 15000, "bonus": False},
+    {"day": 16, "reward_type": "crystals", "reward_amount": 100, "bonus": False},
+    {"day": 17, "reward_type": "gold", "reward_amount": 12000, "bonus": False},
+    {"day": 18, "reward_type": "coins", "reward_amount": 18000, "bonus": False},
+    {"day": 19, "reward_type": "crystals", "reward_amount": 150, "bonus": False},
+    {"day": 20, "reward_type": "gold", "reward_amount": 15000, "bonus": False},
+    {"day": 21, "reward_type": "crystals", "reward_amount": 400, "bonus": True},  # 3-week bonus
+    {"day": 22, "reward_type": "coins", "reward_amount": 20000, "bonus": False},
+    {"day": 23, "reward_type": "crystals", "reward_amount": 180, "bonus": False},
+    {"day": 24, "reward_type": "gold", "reward_amount": 18000, "bonus": False},
+    {"day": 25, "reward_type": "coins", "reward_amount": 25000, "bonus": False},
+    {"day": 26, "reward_type": "crystals", "reward_amount": 200, "bonus": False},
+    {"day": 27, "reward_type": "gold", "reward_amount": 20000, "bonus": False},
+    {"day": 28, "reward_type": "divine_essence", "reward_amount": 10, "bonus": True},  # Monthly bonus - Divine Essence!
+]
+
+@api_router.get("/login-rewards/{username}")
+async def get_login_rewards(username: str):
+    """Get daily login reward status for user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    login_days = user.get("login_days", 0)
+    today = datetime.utcnow().date().isoformat()
+    
+    # Get claimed rewards
+    login_data = await db.login_rewards.find_one({"user_id": user["id"]})
+    if not login_data:
+        login_data = {
+            "user_id": user["id"],
+            "claimed_days": [],
+            "last_claim_date": None,
+            "current_streak": 0
+        }
+        await db.login_rewards.insert_one(login_data)
+    
+    claimed_days = login_data.get("claimed_days", [])
+    last_claim_date = login_data.get("last_claim_date")
+    
+    # Check if can claim today
+    can_claim_today = last_claim_date != today and login_days > 0
+    
+    # Build rewards calendar
+    rewards = []
+    for reward in DAILY_LOGIN_REWARDS:
+        day = reward["day"]
+        rewards.append({
+            **reward,
+            "claimed": day in claimed_days,
+            "available": day <= login_days and day not in claimed_days,
+            "locked": day > login_days
+        })
+    
+    return {
+        "login_days": login_days,
+        "rewards": rewards,
+        "can_claim_today": can_claim_today,
+        "last_claim_date": last_claim_date,
+        "current_streak": login_data.get("current_streak", 0)
+    }
+
+@api_router.post("/login-rewards/{username}/claim/{day}")
+async def claim_login_reward(username: str, day: int):
+    """Claim a specific day's login reward"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    login_days = user.get("login_days", 0)
+    
+    if day > login_days:
+        raise HTTPException(status_code=400, detail="Day not yet reached")
+    
+    if day < 1 or day > 28:
+        raise HTTPException(status_code=400, detail="Invalid day")
+    
+    login_data = await db.login_rewards.find_one({"user_id": user["id"]})
+    if not login_data:
+        login_data = {"user_id": user["id"], "claimed_days": [], "last_claim_date": None}
+        await db.login_rewards.insert_one(login_data)
+    
+    if day in login_data.get("claimed_days", []):
+        raise HTTPException(status_code=400, detail="Already claimed this day")
+    
+    # Get reward
+    reward = DAILY_LOGIN_REWARDS[day - 1]
+    
+    # Grant reward
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {reward["reward_type"]: reward["reward_amount"]}}
+    )
+    
+    # Mark as claimed
+    today = datetime.utcnow().date().isoformat()
+    await db.login_rewards.update_one(
+        {"user_id": user["id"]},
+        {
+            "$push": {"claimed_days": day},
+            "$set": {"last_claim_date": today}
+        }
+    )
+    
+    return {
+        "success": True,
+        "day": day,
+        "reward_type": reward["reward_type"],
+        "reward_amount": reward["reward_amount"],
+        "is_bonus": reward["bonus"]
+    }
+
+# ==================== BATTLE PASS SYSTEM ====================
+
+BATTLE_PASS_REWARDS = {
+    "free": [
+        {"level": 1, "reward_type": "coins", "reward_amount": 5000},
+        {"level": 3, "reward_type": "crystals", "reward_amount": 50},
+        {"level": 5, "reward_type": "gold", "reward_amount": 5000},
+        {"level": 7, "reward_type": "coins", "reward_amount": 10000},
+        {"level": 10, "reward_type": "crystals", "reward_amount": 100},
+        {"level": 13, "reward_type": "gold", "reward_amount": 10000},
+        {"level": 15, "reward_type": "crystals", "reward_amount": 150},
+        {"level": 18, "reward_type": "coins", "reward_amount": 20000},
+        {"level": 20, "reward_type": "crystals", "reward_amount": 200},
+        {"level": 23, "reward_type": "gold", "reward_amount": 20000},
+        {"level": 25, "reward_type": "crystals", "reward_amount": 250},
+        {"level": 28, "reward_type": "coins", "reward_amount": 30000},
+        {"level": 30, "reward_type": "crystals", "reward_amount": 300},
+    ],
+    "premium": [
+        {"level": 1, "reward_type": "crystals", "reward_amount": 100},
+        {"level": 2, "reward_type": "gold", "reward_amount": 5000},
+        {"level": 3, "reward_type": "crystals", "reward_amount": 100},
+        {"level": 4, "reward_type": "coins", "reward_amount": 15000},
+        {"level": 5, "reward_type": "crystals", "reward_amount": 150},
+        {"level": 6, "reward_type": "gold", "reward_amount": 8000},
+        {"level": 7, "reward_type": "crystals", "reward_amount": 150},
+        {"level": 8, "reward_type": "coins", "reward_amount": 20000},
+        {"level": 9, "reward_type": "crystals", "reward_amount": 200},
+        {"level": 10, "reward_type": "divine_essence", "reward_amount": 5},
+        {"level": 12, "reward_type": "crystals", "reward_amount": 200},
+        {"level": 14, "reward_type": "gold", "reward_amount": 15000},
+        {"level": 16, "reward_type": "crystals", "reward_amount": 250},
+        {"level": 18, "reward_type": "coins", "reward_amount": 30000},
+        {"level": 20, "reward_type": "divine_essence", "reward_amount": 10},
+        {"level": 22, "reward_type": "crystals", "reward_amount": 300},
+        {"level": 24, "reward_type": "gold", "reward_amount": 25000},
+        {"level": 26, "reward_type": "crystals", "reward_amount": 350},
+        {"level": 28, "reward_type": "coins", "reward_amount": 50000},
+        {"level": 30, "reward_type": "divine_essence", "reward_amount": 20},
+    ]
+}
+
+BATTLE_PASS_XP_PER_LEVEL = 1000
+BATTLE_PASS_PRICE = 9.99  # USD
+BATTLE_PASS_PREMIUM_PLUS_PRICE = 19.99  # Includes 10 level skips
+
+@api_router.get("/battle-pass/{username}")
+async def get_battle_pass(username: str):
+    """Get battle pass progress for user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
+    if not bp_data:
+        bp_data = {
+            "user_id": user["id"],
+            "season": 1,
+            "xp": 0,
+            "level": 1,
+            "is_premium": False,
+            "claimed_free": [],
+            "claimed_premium": []
+        }
+        await db.battle_pass.insert_one(bp_data)
+    
+    # Calculate level from XP
+    level = min(30, 1 + bp_data.get("xp", 0) // BATTLE_PASS_XP_PER_LEVEL)
+    xp_in_level = bp_data.get("xp", 0) % BATTLE_PASS_XP_PER_LEVEL
+    
+    # Build rewards list
+    free_rewards = []
+    for reward in BATTLE_PASS_REWARDS["free"]:
+        free_rewards.append({
+            **reward,
+            "claimed": reward["level"] in bp_data.get("claimed_free", []),
+            "available": reward["level"] <= level and reward["level"] not in bp_data.get("claimed_free", []),
+            "locked": reward["level"] > level
+        })
+    
+    premium_rewards = []
+    for reward in BATTLE_PASS_REWARDS["premium"]:
+        premium_rewards.append({
+            **reward,
+            "claimed": reward["level"] in bp_data.get("claimed_premium", []),
+            "available": bp_data.get("is_premium", False) and reward["level"] <= level and reward["level"] not in bp_data.get("claimed_premium", []),
+            "locked": reward["level"] > level or not bp_data.get("is_premium", False)
+        })
+    
+    return {
+        "season": bp_data.get("season", 1),
+        "level": level,
+        "xp": bp_data.get("xp", 0),
+        "xp_in_level": xp_in_level,
+        "xp_to_next_level": BATTLE_PASS_XP_PER_LEVEL,
+        "is_premium": bp_data.get("is_premium", False),
+        "free_rewards": free_rewards,
+        "premium_rewards": premium_rewards,
+        "premium_price": BATTLE_PASS_PRICE,
+        "premium_plus_price": BATTLE_PASS_PREMIUM_PLUS_PRICE
+    }
+
+@api_router.post("/battle-pass/{username}/claim/{track}/{level}")
+async def claim_battle_pass_reward(username: str, track: str, level: int):
+    """Claim a battle pass reward"""
+    if track not in ["free", "premium"]:
+        raise HTTPException(status_code=400, detail="Invalid track")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
+    if not bp_data:
+        raise HTTPException(status_code=400, detail="Battle pass data not found")
+    
+    current_level = min(30, 1 + bp_data.get("xp", 0) // BATTLE_PASS_XP_PER_LEVEL)
+    
+    if level > current_level:
+        raise HTTPException(status_code=400, detail="Level not yet reached")
+    
+    if track == "premium" and not bp_data.get("is_premium", False):
+        raise HTTPException(status_code=400, detail="Premium pass required")
+    
+    claimed_key = f"claimed_{track}"
+    if level in bp_data.get(claimed_key, []):
+        raise HTTPException(status_code=400, detail="Already claimed")
+    
+    # Find reward
+    reward = next((r for r in BATTLE_PASS_REWARDS[track] if r["level"] == level), None)
+    if not reward:
+        raise HTTPException(status_code=404, detail="Reward not found")
+    
+    # Grant reward
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {reward["reward_type"]: reward["reward_amount"]}}
+    )
+    
+    # Mark as claimed
+    await db.battle_pass.update_one(
+        {"user_id": user["id"]},
+        {"$push": {claimed_key: level}}
+    )
+    
+    return {
+        "success": True,
+        "track": track,
+        "level": level,
+        "reward_type": reward["reward_type"],
+        "reward_amount": reward["reward_amount"]
+    }
+
+@api_router.post("/battle-pass/{username}/purchase")
+async def purchase_battle_pass(username: str, tier: str = "premium"):
+    """Purchase battle pass (simulated)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
+    if not bp_data:
+        bp_data = {
+            "user_id": user["id"],
+            "season": 1,
+            "xp": 0,
+            "is_premium": False,
+            "claimed_free": [],
+            "claimed_premium": []
+        }
+        await db.battle_pass.insert_one(bp_data)
+    
+    if bp_data.get("is_premium", False):
+        raise HTTPException(status_code=400, detail="Already have premium pass")
+    
+    # Grant premium status
+    update = {"$set": {"is_premium": True}}
+    
+    # If premium plus, add 10 levels worth of XP
+    if tier == "premium_plus":
+        update["$inc"] = {"xp": 10 * BATTLE_PASS_XP_PER_LEVEL}
+    
+    await db.battle_pass.update_one({"user_id": user["id"]}, update)
+    
+    # Add VIP XP
+    vip_xp = 9.99 if tier == "premium" else 19.99
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"total_spent": vip_xp}}
+    )
+    
+    return {
+        "success": True,
+        "tier": tier,
+        "price": BATTLE_PASS_PRICE if tier == "premium" else BATTLE_PASS_PREMIUM_PLUS_PRICE
+    }
+
+@api_router.post("/battle-pass/{username}/add-xp")
+async def add_battle_pass_xp(username: str, xp: int = 100):
+    """Add XP to battle pass (called by various game actions)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.battle_pass.update_one(
+        {"user_id": user["id"]},
+        {"$inc": {"xp": xp}},
+        upsert=True
+    )
+    
+    return {"success": True, "xp_added": xp}
+
+# ==================== EVENT BANNERS ====================
+
+# Active event banners - in production, this would be database-driven
+EVENT_BANNERS = [
+    {
+        "id": "celestial_ascension",
+        "name": "Celestial Ascension",
+        "description": "Limited time! Increased rates for Light element heroes!",
+        "banner_type": "premium",  # Uses crystals
+        "start_date": "2025-01-01",
+        "end_date": "2025-01-15",
+        "featured_heroes": ["Seraphiel the Radiant", "Leon the Paladin", "Lucian the Divine"],
+        "rate_boosts": {"Light": 2.0},  # 2x rate for Light heroes
+        "guaranteed_featured_pity": 80,  # Guaranteed featured hero at 80 pulls
+        "is_active": True
+    },
+    {
+        "id": "shadow_realm",
+        "name": "Shadow Realm",
+        "description": "Exclusive Dark element heroes with boosted rates!",
+        "banner_type": "premium",
+        "start_date": "2025-01-10",
+        "end_date": "2025-01-24",
+        "featured_heroes": ["Apollyon the Fallen", "Morgana the Shadow", "Selene the Moonbow"],
+        "rate_boosts": {"Dark": 2.0},
+        "guaranteed_featured_pity": 80,
+        "is_active": True
+    },
+    {
+        "id": "divine_collection",
+        "name": "Divine Collection",
+        "description": "Triple UR+ rate! Get your UR+ heroes now!",
+        "banner_type": "divine",  # Uses Divine Essence
+        "start_date": "2025-01-05",
+        "end_date": "2025-01-12",
+        "featured_heroes": ["Raphael the Eternal", "Michael the Archangel", "Apollyon the Fallen"],
+        "rate_boosts": {"UR+": 1.0},  # Already 100% for divine
+        "guaranteed_featured_pity": 20,  # Shorter pity for events
+        "is_active": True
+    }
+]
+
+@api_router.get("/event-banners")
+async def get_event_banners():
+    """Get all active event banners"""
+    today = datetime.utcnow().date().isoformat()
+    
+    active_banners = []
+    for banner in EVENT_BANNERS:
+        if banner["is_active"]:
+            # Check if within date range (simplified check)
+            days_remaining = 7  # Placeholder
+            active_banners.append({
+                **banner,
+                "days_remaining": days_remaining
+            })
+    
+    return {"banners": active_banners}
+
+@api_router.get("/event-banners/{banner_id}")
+async def get_event_banner_details(banner_id: str, username: str):
+    """Get detailed info for a specific event banner"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    banner = next((b for b in EVENT_BANNERS if b["id"] == banner_id), None)
+    if not banner:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    
+    # Get user's pity for this banner
+    event_pity = await db.event_pity.find_one({"user_id": user["id"], "banner_id": banner_id})
+    pity_count = event_pity.get("pity_count", 0) if event_pity else 0
+    
+    return {
+        **banner,
+        "pity_count": pity_count,
+        "pity_threshold": banner["guaranteed_featured_pity"]
+    }
+
+@api_router.post("/event-banners/{banner_id}/pull")
+async def pull_event_banner(banner_id: str, username: str, multi: bool = False):
+    """Pull on an event banner"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    banner = next((b for b in EVENT_BANNERS if b["id"] == banner_id), None)
+    if not banner:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    
+    # Determine currency and cost
+    if banner["banner_type"] == "divine":
+        currency = "divine_essence"
+        cost = DIVINE_ESSENCE_COST_MULTI if multi else DIVINE_ESSENCE_COST_SINGLE
+    else:
+        currency = "gems"
+        cost = CRYSTAL_COST_MULTI if multi else CRYSTAL_COST_SINGLE
+    
+    if user.get(currency, 0) < cost:
+        raise HTTPException(status_code=400, detail=f"Not enough {currency}")
+    
+    # Get/update pity
+    event_pity = await db.event_pity.find_one({"user_id": user["id"], "banner_id": banner_id})
+    pity_count = event_pity.get("pity_count", 0) if event_pity else 0
+    
+    num_pulls = 10 if multi else 1
+    results = []
+    
+    # Get featured hero pool
+    featured_heroes = []
+    for hero_name in banner["featured_heroes"]:
+        hero = await db.heroes.find_one({"name": hero_name})
+        if hero:
+            featured_heroes.append(hero)
+    
+    for i in range(num_pulls):
+        pity_count += 1
+        
+        # Check if guaranteed featured
+        if pity_count >= banner["guaranteed_featured_pity"] and featured_heroes:
+            pulled_hero = random.choice(featured_heroes)
+            pity_count = 0  # Reset pity
+        else:
+            # Normal pull with boosted rates for featured element
+            if banner["banner_type"] == "divine":
+                pool = [h for h in HERO_POOL if h.rarity == "UR+"]
+            else:
+                pool = [h for h in HERO_POOL if h.rarity in ["SR", "SSR", "UR"]]
+            
+            # Apply element boost
+            weighted_pool = []
+            for hero in pool:
+                weight = banner["rate_boosts"].get(hero.element, 1.0)
+                weighted_pool.extend([hero] * int(weight * 10))
+            
+            if weighted_pool:
+                pulled_hero = random.choice(weighted_pool)
+            else:
+                pulled_hero = random.choice(pool) if pool else HERO_POOL[0]
+        
+        # Find in database
+        hero_doc = await db.heroes.find_one({"name": pulled_hero.name})
+        if hero_doc:
+            # Add to user's collection
+            existing = await db.user_heroes.find_one({
+                "user_id": user["id"],
+                "hero_id": hero_doc["id"]
+            })
+            
+            if existing:
+                await db.user_heroes.update_one(
+                    {"id": existing["id"]},
+                    {"$inc": {"duplicates": 1}}
+                )
+                results.append({
+                    "hero": convert_objectid(hero_doc),
+                    "is_new": False,
+                    "duplicates": existing.get("duplicates", 0) + 1,
+                    "is_featured": pulled_hero.name in banner["featured_heroes"]
+                })
+            else:
+                new_hero = UserHero(
+                    user_id=user["id"],
+                    hero_id=hero_doc["id"],
+                    current_hp=hero_doc["base_hp"],
+                    current_atk=hero_doc["base_atk"],
+                    current_def=hero_doc["base_def"]
+                )
+                await db.user_heroes.insert_one(new_hero.dict())
+                results.append({
+                    "hero": convert_objectid(hero_doc),
+                    "is_new": True,
+                    "duplicates": 0,
+                    "is_featured": pulled_hero.name in banner["featured_heroes"]
+                })
+    
+    # Deduct currency and update pity
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {currency: -cost, "total_pulls": num_pulls}}
+    )
+    
+    await db.event_pity.update_one(
+        {"user_id": user["id"], "banner_id": banner_id},
+        {"$set": {"pity_count": pity_count}},
+        upsert=True
+    )
+    
+    return {
+        "results": results,
+        "currency_spent": cost,
+        "new_pity": pity_count,
+        "pity_threshold": banner["guaranteed_featured_pity"]
+    }
+
+# ==================== STORY/CAMPAIGN MODE ====================
+
+STORY_CHAPTERS = [
+    {
+        "chapter": 1,
+        "name": "The Awakening",
+        "stages": [
+            {"stage": 1, "name": "Village Outskirts", "enemy_power": 500, "rewards": {"coins": 500, "gold": 200, "xp": 100}},
+            {"stage": 2, "name": "Dark Forest", "enemy_power": 700, "rewards": {"coins": 600, "gold": 250, "xp": 120}},
+            {"stage": 3, "name": "Goblin Camp", "enemy_power": 900, "rewards": {"coins": 700, "gold": 300, "xp": 150}},
+            {"stage": 4, "name": "Ancient Ruins", "enemy_power": 1200, "rewards": {"coins": 800, "gold": 350, "xp": 180}},
+            {"stage": 5, "name": "BOSS: Shadow Knight", "enemy_power": 1500, "is_boss": True, "rewards": {"coins": 1500, "gold": 500, "crystals": 50, "xp": 300}},
+        ]
+    },
+    {
+        "chapter": 2,
+        "name": "Rising Darkness",
+        "stages": [
+            {"stage": 1, "name": "Haunted Valley", "enemy_power": 1800, "rewards": {"coins": 1000, "gold": 400, "xp": 200}},
+            {"stage": 2, "name": "Cursed Swamp", "enemy_power": 2200, "rewards": {"coins": 1200, "gold": 450, "xp": 220}},
+            {"stage": 3, "name": "Bandit Fortress", "enemy_power": 2600, "rewards": {"coins": 1400, "gold": 500, "xp": 250}},
+            {"stage": 4, "name": "Dragon's Lair", "enemy_power": 3000, "rewards": {"coins": 1600, "gold": 550, "xp": 280}},
+            {"stage": 5, "name": "BOSS: Dragon Lord", "enemy_power": 4000, "is_boss": True, "rewards": {"coins": 3000, "gold": 1000, "crystals": 100, "xp": 500}},
+        ]
+    },
+    {
+        "chapter": 3,
+        "name": "Divine Conflict",
+        "stages": [
+            {"stage": 1, "name": "Sacred Temple", "enemy_power": 4500, "rewards": {"coins": 2000, "gold": 600, "xp": 300}},
+            {"stage": 2, "name": "Angel's Path", "enemy_power": 5500, "rewards": {"coins": 2400, "gold": 700, "xp": 350}},
+            {"stage": 3, "name": "Demon Gate", "enemy_power": 6500, "rewards": {"coins": 2800, "gold": 800, "xp": 400}},
+            {"stage": 4, "name": "Celestial Bridge", "enemy_power": 7500, "rewards": {"coins": 3200, "gold": 900, "xp": 450}},
+            {"stage": 5, "name": "BOSS: Fallen Archangel", "enemy_power": 10000, "is_boss": True, "rewards": {"coins": 5000, "gold": 2000, "crystals": 200, "divine_essence": 5, "xp": 800}},
+        ]
+    }
+]
+
+@api_router.get("/story/progress/{username}")
+async def get_story_progress(username: str):
+    """Get user's story/campaign progress"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    progress = await db.story_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        progress = {
+            "user_id": user["id"],
+            "current_chapter": 1,
+            "current_stage": 1,
+            "completed_stages": [],
+            "stars_earned": {}
+        }
+        await db.story_progress.insert_one(progress)
+    
+    # Build chapter data with unlocks
+    chapters = []
+    for chapter_data in STORY_CHAPTERS:
+        chapter_num = chapter_data["chapter"]
+        is_unlocked = chapter_num <= progress.get("current_chapter", 1) or \
+                      any(f"{chapter_num-1}-5" in str(s) for s in progress.get("completed_stages", []))
+        
+        stages = []
+        for stage in chapter_data["stages"]:
+            stage_key = f"{chapter_num}-{stage['stage']}"
+            stages.append({
+                **stage,
+                "completed": stage_key in [str(s) for s in progress.get("completed_stages", [])],
+                "stars": progress.get("stars_earned", {}).get(stage_key, 0),
+                "unlocked": is_unlocked and (stage["stage"] == 1 or 
+                           f"{chapter_num}-{stage['stage']-1}" in [str(s) for s in progress.get("completed_stages", [])])
+            })
+        
+        chapters.append({
+            "chapter": chapter_num,
+            "name": chapter_data["name"],
+            "unlocked": is_unlocked,
+            "stages": stages
+        })
+    
+    return {
+        "current_chapter": progress.get("current_chapter", 1),
+        "current_stage": progress.get("current_stage", 1),
+        "total_stars": sum(progress.get("stars_earned", {}).values()),
+        "chapters": chapters
+    }
+
+@api_router.post("/story/battle/{username}/{chapter}/{stage}")
+async def story_battle(username: str, chapter: int, stage: int):
+    """Battle a story stage"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Find stage data
+    chapter_data = next((c for c in STORY_CHAPTERS if c["chapter"] == chapter), None)
+    if not chapter_data:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+    
+    stage_data = next((s for s in chapter_data["stages"] if s["stage"] == stage), None)
+    if not stage_data:
+        raise HTTPException(status_code=404, detail="Stage not found")
+    
+    # Get user's team power
+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
+    if not team:
+        # Use top heroes
+        user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+        team_power = 0
+        for uh in user_heroes[:6]:
+            hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+            if hero_data:
+                level_mult = 1 + (uh.get("level", 1) - 1) * 0.05
+                team_power += (hero_data["base_hp"] + hero_data["base_atk"] * 3 + hero_data["base_def"] * 2) * level_mult
+    else:
+        team_power = team.get("team_power", 0)
+    
+    enemy_power = stage_data["enemy_power"]
+    
+    # Calculate battle result
+    power_ratio = team_power / max(enemy_power, 1)
+    base_win_chance = min(max(power_ratio * 0.5, 0.1), 0.95)
+    
+    victory = random.random() < base_win_chance
+    
+    # Calculate stars (3 = overwhelming, 2 = normal, 1 = barely won)
+    stars = 0
+    if victory:
+        if power_ratio >= 1.5:
+            stars = 3
+        elif power_ratio >= 1.0:
+            stars = 2
+        else:
+            stars = 1
+    
+    result = {
+        "victory": victory,
+        "team_power": int(team_power),
+        "enemy_power": enemy_power,
+        "stars": stars,
+        "is_boss": stage_data.get("is_boss", False),
+        "rewards": {}
+    }
+    
+    if victory:
+        # Grant rewards
+        rewards = stage_data["rewards"]
+        for reward_type, amount in rewards.items():
+            if reward_type == "xp":
+                # Add battle pass XP
+                await db.battle_pass.update_one(
+                    {"user_id": user["id"]},
+                    {"$inc": {"xp": amount}},
+                    upsert=True
+                )
+            else:
+                await db.users.update_one(
+                    {"username": username},
+                    {"$inc": {reward_type: amount}}
+                )
+            result["rewards"][reward_type] = amount
+        
+        # Update progress
+        stage_key = f"{chapter}-{stage}"
+        progress = await db.story_progress.find_one({"user_id": user["id"]})
+        current_stars = progress.get("stars_earned", {}).get(stage_key, 0) if progress else 0
+        
+        update = {
+            "$addToSet": {"completed_stages": stage_key},
+            "$set": {f"stars_earned.{stage_key}": max(stars, current_stars)}
+        }
+        
+        # If completed chapter boss, unlock next chapter
+        if stage == 5:
+            update["$set"]["current_chapter"] = chapter + 1
+            update["$set"]["current_stage"] = 1
+        else:
+            update["$set"]["current_stage"] = stage + 1
+        
+        await db.story_progress.update_one(
+            {"user_id": user["id"]},
+            update,
+            upsert=True
+        )
+    
+    return result
+
 # Include the router in the main app
 app.include_router(api_router)
 

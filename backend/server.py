@@ -812,9 +812,15 @@ async def pull_gacha(username: str, request: PullRequest):
         pity_counter += 1
         hero = get_random_hero(pity_counter, is_premium)
         
-        # Reset pity if SSR or better
-        if hero.rarity in ["SSR", "UR", "UR+"]:
-            pity_counter = 0
+        # Reset pity based on pool type
+        if is_premium:
+            # Premium: reset on SSR, UR, or UR+
+            if hero.rarity in ["SSR", "UR", "UR+"]:
+                pity_counter = 0
+        else:
+            # Common: reset on SSR or SSR+
+            if hero.rarity in ["SSR", "SSR+"]:
+                pity_counter = 0
         
         # Create user hero instance
         user_hero = UserHero(

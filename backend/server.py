@@ -2779,6 +2779,48 @@ async def get_user_guild(username: str):
     
     return guild_data
 
+@api_router.get("/guilds")
+async def list_guilds(limit: int = 20, skip: int = 0):
+    """List available guilds to join"""
+    guilds = await db.guilds.find().skip(skip).limit(limit).to_list(length=limit)
+    
+    result = []
+    for guild in guilds:
+        guild_data = convert_objectid(guild)
+        guild_data["member_count"] = len(guild.get("member_ids", []))
+        result.append(guild_data)
+    
+    return result
+
+@api_router.post("/guild/leave")
+async def leave_guild(username: str):
+    """Leave current guild"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Find user's guild
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    # Check if user is leader
+    if guild.get("leader_id") == user["id"]:
+        # If leader and only member, delete guild
+        if len(guild.get("member_ids", [])) == 1:
+            await db.guilds.delete_one({"id": guild["id"]})
+            return {"message": "Guild disbanded"}
+        else:
+            raise HTTPException(status_code=400, detail="Transfer leadership before leaving")
+    
+    # Remove user from guild
+    await db.guilds.update_one(
+        {"id": guild["id"]},
+        {"$pull": {"member_ids": user["id"]}}
+    )
+    
+    return {"message": "Left guild successfully"}
+
 # ==================== HERO UPGRADE SYSTEM ====================
 
 class HeroUpgradeRequest(BaseModel):

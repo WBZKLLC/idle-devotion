@@ -1084,6 +1084,73 @@ async def get_vip_info(username: str):
         "all_tiers": VIP_TIERS
     }
 
+@api_router.get("/vip/comparison/{username}")
+async def get_vip_comparison(username: str):
+    """Get VIP tier comparison for store display"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    total_spent = user.get("total_spent", 0)
+    current_vip = calculate_vip_level(total_spent)
+    
+    # Build comparison data
+    comparison = {
+        "current_vip": current_vip,
+        "total_spent": total_spent,
+        "tiers": {}
+    }
+    
+    # Previous tier (if exists)
+    if current_vip > 0:
+        prev_vip = current_vip - 1
+        comparison["tiers"]["previous"] = {
+            "level": prev_vip,
+            "spend_required": VIP_TIERS[prev_vip]["spend"],
+            "idle_hours": VIP_TIERS[prev_vip]["idle_hours"],
+            "idle_rate": get_idle_gold_rate(prev_vip),
+            "avatar_frame": get_avatar_frame(prev_vip),
+            "status": "completed"
+        }
+    
+    # Current tier
+    comparison["tiers"]["current"] = {
+        "level": current_vip,
+        "spend_required": VIP_TIERS[current_vip]["spend"],
+        "idle_hours": VIP_TIERS[current_vip]["idle_hours"],
+        "idle_rate": get_idle_gold_rate(current_vip),
+        "avatar_frame": get_avatar_frame(current_vip),
+        "status": "active"
+    }
+    
+    # Next tier (if exists)
+    if current_vip < 15:
+        next_vip = current_vip + 1
+        comparison["tiers"]["next"] = {
+            "level": next_vip,
+            "spend_required": VIP_TIERS[next_vip]["spend"],
+            "idle_hours": VIP_TIERS[next_vip]["idle_hours"],
+            "idle_rate": get_idle_gold_rate(next_vip),
+            "avatar_frame": get_avatar_frame(next_vip),
+            "status": "locked",
+            "spend_needed": VIP_TIERS[next_vip]["spend"] - total_spent
+        }
+    
+    # Next 2 tiers (if exists)
+    if current_vip < 14:
+        next2_vip = current_vip + 2
+        comparison["tiers"]["next2"] = {
+            "level": next2_vip,
+            "spend_required": VIP_TIERS[next2_vip]["spend"],
+            "idle_hours": VIP_TIERS[next2_vip]["idle_hours"],
+            "idle_rate": get_idle_gold_rate(next2_vip),
+            "avatar_frame": get_avatar_frame(next2_vip),
+            "status": "future",
+            "spend_needed": VIP_TIERS[next2_vip]["spend"] - total_spent
+        }
+    
+    return comparison
+
 @api_router.post("/vip/purchase")
 async def vip_purchase(username: str, amount_usd: float):
     """Simulate VIP purchase (in production, integrate with payment processor)"""

@@ -1850,8 +1850,9 @@ async def get_abyss_progress(username: str):
     return convert_objectid(progress)
 
 @api_router.post("/abyss/battle/{username}/{level}")
-async def battle_abyss(username: str, level: int, team_ids: List[str]):
+async def battle_abyss(username: str, level: int, request: AbyssBattleRequest):
     """Battle an abyss level - requires multiple teams for higher levels"""
+    team_ids = request.team_ids
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

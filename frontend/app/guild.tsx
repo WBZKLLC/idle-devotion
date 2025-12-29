@@ -84,15 +84,8 @@ export default function GuildScreen() {
     setIsCreating(true);
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/create?username=${user?.username}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: guildName.trim(),
-            description: guildDescription.trim() || 'A new guild',
-          }),
-        }
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/create?username=${user?.username}&guild_name=${encodeURIComponent(guildName.trim())}`,
+        { method: 'POST' }
       );
       
       if (response.ok) {

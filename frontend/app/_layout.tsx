@@ -2,12 +2,19 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet } from 'react-native';
 
+// Regal Color Palette
+const COLORS = {
+  navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b' },
+  gold: { primary: '#c9a227', light: '#e6c666' },
+  cream: { soft: '#f8f6f0' },
+};
+
 export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#FF1493',
-        tabBarInactiveTintColor: '#A0A0A0',
+        tabBarActiveTintColor: COLORS.gold.primary,
+        tabBarInactiveTintColor: COLORS.cream.soft + '60',
         tabBarStyle: styles.tabBar,
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,

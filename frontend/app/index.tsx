@@ -230,6 +230,61 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Game Modes Grid */}
+          <View style={styles.gameModesContainer}>
+            <TouchableOpacity 
+              style={styles.gameModeButton}
+              onPress={() => router.push('/abyss')}
+            >
+              <LinearGradient
+                colors={['#FF6347', '#FF1493']}
+                style={styles.gameModeGradient}
+              >
+                <Ionicons name="flame" size={28} color="#FFF" />
+                <Text style={styles.gameModeText}>Abyss</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.gameModeButton}
+              onPress={() => router.push('/arena')}
+            >
+              <LinearGradient
+                colors={['#FFD700', '#FFA500']}
+                style={styles.gameModeGradient}
+              >
+                <Ionicons name="trophy" size={28} color="#FFF" />
+                <Text style={styles.gameModeText}>Arena</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.gameModeButton}
+              onPress={() => router.push('/chat')}
+            >
+              <LinearGradient
+                colors={['#3498db', '#2980b9']}
+                style={styles.gameModeGradient}
+              >
+                <Ionicons name="chatbubbles" size={28} color="#FFF" />
+                <Text style={styles.gameModeText}>Chat</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.gameModeButton}
+              onPress={() => router.push('/profile')}
+            >
+              <LinearGradient
+                colors={['#9400D3', '#4B0082']}
+                style={styles.gameModeGradient}
+              >
+                <Ionicons name="person" size={28} color="#FFF" />
+                <Text style={styles.gameModeText}>Profile</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
           {/* Stats */}
           <View style={styles.statsContainer}>
             <Text style={styles.sectionTitle}>⚔️ Your Progress</Text>

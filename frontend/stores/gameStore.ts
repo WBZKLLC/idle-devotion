@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -10,7 +11,10 @@ interface User {
   gems: number;
   coins: number;
   gold: number;
+  divine_essence?: number;
   pity_counter: number;
+  pity_counter_premium?: number;
+  pity_counter_divine?: number;
   total_pulls: number;
   login_days: number;
   last_login: string | null;
@@ -51,10 +55,12 @@ interface GameState {
   allHeroes: Hero[];
   isLoading: boolean;
   error: string | null;
+  _hasHydrated: boolean;
   
   // Actions
   initUser: (username: string) => Promise<void>;
   login: () => Promise<any>;
+  logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   fetchUserHeroes: () => Promise<void>;
   fetchAllHeroes: () => Promise<void>;
@@ -64,9 +70,12 @@ interface GameState {
   fetchCR: () => Promise<{cr: number; hero_count: number}>;
   updateProfilePicture: (heroId: string) => Promise<void>;
   setUser: (user: User | null) => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
+export const useGameStore = create<GameState>()(
+  persist(
+    (set, get) => ({
   user: null,
   userHeroes: [],
   allHeroes: [],

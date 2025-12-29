@@ -829,37 +829,56 @@ async def pull_gacha(username: str, request: PullRequest):
     user = User(**user_data)
     num_pulls = 10 if request.pull_type == "multi" else 1
     
-    # Determine if premium or common summon
-    is_premium = request.currency_type == "crystals"
+    # Determine summon type: common (coins), premium (crystals), or divine (divine_essence)
+    summon_type = "common"
+    if request.currency_type == "crystals":
+        summon_type = "premium"
+    elif request.currency_type == "divine_essence":
+        summon_type = "divine"
     
-    # Calculate cost
-    if is_premium:
+    # Calculate cost and deduct
+    if summon_type == "divine":
+        cost = DIVINE_ESSENCE_COST_MULTI if request.pull_type == "multi" else DIVINE_ESSENCE_COST_SINGLE
+        if user.divine_essence < cost:
+            raise HTTPException(status_code=400, detail="Not enough Divine Essence")
+        user.divine_essence -= cost
+        crystals_spent = 0
+        coins_spent = 0
+        divine_spent = cost
+        pity_counter = user.pity_counter_divine
+    elif summon_type == "premium":
         cost = CRYSTAL_COST_MULTI if request.pull_type == "multi" else CRYSTAL_COST_SINGLE
         if user.crystals < cost:
             raise HTTPException(status_code=400, detail="Not enough crystals")
         user.crystals -= cost
         crystals_spent = cost
         coins_spent = 0
+        divine_spent = 0
         pity_counter = user.pity_counter_premium
-    else:
+    else:  # common
         cost = COIN_COST_MULTI if request.pull_type == "multi" else COIN_COST_SINGLE
         if user.coins < cost:
             raise HTTPException(status_code=400, detail="Not enough coins")
         user.coins -= cost
         crystals_spent = 0
         coins_spent = cost
+        divine_spent = 0
         pity_counter = user.pity_counter
     
     # Perform pulls
     pulled_heroes = []
     for _ in range(num_pulls):
         pity_counter += 1
-        hero = get_random_hero(pity_counter, is_premium)
+        hero = get_random_hero(pity_counter, summon_type)
         
         # Reset pity based on pool type
-        if is_premium:
-            # Premium: reset on SSR, UR, or UR+
-            if hero.rarity in ["SSR", "UR", "UR+"]:
+        if summon_type == "divine":
+            # Divine: always UR+, reset at 40 pity
+            if pity_counter >= PITY_THRESHOLD_DIVINE:
+                pity_counter = 0
+        elif summon_type == "premium":
+            # Premium: reset on SSR or UR
+            if hero.rarity in ["SSR", "UR"]:
                 pity_counter = 0
         else:
             # Common: reset on SSR or SSR+
@@ -874,6 +893,11 @@ async def pull_gacha(username: str, request: PullRequest):
             current_atk=hero.base_atk,
             current_def=hero.base_def
         )
+        
+        # Add hero name for frontend display
+        user_hero_dict = user_hero.dict()
+        user_hero_dict["hero_name"] = hero.name
+        user_hero_dict["rarity"] = hero.rarity
         
         # Check for duplicates and merge
         existing_heroes = await db.user_heroes.find(
@@ -893,12 +917,25 @@ async def pull_gacha(username: str, request: PullRequest):
         else:
             await db.user_heroes.insert_one(user_hero.dict())
         
-        pulled_heroes.append(user_hero)
+        # Create server-wide marquee notification for UR or UR+ pulls
+        if hero.rarity in ["UR", "UR+"]:
+            marquee = MarqueeNotification(
+                server_id=user.server_id,
+                username=username,
+                hero_name=hero.name,
+                hero_rarity=hero.rarity,
+                message=f"🎉 {username} obtained {hero.rarity} {hero.name}!"
+            )
+            await db.marquee_notifications.insert_one(marquee.dict())
+        
+        pulled_heroes.append(user_hero_dict)
     
     user.total_pulls += num_pulls
     
     # Update user with new pity counter
-    if is_premium:
+    if summon_type == "divine":
+        user.pity_counter_divine = pity_counter
+    elif summon_type == "premium":
         user.pity_counter_premium = pity_counter
     else:
         user.pity_counter = pity_counter
@@ -909,12 +946,13 @@ async def pull_gacha(username: str, request: PullRequest):
         {"$set": user.dict()}
     )
     
-    return GachaResult(
-        heroes=pulled_heroes,
-        new_pity_counter=pity_counter,
-        crystals_spent=crystals_spent,
-        coins_spent=coins_spent
-    )
+    return {
+        "heroes": pulled_heroes,
+        "new_pity_counter": pity_counter,
+        "crystals_spent": crystals_spent,
+        "coins_spent": coins_spent,
+        "divine_spent": divine_spent
+    }
 
 @api_router.get("/heroes")
 async def get_all_heroes():

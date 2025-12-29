@@ -349,7 +349,7 @@ class GachaGameTester:
         # Try to pull with gems when user likely doesn't have enough
         pull_data = {
             "pull_type": "multi",
-            "currency_type": "gems"
+            "currency_type": "crystals"
         }
         
         # Make multiple pulls to exhaust gems

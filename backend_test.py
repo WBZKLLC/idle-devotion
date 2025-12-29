@@ -219,7 +219,7 @@ class GachaGameTester:
                 heroes = result["heroes"]
                 if len(heroes) == 1:
                     self.log_result("Single Pull (Gems)", True, 
-                                  f"Pulled 1 hero, spent 100 gems, pity: {result['new_pity_counter']}")
+                                  f"Pulled 1 hero, spent 100 crystals, pity: {result['new_pity_counter']}")
                     return True
                 else:
                     self.log_result("Single Pull (Gems)", False, f"Expected 1 hero, got {len(heroes)}")

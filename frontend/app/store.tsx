@@ -13,6 +13,7 @@ import {
 import { useGameStore } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import COLORS from '../theme/colors';
 
 interface CrystalPackage {
   id: string;
@@ -79,7 +80,6 @@ export default function StoreScreen() {
       const divineData = await divineRes.json();
       const vipData = await vipRes.json();
       
-      // Convert packages object to array
       const packagesObj = packagesData.packages || packagesData;
       const packagesArray = Object.values(packagesObj) as CrystalPackage[];
       setPackages(packagesArray);
@@ -94,7 +94,7 @@ export default function StoreScreen() {
 
   const purchaseCrystals = async (packageId: string, packageName: string, price: number) => {
     Alert.alert(
-      '💎 Purchase Crystals',
+      'Purchase Crystals',
       `Purchase ${packageName} for $${price.toFixed(2)}?\n\n(This is a simulation - no real payment)`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -110,9 +110,9 @@ export default function StoreScreen() {
               if (response.ok) {
                 const result = await response.json();
                 Alert.alert(
-                  '🎉 Purchase Successful!',
+                  'Purchase Successful!',
                   `You received ${result.crystals_received} crystals!\n` +
-                  (result.first_purchase_bonus ? `🎁 First Purchase Bonus: +${result.first_purchase_bonus}!\n` : '') +
+                  (result.first_purchase_bonus ? `First Purchase Bonus: +${result.first_purchase_bonus}!\n` : '') +
                   `\nTotal Crystals: ${result.new_crystal_total}`
                 );
                 fetchUser();
@@ -138,7 +138,7 @@ export default function StoreScreen() {
     }
     
     Alert.alert(
-      '✨ Purchase Divine Package',
+      'Purchase Divine Package',
       `Purchase ${packageName} for $${price.toFixed(2)}?\n\n` +
       `Contains: Divine Essence + Crystals + VIP XP\n` +
       `Remaining: ${purchaseInfo?.remaining || 3}/3 this month\n\n` +
@@ -157,10 +157,10 @@ export default function StoreScreen() {
               if (response.ok) {
                 const result = await response.json();
                 Alert.alert(
-                  '🎉 Divine Package Purchased!',
-                  `✨ Divine Essence: +${result.divine_essence_received}\n` +
-                  `💎 Crystals: +${result.crystals_received}\n` +
-                  `👑 New VIP Level: ${result.new_vip_level}\n\n` +
+                  'Divine Package Purchased!',
+                  `Divine Essence: +${result.divine_essence_received}\n` +
+                  `Crystals: +${result.crystals_received}\n` +
+                  `New VIP Level: ${result.new_vip_level}\n\n` +
                   `${result.purchases_remaining} purchases remaining this month`
                 );
                 fetchUser();
@@ -182,14 +182,14 @@ export default function StoreScreen() {
     switch (frame) {
       case 'bronze': return '#CD7F32';
       case 'silver': return '#C0C0C0';
-      case 'gold': return '#FFD700';
+      case 'gold': return COLORS.gold.medium;
       case 'platinum': return '#E5E4E2';
       case 'diamond': return '#B9F2FF';
       case 'rainbow': return '#FF6B6B';
       case 'legendary': return '#FF1493';
-      case 'divine': return '#9400D3';
-      case 'celestial': return '#FFD700';
-      default: return '#666';
+      case 'divine': return COLORS.rarity['UR+'];
+      case 'celestial': return COLORS.gold.primary;
+      default: return COLORS.navy.light;
     }
   };
 
@@ -212,13 +212,12 @@ export default function StoreScreen() {
               style={styles.closeButton}
               onPress={() => setShowVIPModal(false)}
             >
-              <Ionicons name="close" size={24} color="#333" />
+              <Ionicons name="close" size={24} color={COLORS.cream.pure} />
             </TouchableOpacity>
             
-            <Text style={styles.modalTitle}>👑 VIP Comparison</Text>
+            <Text style={styles.modalTitle}>VIP Comparison</Text>
             
             <ScrollView style={styles.vipScrollView}>
-              {/* Previous Tier */}
               {currentLevel > 0 && (
                 <View style={[styles.tierCard, styles.tierCardPrev]}>
                   <Text style={styles.tierLabel}>Previous Level</Text>
@@ -231,9 +230,8 @@ export default function StoreScreen() {
                 </View>
               )}
               
-              {/* Current Tier */}
               <LinearGradient
-                colors={['#FFD700', '#FFA500']}
+                colors={[COLORS.gold.primary, COLORS.gold.dark]}
                 style={[styles.tierCard, styles.tierCardCurrent]}
               >
                 <Text style={styles.tierLabelCurrent}>Current Level</Text>
@@ -251,7 +249,6 @@ export default function StoreScreen() {
                 </View>
               </LinearGradient>
               
-              {/* Next Tier */}
               {currentLevel < 15 && (
                 <View style={[styles.tierCard, styles.tierCardNext]}>
                   <Text style={styles.tierLabel}>Next Level</Text>
@@ -274,7 +271,6 @@ export default function StoreScreen() {
                 </View>
               )}
               
-              {/* All Tiers Preview */}
               <Text style={styles.allTiersTitle}>All VIP Tiers</Text>
               {VIP_TIERS.map((tier) => (
                 <View 
@@ -303,7 +299,7 @@ export default function StoreScreen() {
 
   if (!user) {
     return (
-      <LinearGradient colors={['#FF6B9D', '#FF1493', '#9400D3']} style={styles.container}>
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
         <SafeAreaView style={styles.container}>
           <Text style={styles.errorText}>Please log in first</Text>
         </SafeAreaView>
@@ -312,23 +308,23 @@ export default function StoreScreen() {
   }
 
   return (
-    <LinearGradient colors={['#FF6B9D', '#FF1493', '#9400D3']} style={styles.container}>
+    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>💎 Store</Text>
+          <Text style={styles.title}>Store</Text>
           
           {/* Currency Display */}
           <View style={styles.currencyBar}>
             <View style={styles.currencyItem}>
-              <Ionicons name="star" size={18} color="#FFD700" />
+              <Ionicons name="star" size={18} color={COLORS.gold.primary} />
               <Text style={styles.currencyText}>{user.divine_essence || 0}</Text>
             </View>
             <View style={styles.currencyItem}>
-              <Ionicons name="diamond" size={18} color="#FF6B9D" />
+              <Ionicons name="diamond" size={18} color={COLORS.rarity['UR+']} />
               <Text style={styles.currencyText}>{user.gems || 0}</Text>
             </View>
             <View style={styles.currencyItem}>
-              <Ionicons name="cash" size={18} color="#FFD700" />
+              <Ionicons name="cash" size={18} color={COLORS.gold.light} />
               <Text style={styles.currencyText}>{user.coins || 0}</Text>
             </View>
           </View>
@@ -340,7 +336,7 @@ export default function StoreScreen() {
               onPress={() => setSelectedTab('crystals')}
             >
               <Text style={[styles.tabText, selectedTab === 'crystals' && styles.tabTextActive]}>
-                💎 Crystals
+                Crystals
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -348,7 +344,7 @@ export default function StoreScreen() {
               onPress={() => setSelectedTab('divine')}
             >
               <Text style={[styles.tabText, selectedTab === 'divine' && styles.tabTextActive]}>
-                ✨ Divine
+                Divine
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -356,39 +352,38 @@ export default function StoreScreen() {
               onPress={() => setSelectedTab('vip')}
             >
               <Text style={[styles.tabText, selectedTab === 'vip' && styles.tabTextActive]}>
-                👑 VIP
+                VIP
               </Text>
             </TouchableOpacity>
           </View>
 
           {isLoading ? (
-            <ActivityIndicator size="large" color="#FFF" style={styles.loader} />
+            <ActivityIndicator size="large" color={COLORS.gold.primary} style={styles.loader} />
           ) : selectedTab === 'divine' ? (
             <>
               {/* Divine Packages Section */}
               <LinearGradient
-                colors={['#FFD700', '#FF1493', '#9400D3']}
+                colors={[COLORS.gold.primary, COLORS.rarity['UR+']]}
                 style={styles.divineHeader}
               >
-                <Text style={styles.divineHeaderTitle}>✨ Divine Packages</Text>
+                <Text style={styles.divineHeaderTitle}>Divine Packages</Text>
                 <Text style={styles.divineHeaderSubtitle}>
                   Limited to 3 purchases per package every 30 days
                 </Text>
                 {divinePackages && (
                   <Text style={styles.divineResetText}>
-                    🔄 Resets in {divinePackages.days_until_reset} days
+                    Resets in {divinePackages.days_until_reset} days
                   </Text>
                 )}
               </LinearGradient>
               
               <View style={styles.divinePackagesGrid}>
-                {/* $49.99 Package */}
                 <TouchableOpacity
                   style={styles.divinePackageCard}
                   onPress={() => purchaseDivinePackage('divine_49', 'Divine Blessing', 49.99)}
                 >
                   <LinearGradient
-                    colors={['#FFD700', '#FF8C00']}
+                    colors={[COLORS.gold.primary, COLORS.gold.dark]}
                     style={styles.divinePackageGradient}
                   >
                     <Text style={styles.divinePackageTitle}>Divine Blessing</Text>
@@ -408,13 +403,12 @@ export default function StoreScreen() {
                   </LinearGradient>
                 </TouchableOpacity>
                 
-                {/* $99.99 Package */}
                 <TouchableOpacity
                   style={styles.divinePackageCard}
                   onPress={() => purchaseDivinePackage('divine_99', 'Divine Ascension', 99.99)}
                 >
                   <LinearGradient
-                    colors={['#FF1493', '#9400D3']}
+                    colors={[COLORS.rarity.UR, COLORS.rarity['UR+']]}
                     style={styles.divinePackageGradient}
                   >
                     <View style={styles.bestValueBadge}>
@@ -438,9 +432,8 @@ export default function StoreScreen() {
                 </TouchableOpacity>
               </View>
               
-              {/* Divine Info */}
               <View style={styles.divineInfoBox}>
-                <Ionicons name="information-circle" size={20} color="#FFD700" />
+                <Ionicons name="information-circle" size={20} color={COLORS.gold.primary} />
                 <Text style={styles.divineInfoText}>
                   Divine Essence is used for Divine Summons to get exclusive UR+ heroes!
                 </Text>
@@ -448,13 +441,12 @@ export default function StoreScreen() {
             </>
           ) : selectedTab === 'crystals' ? (
             <>
-              {/* First Purchase Banner */}
               {vipInfo && !vipInfo.first_purchase_used && (
                 <LinearGradient
-                  colors={['#FFD700', '#FFA500']}
+                  colors={[COLORS.gold.primary, COLORS.gold.dark]}
                   style={styles.firstPurchaseBanner}
                 >
-                  <Ionicons name="gift" size={24} color="#FFF" />
+                  <Ionicons name="gift" size={24} color={COLORS.navy.darkest} />
                   <View style={styles.bannerTextContainer}>
                     <Text style={styles.bannerTitle}>First Purchase Bonus!</Text>
                     <Text style={styles.bannerSubtitle}>Get 2x crystals on your first purchase!</Text>
@@ -462,7 +454,6 @@ export default function StoreScreen() {
                 </LinearGradient>
               )}
 
-              {/* Crystal Packages */}
               <View style={styles.packagesGrid}>
                 {packages.map((pkg) => (
                   <TouchableOpacity
@@ -472,9 +463,9 @@ export default function StoreScreen() {
                   >
                     <LinearGradient
                       colors={
-                        pkg.id === 'ultimate' ? ['#FFD700', '#FF6B6B'] :
-                        pkg.id === 'premium' ? ['#9400D3', '#FF1493'] :
-                        ['#4B0082', '#9400D3']
+                        pkg.id === 'ultimate' ? [COLORS.gold.primary, COLORS.gold.dark] :
+                        pkg.id === 'premium' ? [COLORS.rarity.UR, COLORS.rarity['UR+']] :
+                        [COLORS.navy.medium, COLORS.navy.primary]
                       }
                       style={styles.packageGradient}
                     >
@@ -483,7 +474,7 @@ export default function StoreScreen() {
                           <Text style={styles.bonusText}>+{pkg.bonus} BONUS</Text>
                         </View>
                       )}
-                      <Ionicons name="diamond" size={40} color="#FFF" />
+                      <Ionicons name="diamond" size={40} color={COLORS.cream.pure} />
                       <Text style={styles.packageCrystals}>{pkg.crystals}</Text>
                       <Text style={styles.packageName}>{pkg.display_name}</Text>
                       <View style={styles.priceTag}>
@@ -496,10 +487,9 @@ export default function StoreScreen() {
             </>
           ) : (
             <>
-              {/* VIP Info Card */}
               {vipInfo && (
                 <LinearGradient
-                  colors={['#FFD700', '#FFA500']}
+                  colors={[COLORS.gold.primary, COLORS.gold.dark]}
                   style={styles.vipCard}
                 >
                   <View style={styles.vipHeader}>
@@ -556,31 +546,30 @@ export default function StoreScreen() {
                 onPress={() => setShowVIPModal(true)}
               >
                 <LinearGradient
-                  colors={['#FF1493', '#9400D3']}
+                  colors={[COLORS.navy.medium, COLORS.navy.primary]}
                   style={styles.compareButtonGradient}
                 >
-                  <Ionicons name="git-compare" size={20} color="#FFF" />
+                  <Ionicons name="git-compare" size={20} color={COLORS.gold.light} />
                   <Text style={styles.compareButtonText}>Compare VIP Levels</Text>
                 </LinearGradient>
               </TouchableOpacity>
               
-              {/* VIP Benefits List */}
               <View style={styles.benefitsList}>
                 <Text style={styles.benefitsTitle}>VIP Benefits</Text>
                 <View style={styles.benefitItem}>
-                  <Ionicons name="time" size={20} color="#FFD700" />
+                  <Ionicons name="time" size={20} color={COLORS.gold.primary} />
                   <Text style={styles.benefitItemText}>Extended idle collection time (up to 24h)</Text>
                 </View>
                 <View style={styles.benefitItem}>
-                  <Ionicons name="trending-up" size={20} color="#32CD32" />
+                  <Ionicons name="trending-up" size={20} color={COLORS.success} />
                   <Text style={styles.benefitItemText}>Increased gold generation rate (up to 250%)</Text>
                 </View>
                 <View style={styles.benefitItem}>
-                  <Ionicons name="flash" size={20} color="#FF6B6B" />
+                  <Ionicons name="flash" size={20} color={COLORS.gold.light} />
                   <Text style={styles.benefitItemText}>More instant collection uses per day</Text>
                 </View>
                 <View style={styles.benefitItem}>
-                  <Ionicons name="image" size={20} color="#9400D3" />
+                  <Ionicons name="image" size={20} color={COLORS.rarity['UR+']} />
                   <Text style={styles.benefitItemText}>Exclusive avatar frames</Text>
                 </View>
               </View>
@@ -595,511 +584,96 @@ export default function StoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-    paddingTop: 60,
-    paddingBottom: 100,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 16,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
-  },
-  currencyBar: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 16,
-  },
-  currencyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
-  },
-  currencyText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  tabActive: {
-    backgroundColor: '#FFF',
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  tabTextActive: {
-    color: '#FF1493',
-  },
-  loader: {
-    marginTop: 40,
-  },
-  firstPurchaseBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    gap: 12,
-  },
-  bannerTextContainer: {
-    flex: 1,
-  },
-  bannerTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  bannerSubtitle: {
-    color: '#FFF',
-    fontSize: 14,
-    opacity: 0.9,
-  },
-  packagesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  packageCard: {
-    width: '48%',
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  packageGradient: {
-    padding: 16,
-    alignItems: 'center',
-    minHeight: 160,
-  },
-  bonusBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  bonusText: {
-    color: '#333',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  packageCrystals: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginTop: 8,
-  },
-  packageName: {
-    fontSize: 14,
-    color: '#FFF',
-    opacity: 0.9,
-    marginBottom: 12,
-  },
-  priceTag: {
-    backgroundColor: '#FFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  priceText: {
-    color: '#FF1493',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  vipCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-  },
-  vipHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  vipTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  vipSpent: {
-    fontSize: 14,
-    color: '#FFF',
-    opacity: 0.9,
-  },
-  avatarFrame: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  vipBenefits: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  benefitRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  benefitLabel: {
-    color: '#FFF',
-    fontSize: 14,
-  },
-  benefitValue: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  progressSection: {
-    marginTop: 8,
-  },
-  progressLabel: {
-    color: '#FFF',
-    fontSize: 12,
-    marginBottom: 6,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 4,
-  },
-  compareButton: {
-    marginBottom: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  compareButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    gap: 8,
-  },
-  compareButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  benefitsList: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 16,
-  },
-  benefitsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 12,
-  },
-  benefitItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
-  },
-  benefitItemText: {
-    color: '#FFF',
-    fontSize: 14,
-    flex: 1,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
-    maxHeight: '80%',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 1,
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  vipScrollView: {
-    maxHeight: 500,
-  },
-  tierCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  tierCardPrev: {
-    backgroundColor: '#E0E0E0',
-  },
-  tierCardCurrent: {
-    borderWidth: 3,
-    borderColor: '#FFD700',
-  },
-  tierCardNext: {
-    backgroundColor: '#F5F5F5',
-    borderWidth: 2,
-    borderColor: '#9400D3',
-    borderStyle: 'dashed',
-  },
-  tierLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  tierLabelCurrent: {
-    fontSize: 12,
-    color: '#FFF',
-    marginBottom: 4,
-  },
-  tierLevel: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  tierLevelCurrent: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  unlockText: {
-    fontSize: 12,
-    color: '#9400D3',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  tierStats: {
-    gap: 4,
-  },
-  tierStat: {
-    fontSize: 14,
-    color: '#666',
-  },
-  tierStatCurrent: {
-    fontSize: 14,
-    color: '#FFF',
-  },
-  frameBadge: {
-    borderWidth: 2,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  frameText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  frameBadgeSmall: {
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginTop: 4,
-    alignSelf: 'flex-start',
-  },
-  frameTextSmall: {
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  allTiersTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  tierRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  tierRowCurrent: {
-    backgroundColor: '#FFD700',
-    borderRadius: 8,
-  },
-  tierRowLevel: {
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
-  },
-  tierRowLevelCurrent: {
-    fontWeight: 'bold',
-  },
-  tierRowSpend: {
-    fontSize: 14,
-    color: '#666',
-    width: 60,
-    textAlign: 'center',
-  },
-  tierRowBonus: {
-    fontSize: 14,
-    color: '#32CD32',
-    width: 50,
-    textAlign: 'right',
-    fontWeight: 'bold',
-  },
-  errorText: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-  },
-  divineHeader: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  divineHeaderTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  divineHeaderSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
-  },
-  divineResetText: {
-    fontSize: 12,
-    color: '#FFD700',
-    marginTop: 8,
-    fontWeight: 'bold',
-  },
-  divinePackagesGrid: {
-    gap: 16,
-    marginBottom: 20,
-  },
-  divinePackageCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  divinePackageGradient: {
-    padding: 20,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  divinePackageTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 16,
-  },
-  divinePackageContents: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  divinePackageItem: {
-    fontSize: 16,
-    color: '#FFF',
-    marginVertical: 4,
-  },
-  divinePriceTag: {
-    backgroundColor: '#FFF',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginBottom: 12,
-  },
-  divinePriceText: {
-    color: '#FF1493',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  divineRemainingBadge: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  divineRemainingText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  bestValueBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  bestValueText: {
-    color: '#333',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  divineInfoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
-    padding: 16,
-    borderRadius: 12,
-    gap: 12,
-  },
-  divineInfoText: {
-    flex: 1,
-    color: '#FFD700',
-    fontSize: 14,
-  },
+  container: { flex: 1 },
+  content: { padding: 16, paddingTop: 60, paddingBottom: 100 },
+  title: { fontSize: 32, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center', marginBottom: 16, letterSpacing: 1 },
+  currencyBar: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 16 },
+  currencyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, gap: 6, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
+  currencyText: { color: COLORS.cream.pure, fontWeight: 'bold', fontSize: 16 },
+  tabContainer: { flexDirection: 'row', backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 4, marginBottom: 20, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 10 },
+  tabActive: { backgroundColor: COLORS.gold.primary },
+  tabText: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.dark },
+  tabTextActive: { color: COLORS.navy.darkest },
+  loader: { marginTop: 40 },
+  firstPurchaseBanner: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, marginBottom: 20, gap: 12 },
+  bannerTextContainer: { flex: 1 },
+  bannerTitle: { color: COLORS.navy.darkest, fontSize: 18, fontWeight: 'bold' },
+  bannerSubtitle: { color: COLORS.navy.dark, fontSize: 14 },
+  packagesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
+  packageCard: { width: '48%', borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
+  packageGradient: { padding: 16, alignItems: 'center', minHeight: 160, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  bonusBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: COLORS.gold.primary, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  bonusText: { color: COLORS.navy.darkest, fontSize: 10, fontWeight: 'bold' },
+  packageCrystals: { fontSize: 28, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 8 },
+  packageName: { fontSize: 14, color: COLORS.cream.soft, marginBottom: 12 },
+  priceTag: { backgroundColor: COLORS.navy.darkest, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: COLORS.gold.primary },
+  priceText: { color: COLORS.gold.primary, fontWeight: 'bold', fontSize: 16 },
+  vipCard: { borderRadius: 16, padding: 20, marginBottom: 20 },
+  vipHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  vipTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.navy.darkest },
+  vipSpent: { fontSize: 14, color: COLORS.navy.dark },
+  avatarFrame: { width: 60, height: 60, borderRadius: 30, borderWidth: 3, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.navy.medium + '60' },
+  vipBenefits: { backgroundColor: COLORS.navy.darkest + '40', borderRadius: 12, padding: 12, marginBottom: 16 },
+  benefitRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.navy.medium + '60' },
+  benefitLabel: { color: COLORS.navy.darkest, fontSize: 14 },
+  benefitValue: { color: COLORS.navy.darkest, fontSize: 14, fontWeight: 'bold' },
+  progressSection: { marginTop: 8 },
+  progressLabel: { color: COLORS.navy.darkest, fontSize: 12, marginBottom: 6 },
+  progressBar: { height: 8, backgroundColor: COLORS.navy.darkest + '40', borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: COLORS.navy.darkest, borderRadius: 4 },
+  compareButton: { marginBottom: 20, borderRadius: 12, overflow: 'hidden' },
+  compareButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 8, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  compareButtonText: { color: COLORS.cream.pure, fontSize: 16, fontWeight: 'bold' },
+  benefitsList: { backgroundColor: COLORS.navy.medium, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  benefitsTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
+  benefitItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
+  benefitItemText: { color: COLORS.cream.soft, fontSize: 14, flex: 1 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.8)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { backgroundColor: COLORS.navy.primary, borderRadius: 20, padding: 20, width: '90%', maxHeight: '80%', borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
+  closeButton: { position: 'absolute', top: 12, right: 12, zIndex: 1 },
+  modalTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary, textAlign: 'center', marginBottom: 20 },
+  vipScrollView: { maxHeight: 500 },
+  tierCard: { borderRadius: 12, padding: 16, marginBottom: 12 },
+  tierCardPrev: { backgroundColor: COLORS.navy.medium },
+  tierCardCurrent: { borderWidth: 2, borderColor: COLORS.gold.primary },
+  tierCardNext: { backgroundColor: COLORS.navy.medium, borderWidth: 2, borderColor: COLORS.rarity['UR+'], borderStyle: 'dashed' },
+  tierLabel: { fontSize: 12, color: COLORS.cream.dark, marginBottom: 4 },
+  tierLabelCurrent: { fontSize: 12, color: COLORS.navy.darkest, marginBottom: 4 },
+  tierLevel: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 8 },
+  tierLevelCurrent: { fontSize: 24, fontWeight: 'bold', color: COLORS.navy.darkest, marginBottom: 8 },
+  unlockText: { fontSize: 12, color: COLORS.rarity['UR+'], fontWeight: 'bold', marginBottom: 8 },
+  tierStats: { gap: 4 },
+  tierStat: { fontSize: 14, color: COLORS.cream.soft },
+  tierStatCurrent: { fontSize: 14, color: COLORS.navy.darkest },
+  frameBadge: { borderWidth: 2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, marginTop: 8, alignSelf: 'flex-start' },
+  frameText: { fontSize: 12, fontWeight: 'bold' },
+  frameBadgeSmall: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginTop: 4, alignSelf: 'flex-start' },
+  frameTextSmall: { fontSize: 10, fontWeight: 'bold' },
+  allTiersTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 20, marginBottom: 12 },
+  tierRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: COLORS.navy.medium },
+  tierRowCurrent: { backgroundColor: COLORS.gold.primary, borderRadius: 8 },
+  tierRowLevel: { fontSize: 14, color: COLORS.cream.soft, flex: 1 },
+  tierRowLevelCurrent: { fontWeight: 'bold', color: COLORS.navy.darkest },
+  tierRowSpend: { fontSize: 14, color: COLORS.cream.dark, width: 80, textAlign: 'center' },
+  tierRowBonus: { fontSize: 14, color: COLORS.success, width: 50, textAlign: 'right', fontWeight: 'bold' },
+  errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center', marginTop: 100 },
+  divineHeader: { borderRadius: 16, padding: 20, marginBottom: 20, alignItems: 'center' },
+  divineHeaderTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 8 },
+  divineHeaderSubtitle: { fontSize: 14, color: COLORS.cream.soft, textAlign: 'center' },
+  divineResetText: { fontSize: 12, color: COLORS.navy.darkest, marginTop: 8, fontWeight: 'bold' },
+  divinePackagesGrid: { gap: 16, marginBottom: 20 },
+  divinePackageCard: { borderRadius: 16, overflow: 'hidden' },
+  divinePackageGradient: { padding: 20, alignItems: 'center', position: 'relative' },
+  divinePackageTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 16 },
+  divinePackageContents: { alignItems: 'center', marginBottom: 16 },
+  divinePackageItem: { fontSize: 16, color: COLORS.cream.soft, marginVertical: 4 },
+  divinePriceTag: { backgroundColor: COLORS.navy.darkest, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: COLORS.gold.primary },
+  divinePriceText: { color: COLORS.gold.primary, fontSize: 20, fontWeight: 'bold' },
+  divineRemainingBadge: { backgroundColor: COLORS.navy.darkest + '60', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  divineRemainingText: { color: COLORS.cream.soft, fontSize: 12, fontWeight: 'bold' },
+  bestValueBadge: { position: 'absolute', top: 10, right: 10, backgroundColor: COLORS.gold.primary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  bestValueText: { color: COLORS.navy.darkest, fontSize: 10, fontWeight: 'bold' },
+  divineInfoBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, padding: 16, borderRadius: 12, gap: 12, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  divineInfoText: { flex: 1, color: COLORS.gold.light, fontSize: 14 },
 });

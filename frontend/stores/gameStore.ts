@@ -278,9 +278,38 @@ export const useGameStore = create<GameState>()(
         user: state.user,
         // Only persist user data, not loading states or heroes cache
       }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('Error rehydrating state:', error);
+        }
+        // Always set hydrated to true, even if there's an error
+        if (state) {
+          state.setHasHydrated(true);
+        }
       },
     }
   )
 );
+
+// Helper hook to ensure hydration
+export const useHydration = () => {
+  const [hydrated, setHydrated] = useState(false);
+  
+  useEffect(() => {
+    // Manual check for hydration
+    const unsubFinishHydration = useGameStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+    
+    // Check if already hydrated
+    if (useGameStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+    
+    return () => {
+      unsubFinishHydration();
+    };
+  }, []);
+  
+  return hydrated;
+};

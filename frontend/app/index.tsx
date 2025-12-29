@@ -270,21 +270,49 @@ export default function HomeScreen() {
 
         <ScrollView contentContainerStyle={styles.content}>
 
-          {/* Idle Rewards */}
-          {idleRewards && idleRewards.gold_earned > 0 && (
-            <LinearGradient
-              colors={['#32CD32', '#00CED1']}
-              style={styles.rewardCard}
-            >
-              <Ionicons name="time" size={32} color="#FFF" />
-              <View style={styles.rewardInfo}>
-                <Text style={styles.rewardTitle}>⚡ Idle Rewards!</Text>
-                <Text style={styles.rewardText}>
-                  +{idleRewards.gold_earned} Gold ({Math.floor(idleRewards.time_away / 60)} min)
-                </Text>
+          {/* Idle Rewards Section */}
+          <LinearGradient
+            colors={idleStatus?.is_capped ? ['#FFD700', '#FFA500'] : ['#32CD32', '#00CED1']}
+            style={styles.idleCard}
+          >
+            <View style={styles.idleHeader}>
+              <Ionicons name="time" size={28} color="#FFF" />
+              <Text style={styles.idleTitle}>⚡ Idle Farming</Text>
+            </View>
+            
+            <View style={styles.idleTimerContainer}>
+              <Text style={styles.idleTimerLabel}>Time Since Collection</Text>
+              <Text style={styles.idleTimer}>
+                {idleStatus ? formatIdleTime(idleStatus.time_elapsed || 0, idleStatus.max_hours || 8) : '00:00:00'}
+              </Text>
+              <Text style={styles.idleCapLabel}>
+                VIP Cap: {idleStatus?.max_hours || 8}h {idleStatus?.is_capped ? '(MAX!)' : ''}
+              </Text>
+            </View>
+            
+            <View style={styles.idleRewardsPreview}>
+              <View style={styles.idleRewardItem}>
+                <Ionicons name="star" size={20} color="#FFD700" />
+                <Text style={styles.idleRewardValue}>+{idleStatus?.gold_pending || 0}</Text>
+                <Text style={styles.idleRewardLabel}>Gold</Text>
               </View>
-            </LinearGradient>
-          )}
+            </View>
+            
+            <TouchableOpacity
+              style={[styles.claimButton, isClaiming && styles.claimButtonDisabled]}
+              onPress={handleClaimIdle}
+              disabled={isClaiming}
+            >
+              {isClaiming ? (
+                <ActivityIndicator color="#FFF" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="download" size={20} color="#FFF" />
+                  <Text style={styles.claimButtonText}>Collect Rewards</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </LinearGradient>
 
           {/* Quick Actions */}
           <View style={styles.actionsContainer}>

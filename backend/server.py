@@ -2018,16 +2018,22 @@ async def arena_battle(username: str, request: ArenaBattleRequest):
         await db.arena_records.insert_one(user_record.dict())
         user_record = await db.arena_records.find_one({"user_id": user["id"]})
     
-    # Get user's team
-    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    
+    # Get all user heroes
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
-    team_heroes = [h for h in user_heroes if h["id"] in team.get("hero_ids", [])]
+    
+    # Get user's team or use all heroes if team_id is "default" or not found
+    team_heroes = []
+    if team_id and team_id != "default":
+        team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
+        if team:
+            team_heroes = [h for h in user_heroes if h["id"] in team.get("hero_ids", [])]
+    
+    # If no specific team found, use all user's heroes (simplified battle mode)
+    if not team_heroes:
+        team_heroes = user_heroes
     
     if len(team_heroes) == 0:
-        raise HTTPException(status_code=400, detail="Team has no heroes")
+        raise HTTPException(status_code=400, detail="No heroes available for battle")
     
     # Calculate user power with player buffs
     player_char = await db.player_characters.find_one({"user_id": user["id"]})

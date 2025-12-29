@@ -307,13 +307,15 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 // Hook to handle session restoration
 export const useHydration = () => {
-  const { isHydrated, restoreSession } = useGameStore();
+  const { isHydrated, restoreSession, user } = useGameStore();
   
   useEffect(() => {
+    console.log('useHydration: isHydrated=', isHydrated, 'user=', user?.username);
     if (!isHydrated) {
+      console.log('useHydration: calling restoreSession');
       restoreSession();
     }
-  }, []);
+  }, [isHydrated]);
   
   return isHydrated;
 };

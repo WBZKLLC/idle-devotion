@@ -4,37 +4,23 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
   Image,
   ActivityIndicator,
-  Modal,
-  Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useGameStore } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
-
-const RARITY_COLORS: { [key: string]: string } = {
-  'SR': '#4CAF50',
-  'SSR': '#9C27B0',
-  'UR': '#FF9800',
-  'UR+': '#F44336',
-};
-
-const ELEMENT_COLORS: { [key: string]: string } = {
-  'Fire': '#FF5722',
-  'Water': '#2196F3',
-  'Earth': '#795548',
-  'Wind': '#00BCD4',
-  'Light': '#FFD700',
-  'Dark': '#9C27B0',
-};
+import { LinearGradient } from 'expo-linear-gradient';
+import COLORS from '../theme/colors';
 
 export default function HeroesScreen() {
-  const { user, userHeroes, fetchUserHeroes, upgradeHero, updateProfilePicture, isLoading } = useGameStore();
-  const [selectedHero, setSelectedHero] = useState<any>(null);
-  const [showDetail, setShowDetail] = useState(false);
+  const router = useRouter();
+  const { user, userHeroes, fetchUserHeroes, isLoading } = useGameStore();
   const [filterRarity, setFilterRarity] = useState<string | null>(null);
+  const [filterClass, setFilterClass] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'level' | 'rarity' | 'power'>('rarity');
 
   useEffect(() => {
     if (user) {
@@ -42,598 +28,306 @@ export default function HeroesScreen() {
     }
   }, [user]);
 
-  const handleUpgrade = async () => {
-    if (!selectedHero) return;
+  const getRarityColor = (rarity: string) => {
+    return COLORS.rarity[rarity as keyof typeof COLORS.rarity] || COLORS.cream.dark;
+  };
 
-    const duplicatesNeeded = selectedHero.rank * 2;
+  const getRarityOrder = (rarity: string) => {
+    const order = { 'N': 0, 'R': 1, 'SR': 2, 'SSR': 3, 'SSR+': 4, 'UR': 5, 'UR+': 6 };
+    return order[rarity as keyof typeof order] || 0;
+  };
 
-    if (selectedHero.rank >= 10) {
-      Alert.alert('Max Rank', 'This hero is at max rank. Use Star Chart for further progression.');
-      return;
-    }
-
-    if (selectedHero.duplicates < duplicatesNeeded) {
-      Alert.alert(
-        'Insufficient Duplicates',
-        `You need ${duplicatesNeeded} duplicates to rank up. You have ${selectedHero.duplicates}.`
-      );
-      return;
-    }
-
-    try {
-      await upgradeHero(selectedHero.id);
-      Alert.alert('Success!', `${selectedHero.hero_data.name} ranked up to Rank ${selectedHero.rank + 1}!`);
-      setShowDetail(false);
-      await fetchUserHeroes();
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to upgrade hero');
+  const getClassIcon = (heroClass: string) => {
+    switch (heroClass) {
+      case 'Warrior': return 'shield';
+      case 'Mage': return 'flame';
+      case 'Archer': return 'locate';
+      default: return 'person';
     }
   };
 
-  const handleSetProfilePicture = async () => {
-    if (!selectedHero) return;
-
-    try {
-      await updateProfilePicture(selectedHero.hero_data.id);
-      Alert.alert('Success!', `${selectedHero.hero_data.name} is now your profile picture!`);
-      setShowDetail(false);
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to set profile picture');
-    }
+  const calculatePower = (hero: any) => {
+    const heroData = hero.hero_data;
+    if (!heroData) return 0;
+    const levelMult = 1 + (hero.level - 1) * 0.05;
+    const starMult = 1 + (hero.stars || 0) * 0.1;
+    const awakenMult = 1 + (hero.awakening_level || 0) * 0.2;
+    return Math.floor((heroData.base_hp + heroData.base_atk * 3 + heroData.base_def * 2) * levelMult * starMult * awakenMult);
   };
 
-  const filteredHeroes = filterRarity
-    ? userHeroes.filter((h) => h.hero_data?.rarity === filterRarity)
-    : userHeroes;
+  const filteredAndSortedHeroes = userHeroes
+    .filter(hero => {
+      if (filterRarity && hero.hero_data?.rarity !== filterRarity) return false;
+      if (filterClass && hero.hero_data?.hero_class !== filterClass) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'level') return b.level - a.level;
+      if (sortBy === 'power') return calculatePower(b) - calculatePower(a);
+      if (sortBy === 'rarity') {
+        const rarityDiff = getRarityOrder(b.hero_data?.rarity) - getRarityOrder(a.hero_data?.rarity);
+        if (rarityDiff !== 0) return rarityDiff;
+        return b.level - a.level;
+      }
+      return 0;
+    });
 
-  // Group heroes by rarity
-  const groupedHeroes = filteredHeroes.reduce((acc: any, hero: any) => {
-    const rarity = hero.hero_data?.rarity || 'SR';
-    if (!acc[rarity]) acc[rarity] = [];
-    acc[rarity].push(hero);
-    return acc;
-  }, {});
+  const RARITIES = ['SR', 'SSR', 'SSR+', 'UR', 'UR+'];
+  const CLASSES = ['Warrior', 'Mage', 'Archer'];
 
   if (!user) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.noUserText}>Please login first</Text>
-      </View>
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
+          <Text style={styles.errorText}>Please log in first</Text>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
+    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Hero Collection</Text>
+          <Text style={styles.title}>Heroes</Text>
           <Text style={styles.subtitle}>{userHeroes.length} Heroes Collected</Text>
         </View>
 
-        {/* Rarity Filter */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterScroll}
-          contentContainerStyle={styles.filterContent}
-        >
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              !filterRarity && styles.filterButtonActive,
-            ]}
-            onPress={() => setFilterRarity(null)}
-          >
-            <Text style={styles.filterText}>All</Text>
-          </TouchableOpacity>
-          {['SR', 'SSR', 'UR', 'UR+'].map((rarity) => (
+        {/* Filter Bar */}
+        <View style={styles.filterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
             <TouchableOpacity
-              key={rarity}
-              style={[
-                styles.filterButton,
-                { borderColor: RARITY_COLORS[rarity] },
-                filterRarity === rarity && styles.filterButtonActive,
-                filterRarity === rarity && { backgroundColor: RARITY_COLORS[rarity] + '33' },
-              ]}
-              onPress={() => setFilterRarity(rarity)}
+              style={[styles.filterChip, !filterRarity && styles.filterChipActive]}
+              onPress={() => setFilterRarity(null)}
             >
-              <Text
+              <Text style={[styles.filterText, !filterRarity && styles.filterTextActive]}>All</Text>
+            </TouchableOpacity>
+            {RARITIES.map(rarity => (
+              <TouchableOpacity
+                key={rarity}
                 style={[
-                  styles.filterText,
-                  { color: RARITY_COLORS[rarity] },
+                  styles.filterChip,
+                  filterRarity === rarity && styles.filterChipActive,
+                  { borderColor: getRarityColor(rarity) }
                 ]}
+                onPress={() => setFilterRarity(filterRarity === rarity ? null : rarity)}
               >
-                {rarity}
+                <Text style={[
+                  styles.filterText,
+                  filterRarity === rarity && styles.filterTextActive,
+                  { color: filterRarity === rarity ? COLORS.navy.darkest : getRarityColor(rarity) }
+                ]}>
+                  {rarity}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Class Filter */}
+        <View style={styles.classFilterContainer}>
+          {CLASSES.map(cls => (
+            <TouchableOpacity
+              key={cls}
+              style={[styles.classChip, filterClass === cls && styles.classChipActive]}
+              onPress={() => setFilterClass(filterClass === cls ? null : cls)}
+            >
+              <Ionicons 
+                name={getClassIcon(cls) as any} 
+                size={16} 
+                color={filterClass === cls ? COLORS.navy.darkest : COLORS.gold.light} 
+              />
+              <Text style={[styles.classText, filterClass === cls && styles.classTextActive]}>
+                {cls}
               </Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
 
-        {/* Heroes List */}
+        {/* Sort Options */}
+        <View style={styles.sortContainer}>
+          <Text style={styles.sortLabel}>Sort by:</Text>
+          {(['rarity', 'level', 'power'] as const).map(option => (
+            <TouchableOpacity
+              key={option}
+              style={[styles.sortChip, sortBy === option && styles.sortChipActive]}
+              onPress={() => setSortBy(option)}
+            >
+              <Text style={[styles.sortText, sortBy === option && styles.sortTextActive]}>
+                {option.charAt(0).toUpperCase() + option.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {isLoading ? (
-          <ActivityIndicator size="large" color="#FF6B9D" style={styles.loader} />
-        ) : userHeroes.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={64} color="#666" />
-            <Text style={styles.emptyText}>No heroes yet</Text>
-            <Text style={styles.emptySubtext}>Try summoning some heroes!</Text>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.gold.primary} />
+            <Text style={styles.loadingText}>Loading heroes...</Text>
           </View>
         ) : (
-          Object.keys(groupedHeroes)
-            .sort((a, b) => {
-              const order = ['UR+', 'UR', 'SSR', 'SR'];
-              return order.indexOf(a) - order.indexOf(b);
-            })
-            .map((rarity) => (
-              <View key={rarity} style={styles.raritySection}>
-                <Text
-                  style={[
-                    styles.raritySectionTitle,
-                    { color: RARITY_COLORS[rarity] },
-                  ]}
-                >
-                  {rarity} Heroes ({groupedHeroes[rarity].length})
-                </Text>
-                <View style={styles.heroGrid}>
-                  {groupedHeroes[rarity].map((hero: any) => (
-                    <TouchableOpacity
-                      key={hero.id}
-                      style={[
-                        styles.heroCard,
-                        { borderColor: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
-                      ]}
-                      onPress={() => {
-                        setSelectedHero(hero);
-                        setShowDetail(true);
-                      }}
+          <ScrollView 
+            style={styles.heroesGrid}
+            contentContainerStyle={styles.heroesGridContent}
+          >
+            <View style={styles.gridContainer}>
+              {filteredAndSortedHeroes.map((hero) => {
+                const heroData = hero.hero_data;
+                const power = calculatePower(hero);
+                
+                return (
+                  <TouchableOpacity
+                    key={hero.id}
+                    style={styles.heroCard}
+                    onPress={() => router.push(`/hero-upgrade?heroId=${hero.id}`)}
+                  >
+                    <LinearGradient
+                      colors={[getRarityColor(heroData?.rarity) + '40', COLORS.navy.dark]}
+                      style={styles.heroCardGradient}
                     >
                       <Image
-                        source={{ uri: hero.hero_data?.image_url }}
+                        source={{ uri: heroData?.image_url }}
                         style={styles.heroImage}
                       />
+                      
+                      {/* Rarity Badge */}
+                      <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(heroData?.rarity) }]}>
+                        <Text style={styles.rarityText}>{heroData?.rarity}</Text>
+                      </View>
+                      
+                      {/* Class Icon */}
+                      <View style={styles.classIcon}>
+                        <Ionicons 
+                          name={getClassIcon(heroData?.hero_class) as any} 
+                          size={14} 
+                          color={COLORS.gold.light} 
+                        />
+                      </View>
+                      
+                      {/* Stars */}
+                      {(hero.stars || 0) > 0 && (
+                        <View style={styles.starsContainer}>
+                          {Array.from({ length: hero.stars || 0 }).map((_, i) => (
+                            <Ionicons key={i} name="star" size={10} color={COLORS.gold.primary} />
+                          ))}
+                        </View>
+                      )}
+                      
+                      {/* Awakening Badge */}
+                      {(hero.awakening_level || 0) > 0 && (
+                        <View style={styles.awakenBadge}>
+                          <Text style={styles.awakenText}>⚡{hero.awakening_level}</Text>
+                        </View>
+                      )}
+                      
                       <View style={styles.heroInfo}>
-                        <Text style={styles.heroName} numberOfLines={1}>
-                          {hero.hero_data?.name}
+                        <Text style={[styles.heroName, { color: getRarityColor(heroData?.rarity) }]} numberOfLines={1}>
+                          {heroData?.name?.split(' ')[0]}
                         </Text>
                         <View style={styles.heroStats}>
-                          <View style={styles.statBadge}>
-                            <Text style={styles.statText}>Rank {hero.rank}</Text>
-                          </View>
-                          <View style={styles.statBadge}>
-                            <Text style={styles.statText}>Lv.{hero.level}</Text>
-                          </View>
+                          <Text style={styles.levelText}>Lv.{hero.level}</Text>
+                          <Text style={styles.powerText}>{power.toLocaleString()}</Text>
                         </View>
-                        {hero.duplicates > 0 && (
-                          <View style={styles.duplicateBadge}>
-                            <Ionicons name="copy" size={12} color="#FFD700" />
-                            <Text style={styles.duplicateText}>+{hero.duplicates}</Text>
-                          </View>
-                        )}
                       </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            ))
-        )}
-      </ScrollView>
-
-      {/* Hero Detail Modal */}
-      <Modal
-        visible={showDetail}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowDetail(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {selectedHero && (
-              <>
-                <TouchableOpacity
-                  style={styles.closeIcon}
-                  onPress={() => setShowDetail(false)}
-                >
-                  <Ionicons name="close" size={32} color="#fff" />
-                </TouchableOpacity>
-
-                <Image
-                  source={{ uri: selectedHero.hero_data?.image_url }}
-                  style={styles.detailImage}
-                />
-
-                <View
-                  style={[
-                    styles.rarityBadge,
-                    { backgroundColor: RARITY_COLORS[selectedHero.hero_data?.rarity || 'SR'] },
-                  ]}
-                >
-                  <Text style={styles.rarityText}>{selectedHero.hero_data?.rarity}</Text>
-                </View>
-
-                <Text style={styles.detailName}>{selectedHero.hero_data?.name}</Text>
-                <Text style={styles.detailDescription}>
-                  {selectedHero.hero_data?.description}
-                </Text>
-
-                <View style={styles.detailStats}>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Class:</Text>
-                    <Text style={styles.statValue}>{selectedHero.hero_data?.hero_class}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Element:</Text>
-                    <View style={styles.elementBadge}>
-                      <View
-                        style={[
-                          styles.elementDot,
-                          { backgroundColor: ELEMENT_COLORS[selectedHero.hero_data?.element || 'Fire'] },
-                        ]}
-                      />
-                      <Text style={styles.statValue}>{selectedHero.hero_data?.element}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Level:</Text>
-                    <Text style={styles.statValue}>{selectedHero.level}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Rank:</Text>
-                    <Text style={styles.statValue}>{selectedHero.rank} / 10</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Duplicates:</Text>
-                    <Text style={styles.statValue}>{selectedHero.duplicates}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.combatStats}>
-                  <View style={styles.combatStat}>
-                    <Ionicons name="heart" size={24} color="#F44336" />
-                    <Text style={styles.combatStatLabel}>HP</Text>
-                    <Text style={styles.combatStatValue}>{selectedHero.current_hp}</Text>
-                  </View>
-                  <View style={styles.combatStat}>
-                    <Ionicons name="flash" size={24} color="#FF9800" />
-                    <Text style={styles.combatStatLabel}>ATK</Text>
-                    <Text style={styles.combatStatValue}>{selectedHero.current_atk}</Text>
-                  </View>
-                  <View style={styles.combatStat}>
-                    <Ionicons name="shield" size={24} color="#2196F3" />
-                    <Text style={styles.combatStatLabel}>DEF</Text>
-                    <Text style={styles.combatStatValue}>{selectedHero.current_def}</Text>
-                  </View>
-                </View>
-
-                {selectedHero.rank < 10 && (
-                  <TouchableOpacity
-                    style={[
-                      styles.upgradeButton,
-                      selectedHero.duplicates < selectedHero.rank * 2 && styles.upgradeButtonDisabled,
-                    ]}
-                    onPress={handleUpgrade}
-                    disabled={selectedHero.duplicates < selectedHero.rank * 2}
-                  >
-                    <Text style={styles.upgradeButtonText}>
-                      Rank Up (Need {selectedHero.rank * 2} duplicates)
-                    </Text>
+                    </LinearGradient>
                   </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={[
-                    styles.profilePictureButton,
-                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonActive
-                  ]}
-                  onPress={handleSetProfilePicture}
-                >
-                  <Ionicons 
-                    name={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "checkmark-circle" : "person-circle"} 
-                    size={20} 
-                    color={user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "#4CAF50" : "#FFF"} 
-                  />
-                  <Text style={[
-                    styles.profilePictureButtonText,
-                    user?.profile_picture_hero_id === selectedHero.hero_data?.id && styles.profilePictureButtonTextActive
-                  ]}>
-                    {user?.profile_picture_hero_id === selectedHero.hero_data?.id ? "Current Profile Picture" : "Set as Profile Picture"}
-                  </Text>
+                );
+              })}
+            </View>
+            
+            {filteredAndSortedHeroes.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="search" size={48} color={COLORS.navy.light} />
+                <Text style={styles.emptyText}>No heroes match your filters</Text>
+                <TouchableOpacity onPress={() => { setFilterRarity(null); setFilterClass(null); }}>
+                  <Text style={styles.clearFilters}>Clear Filters</Text>
                 </TouchableOpacity>
-
-                {selectedHero.rank === 10 && (
-                  <View style={styles.maxRankBadge}>
-                    <Ionicons name="trophy" size={24} color="#FFD700" />
-                    <Text style={styles.maxRankText}>Max Rank - Star Chart Available</Text>
-                  </View>
-                )}
-              </>
+              </View>
             )}
-          </View>
+          </ScrollView>
+        )}
+
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => router.push('/team-builder')}
+          >
+            <LinearGradient
+              colors={[COLORS.gold.primary, COLORS.gold.dark]}
+              style={styles.quickActionGradient}
+            >
+              <Ionicons name="people" size={20} color={COLORS.navy.darkest} />
+              <Text style={styles.quickActionText}>Team Builder</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => router.push('/summon-hub')}
+          >
+            <LinearGradient
+              colors={[COLORS.rarity.UR, COLORS.rarity['UR+']]}
+              style={styles.quickActionGradient}
+            >
+              <Ionicons name="sparkles" size={20} color={COLORS.cream.pure} />
+              <Text style={[styles.quickActionText, { color: COLORS.cream.pure }]}>Summon</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-      </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f0f1e',
-  },
-  content: {
-    padding: 16,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FF6B9D',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
-  },
-  filterScroll: {
-    marginBottom: 16,
-  },
-  filterContent: {
-    gap: 8,
-    paddingHorizontal: 4,
-  },
-  filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#333',
-    backgroundColor: '#1a1a2e',
-  },
-  filterButtonActive: {
-    borderColor: '#FF6B9D',
-    backgroundColor: '#FF6B9D33',
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  raritySection: {
-    marginBottom: 24,
-  },
-  raritySectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  heroGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  heroCard: {
-    width: '48%',
-    backgroundColor: '#1a1a2e',
-    borderRadius: 12,
-    borderWidth: 2,
-    overflow: 'hidden',
-  },
-  heroImage: {
-    width: '100%',
-    height: 150,
-  },
-  heroInfo: {
-    padding: 8,
-  },
-  heroName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  heroStats: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  statBadge: {
-    backgroundColor: '#0f0f1e',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statText: {
-    fontSize: 10,
-    color: '#999',
-  },
-  duplicateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  duplicateText: {
-    fontSize: 12,
-    color: '#FFD700',
-    fontWeight: 'bold',
-  },
-  loader: {
-    marginTop: 50,
-  },
-  emptyState: {
-    alignItems: 'center',
-    marginTop: 100,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#999',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    padding: 16,
-  },
-  modalContent: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 16,
-    padding: 24,
-    maxHeight: '90%',
-    borderWidth: 2,
-    borderColor: '#FF6B9D',
-  },
-  closeIcon: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    zIndex: 10,
-  },
-  detailImage: {
-    width: '100%',
-    height: 250,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  rarityBadge: {
-    position: 'absolute',
-    top: 24,
-    left: 24,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  rarityText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  detailName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  detailDescription: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  detailStats: {
-    backgroundColor: '#0f0f1e',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#999',
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  elementBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  elementDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  combatStats: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  combatStat: {
-    flex: 1,
-    backgroundColor: '#0f0f1e',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-  },
-  combatStatLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-  combatStatValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 2,
-  },
-  upgradeButton: {
-    backgroundColor: '#FF6B9D',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  upgradeButtonDisabled: {
-    backgroundColor: '#666',
-  },
-  upgradeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  maxRankBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFD70033',
-    borderRadius: 8,
-    padding: 16,
-    gap: 8,
-  },
-  maxRankText: {
-    color: '#FFD700',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  profilePictureButton: {
-    backgroundColor: '#9C27B0',
-    borderRadius: 8,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 8,
-  },
-  profilePictureButtonActive: {
-    backgroundColor: '#4CAF50',
-  },
-  profilePictureButtonText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  profilePictureButtonTextActive: {
-    color: '#FFF',
-  },
-  noUserText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-  },
+  container: { flex: 1 },
+  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12 },
+  title: { fontSize: 32, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
+  subtitle: { fontSize: 14, color: COLORS.cream.dark, textAlign: 'center', marginTop: 4 },
+  filterContainer: { paddingHorizontal: 16, marginBottom: 8 },
+  filterScroll: { flexDirection: 'row' },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: COLORS.navy.light, backgroundColor: COLORS.navy.medium },
+  filterChipActive: { backgroundColor: COLORS.gold.primary, borderColor: COLORS.gold.primary },
+  filterText: { fontSize: 12, fontWeight: 'bold', color: COLORS.cream.soft },
+  filterTextActive: { color: COLORS.navy.darkest },
+  classFilterContainer: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8, gap: 8 },
+  classChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 10, backgroundColor: COLORS.navy.medium, gap: 6, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  classChipActive: { backgroundColor: COLORS.gold.primary },
+  classText: { fontSize: 12, fontWeight: 'bold', color: COLORS.cream.soft },
+  classTextActive: { color: COLORS.navy.darkest },
+  sortContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12, gap: 8 },
+  sortLabel: { fontSize: 12, color: COLORS.cream.dark },
+  sortChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: COLORS.navy.medium },
+  sortChipActive: { backgroundColor: COLORS.gold.dark },
+  sortText: { fontSize: 11, color: COLORS.cream.soft },
+  sortTextActive: { color: COLORS.cream.pure, fontWeight: 'bold' },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: COLORS.cream.soft, marginTop: 12, fontSize: 16 },
+  heroesGrid: { flex: 1 },
+  heroesGridContent: { paddingHorizontal: 12, paddingBottom: 100 },
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  heroCard: { width: '31%', aspectRatio: 0.75, marginBottom: 12, borderRadius: 12, overflow: 'hidden' },
+  heroCardGradient: { flex: 1, padding: 6 },
+  heroImage: { width: '100%', aspectRatio: 1, borderRadius: 8, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
+  rarityBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  rarityText: { fontSize: 8, fontWeight: 'bold', color: COLORS.cream.pure },
+  classIcon: { position: 'absolute', top: 10, right: 10, backgroundColor: COLORS.navy.darkest + '80', padding: 4, borderRadius: 6 },
+  starsContainer: { position: 'absolute', top: 30, left: 10, flexDirection: 'row', gap: 1 },
+  awakenBadge: { position: 'absolute', bottom: 40, right: 10, backgroundColor: COLORS.rarity['UR+'], paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
+  awakenText: { fontSize: 8, fontWeight: 'bold', color: COLORS.cream.pure },
+  heroInfo: { marginTop: 4 },
+  heroName: { fontSize: 11, fontWeight: 'bold', marginBottom: 2 },
+  heroStats: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  levelText: { fontSize: 10, color: COLORS.cream.soft, fontWeight: 'bold' },
+  powerText: { fontSize: 9, color: COLORS.gold.light },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  emptyText: { fontSize: 16, color: COLORS.cream.dark, marginTop: 12 },
+  clearFilters: { fontSize: 14, color: COLORS.gold.primary, marginTop: 8, fontWeight: 'bold' },
+  quickActions: { position: 'absolute', bottom: 80, left: 16, right: 16, flexDirection: 'row', gap: 12 },
+  quickActionButton: { flex: 1, borderRadius: 12, overflow: 'hidden' },
+  quickActionGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 8 },
+  quickActionText: { fontSize: 14, fontWeight: 'bold', color: COLORS.navy.darkest },
+  errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
 });

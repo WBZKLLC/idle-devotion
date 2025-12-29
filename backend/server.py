@@ -662,57 +662,177 @@ CRYSTAL_COST_MULTI = 900  # 10 pulls, 100 crystal discount
 COIN_COST_SINGLE = 1000
 COIN_COST_MULTI = 9000
 
-# Initialize hero pool
+# Hero Skills Templates
+def create_warrior_skills(rarity: str) -> List[HeroSkill]:
+    base_mult = RARITY_MULTIPLIERS.get(rarity, 1.0)
+    return [
+        HeroSkill(id="w_slash", name="Crushing Blow", description="Deal heavy damage to a single enemy",
+                  skill_type="active", damage_multiplier=1.5 * base_mult, cooldown=2, unlock_level=1),
+        HeroSkill(id="w_taunt", name="Guardian's Taunt", description="Force enemies to attack you for 2 turns",
+                  skill_type="active", buff_type="taunt", cooldown=4, unlock_level=10),
+        HeroSkill(id="w_passive", name="Iron Will", description="Increases DEF by 15%",
+                  skill_type="passive", buff_type="def", buff_percent=0.15, unlock_level=20),
+        HeroSkill(id="w_ultimate", name="Judgment Strike", description="Massive damage to all enemies",
+                  skill_type="active", damage_multiplier=2.5 * base_mult, cooldown=6, unlock_level=40, unlock_stars=3),
+    ]
+
+def create_mage_skills(rarity: str) -> List[HeroSkill]:
+    base_mult = RARITY_MULTIPLIERS.get(rarity, 1.0)
+    return [
+        HeroSkill(id="m_bolt", name="Arcane Bolt", description="Magical attack on single target",
+                  skill_type="active", damage_multiplier=1.8 * base_mult, cooldown=2, unlock_level=1),
+        HeroSkill(id="m_aoe", name="Meteor Storm", description="Damage all enemies",
+                  skill_type="active", damage_multiplier=1.2 * base_mult, cooldown=4, unlock_level=10),
+        HeroSkill(id="m_passive", name="Arcane Mastery", description="Increases ATK by 20%",
+                  skill_type="passive", buff_type="atk", buff_percent=0.20, unlock_level=20),
+        HeroSkill(id="m_ultimate", name="Apocalypse", description="Devastating magic on all enemies",
+                  skill_type="active", damage_multiplier=3.0 * base_mult, cooldown=6, unlock_level=40, unlock_stars=3),
+    ]
+
+def create_archer_skills(rarity: str) -> List[HeroSkill]:
+    base_mult = RARITY_MULTIPLIERS.get(rarity, 1.0)
+    return [
+        HeroSkill(id="a_shot", name="Piercing Arrow", description="High damage to single target",
+                  skill_type="active", damage_multiplier=1.6 * base_mult, cooldown=2, unlock_level=1),
+        HeroSkill(id="a_rain", name="Arrow Rain", description="Damage all enemies",
+                  skill_type="active", damage_multiplier=1.0 * base_mult, cooldown=4, unlock_level=10),
+        HeroSkill(id="a_passive", name="Eagle Eye", description="Increases CRIT by 25%",
+                  skill_type="passive", buff_type="crit", buff_percent=0.25, unlock_level=20),
+        HeroSkill(id="a_ultimate", name="Divine Volley", description="Rapid attacks on random enemies",
+                  skill_type="active", damage_multiplier=2.2 * base_mult, cooldown=6, unlock_level=40, unlock_stars=3),
+    ]
+
+# Initialize hero pool with expanded roster
 HERO_POOL = [
-    # SR Heroes
+    # ========== SR HEROES (Common) ==========
+    # Warriors (Front Line)
     Hero(name="Azrael the Fallen", rarity="SR", element="Dark", hero_class="Warrior", 
-         base_hp=1200, base_atk=150, base_def=100, 
+         base_hp=1200, base_atk=150, base_def=100, base_speed=90, position="front",
+         skills=create_warrior_skills("SR"),
          image_url="https://img.freepik.com/free-photo/anime-knight-with-sword_23-2152013379.jpg",
          description="A fallen angel seeking redemption through battle"),
+    Hero(name="Marcus the Shield", rarity="SR", element="Earth", hero_class="Warrior",
+         base_hp=1400, base_atk=130, base_def=120, base_speed=85, position="front",
+         skills=create_warrior_skills("SR"),
+         image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499073.jpg",
+         description="A stalwart defender who never retreats"),
+    Hero(name="Kane the Berserker", rarity="SR", element="Fire", hero_class="Warrior",
+         base_hp=1100, base_atk=170, base_def=80, base_speed=95, position="front",
+         skills=create_warrior_skills("SR"),
+         image_url="https://img.freepik.com/free-photo/anime-japanese-character_23-2151478202.jpg",
+         description="Fury incarnate, dealing devastating blows"),
+    
+    # Mages (Back Line)
     Hero(name="Soren the Flame", rarity="SR", element="Fire", hero_class="Mage",
-         base_hp=900, base_atk=180, base_def=70,
+         base_hp=900, base_atk=180, base_def=70, base_speed=100, position="back",
+         skills=create_mage_skills("SR"),
          image_url="https://img.freepik.com/free-photo/anime-samurai-warrior-with-katana-pink-petals_23-2151995161.jpg",
          description="A passionate sorcerer wielding infernal flames"),
-    Hero(name="Kai the Tempest", rarity="SR", element="Wind", hero_class="Assassin",
-         base_hp=1000, base_atk=170, base_def=80,
+    Hero(name="Lysander the Frost", rarity="SR", element="Water", hero_class="Mage",
+         base_hp=950, base_atk=175, base_def=75, base_speed=95, position="back",
+         skills=create_mage_skills("SR"),
+         image_url="https://img.freepik.com/free-photo/anime-character-with-blue-hair_23-2151499092.jpg",
+         description="Master of ice who freezes enemies solid"),
+    Hero(name="Theron the Storm", rarity="SR", element="Wind", hero_class="Mage",
+         base_hp=880, base_atk=185, base_def=65, base_speed=110, position="back",
+         skills=create_mage_skills("SR"),
          image_url="https://img.freepik.com/free-photo/intense-anime-fighter-with-energy-blade_23-2152031302.jpg",
+         description="Commands lightning and thunder with ease"),
+    
+    # Archers (Back Line)
+    Hero(name="Kai the Tempest", rarity="SR", element="Wind", hero_class="Archer",
+         base_hp=1000, base_atk=170, base_def=80, base_speed=115, position="back",
+         skills=create_archer_skills("SR"),
+         image_url="https://img.freepik.com/free-photo/anime-character-portrait-illustration_23-2151499104.jpg",
          description="Swift as the wind, deadly as the storm"),
-    
-    # SSR Heroes
-    Hero(name="Lucian the Divine", rarity="SSR", element="Light", hero_class="Healer",
-         base_hp=1400, base_atk=140, base_def=120,
+    Hero(name="Robin the Hunter", rarity="SR", element="Earth", hero_class="Archer",
+         base_hp=1050, base_atk=165, base_def=85, base_speed=105, position="back",
+         skills=create_archer_skills("SR"),
          image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499113.jpg",
-         description="An angelic being who mends wounds with holy magic"),
-    Hero(name="Darius the Void", rarity="SSR", element="Dark", hero_class="Tank",
-         base_hp=2000, base_atk=120, base_def=180,
-         image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499073.jpg",
-         description="A demonic guardian with impenetrable defense"),
+         description="Never misses his mark, ever"),
     
-    # SSR+ Heroes (Common Summon Exclusive - Top tier for free players)
+    # ========== SSR HEROES ==========
+    # Warriors
+    Hero(name="Darius the Void", rarity="SSR", element="Dark", hero_class="Warrior",
+         base_hp=2000, base_atk=200, base_def=180, base_speed=88, position="front",
+         skills=create_warrior_skills("SSR"),
+         image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499067.jpg",
+         description="A demonic guardian with impenetrable defense"),
+    Hero(name="Leon the Paladin", rarity="SSR", element="Light", hero_class="Warrior",
+         base_hp=1800, base_atk=220, base_def=160, base_speed=92, position="front",
+         skills=create_warrior_skills("SSR"),
+         image_url="https://img.freepik.com/free-photo/anime-knight-with-sword_23-2152013379.jpg",
+         description="Holy warrior blessed by the divine"),
+    
+    # Mages
+    Hero(name="Lucian the Divine", rarity="SSR", element="Light", hero_class="Mage",
+         base_hp=1400, base_atk=260, base_def=120, base_speed=98, position="back",
+         skills=create_mage_skills("SSR"),
+         image_url="https://img.freepik.com/free-photo/anime-samurai-warrior-with-katana-pink-petals_23-2151995161.jpg",
+         description="An angelic being with devastating magic"),
+    Hero(name="Morgana the Shadow", rarity="SSR", element="Dark", hero_class="Mage",
+         base_hp=1300, base_atk=280, base_def=100, base_speed=102, position="back",
+         skills=create_mage_skills("SSR"),
+         image_url="https://img.freepik.com/free-photo/anime-character-with-blue-hair_23-2151499092.jpg",
+         description="Mistress of dark arts and forbidden spells"),
+    
+    # Archers
+    Hero(name="Artemis the Swift", rarity="SSR", element="Wind", hero_class="Archer",
+         base_hp=1500, base_atk=250, base_def=130, base_speed=120, position="back",
+         skills=create_archer_skills("SSR"),
+         image_url="https://img.freepik.com/free-photo/anime-character-portrait-illustration_23-2151499104.jpg",
+         description="Goddess of the hunt, unmatched in speed"),
+    
+    # ========== SSR+ HEROES (Common Summon Exclusive) ==========
     Hero(name="Orion the Mystic", rarity="SSR+", element="Water", hero_class="Mage",
-         base_hp=1700, base_atk=210, base_def=130,
+         base_hp=1700, base_atk=310, base_def=140, base_speed=105, position="back",
+         skills=create_mage_skills("SSR+"),
          image_url="https://img.freepik.com/free-photo/anime-character-with-blue-hair_23-2151499092.jpg",
          description="A rare sorcerer who commands the tides"),
-    Hero(name="Phoenix the Reborn", rarity="SSR+", element="Fire", hero_class="Support",
-         base_hp=1600, base_atk=190, base_def=150,
-         image_url="https://img.freepik.com/free-photo/anime-character-portrait-illustration_23-2151499104.jpg",
-         description="Rising from ashes, granting power to allies"),
+    Hero(name="Phoenix the Reborn", rarity="SSR+", element="Fire", hero_class="Warrior",
+         base_hp=2100, base_atk=280, base_def=170, base_speed=95, position="front",
+         skills=create_warrior_skills("SSR+"),
+         image_url="https://img.freepik.com/free-photo/anime-japanese-character_23-2151478202.jpg",
+         description="Rising from ashes, immortal in battle"),
+    Hero(name="Gale the Windwalker", rarity="SSR+", element="Wind", hero_class="Archer",
+         base_hp=1600, base_atk=300, base_def=130, base_speed=130, position="back",
+         skills=create_archer_skills("SSR+"),
+         image_url="https://img.freepik.com/free-photo/intense-anime-fighter-with-energy-blade_23-2152031302.jpg",
+         description="Moves faster than the eye can see"),
     
-    # UR Heroes (Premium Crystal Exclusive)
-    Hero(name="Seraphiel the Radiant", rarity="UR", element="Light", hero_class="Support",
-         base_hp=1600, base_atk=200, base_def=140,
+    # ========== UR HEROES (Premium Crystal Exclusive) ==========
+    Hero(name="Seraphiel the Radiant", rarity="UR", element="Light", hero_class="Mage",
+         base_hp=2000, base_atk=380, base_def=180, base_speed=110, position="back",
+         skills=create_mage_skills("UR"),
          image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499067.jpg",
          description="An archangel with power beyond mortal comprehension"),
     Hero(name="Malachi the Destroyer", rarity="UR", element="Fire", hero_class="Warrior",
-         base_hp=1800, base_atk=250, base_def=130,
-         image_url="https://img.freepik.com/free-photo/anime-japanese-character_23-2151478202.jpg",
+         base_hp=2500, base_atk=350, base_def=200, base_speed=100, position="front",
+         skills=create_warrior_skills("UR"),
+         image_url="https://img.freepik.com/free-photo/anime-knight-with-sword_23-2152013379.jpg",
          description="A god of war who revels in destruction"),
+    Hero(name="Selene the Moonbow", rarity="UR", element="Dark", hero_class="Archer",
+         base_hp=1900, base_atk=400, base_def=160, base_speed=125, position="back",
+         skills=create_archer_skills("UR"),
+         image_url="https://img.freepik.com/free-photo/anime-character-portrait-illustration_23-2151499104.jpg",
+         description="Huntress of the night, death from the shadows"),
     
-    # UR+ Heroes (Premium Crystal Exclusive - Rarest)
+    # ========== UR+ HEROES (Divine Summon Exclusive) ==========
     Hero(name="Raphael the Eternal", rarity="UR+", element="Light", hero_class="Mage",
-         base_hp=2200, base_atk=300, base_def=160,
+         base_hp=2800, base_atk=500, base_def=220, base_speed=115, position="back",
+         skills=create_mage_skills("UR+"),
          image_url="https://img.itch.zone/aW1nLzgyOTQ5NTMucG5n/original/jCtJlk.png",
-         description="The supreme deity of magic and transcendence")
+         description="The supreme deity of magic and transcendence"),
+    Hero(name="Michael the Archangel", rarity="UR+", element="Light", hero_class="Warrior",
+         base_hp=3200, base_atk=450, base_def=280, base_speed=105, position="front",
+         skills=create_warrior_skills("UR+"),
+         image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499113.jpg",
+         description="Commander of the heavenly host, invincible in combat"),
+    Hero(name="Apollyon the Fallen", rarity="UR+", element="Dark", hero_class="Archer",
+         base_hp=2600, base_atk=520, base_def=200, base_speed=135, position="back",
+         skills=create_archer_skills("UR+"),
+         image_url="https://img.freepik.com/free-photo/anime-samurai-warrior-with-katana-pink-petals_23-2151995161.jpg",
+         description="The angel of the abyss, bringer of destruction"),
 ]
 
 async def init_heroes():

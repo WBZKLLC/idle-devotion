@@ -205,7 +205,7 @@ export default function StoreScreen() {
                   <Text style={styles.tierLabel}>Next Level</Text>
                   <Text style={styles.tierLevel}>VIP {nextTier.level}</Text>
                   <Text style={styles.unlockText}>
-                    Spend ${(nextTier.required_spend - (vipInfo?.total_spent || 0)).toFixed(2)} more to unlock
+                    Earn {Math.floor((nextTier.required_spend - (vipInfo?.total_spent || 0)) * 100).toLocaleString()} more XP to unlock
                   </Text>
                   <View style={styles.tierStats}>
                     <Text style={styles.tierStat}>⏰ {nextTier.idle_hours}h idle cap</Text>
@@ -238,7 +238,7 @@ export default function StoreScreen() {
                   ]}>
                     VIP {tier.level}
                   </Text>
-                  <Text style={styles.tierRowSpend}>${tier.required_spend}</Text>
+                  <Text style={styles.tierRowSpend}>{(tier.required_spend * 100).toLocaleString()} XP</Text>
                   <Text style={styles.tierRowBonus}>{(tier.idle_gold_rate * 100).toFixed(0)}%</Text>
                 </View>
               ))}

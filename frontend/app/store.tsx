@@ -320,11 +320,15 @@ export default function StoreScreen() {
           {/* Currency Display */}
           <View style={styles.currencyBar}>
             <View style={styles.currencyItem}>
-              <Ionicons name="diamond" size={20} color="#FF6B9D" />
+              <Ionicons name="star" size={18} color="#FFD700" />
+              <Text style={styles.currencyText}>{user.divine_essence || 0}</Text>
+            </View>
+            <View style={styles.currencyItem}>
+              <Ionicons name="diamond" size={18} color="#FF6B9D" />
               <Text style={styles.currencyText}>{user.gems || 0}</Text>
             </View>
             <View style={styles.currencyItem}>
-              <Ionicons name="cash" size={20} color="#FFD700" />
+              <Ionicons name="cash" size={18} color="#FFD700" />
               <Text style={styles.currencyText}>{user.coins || 0}</Text>
             </View>
           </View>
@@ -340,6 +344,14 @@ export default function StoreScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              style={[styles.tab, selectedTab === 'divine' && styles.tabActive]}
+              onPress={() => setSelectedTab('divine')}
+            >
+              <Text style={[styles.tabText, selectedTab === 'divine' && styles.tabTextActive]}>
+                ✨ Divine
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[styles.tab, selectedTab === 'vip' && styles.tabActive]}
               onPress={() => setSelectedTab('vip')}
             >
@@ -351,6 +363,89 @@ export default function StoreScreen() {
 
           {isLoading ? (
             <ActivityIndicator size="large" color="#FFF" style={styles.loader} />
+          ) : selectedTab === 'divine' ? (
+            <>
+              {/* Divine Packages Section */}
+              <LinearGradient
+                colors={['#FFD700', '#FF1493', '#9400D3']}
+                style={styles.divineHeader}
+              >
+                <Text style={styles.divineHeaderTitle}>✨ Divine Packages</Text>
+                <Text style={styles.divineHeaderSubtitle}>
+                  Limited to 3 purchases per package every 30 days
+                </Text>
+                {divinePackages && (
+                  <Text style={styles.divineResetText}>
+                    🔄 Resets in {divinePackages.days_until_reset} days
+                  </Text>
+                )}
+              </LinearGradient>
+              
+              <View style={styles.divinePackagesGrid}>
+                {/* $49.99 Package */}
+                <TouchableOpacity
+                  style={styles.divinePackageCard}
+                  onPress={() => purchaseDivinePackage('divine_49', 'Divine Blessing', 49.99)}
+                >
+                  <LinearGradient
+                    colors={['#FFD700', '#FF8C00']}
+                    style={styles.divinePackageGradient}
+                  >
+                    <Text style={styles.divinePackageTitle}>Divine Blessing</Text>
+                    <View style={styles.divinePackageContents}>
+                      <Text style={styles.divinePackageItem}>✨ 40 Divine Essence</Text>
+                      <Text style={styles.divinePackageItem}>💎 3,440 Crystals</Text>
+                      <Text style={styles.divinePackageItem}>👑 VIP XP</Text>
+                    </View>
+                    <View style={styles.divinePriceTag}>
+                      <Text style={styles.divinePriceText}>$49.99</Text>
+                    </View>
+                    <View style={styles.divineRemainingBadge}>
+                      <Text style={styles.divineRemainingText}>
+                        {divinePackages?.user_purchases?.divine_49?.remaining || 3}/3 left
+                      </Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                {/* $99.99 Package */}
+                <TouchableOpacity
+                  style={styles.divinePackageCard}
+                  onPress={() => purchaseDivinePackage('divine_99', 'Divine Ascension', 99.99)}
+                >
+                  <LinearGradient
+                    colors={['#FF1493', '#9400D3']}
+                    style={styles.divinePackageGradient}
+                  >
+                    <View style={styles.bestValueBadge}>
+                      <Text style={styles.bestValueText}>BEST VALUE</Text>
+                    </View>
+                    <Text style={styles.divinePackageTitle}>Divine Ascension</Text>
+                    <View style={styles.divinePackageContents}>
+                      <Text style={styles.divinePackageItem}>✨ 75 Divine Essence</Text>
+                      <Text style={styles.divinePackageItem}>💎 6,880 Crystals</Text>
+                      <Text style={styles.divinePackageItem}>👑 VIP XP</Text>
+                    </View>
+                    <View style={styles.divinePriceTag}>
+                      <Text style={styles.divinePriceText}>$99.99</Text>
+                    </View>
+                    <View style={styles.divineRemainingBadge}>
+                      <Text style={styles.divineRemainingText}>
+                        {divinePackages?.user_purchases?.divine_99?.remaining || 3}/3 left
+                      </Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+              
+              {/* Divine Info */}
+              <View style={styles.divineInfoBox}>
+                <Ionicons name="information-circle" size={20} color="#FFD700" />
+                <Text style={styles.divineInfoText}>
+                  Divine Essence is used for Divine Summons to get exclusive UR+ heroes!
+                </Text>
+              </View>
+            </>
           ) : selectedTab === 'crystals' ? (
             <>
               {/* First Purchase Banner */}

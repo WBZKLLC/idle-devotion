@@ -224,16 +224,38 @@ export default function HomeScreen() {
                 <Text style={styles.quickLinkText}>Heroes</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/leaderboard')}>
-              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
-                <Ionicons name="podium" size={22} color={COLORS.gold.light} />
-                <Text style={styles.quickLinkText}>Ranks</Text>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/login-rewards')}>
+              <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.quickLinkGradient}>
+                <Ionicons name="calendar" size={22} color={COLORS.navy.darkest} />
+                <Text style={[styles.quickLinkText, { color: COLORS.navy.darkest }]}>Rewards</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/store')}>
               <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
                 <Ionicons name="cart" size={22} color={COLORS.gold.light} />
                 <Text style={styles.quickLinkText}>Store</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* More Quick Links */}
+          <View style={styles.quickLinks}>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/leaderboard')}>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="podium" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>Ranks</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/guild')}>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="shield" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>Guild</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/events')}>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="sparkles" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>Events</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

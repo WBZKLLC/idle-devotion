@@ -105,7 +105,7 @@ export default function HomeScreen() {
     } catch (error) { Alert.alert('Error', 'Failed to create account'); }
   };
 
-  if (isInitializing || isLoading) {
+  if (!hydrated || isLoading) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
         <SafeAreaView style={styles.loadingContainer}>

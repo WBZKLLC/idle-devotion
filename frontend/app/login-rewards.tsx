@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
@@ -19,7 +19,8 @@ const MONTHS = ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'
 const DAYS_PER_MONTH = 30;
 
 export default function LoginRewardsScreen() {
-  const { user, fetchUser, _hasHydrated } = useGameStore();
+  const { user, fetchUser } = useGameStore();
+  const hydrated = useHydration();
   const [rewards, setRewards] = useState<any[]>([]);
   const [loginDays, setLoginDays] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(1);
@@ -27,12 +28,12 @@ export default function LoginRewardsScreen() {
   const [isClaiming, setIsClaiming] = useState(false);
 
   useEffect(() => {
-    if (_hasHydrated && user) {
+    if (hydrated && user) {
       loadRewards();
-    } else if (_hasHydrated && !user) {
+    } else if (hydrated && !user) {
       setIsLoading(false);
     }
-  }, [_hasHydrated, user]);
+  }, [hydrated, user]);
 
   // Auto-select current month based on login days
   useEffect(() => {

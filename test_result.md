@@ -107,75 +107,129 @@ user_problem_statement: "Build an idle gacha game with strategic team building, 
 backend:
   - task: "User registration and authentication"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented user registration endpoint with username-based system. Users get initial resources (300 gems, 10000 coins, 5000 gold)."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: User registration, profile retrieval, and daily login all working correctly. Users receive 300 crystals, 10000 coins, 5000 gold on registration. Daily login provides 1000 coins, 500 gold, and crystals on milestones."
 
   - task: "Gacha pull system with pity mechanics"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented gacha pull endpoint with single/multi pulls, dual currency support (gems/coins), 50-pull pity system guaranteeing SSR. Pull rates: SR 60%, SSR 30%, UR 9%, UR+ 1%."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Gacha system working correctly. Single/multi pulls with crystals and coins work. Pity counter increments properly. API uses 'crystals' not 'gems' as currency name."
 
   - task: "Hero management and collection"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented hero pool initialization with 8 heroes across 4 rarities. User hero instances track level, rank (1-10), duplicates, and stats."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Hero pool retrieval works (8 heroes available). User hero collection and character rating calculation working. Hero upgrade system correctly rejects upgrades without sufficient duplicates."
 
   - task: "Hero upgrade/rank up system"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented hero rank up system requiring duplicates (rank * 2). Each rank increases stats by 15%. Max rank is 10."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Hero upgrade system working correctly. Properly validates duplicate requirements and rejects upgrades when insufficient duplicates available."
 
   - task: "Daily login rewards and idle resource generation"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented daily login rewards (coins, gold, gems on week milestones, 10-15 free summons per day). Idle gold generation at 100 gold/minute, capped at 8 hours."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Daily login rewards working (1000 coins, 500 gold per day). Idle system working with VIP-based caps. Idle status and claim endpoints functional."
 
   - task: "Team management system"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented team creation and hero assignment endpoints. Teams support up to 6 heroes."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Team management working correctly. Team creation, retrieval, and hero assignment all functional. Supports up to 6 heroes per team."
+
+  - task: "VIP system and store integration"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: VIP system fully functional. VIP info, comparison, and crystal store working. Purchase simulation works correctly with first-purchase bonuses."
+
+  - task: "Leaderboard systems"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: All leaderboards (CR, Arena, Abyss) working correctly and returning data."
+
+  - task: "Arena and Abyss battle systems"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ISSUE: Arena and Abyss battle endpoints exist but have parameter format issues. Arena record and Abyss progress endpoints work correctly, but battle endpoints fail due to incorrect request format expectations."
 
 frontend:
   - task: "Navigation structure with tabs"

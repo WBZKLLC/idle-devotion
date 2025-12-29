@@ -371,6 +371,67 @@ export default function LoginRewardsScreen() {
             </Text>
           </View>
         </ScrollView>
+        
+        {/* Animated Claim Modal */}
+        <Modal
+          visible={showClaimModal}
+          transparent={true}
+          animationType="none"
+          onRequestClose={closeClaimModal}
+        >
+          <Animated.View style={[styles.claimModalOverlay, { opacity: fadeAnim }]}>
+            <Animated.View 
+              style={[
+                styles.claimModalContent,
+                { 
+                  transform: [
+                    { scale: scaleAnim },
+                  ] 
+                }
+              ]}
+            >
+              <LinearGradient
+                colors={claimedReward?.is_bonus 
+                  ? [COLORS.rarity.UR, COLORS.rarity['UR+']] 
+                  : [COLORS.gold.primary, COLORS.gold.dark]
+                }
+                style={styles.claimModalGradient}
+              >
+                <Text style={styles.claimModalTitle}>
+                  {claimedReward?.is_bonus ? '🎉 Bonus Reward!' : '✨ Reward Claimed!'}
+                </Text>
+                
+                <Animated.View 
+                  style={[
+                    styles.claimIconContainer,
+                    { transform: [{ rotate: rotateInterpolate }] }
+                  ]}
+                >
+                  <View style={styles.claimIconBg}>
+                    <Ionicons 
+                      name={getRewardIcon(claimedReward?.reward_type) as any} 
+                      size={48} 
+                      color={getRewardColor(claimedReward?.reward_type)} 
+                    />
+                  </View>
+                </Animated.View>
+                
+                <Text style={styles.claimAmount}>
+                  +{claimedReward?.reward_amount?.toLocaleString()}
+                </Text>
+                <Text style={styles.claimType}>
+                  {getRewardName(claimedReward?.reward_type)}
+                </Text>
+                
+                <Text style={styles.claimDay}>Day {claimedReward?.day}</Text>
+                
+                <TouchableOpacity style={styles.claimButton} onPress={closeClaimModal}>
+                  <Text style={styles.claimButtonText}>Collect</Text>
+                </TouchableOpacity>
+              </LinearGradient>
+            </Animated.View>
+          </Animated.View>
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );

@@ -646,26 +646,31 @@ def get_random_hero(pity_counter: int, is_premium: bool = False) -> Hero:
     """Select a random hero based on gacha rates with pity system
     
     Args:
-        pity_counter: Number of pulls since last SSR+
-        is_premium: If True, use premium pool (includes UR/UR+), else common pool (SR/SSR only)
+        pity_counter: Number of pulls since last high-tier hero
+        is_premium: If True, use premium pool (includes UR/UR+), else common pool (SR/SSR/SSR+)
     """
     # Determine which pool and rates to use
     if is_premium:
-        available_heroes = HERO_POOL  # All heroes available
+        # Premium pool: All rarities including UR and UR+ (exclusive to premium)
+        available_heroes = HERO_POOL
         rates = GACHA_RATES_PREMIUM
+        pity_threshold = PITY_THRESHOLD_PREMIUM
     else:
-        # Common pool: Only SR and SSR heroes
-        available_heroes = [h for h in HERO_POOL if h.rarity in ["SR", "SSR"]]
+        # Common pool: SR, SSR, and SSR+ heroes only (no UR/UR+)
+        available_heroes = [h for h in HERO_POOL if h.rarity in ["SR", "SSR", "SSR+"]]
         rates = GACHA_RATES_COMMON
+        pity_threshold = PITY_THRESHOLD_COMMON
     
-    # Pity system: guarantee SSR at 50 pulls
-    if pity_counter >= PITY_THRESHOLD:
+    # Pity system: guarantee high tier at threshold
+    if pity_counter >= pity_threshold:
         if is_premium:
+            # Premium pity: weighted chance at SSR, UR, or UR+
             rarities = ["SSR", "UR", "UR+"]
-            weights = [70, 25, 5]  # Weighted towards SSR but can still get UR+
+            weights = [60, 30, 10]  # Better UR/UR+ chances at pity
         else:
-            rarities = ["SSR"]
-            weights = [100]  # Guaranteed SSR in common pool
+            # Common pity: guaranteed SSR or SSR+
+            rarities = ["SSR", "SSR+"]
+            weights = [70, 30]  # SSR+ is rarer even at pity
     else:
         rarities = list(rates.keys())
         weights = list(rates.values())

@@ -522,16 +522,25 @@ GACHA_RATES_COMMON = {
     "SSR+": 3.0,   # 3% - New tier exclusive to common summons
 }
 
-# Premium Summons (crystals) - ALL rarities with better rates (UR/UR+ exclusive)
+# Premium Summons (crystals) - UR is highest tier here (UR+ removed)
 GACHA_RATES_PREMIUM = {
-    "SR": 45.0,   # 45%
+    "SR": 50.0,   # 50%
     "SSR": 40.0,  # 40%
-    "UR": 13.0,   # 13% - Premium exclusive
-    "UR+": 2.0    # 2% - Premium exclusive
+    "UR": 10.0,   # 10% - Premium exclusive (UR+ moved to divine)
+}
+
+# Divine Summons (Divine Essence) - UR+ ONLY
+GACHA_RATES_DIVINE = {
+    "UR+": 100.0  # 100% UR+ only
 }
 
 PITY_THRESHOLD_COMMON = 50   # Guaranteed SSR+ at 50 pulls for common
-PITY_THRESHOLD_PREMIUM = 50  # Guaranteed SSR+ at 50 pulls for premium
+PITY_THRESHOLD_PREMIUM = 50  # Guaranteed UR at 50 pulls for premium
+PITY_THRESHOLD_DIVINE = 40   # Guaranteed UR+ at 40 pulls for divine
+
+# Divine Essence cost per pull
+DIVINE_ESSENCE_COST_SINGLE = 1
+DIVINE_ESSENCE_COST_MULTI = 10
 CRYSTAL_COST_SINGLE = 100
 CRYSTAL_COST_MULTI = 900  # 10 pulls, 100 crystal discount
 COIN_COST_SINGLE = 1000

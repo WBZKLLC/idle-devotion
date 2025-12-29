@@ -3294,38 +3294,72 @@ async def claim_daily_quest(username: str, quest_id: str):
         "reward_amount": reward_amount
     }
 
-# ==================== DAILY LOGIN REWARDS ====================
+# ==================== DAILY LOGIN REWARDS (6 MONTHS - 180 DAYS) ====================
 
-DAILY_LOGIN_REWARDS = [
-    {"day": 1, "reward_type": "coins", "reward_amount": 5000, "bonus": False},
-    {"day": 2, "reward_type": "crystals", "reward_amount": 50, "bonus": False},
-    {"day": 3, "reward_type": "gold", "reward_amount": 3000, "bonus": False},
-    {"day": 4, "reward_type": "coins", "reward_amount": 8000, "bonus": False},
-    {"day": 5, "reward_type": "crystals", "reward_amount": 100, "bonus": False},
-    {"day": 6, "reward_type": "gold", "reward_amount": 5000, "bonus": False},
-    {"day": 7, "reward_type": "crystals", "reward_amount": 200, "bonus": True},  # Weekly bonus
-    {"day": 8, "reward_type": "coins", "reward_amount": 10000, "bonus": False},
-    {"day": 9, "reward_type": "crystals", "reward_amount": 80, "bonus": False},
-    {"day": 10, "reward_type": "gold", "reward_amount": 8000, "bonus": False},
-    {"day": 11, "reward_type": "coins", "reward_amount": 12000, "bonus": False},
-    {"day": 12, "reward_type": "crystals", "reward_amount": 120, "bonus": False},
-    {"day": 13, "reward_type": "gold", "reward_amount": 10000, "bonus": False},
-    {"day": 14, "reward_type": "crystals", "reward_amount": 300, "bonus": True},  # 2-week bonus
-    {"day": 15, "reward_type": "coins", "reward_amount": 15000, "bonus": False},
-    {"day": 16, "reward_type": "crystals", "reward_amount": 100, "bonus": False},
-    {"day": 17, "reward_type": "gold", "reward_amount": 12000, "bonus": False},
-    {"day": 18, "reward_type": "coins", "reward_amount": 18000, "bonus": False},
-    {"day": 19, "reward_type": "crystals", "reward_amount": 150, "bonus": False},
-    {"day": 20, "reward_type": "gold", "reward_amount": 15000, "bonus": False},
-    {"day": 21, "reward_type": "crystals", "reward_amount": 400, "bonus": True},  # 3-week bonus
-    {"day": 22, "reward_type": "coins", "reward_amount": 20000, "bonus": False},
-    {"day": 23, "reward_type": "crystals", "reward_amount": 180, "bonus": False},
-    {"day": 24, "reward_type": "gold", "reward_amount": 18000, "bonus": False},
-    {"day": 25, "reward_type": "coins", "reward_amount": 25000, "bonus": False},
-    {"day": 26, "reward_type": "crystals", "reward_amount": 200, "bonus": False},
-    {"day": 27, "reward_type": "gold", "reward_amount": 20000, "bonus": False},
-    {"day": 28, "reward_type": "divine_essence", "reward_amount": 10, "bonus": True},  # Monthly bonus - Divine Essence!
-]
+def generate_daily_login_rewards():
+    """Generate 180 days of login rewards with escalating values"""
+    rewards = []
+    
+    for day in range(1, 181):
+        month = (day - 1) // 30 + 1  # 1-6
+        day_in_month = (day - 1) % 30 + 1  # 1-30
+        
+        # Determine if this is a bonus day
+        is_weekly_bonus = day % 7 == 0
+        is_monthly_bonus = day % 30 == 0
+        is_90_day_milestone = day == 90
+        is_180_day_milestone = day == 180
+        is_bonus = is_weekly_bonus or is_monthly_bonus or is_90_day_milestone or is_180_day_milestone
+        
+        # Base multiplier increases each month
+        month_multiplier = 1 + (month - 1) * 0.5  # 1.0, 1.5, 2.0, 2.5, 3.0, 3.5
+        
+        # Determine reward type and amount based on day pattern
+        if is_180_day_milestone:
+            # Final reward - massive divine essence
+            reward_type = "divine_essence"
+            reward_amount = 50
+        elif is_90_day_milestone:
+            # 3-month milestone - large divine essence
+            reward_type = "divine_essence"
+            reward_amount = 25
+        elif is_monthly_bonus:
+            # Monthly bonus (day 30, 60, 90, 120, 150, 180) - divine essence
+            reward_type = "divine_essence"
+            reward_amount = int(10 * month_multiplier)
+        elif is_weekly_bonus:
+            # Weekly bonus (day 7, 14, 21, 28, etc.) - crystals
+            reward_type = "crystals"
+            reward_amount = int(200 * month_multiplier)
+        else:
+            # Regular days - cycle through coins, crystals, gold
+            day_cycle = day_in_month % 5
+            if day_cycle == 1:
+                reward_type = "coins"
+                reward_amount = int(5000 * month_multiplier * (1 + day_in_month * 0.05))
+            elif day_cycle == 2:
+                reward_type = "crystals"
+                reward_amount = int(50 * month_multiplier * (1 + day_in_month * 0.03))
+            elif day_cycle == 3:
+                reward_type = "gold"
+                reward_amount = int(3000 * month_multiplier * (1 + day_in_month * 0.05))
+            elif day_cycle == 4:
+                reward_type = "coins"
+                reward_amount = int(8000 * month_multiplier * (1 + day_in_month * 0.05))
+            else:  # day_cycle == 0
+                reward_type = "crystals"
+                reward_amount = int(80 * month_multiplier * (1 + day_in_month * 0.03))
+        
+        rewards.append({
+            "day": day,
+            "reward_type": reward_type,
+            "reward_amount": int(reward_amount),
+            "bonus": is_bonus
+        })
+    
+    return rewards
+
+DAILY_LOGIN_REWARDS = generate_daily_login_rewards()
 
 @api_router.get("/login-rewards/{username}")
 async def get_login_rewards(username: str):

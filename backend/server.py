@@ -1429,6 +1429,112 @@ async def purchase_crystals(username: str, package_id: str):
         "new_total_spent": update_dict["total_spent"]
     }
 
+@api_router.get("/store/divine-packages")
+async def get_divine_packages(username: str):
+    """Get Divine Package availability for a user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if monthly reset is needed
+    now = datetime.utcnow()
+    last_reset = user.get("divine_pack_last_reset")
+    
+    # Reset if never reset or if more than 30 days have passed
+    needs_reset = False
+    if last_reset is None:
+        needs_reset = True
+    else:
+        if isinstance(last_reset, str):
+            last_reset = datetime.fromisoformat(last_reset.replace('Z', '+00:00'))
+        days_since_reset = (now - last_reset).days
+        if days_since_reset >= 30:
+            needs_reset = True
+    
+    if needs_reset:
+        await db.users.update_one(
+            {"username": username},
+            {"$set": {
+                "divine_pack_49_purchased": 0,
+                "divine_pack_99_purchased": 0,
+                "divine_pack_last_reset": now
+            }}
+        )
+        user = await db.users.find_one({"username": username})
+    
+    # Calculate days until reset
+    last_reset = user.get("divine_pack_last_reset", now)
+    if isinstance(last_reset, str):
+        last_reset = datetime.fromisoformat(last_reset.replace('Z', '+00:00'))
+    days_until_reset = 30 - (now - last_reset).days
+    
+    return {
+        "packages": DIVINE_PACKAGES,
+        "user_purchases": {
+            "divine_49": {
+                "purchased": user.get("divine_pack_49_purchased", 0),
+                "limit": 3,
+                "remaining": 3 - user.get("divine_pack_49_purchased", 0)
+            },
+            "divine_99": {
+                "purchased": user.get("divine_pack_99_purchased", 0),
+                "limit": 3,
+                "remaining": 3 - user.get("divine_pack_99_purchased", 0)
+            }
+        },
+        "days_until_reset": max(0, days_until_reset),
+        "user_divine_essence": user.get("divine_essence", 0)
+    }
+
+@api_router.post("/store/purchase-divine")
+async def purchase_divine_package(username: str, package_id: str):
+    """Purchase Divine Package (limited 3 per month per tier)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if package_id not in DIVINE_PACKAGES:
+        raise HTTPException(status_code=404, detail="Package not found")
+    
+    package = DIVINE_PACKAGES[package_id]
+    
+    # Check monthly limit
+    purchase_field = f"divine_pack_{'49' if package_id == 'divine_49' else '99'}_purchased"
+    current_purchases = user.get(purchase_field, 0)
+    
+    if current_purchases >= 3:
+        raise HTTPException(status_code=400, detail="Monthly limit reached for this package")
+    
+    # Award resources
+    update_dict = {
+        "divine_essence": user.get("divine_essence", 0) + package["divine_essence"],
+        "crystals": user.get("crystals", 0) + package["crystals"],
+        "total_spent": user.get("total_spent", 0.0) + package["price_usd"],
+        purchase_field: current_purchases + 1
+    }
+    
+    # Recalculate VIP level
+    new_vip_level = calculate_vip_level(update_dict["total_spent"])
+    update_dict["vip_level"] = new_vip_level
+    update_dict["avatar_frame"] = get_avatar_frame(new_vip_level)
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": update_dict}
+    )
+    
+    return {
+        "package_id": package_id,
+        "package_name": package["display_name"],
+        "price_usd": package["price_usd"],
+        "divine_essence_received": package["divine_essence"],
+        "crystals_received": package["crystals"],
+        "new_divine_essence_total": update_dict["divine_essence"],
+        "new_crystal_total": update_dict["crystals"],
+        "new_vip_level": new_vip_level,
+        "purchases_remaining": 3 - update_dict[purchase_field]
+    }
+
 @api_router.get("/user/{username}/cr")
 async def get_character_rating(username: str):
     """Calculate and return user's Character Rating (CR)"""

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,12 +18,15 @@ import { router } from 'expo-router';
 import Sidebar from '../components/Sidebar';
 
 export default function HomeScreen() {
-  const { user, initUser, login, claimIdleRewards, isLoading, fetchCR } = useGameStore();
+  const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();
   const [username, setUsername] = useState('');
   const [isInitializing, setIsInitializing] = useState(true);
-  const [idleRewards, setIdleRewards] = useState<any>(null);
+  const [idleStatus, setIdleStatus] = useState<any>(null);
+  const [idleTimer, setIdleTimer] = useState('00:00:00');
+  const [isClaiming, setIsClaiming] = useState(false);
   const [cr, setCR] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     checkExistingUser();

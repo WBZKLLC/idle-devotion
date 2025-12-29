@@ -11,7 +11,7 @@ from datetime import datetime
 import sys
 
 # Configuration
-BASE_URL = "https://angels-and-demons.preview.emergentagent.com/api"
+BASE_URL = "https://angel-idle.preview.emergentagent.com/api"
 TEST_USERNAME = "testplayer"
 
 class GachaGameTester:

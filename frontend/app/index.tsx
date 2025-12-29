@@ -315,85 +315,43 @@ export default function HomeScreen() {
           </LinearGradient>
 
           {/* Quick Actions */}
-          <View style={styles.actionsContainer}>
+          <View style={styles.quickLinksContainer}>
             <TouchableOpacity 
-              style={styles.actionButtonWrapper}
-              onPress={() => router.push('/story')}
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/heroes')}
             >
               <LinearGradient
-                colors={['#9370DB', '#8B008B']}
-                style={styles.actionButton}
+                colors={['#9400D3', '#FF1493']}
+                style={styles.quickLinkGradient}
               >
-                <Ionicons name="map" size={40} color="#FFF" />
-                <Text style={styles.actionText}>Story Mode</Text>
+                <Ionicons name="people" size={24} color="#FFF" />
+                <Text style={styles.quickLinkText}>Heroes</Text>
               </LinearGradient>
             </TouchableOpacity>
-
+            
             <TouchableOpacity 
-              style={styles.actionButtonWrapper}
-              onPress={() => router.push('/summon-hub')}
-            >
-              <LinearGradient
-                colors={['#FF1493', '#FF69B4']}
-                style={styles.actionButton}
-              >
-                <Ionicons name="gift" size={40} color="#FFF" />
-                <Text style={styles.actionText}>Summon</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-
-          {/* Game Modes Grid */}
-          <View style={styles.gameModesContainer}>
-            <TouchableOpacity 
-              style={styles.gameModeButton}
-              onPress={() => router.push('/abyss')}
-            >
-              <LinearGradient
-                colors={['#FF6347', '#FF1493']}
-                style={styles.gameModeGradient}
-              >
-                <Ionicons name="flame" size={28} color="#FFF" />
-                <Text style={styles.gameModeText}>Abyss</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.gameModeButton}
-              onPress={() => router.push('/arena')}
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/leaderboard')}
             >
               <LinearGradient
                 colors={['#FFD700', '#FFA500']}
-                style={styles.gameModeGradient}
+                style={styles.quickLinkGradient}
               >
-                <Ionicons name="trophy" size={28} color="#FFF" />
-                <Text style={styles.gameModeText}>Arena</Text>
+                <Ionicons name="podium" size={24} color="#FFF" />
+                <Text style={styles.quickLinkText}>Ranks</Text>
               </LinearGradient>
             </TouchableOpacity>
-
+            
             <TouchableOpacity 
-              style={styles.gameModeButton}
-              onPress={() => router.push('/chat')}
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/store')}
             >
               <LinearGradient
-                colors={['#3498db', '#2980b9']}
-                style={styles.gameModeGradient}
+                colors={['#32CD32', '#00CED1']}
+                style={styles.quickLinkGradient}
               >
-                <Ionicons name="chatbubbles" size={28} color="#FFF" />
-                <Text style={styles.gameModeText}>Chat</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.gameModeButton}
-              onPress={() => router.push('/profile')}
-            >
-              <LinearGradient
-                colors={['#9400D3', '#4B0082']}
-                style={styles.gameModeGradient}
-              >
-                <Ionicons name="person" size={28} color="#FFF" />
-                <Text style={styles.gameModeText}>Profile</Text>
+                <Ionicons name="cart" size={24} color="#FFF" />
+                <Text style={styles.quickLinkText}>Store</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

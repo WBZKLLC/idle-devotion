@@ -168,6 +168,28 @@ CRYSTAL_PACKAGES = {
     }
 }
 
+# Divine Packages (Limited to 3 per month each)
+DIVINE_PACKAGES = {
+    "divine_49": {
+        "id": "divine_49",
+        "price_usd": 49.99,
+        "divine_essence": 40,
+        "crystals": 3440,
+        "display_name": "Divine Blessing",
+        "monthly_limit": 3,
+        "description": "40 Divine Essence + 3440 Crystals"
+    },
+    "divine_99": {
+        "id": "divine_99",
+        "price_usd": 99.99,
+        "divine_essence": 75,
+        "crystals": 6880,
+        "display_name": "Divine Ascension",
+        "monthly_limit": 3,
+        "description": "75 Divine Essence + 6880 Crystals"
+    }
+}
+
 class MarqueeNotification(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     server_id: str

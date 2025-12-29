@@ -511,19 +511,21 @@ VIP_PACKAGES = {
 # Gacha rates configuration
 # Common Summons (coins) - NO UR/UR+ heroes
 GACHA_RATES_COMMON = {
-    "SR": 70.0,   # 70%
-    "SSR": 30.0,  # 30%
+    "SR": 65.0,    # 65%
+    "SSR": 32.0,   # 32%
+    "SSR+": 3.0,   # 3% - New tier exclusive to common summons
 }
 
-# Premium Summons (crystals) - ALL rarities with better rates
+# Premium Summons (crystals) - ALL rarities with better rates (UR/UR+ exclusive)
 GACHA_RATES_PREMIUM = {
     "SR": 45.0,   # 45%
     "SSR": 40.0,  # 40%
-    "UR": 13.0,   # 13%
-    "UR+": 2.0    # 2%
+    "UR": 13.0,   # 13% - Premium exclusive
+    "UR+": 2.0    # 2% - Premium exclusive
 }
 
-PITY_THRESHOLD = 50
+PITY_THRESHOLD_COMMON = 50   # Guaranteed SSR+ at 50 pulls for common
+PITY_THRESHOLD_PREMIUM = 50  # Guaranteed SSR+ at 50 pulls for premium
 CRYSTAL_COST_SINGLE = 100
 CRYSTAL_COST_MULTI = 900  # 10 pulls, 100 crystal discount
 COIN_COST_SINGLE = 1000

@@ -118,7 +118,7 @@ class GachaGameTester:
             reward_data = response.json()
             
             # Verify reward structure
-            required_fields = ["coins", "gold", "gems", "free_summons", "day_count"]
+            required_fields = ["coins", "gold", "crystals", "free_summons", "day_count"]
             missing_fields = [field for field in required_fields if field not in reward_data]
             
             if not missing_fields:

@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -24,9 +24,9 @@ const COLORS = {
 };
 
 export default function HomeScreen() {
-  const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser, _hasHydrated } = useGameStore();
+  const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();
+  const hydrated = useHydration();
   const [username, setUsername] = useState('');
-  const [isInitializing, setIsInitializing] = useState(true);
   const [idleStatus, setIdleStatus] = useState<any>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [cr, setCR] = useState(0);

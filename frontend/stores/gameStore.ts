@@ -76,13 +76,18 @@ interface GameState {
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-  user: null,
-  userHeroes: [],
-  allHeroes: [],
-  isLoading: false,
-  error: null,
+      user: null,
+      userHeroes: [],
+      allHeroes: [],
+      isLoading: false,
+      error: null,
+      _hasHydrated: false,
 
-  initUser: async (username: string) => {
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state });
+      },
+
+      initUser: async (username: string) => {
     set({ isLoading: true, error: null });
     try {
       // Try to get existing user

@@ -78,10 +78,9 @@ export default function LoginRewardsScreen() {
       
       if (response.ok) {
         const result = await response.json();
-        Alert.alert(
-          result.is_bonus ? '🎉 Bonus Reward!' : 'Reward Claimed!',
-          `+${result.reward_amount.toLocaleString()} ${getRewardName(result.reward_type)}`
-        );
+        setClaimedReward(result);
+        setShowClaimModal(true);
+        playClaimAnimation();
         loadRewards();
         fetchUser();
       } else {
@@ -93,6 +92,51 @@ export default function LoginRewardsScreen() {
     } finally {
       setIsClaiming(false);
     }
+  };
+
+  const playClaimAnimation = () => {
+    // Reset animations
+    scaleAnim.setValue(0);
+    rotateAnim.setValue(0);
+    fadeAnim.setValue(0);
+    
+    // Play animations
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeClaimModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowClaimModal(false);
+      setClaimedReward(null);
+    });
+  };
+
+  const rotateInterpolate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
   };
 
   const getRewardIcon = (type: string) => {

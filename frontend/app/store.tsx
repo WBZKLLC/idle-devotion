@@ -76,7 +76,10 @@ export default function StoreScreen() {
       const packagesData = await packagesRes.json();
       const vipData = await vipRes.json();
       
-      setPackages(packagesData);
+      // Convert packages object to array
+      const packagesObj = packagesData.packages || packagesData;
+      const packagesArray = Object.values(packagesObj) as CrystalPackage[];
+      setPackages(packagesArray);
       setVipInfo(vipData);
     } catch (error) {
       console.error('Failed to load store data:', error);

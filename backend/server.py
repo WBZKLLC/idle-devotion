@@ -196,6 +196,12 @@ class PullRequest(BaseModel):
     pull_type: str  # "single" or "multi"
     currency_type: str  # "crystals" or "coins"
 
+class AbyssBattleRequest(BaseModel):
+    team_ids: List[str] = []  # List of team IDs
+
+class ArenaBattleRequest(BaseModel):
+    team_id: str = "default"  # Team ID for arena battle
+
 class IdleRewards(BaseModel):
     gold_earned: int
     time_away: int  # seconds

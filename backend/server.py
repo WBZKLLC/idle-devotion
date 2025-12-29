@@ -297,8 +297,16 @@ class Team(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     name: str
-    hero_ids: List[str] = []  # Max 6 heroes
+    # Hero positions: slots 1-3 are front line, 4-6 are back line
+    slot_1: Optional[str] = None  # Front Left
+    slot_2: Optional[str] = None  # Front Center
+    slot_3: Optional[str] = None  # Front Right
+    slot_4: Optional[str] = None  # Back Left
+    slot_5: Optional[str] = None  # Back Center
+    slot_6: Optional[str] = None  # Back Right
+    hero_ids: List[str] = []  # Legacy - all hero IDs
     is_active: bool = False
+    team_power: int = 0  # Cached team CR
 
 class GachaResult(BaseModel):
     heroes: List[UserHero]

@@ -393,12 +393,30 @@ export default function HomeScreen() {
                   <Text style={styles.statValue}>{user.pity_counter_premium || 0}/50</Text>
                   <View style={styles.pityBar}>
                     <LinearGradient
-                      colors={['#FF1493', '#9400D3']}
+                      colors={['#9400D3', '#FF1493']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={[
                         styles.pityFill,
                         { width: `${((user.pity_counter_premium || 0) / 50) * 100}%` },
+                      ]}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>✨ Divine Pity</Text>
+                <View style={styles.pityContainer}>
+                  <Text style={styles.statValue}>{user.pity_counter_divine || 0}/40</Text>
+                  <View style={styles.pityBar}>
+                    <LinearGradient
+                      colors={['#FFD700', '#FF1493']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[
+                        styles.pityFill,
+                        { width: `${((user.pity_counter_divine || 0) / 40) * 100}%` },
                       ]}
                     />
                   </View>

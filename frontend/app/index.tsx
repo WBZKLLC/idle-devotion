@@ -870,4 +870,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
   },
+  quickLinksContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  quickLinkButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  quickLinkGradient: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    gap: 4,
+  },
+  quickLinkText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
 });

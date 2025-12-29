@@ -148,8 +148,6 @@ export default function HomeScreen() {
   const handleLogin = async () => {
     try {
       const loginReward = await login();
-      const rewards = await claimIdleRewards();
-      setIdleRewards(rewards);
       
       if (loginReward.free_summons > 0 || loginReward.gems > 0) {
         Alert.alert(

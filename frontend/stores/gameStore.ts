@@ -92,18 +92,38 @@ export const useGameStore = create<GameState>((set, get) => ({
         return;
       }
       
-      const savedUsername = await AsyncStorage.getItem('divine_heroes_username');
+      console.log('restoreSession: starting');
+      
+      // Try localStorage first (works better on web)
+      let savedUsername = null;
+      try {
+        savedUsername = window.localStorage.getItem('divine_heroes_username');
+        console.log('restoreSession: localStorage username=', savedUsername);
+      } catch (e) {
+        // Fall back to AsyncStorage for native
+        savedUsername = await AsyncStorage.getItem('divine_heroes_username');
+        console.log('restoreSession: AsyncStorage username=', savedUsername);
+      }
+      
       if (savedUsername) {
         // Try to fetch user data
         try {
+          console.log('restoreSession: fetching user data');
           const response = await axios.get(`${BACKEND_URL}/api/user/${savedUsername}`);
+          console.log('restoreSession: user found', response.data.username);
           set({ user: response.data, isHydrated: true });
         } catch (error) {
           // User doesn't exist anymore, clear storage
-          await AsyncStorage.removeItem('divine_heroes_username');
+          console.log('restoreSession: user not found, clearing storage');
+          try {
+            window.localStorage.removeItem('divine_heroes_username');
+          } catch (e) {
+            await AsyncStorage.removeItem('divine_heroes_username');
+          }
           set({ isHydrated: true });
         }
       } else {
+        console.log('restoreSession: no saved username');
         set({ isHydrated: true });
       }
     } catch (error) {

@@ -358,30 +358,30 @@ export default function StoreScreen() {
                   <View style={styles.vipHeader}>
                     <View>
                       <Text style={styles.vipTitle}>VIP Level {vipInfo.current_vip_level}</Text>
-                      <Text style={styles.vipSpent}>Total Spent: ${vipInfo.total_spent.toFixed(2)}</Text>
+                      <Text style={styles.vipSpent}>Total Spent: ${vipInfo.total_spent?.toFixed(2) || '0.00'}</Text>
                     </View>
-                    <View style={[styles.avatarFrame, { borderColor: getFrameColor(vipInfo.avatar_frame) }]}>
-                      <Ionicons name="person" size={30} color={getFrameColor(vipInfo.avatar_frame)} />
+                    <View style={[styles.avatarFrame, { borderColor: getFrameColor(vipInfo.current_avatar_frame || 'default') }]}>
+                      <Ionicons name="person" size={30} color={getFrameColor(vipInfo.current_avatar_frame || 'default')} />
                     </View>
                   </View>
                   
                   <View style={styles.vipBenefits}>
                     <View style={styles.benefitRow}>
                       <Text style={styles.benefitLabel}>⏰ Idle Cap</Text>
-                      <Text style={styles.benefitValue}>{vipInfo.current_idle_hours}h</Text>
+                      <Text style={styles.benefitValue}>{vipInfo.current_idle_hours || 8}h</Text>
                     </View>
                     <View style={styles.benefitRow}>
                       <Text style={styles.benefitLabel}>💰 Gold Rate</Text>
-                      <Text style={styles.benefitValue}>{(vipInfo.idle_gold_rate * 100).toFixed(0)}%</Text>
+                      <Text style={styles.benefitValue}>{(vipInfo.current_idle_rate || 100).toFixed(0)}%</Text>
                     </View>
                     <View style={styles.benefitRow}>
                       <Text style={styles.benefitLabel}>⚡ Active Uses</Text>
-                      <Text style={styles.benefitValue}>{vipInfo.active_uses_per_day}/day</Text>
+                      <Text style={styles.benefitValue}>{VIP_TIERS[vipInfo.current_vip_level]?.active_uses || 1}/day</Text>
                     </View>
                     <View style={styles.benefitRow}>
                       <Text style={styles.benefitLabel}>🖼️ Frame</Text>
-                      <Text style={[styles.benefitValue, { color: getFrameColor(vipInfo.avatar_frame) }]}>
-                        {vipInfo.avatar_frame?.toUpperCase()}
+                      <Text style={[styles.benefitValue, { color: getFrameColor(vipInfo.current_avatar_frame || 'default') }]}>
+                        {(vipInfo.current_avatar_frame || 'DEFAULT').toUpperCase()}
                       </Text>
                     </View>
                   </View>
@@ -389,13 +389,13 @@ export default function StoreScreen() {
                   {vipInfo.current_vip_level < 15 && (
                     <View style={styles.progressSection}>
                       <Text style={styles.progressLabel}>
-                        Next VIP: ${vipInfo.next_vip_spend?.toFixed(2) || '0'}
+                        Next VIP: ${vipInfo.spend_needed_for_next?.toFixed(2) || '0'} more
                       </Text>
                       <View style={styles.progressBar}>
                         <View 
                           style={[
                             styles.progressFill,
-                            { width: `${Math.min((vipInfo.total_spent / (vipInfo.next_vip_spend || 1)) * 100, 100)}%` }
+                            { width: `${Math.min(((vipInfo.total_spent || 0) / ((vipInfo.total_spent || 0) + (vipInfo.spend_needed_for_next || 1))) * 100, 100)}%` }
                           ]} 
                         />
                       </View>

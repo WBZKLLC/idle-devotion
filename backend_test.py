@@ -214,7 +214,7 @@ class GachaGameTester:
             
             # Verify result structure
             if ("heroes" in result and "new_pity_counter" in result and 
-                "gems_spent" in result and result["gems_spent"] == 100):
+                "crystals_spent" in result and result["crystals_spent"] == 100):
                 
                 heroes = result["heroes"]
                 if len(heroes) == 1:

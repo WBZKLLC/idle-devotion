@@ -106,8 +106,8 @@ export default function HomeScreen() {
 
   const loadCR = async () => {
     try {
-      const crValue = await fetchCR();
-      setCR(crValue);
+      const crData = await fetchCR();
+      setCR(crData?.cr || 0);
     } catch (error) { console.error('CR error:', error); }
   };
 

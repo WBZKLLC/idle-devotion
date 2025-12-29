@@ -2779,6 +2779,521 @@ async def get_user_guild(username: str):
     
     return guild_data
 
+# ==================== HERO UPGRADE SYSTEM ====================
+
+class HeroUpgradeRequest(BaseModel):
+    upgrade_type: str  # "level", "star", "awakening", "skill"
+    amount: int = 1
+    skill_id: Optional[str] = None
+
+@api_router.get("/hero/{user_hero_id}/details")
+async def get_hero_details(user_hero_id: str, username: str):
+    """Get detailed hero info including skills and equipment"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
+    if not user_hero:
+        raise HTTPException(status_code=404, detail="Hero not found")
+    
+    # Get base hero data
+    hero_data = await db.heroes.find_one({"id": user_hero["hero_id"]})
+    
+    # Calculate current stats based on upgrades
+    level_mult = 1 + (user_hero.get("level", 1) - 1) * 0.05
+    star_mult = 1 + user_hero.get("stars", 0) * 0.1
+    awakening_mult = 1 + user_hero.get("awakening_level", 0) * 0.2
+    total_mult = level_mult * star_mult * awakening_mult
+    
+    result = convert_objectid(user_hero)
+    result["hero_data"] = convert_objectid(hero_data) if hero_data else None
+    result["calculated_stats"] = {
+        "hp": int(hero_data["base_hp"] * total_mult) if hero_data else 0,
+        "atk": int(hero_data["base_atk"] * total_mult) if hero_data else 0,
+        "def": int(hero_data["base_def"] * total_mult) if hero_data else 0,
+        "speed": hero_data.get("base_speed", 100) if hero_data else 100,
+    }
+    result["exp_to_next_level"] = get_exp_required(user_hero.get("level", 1) + 1)
+    result["level_up_cost"] = get_level_up_cost(user_hero.get("level", 1))
+    result["shards_for_next_star"] = STAR_SHARD_COSTS.get(user_hero.get("stars", 0) + 1, 999)
+    
+    return result
+
+@api_router.post("/hero/{user_hero_id}/level-up")
+async def level_up_hero(user_hero_id: str, username: str, levels: int = 1):
+    """Level up a hero using gold"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
+    if not user_hero:
+        raise HTTPException(status_code=404, detail="Hero not found")
+    
+    current_level = user_hero.get("level", 1)
+    max_level = user_hero.get("max_level", 100)
+    
+    if current_level >= max_level:
+        raise HTTPException(status_code=400, detail="Hero is at max level")
+    
+    # Calculate total cost
+    total_cost = 0
+    for i in range(levels):
+        if current_level + i >= max_level:
+            break
+        total_cost += get_level_up_cost(current_level + i)
+    
+    if user["gold"] < total_cost:
+        raise HTTPException(status_code=400, detail=f"Not enough gold. Need {total_cost}")
+    
+    new_level = min(current_level + levels, max_level)
+    
+    # Update hero and user
+    await db.user_heroes.update_one(
+        {"id": user_hero_id},
+        {"$set": {"level": new_level}}
+    )
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"gold": -total_cost}}
+    )
+    
+    return {
+        "success": True,
+        "new_level": new_level,
+        "gold_spent": total_cost,
+        "remaining_gold": user["gold"] - total_cost
+    }
+
+@api_router.post("/hero/{user_hero_id}/promote-star")
+async def promote_hero_star(user_hero_id: str, username: str):
+    """Promote hero to next star using shards (duplicates)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
+    if not user_hero:
+        raise HTTPException(status_code=404, detail="Hero not found")
+    
+    current_stars = user_hero.get("stars", 0)
+    if current_stars >= 6:
+        raise HTTPException(status_code=400, detail="Hero is at max stars")
+    
+    shards_needed = STAR_SHARD_COSTS.get(current_stars + 1, 999)
+    current_shards = user_hero.get("duplicates", 0)
+    
+    if current_shards < shards_needed:
+        raise HTTPException(status_code=400, detail=f"Need {shards_needed} shards, have {current_shards}")
+    
+    # Update hero
+    await db.user_heroes.update_one(
+        {"id": user_hero_id},
+        {
+            "$set": {"stars": current_stars + 1},
+            "$inc": {"duplicates": -shards_needed}
+        }
+    )
+    
+    return {
+        "success": True,
+        "new_stars": current_stars + 1,
+        "shards_used": shards_needed,
+        "remaining_shards": current_shards - shards_needed
+    }
+
+@api_router.post("/hero/{user_hero_id}/awaken")
+async def awaken_hero(user_hero_id: str, username: str):
+    """Awaken hero to unlock max potential"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
+    if not user_hero:
+        raise HTTPException(status_code=404, detail="Hero not found")
+    
+    current_awakening = user_hero.get("awakening_level", 0)
+    if current_awakening >= 5:
+        raise HTTPException(status_code=400, detail="Hero is fully awakened")
+    
+    # Check requirements
+    cost = AWAKENING_COSTS.get(current_awakening + 1)
+    if not cost:
+        raise HTTPException(status_code=400, detail="Invalid awakening level")
+    
+    shards_needed = cost["shards"]
+    gold_needed = cost["gold"]
+    
+    if user_hero.get("duplicates", 0) < shards_needed:
+        raise HTTPException(status_code=400, detail=f"Need {shards_needed} shards")
+    if user["gold"] < gold_needed:
+        raise HTTPException(status_code=400, detail=f"Need {gold_needed} gold")
+    
+    # Update hero and user
+    await db.user_heroes.update_one(
+        {"id": user_hero_id},
+        {
+            "$set": {"awakening_level": current_awakening + 1},
+            "$inc": {"duplicates": -shards_needed}
+        }
+    )
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"gold": -gold_needed}}
+    )
+    
+    return {
+        "success": True,
+        "new_awakening_level": current_awakening + 1,
+        "shards_used": shards_needed,
+        "gold_used": gold_needed
+    }
+
+# ==================== TEAM BUILDER SYSTEM ====================
+
+class TeamSlotUpdate(BaseModel):
+    slot_1: Optional[str] = None
+    slot_2: Optional[str] = None
+    slot_3: Optional[str] = None
+    slot_4: Optional[str] = None
+    slot_5: Optional[str] = None
+    slot_6: Optional[str] = None
+
+@api_router.post("/team/create-full")
+async def create_team_full(username: str, team_name: str, slots: TeamSlotUpdate):
+    """Create a new team with positioned heroes"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Calculate team power
+    slot_heroes = [slots.slot_1, slots.slot_2, slots.slot_3, slots.slot_4, slots.slot_5, slots.slot_6]
+    hero_ids = [h for h in slot_heroes if h]
+    
+    team_power = 0
+    for hero_id in hero_ids:
+        hero = await db.user_heroes.find_one({"id": hero_id, "user_id": user["id"]})
+        if hero:
+            hero_data = await db.heroes.find_one({"id": hero["hero_id"]})
+            if hero_data:
+                level_mult = 1 + (hero.get("level", 1) - 1) * 0.05
+                star_mult = 1 + hero.get("stars", 0) * 0.1
+                power = (hero_data["base_hp"] + hero_data["base_atk"] * 3 + hero_data["base_def"] * 2) * level_mult * star_mult
+                team_power += int(power)
+    
+    team = Team(
+        user_id=user["id"],
+        name=team_name,
+        slot_1=slots.slot_1,
+        slot_2=slots.slot_2,
+        slot_3=slots.slot_3,
+        slot_4=slots.slot_4,
+        slot_5=slots.slot_5,
+        slot_6=slots.slot_6,
+        hero_ids=hero_ids,
+        team_power=team_power
+    )
+    
+    await db.teams.insert_one(team.dict())
+    return convert_objectid(team.dict())
+
+@api_router.put("/team/{team_id}/slots")
+async def update_team_slots(team_id: str, username: str, slots: TeamSlotUpdate):
+    """Update team hero positions"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    # Calculate new team power
+    slot_heroes = [slots.slot_1, slots.slot_2, slots.slot_3, slots.slot_4, slots.slot_5, slots.slot_6]
+    hero_ids = [h for h in slot_heroes if h]
+    
+    team_power = 0
+    for hero_id in hero_ids:
+        hero = await db.user_heroes.find_one({"id": hero_id, "user_id": user["id"]})
+        if hero:
+            hero_data = await db.heroes.find_one({"id": hero["hero_id"]})
+            if hero_data:
+                level_mult = 1 + (hero.get("level", 1) - 1) * 0.05
+                star_mult = 1 + hero.get("stars", 0) * 0.1
+                power = (hero_data["base_hp"] + hero_data["base_atk"] * 3 + hero_data["base_def"] * 2) * level_mult * star_mult
+                team_power += int(power)
+    
+    await db.teams.update_one(
+        {"id": team_id},
+        {"$set": {
+            "slot_1": slots.slot_1,
+            "slot_2": slots.slot_2,
+            "slot_3": slots.slot_3,
+            "slot_4": slots.slot_4,
+            "slot_5": slots.slot_5,
+            "slot_6": slots.slot_6,
+            "hero_ids": hero_ids,
+            "team_power": team_power
+        }}
+    )
+    
+    updated_team = await db.teams.find_one({"id": team_id})
+    return convert_objectid(updated_team)
+
+@api_router.get("/team/{username}/full")
+async def get_user_teams_full(username: str):
+    """Get all teams with full hero data"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
+    
+    result = []
+    for team in teams:
+        team_data = convert_objectid(team)
+        
+        # Get hero data for each slot
+        for slot_name in ["slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "slot_6"]:
+            hero_id = team.get(slot_name)
+            if hero_id:
+                user_hero = await db.user_heroes.find_one({"id": hero_id})
+                if user_hero:
+                    hero_data = await db.heroes.find_one({"id": user_hero["hero_id"]})
+                    team_data[f"{slot_name}_data"] = {
+                        "user_hero": convert_objectid(user_hero),
+                        "hero_data": convert_objectid(hero_data) if hero_data else None
+                    }
+        
+        result.append(team_data)
+    
+    return result
+
+@api_router.put("/team/{team_id}/set-active")
+async def set_active_team(team_id: str, username: str):
+    """Set a team as the active team"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Deactivate all teams first
+    await db.teams.update_many(
+        {"user_id": user["id"]},
+        {"$set": {"is_active": False}}
+    )
+    
+    # Activate the selected team
+    await db.teams.update_one(
+        {"id": team_id, "user_id": user["id"]},
+        {"$set": {"is_active": True}}
+    )
+    
+    return {"success": True, "active_team_id": team_id}
+
+# ==================== COMBAT SIMULATOR ====================
+
+def calculate_class_advantage(attacker_class: str, defender_class: str) -> float:
+    """Calculate damage multiplier based on class advantage"""
+    advantage = CLASS_ADVANTAGES.get(attacker_class, {})
+    if advantage.get("strong_against") == defender_class:
+        return 1.3  # 30% bonus damage
+    elif advantage.get("weak_against") == defender_class:
+        return 0.7  # 30% less damage
+    return 1.0
+
+def calculate_element_advantage(attacker_element: str, defender_element: str) -> float:
+    """Calculate damage multiplier based on element advantage"""
+    advantage = ELEMENT_ADVANTAGES.get(attacker_element, {})
+    if advantage.get("strong_against") == defender_element:
+        return 1.2  # 20% bonus damage
+    elif advantage.get("weak_against") == defender_element:
+        return 0.8  # 20% less damage
+    return 1.0
+
+@api_router.post("/combat/simulate")
+async def simulate_combat(username: str, enemy_power: int = 1000):
+    """Simulate a combat encounter and return detailed results"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get active team or top heroes
+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
+    
+    if team:
+        hero_ids = [team.get(f"slot_{i}") for i in range(1, 7) if team.get(f"slot_{i}")]
+    else:
+        # Use top 6 heroes by power
+        user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+        hero_powers = []
+        for uh in user_heroes:
+            hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+            if hero_data:
+                level_mult = 1 + (uh.get("level", 1) - 1) * 0.05
+                power = (hero_data["base_hp"] + hero_data["base_atk"] * 3 + hero_data["base_def"] * 2) * level_mult
+                hero_powers.append((uh["id"], power))
+        hero_powers.sort(key=lambda x: x[1], reverse=True)
+        hero_ids = [hp[0] for hp in hero_powers[:6]]
+    
+    # Calculate team stats
+    team_hp = 0
+    team_atk = 0
+    team_def = 0
+    team_speed = 0
+    heroes_in_battle = []
+    
+    for hero_id in hero_ids:
+        user_hero = await db.user_heroes.find_one({"id": hero_id})
+        if user_hero:
+            hero_data = await db.heroes.find_one({"id": user_hero["hero_id"]})
+            if hero_data:
+                level_mult = 1 + (user_hero.get("level", 1) - 1) * 0.05
+                star_mult = 1 + user_hero.get("stars", 0) * 0.1
+                awakening_mult = 1 + user_hero.get("awakening_level", 0) * 0.2
+                total_mult = level_mult * star_mult * awakening_mult
+                
+                hero_hp = int(hero_data["base_hp"] * total_mult)
+                hero_atk = int(hero_data["base_atk"] * total_mult)
+                hero_def = int(hero_data["base_def"] * total_mult)
+                hero_speed = hero_data.get("base_speed", 100)
+                
+                team_hp += hero_hp
+                team_atk += hero_atk
+                team_def += hero_def
+                team_speed += hero_speed
+                
+                heroes_in_battle.append({
+                    "name": hero_data["name"],
+                    "class": hero_data["hero_class"],
+                    "element": hero_data["element"],
+                    "hp": hero_hp,
+                    "atk": hero_atk,
+                    "def": hero_def,
+                    "speed": hero_speed
+                })
+    
+    num_heroes = max(len(heroes_in_battle), 1)
+    team_power = team_hp + team_atk * 3 + team_def * 2
+    
+    # Simple combat simulation
+    # Higher power team has advantage, but random factor matters
+    power_ratio = team_power / max(enemy_power, 1)
+    base_win_chance = min(max(power_ratio * 0.5, 0.1), 0.95)  # 10% to 95%
+    
+    # Add some randomness
+    roll = random.random()
+    victory = roll < base_win_chance
+    
+    # Calculate damage dealt/taken
+    if victory:
+        damage_dealt = int(enemy_power * random.uniform(0.8, 1.2))
+        damage_taken = int(team_hp * random.uniform(0.2, 0.5))
+    else:
+        damage_dealt = int(enemy_power * random.uniform(0.3, 0.6))
+        damage_taken = int(team_hp * random.uniform(0.7, 1.0))
+    
+    return {
+        "victory": victory,
+        "team_power": team_power,
+        "enemy_power": enemy_power,
+        "power_ratio": round(power_ratio, 2),
+        "win_chance": round(base_win_chance * 100, 1),
+        "damage_dealt": damage_dealt,
+        "damage_taken": damage_taken,
+        "heroes_used": heroes_in_battle,
+        "turns_taken": random.randint(5, 15)
+    }
+
+# ==================== DAILY QUEST SYSTEM ====================
+
+DAILY_QUESTS = [
+    {"id": "summon_5", "name": "Summoner", "description": "Perform 5 summons", "target": 5, "reward_type": "crystals", "reward_amount": 50},
+    {"id": "arena_3", "name": "Arena Fighter", "description": "Win 3 Arena battles", "target": 3, "reward_type": "crystals", "reward_amount": 30},
+    {"id": "level_hero", "name": "Trainer", "description": "Level up any hero 10 times", "target": 10, "reward_type": "gold", "reward_amount": 5000},
+    {"id": "collect_idle", "name": "Collector", "description": "Collect idle rewards", "target": 1, "reward_type": "coins", "reward_amount": 2000},
+    {"id": "story_battle", "name": "Adventurer", "description": "Complete 3 story battles", "target": 3, "reward_type": "crystals", "reward_amount": 20},
+]
+
+@api_router.get("/daily-quests/{username}")
+async def get_daily_quests(username: str):
+    """Get daily quest progress for user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get or create daily quest progress
+    today = datetime.utcnow().date().isoformat()
+    progress = await db.daily_quest_progress.find_one({"user_id": user["id"], "date": today})
+    
+    if not progress:
+        progress = {
+            "user_id": user["id"],
+            "date": today,
+            "quests": {q["id"]: {"progress": 0, "claimed": False} for q in DAILY_QUESTS}
+        }
+        await db.daily_quest_progress.insert_one(progress)
+    
+    # Build response with quest details
+    result = []
+    for quest in DAILY_QUESTS:
+        quest_progress = progress["quests"].get(quest["id"], {"progress": 0, "claimed": False})
+        result.append({
+            **quest,
+            "progress": quest_progress["progress"],
+            "claimed": quest_progress["claimed"],
+            "completed": quest_progress["progress"] >= quest["target"]
+        })
+    
+    return result
+
+@api_router.post("/daily-quests/{username}/claim/{quest_id}")
+async def claim_daily_quest(username: str, quest_id: str):
+    """Claim reward for completed daily quest"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    today = datetime.utcnow().date().isoformat()
+    progress = await db.daily_quest_progress.find_one({"user_id": user["id"], "date": today})
+    
+    if not progress:
+        raise HTTPException(status_code=400, detail="No quest progress found")
+    
+    quest = next((q for q in DAILY_QUESTS if q["id"] == quest_id), None)
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    quest_progress = progress["quests"].get(quest_id, {"progress": 0, "claimed": False})
+    
+    if quest_progress["claimed"]:
+        raise HTTPException(status_code=400, detail="Already claimed")
+    
+    if quest_progress["progress"] < quest["target"]:
+        raise HTTPException(status_code=400, detail="Quest not completed")
+    
+    # Grant reward
+    reward_field = quest["reward_type"]
+    reward_amount = quest["reward_amount"]
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {reward_field: reward_amount}}
+    )
+    
+    # Mark as claimed
+    await db.daily_quest_progress.update_one(
+        {"user_id": user["id"], "date": today},
+        {"$set": {f"quests.{quest_id}.claimed": True}}
+    )
+    
+    return {
+        "success": True,
+        "reward_type": reward_field,
+        "reward_amount": reward_amount
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

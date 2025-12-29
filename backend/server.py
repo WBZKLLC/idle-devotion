@@ -1875,24 +1875,29 @@ async def battle_abyss(username: str, level: int, request: AbyssBattleRequest):
     elif level > 200:
         required_teams = 2
     
-    if len(team_ids) != required_teams:
-        raise HTTPException(status_code=400, detail=f"Level {level} requires exactly {required_teams} teams")
-    
     # Get all user heroes
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
     
-    # Collect all heroes from teams
+    # If no teams provided, use all heroes (simplified battle mode)
     all_team_heroes = []
-    for team_id in team_ids:
-        team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
-        if not team:
-            raise HTTPException(status_code=404, detail=f"Team {team_id} not found")
+    if not team_ids or len(team_ids) == 0:
+        # Use all user's heroes
+        all_team_heroes = user_heroes
+    else:
+        if len(team_ids) != required_teams:
+            raise HTTPException(status_code=400, detail=f"Level {level} requires exactly {required_teams} teams")
         
-        team_heroes = [h for h in user_heroes if h["id"] in team.get("hero_ids", [])]
-        all_team_heroes.extend(team_heroes)
-    
-    if len(all_team_heroes) < required_teams * 6:
-        raise HTTPException(status_code=400, detail=f"Not enough heroes. Need {required_teams * 6} heroes in {required_teams} teams")
+        # Collect all heroes from teams
+        for tid in team_ids:
+            team = await db.teams.find_one({"id": tid, "user_id": user["id"]})
+            if not team:
+                raise HTTPException(status_code=404, detail=f"Team {tid} not found")
+            
+            team_heroes = [h for h in user_heroes if h["id"] in team.get("hero_ids", [])]
+            all_team_heroes.extend(team_heroes)
+        
+        if len(all_team_heroes) < required_teams * 6:
+            raise HTTPException(status_code=400, detail=f"Not enough heroes. Need {required_teams * 6} heroes in {required_teams} teams")
     
     # Get player character buffs
     player_char = await db.player_characters.find_one({"user_id": user["id"]})

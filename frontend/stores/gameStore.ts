@@ -138,9 +138,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Try to get existing user
       const response = await axios.get(`${BACKEND_URL}/api/user/${username}`);
       set({ user: response.data, isLoading: false });
-      // Save to storage
+      // Save to storage (both localStorage for web and AsyncStorage for native)
       if (typeof window !== 'undefined') {
-        await AsyncStorage.setItem('divine_heroes_username', username);
+        try {
+          window.localStorage.setItem('divine_heroes_username', username);
+        } catch (e) {
+          await AsyncStorage.setItem('divine_heroes_username', username);
+        }
       }
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -151,7 +155,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({ user: registerResponse.data, isLoading: false });
         // Save to storage
         if (typeof window !== 'undefined') {
-          await AsyncStorage.setItem('divine_heroes_username', username);
+          try {
+            window.localStorage.setItem('divine_heroes_username', username);
+          } catch (e) {
+            await AsyncStorage.setItem('divine_heroes_username', username);
+          }
         }
       } else {
         set({ error: 'Failed to initialize user', isLoading: false });

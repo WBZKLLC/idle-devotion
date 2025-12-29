@@ -14,8 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGameStore } from '../stores/gameStore';
 
-const COMMON_RATES = { "SR": 65, "SSR": 32, "SSR+": 3 };
-const PREMIUM_RATES = { "SR": 50, "SSR": 40, "UR": 10 };
+const COMMON_RATES = { "SR": 90.8, "SSR": 8, "SSR+": 1.2 };
+const PREMIUM_RATES = { "SR": 66.8, "SSR": 32, "UR": 1.2 };
 const DIVINE_RATES = { "UR+": 100 };
 
 export default function SummonHubScreen() {

@@ -250,8 +250,8 @@ class GachaGameTester:
         if response.status_code == 200:
             result = response.json()
             
-            if ("heroes" in result and "gems_spent" in result and 
-                result["gems_spent"] == 900):
+            if ("heroes" in result and "crystals_spent" in result and 
+                result["crystals_spent"] == 900):
                 
                 heroes = result["heroes"]
                 if len(heroes) == 10:

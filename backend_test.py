@@ -237,7 +237,7 @@ class GachaGameTester:
         
         pull_data = {
             "pull_type": "multi",
-            "currency_type": "gems"
+            "currency_type": "crystals"
         }
         
         response = self.make_request("POST", f"/gacha/pull?username={self.username}", 

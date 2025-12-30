@@ -1468,6 +1468,12 @@ async def pull_gacha(username: str, request: PullRequest):
     # Update user with new pity counter
     if summon_type == "divine":
         user.pity_counter_divine = pity_counter
+        # Apply filler rewards from divine summons
+        user.crystals += filler_rewards_collected.get("crystals", 0)
+        user.gold += filler_rewards_collected.get("gold", 0)
+        user.coins += filler_rewards_collected.get("coins", 0)
+        user.divine_essence += filler_rewards_collected.get("divine_essence", 0)
+        user.hero_shards = getattr(user, 'hero_shards', 0) + filler_rewards_collected.get("hero_shards", 0)
     elif summon_type == "premium":
         user.pity_counter_premium = pity_counter
     else:
@@ -1479,8 +1485,14 @@ async def pull_gacha(username: str, request: PullRequest):
         {"$set": user.dict()}
     )
     
+    # Combine heroes and filler rewards for display
+    all_results = pulled_heroes + filler_display_items
+    
     return {
-        "heroes": pulled_heroes,
+        "heroes": all_results,  # Now includes both heroes and filler rewards
+        "pulled_heroes_count": len(pulled_heroes),
+        "filler_rewards_count": len(filler_display_items),
+        "filler_rewards_collected": filler_rewards_collected,
         "new_pity_counter": pity_counter,
         "crystals_spent": crystals_spent,
         "coins_spent": coins_spent,

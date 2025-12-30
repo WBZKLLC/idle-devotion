@@ -93,6 +93,16 @@ export default function ProfileScreen() {
     return num.toLocaleString();
   };
 
+  if (!hydrated) {
+    return (
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={COLORS.gold.primary} />
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>

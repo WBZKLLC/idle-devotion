@@ -159,7 +159,15 @@ class HeroBase(BaseModel):
     position: str = "back"  # "front" or "back"
 
 class Hero(HeroBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: str = ""  # Will be set by __init__ or explicitly
+    
+    def __init__(self, **data):
+        # Generate stable ID based on name and rarity if not provided
+        if not data.get('id') or data.get('id') == '':
+            name = data.get('name', '')
+            rarity = data.get('rarity', '')
+            data['id'] = generate_stable_hero_id(name, rarity)
+        super().__init__(**data)
 
 class Equipment(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

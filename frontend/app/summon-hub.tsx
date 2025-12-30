@@ -202,7 +202,7 @@ export default function SummonHubScreen() {
             </TouchableOpacity>
             <TouchableOpacity style={styles.summonButton} onPress={() => performPull('multi')} disabled={isLoading}>
               <LinearGradient colors={[COLORS.gold.dark, COLORS.gold.darkest]} style={styles.summonButtonGradient}>
-                {isLoading ? <ActivityIndicator color={COLORS.navy.dark} /> : (<><Text style={[styles.summonButtonTitle, { color: COLORS.navy.darkest }]}>x10</Text><View style={styles.costRow}><Ionicons name={selectedBanner === 'divine' ? 'star' : selectedBanner === 'premium' ? 'diamond' : 'cash'} size={14} color={COLORS.navy.dark} /><Text style={[styles.summonButtonCost, { color: COLORS.navy.darkest }]}>{selectedBanner === 'divine' ? '10' : selectedBanner === 'premium' ? '1,000' : '10,000'}</Text></View></>)}
+                {isLoading ? <ActivityIndicator color={COLORS.navy.dark} /> : (<><Text style={[styles.summonButtonTitle, { color: COLORS.navy.darkest }]}>x10</Text><View style={styles.costRow}><Ionicons name={selectedBanner === 'divine' ? 'star' : selectedBanner === 'premium' ? 'diamond' : 'cash'} size={14} color={COLORS.navy.dark} /><Text style={[styles.summonButtonCost, { color: COLORS.navy.darkest }]}>{selectedBanner === 'divine' ? '10' : selectedBanner === 'premium' ? '900' : '9,000'}</Text></View></>)}
               </LinearGradient>
             </TouchableOpacity>
           </View>

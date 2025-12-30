@@ -929,11 +929,19 @@ HERO_POOL = [
 ]
 
 async def init_heroes():
-    """Initialize hero pool in database if not exists"""
+    """Initialize hero pool in database - uses stable IDs to prevent sync issues"""
     for hero in HERO_POOL:
-        existing = await db.heroes.find_one({"name": hero.name})
-        if not existing:
-            await db.heroes.insert_one(hero.dict())
+        # Use upsert to ensure hero data is always in sync with code
+        # The stable ID ensures the same hero always has the same ID
+        await db.heroes.update_one(
+            {"id": hero.id},  # Match by stable ID
+            {"$set": hero.dict()},
+            upsert=True
+        )
+    
+    # Clean up any old heroes that might have random UUIDs
+    valid_ids = [h.id for h in HERO_POOL]
+    await db.heroes.delete_many({"id": {"$nin": valid_ids}})
 
 async def init_islands_and_chapters():
     """Initialize story mode islands and chapters"""

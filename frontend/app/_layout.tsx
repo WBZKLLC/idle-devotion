@@ -158,6 +158,12 @@ export default function Layout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="hero-detail"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

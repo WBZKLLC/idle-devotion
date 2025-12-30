@@ -1,0 +1,52 @@
+{
+  "cli": {
+    "version": ">= 5.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://angel-idle.preview.emergentagent.com",
+        "EXPO_PUBLIC_REVENUECAT_API_KEY": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://angel-idle.preview.emergentagent.com",
+        "EXPO_PUBLIC_REVENUECAT_API_KEY": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://your-production-backend.com",
+        "EXPO_PUBLIC_REVENUECAT_API_KEY": "your_production_api_key"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@email.com",
+        "ascAppId": "your-app-store-connect-app-id"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-services.json"
+      }
+    }
+  }
+}

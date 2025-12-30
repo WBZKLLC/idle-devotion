@@ -2731,7 +2731,8 @@ async def create_guild(username: str, guild_name: str):
     guild = Guild(
         name=guild_name,
         leader_id=user["id"],
-        member_ids=[user["id"]]
+        member_ids=[user["id"]],
+        server_id=user.get("server_id", "server_1")
     )
     
     await db.guilds.insert_one(guild.dict())

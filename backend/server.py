@@ -259,6 +259,7 @@ class User(BaseModel):
     coins: int = 10000  # Regular currency
     gold: int = 5000  # Idle resource
     divine_essence: int = 0  # Ultra-rare currency for UR+ summons
+    hero_shards: int = 0  # Universal hero shards for upgrades
     friendship_points: int = 0  # Friend currency
     pity_counter: int = 0  # Counts towards guaranteed SSR at 50 (common)
     pity_counter_premium: int = 0  # Separate pity for premium summons (UR)

@@ -12,6 +12,15 @@ from datetime import datetime, timedelta
 import random
 from bson import ObjectId
 import re
+import asyncio
+
+# AI Narration setup
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    AI_ENABLED = True
+except ImportError:
+    AI_ENABLED = False
+    print("Warning: emergentintegrations not available, AI narration disabled")
 
 def convert_objectid(obj):
     """Convert ObjectId to string in MongoDB documents"""

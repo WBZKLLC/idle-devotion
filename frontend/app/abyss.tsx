@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Animated,
   Modal,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
@@ -17,14 +18,28 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const COLORS = {
   navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },
   gold: { darkest: '#8b7355', dark: '#b8860b', primary: '#c9a227', medium: '#d4af37', light: '#e6c666' },
   cream: { pure: '#ffffff', soft: '#f8f6f0', dark: '#e8e0d0' },
-  abyss: { purple: '#9b59b6', darkPurple: '#6c3483', red: '#e74c3c' },
+  // Cave dive theme colors
+  cave: {
+    surface: '#4a5568',  // Rocky surface
+    shallow: '#2d3748', // Shallow depths
+    mid: '#1a202c',     // Mid depths
+    deep: '#171923',    // Deep abyss
+    darkest: '#0d0d12', // Deepest void
+    glow: '#48bb78',    // Eerie green glow
+    magma: '#ed8936',   // Magma veins
+    crystal: '#9f7aea', // Crystal formations
+    water: '#4299e1',   // Underground water
+  },
 };
 
 const API_BASE = '/api';
+const MAX_LEVELS = 1000;
 
 export default function AbyssScreen() {
   const router = useRouter();
@@ -43,6 +58,18 @@ export default function AbyssScreen() {
   // Animation refs
   const bossShakeAnim = useRef(new Animated.Value(0)).current;
   const damagePopAnim = useRef(new Animated.Value(0)).current;
+  const depthPulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Ambient glow animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
 
   useEffect(() => {
     if (hydrated && user) {
@@ -115,7 +142,7 @@ export default function AbyssScreen() {
           if (response.data.milestone_reward) {
             Alert.alert(
               '🎉 MILESTONE FIRST CLEAR!',
-              `${response.data.milestone_reward.message}\n\nLevel ${response.data.level} conquered!`
+              `${response.data.milestone_reward.message}\n\nDepth ${response.data.level}m conquered!`
             );
           }
           loadAbyssData();
@@ -136,23 +163,49 @@ export default function AbyssScreen() {
     return num.toLocaleString();
   };
 
+  const getDepthColor = (level: number) => {
+    // Color gradient based on depth
+    if (level <= 100) return COLORS.cave.shallow;
+    if (level <= 300) return COLORS.cave.mid;
+    if (level <= 500) return COLORS.cave.deep;
+    if (level <= 700) return '#1a0a2e'; // Purple deep
+    if (level <= 900) return '#0f0a1a'; // Dark purple
+    return COLORS.cave.darkest;
+  };
+
+  const getDepthZone = (level: number) => {
+    if (level <= 100) return { name: 'Shallow Depths', icon: '🪨' };
+    if (level <= 200) return { name: 'Crystal Caverns', icon: '💎' };
+    if (level <= 300) return { name: 'Magma Tunnels', icon: '🔥' };
+    if (level <= 400) return { name: 'Frozen Abyss', icon: '❄️' };
+    if (level <= 500) return { name: 'Shadow Realm', icon: '👁️' };
+    if (level <= 600) return { name: 'Void Chambers', icon: '🌀' };
+    if (level <= 700) return { name: 'Elder Deep', icon: '🐙' };
+    if (level <= 800) return { name: 'Chaos Core', icon: '💀' };
+    if (level <= 900) return { name: 'Oblivion Gate', icon: '⚡' };
+    return { name: 'The Final Depth', icon: '👑' };
+  };
+
   const getElementColor = (element: string) => {
     const colors: {[key: string]: string} = {
-      Fire: '#e74c3c',
-      Water: '#3498db',
-      Earth: '#8b4513',
-      Wind: '#2ecc71',
-      Light: '#f1c40f',
-      Dark: '#9b59b6',
+      Fire: '#ed8936',
+      Water: '#4299e1',
+      Earth: '#a0522d',
+      Wind: '#48bb78',
+      Light: '#f6e05e',
+      Dark: '#9f7aea',
     };
-    return colors[element] || COLORS.navy.light;
+    return colors[element] || COLORS.cave.glow;
   };
+
+  // Calculate depth percentage for visual indicator
+  const depthPercentage = abyssData ? (abyssData.highest_cleared / MAX_LEVELS) * 100 : 0;
 
   if (!hydrated) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.abyss.darkPurple]} style={styles.container}>
+      <LinearGradient colors={[COLORS.cave.surface, COLORS.cave.deep]} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.abyss.purple} />
+          <ActivityIndicator size="large" color={COLORS.cave.glow} />
         </SafeAreaView>
       </LinearGradient>
     );
@@ -160,7 +213,7 @@ export default function AbyssScreen() {
 
   if (!user) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.abyss.darkPurple]} style={styles.container}>
+      <LinearGradient colors={[COLORS.cave.surface, COLORS.cave.deep]} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
           <Text style={styles.errorText}>Please login first</Text>
         </SafeAreaView>
@@ -168,19 +221,66 @@ export default function AbyssScreen() {
     );
   }
 
+  const currentZone = abyssData ? getDepthZone(abyssData.current_level || 1) : { name: 'Surface', icon: '🏔️' };
+
   return (
-    <LinearGradient colors={[COLORS.navy.darkest, COLORS.abyss.darkPurple, COLORS.navy.dark]} style={styles.container}>
+    <LinearGradient 
+      colors={[
+        COLORS.cave.surface, 
+        getDepthColor(abyssData?.current_level || 1),
+        COLORS.cave.darkest
+      ]} 
+      style={styles.container}
+    >
       <SafeAreaView style={styles.container}>
-        {/* Header */}
+        {/* Header with Depth Meter */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>⚔️ The Abyss</Text>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelBadgeText}>
-              {abyssData?.highest_cleared || 0}/1000
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>⛏️ The Abyss</Text>
+            <Text style={styles.zoneText}>{currentZone.icon} {currentZone.name}</Text>
+          </View>
+          <View style={styles.depthBadge}>
+            <Ionicons name="chevron-down-outline" size={14} color={COLORS.cave.glow} />
+            <Text style={styles.depthBadgeText}>
+              {abyssData?.current_level || 1}m
             </Text>
+          </View>
+        </View>
+
+        {/* Depth Meter Visual */}
+        <View style={styles.depthMeterContainer}>
+          <View style={styles.depthMeterTrack}>
+            <Animated.View 
+              style={[
+                styles.depthMeterFill,
+                { 
+                  height: `${depthPercentage}%`,
+                  backgroundColor: COLORS.cave.glow,
+                }
+              ]} 
+            />
+            {/* Depth markers */}
+            {[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000].map((marker, idx) => (
+              <View 
+                key={marker} 
+                style={[
+                  styles.depthMarker,
+                  { bottom: `${(marker / MAX_LEVELS) * 100}%` }
+                ]}
+              >
+                <View style={[
+                  styles.depthMarkerDot,
+                  (abyssData?.highest_cleared || 0) >= marker && styles.depthMarkerDotCleared
+                ]} />
+              </View>
+            ))}
+          </View>
+          <View style={styles.depthMeterLabels}>
+            <Text style={styles.depthLabel}>Surface</Text>
+            <Text style={styles.depthLabel}>1000m</Text>
           </View>
         </View>
 
@@ -190,26 +290,29 @@ export default function AbyssScreen() {
             style={[styles.tab, activeTab === 'battle' && styles.tabActive]}
             onPress={() => setActiveTab('battle')}
           >
-            <Text style={[styles.tabText, activeTab === 'battle' && styles.tabTextActive]}>Battle</Text>
+            <Ionicons name="skull" size={16} color={activeTab === 'battle' ? COLORS.cave.glow : COLORS.cream.dark} />
+            <Text style={[styles.tabText, activeTab === 'battle' && styles.tabTextActive]}>Descend</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.tab, activeTab === 'records' && styles.tabActive]}
             onPress={() => { setActiveTab('records'); loadAbyssData(); }}
           >
+            <Ionicons name="document-text" size={16} color={activeTab === 'records' ? COLORS.cave.glow : COLORS.cream.dark} />
             <Text style={[styles.tabText, activeTab === 'records' && styles.tabTextActive]}>Records</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.tab, activeTab === 'leaderboard' && styles.tabActive]}
             onPress={() => { setActiveTab('leaderboard'); loadLeaderboard(); }}
           >
+            <Ionicons name="trophy" size={16} color={activeTab === 'leaderboard' ? COLORS.cave.glow : COLORS.cream.dark} />
             <Text style={[styles.tabText, activeTab === 'leaderboard' && styles.tabTextActive]}>Rankings</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.abyss.purple} />
-            <Text style={styles.loadingText}>Entering the Abyss...</Text>
+            <ActivityIndicator size="large" color={COLORS.cave.glow} />
+            <Text style={styles.loadingText}>Descending into darkness...</Text>
           </View>
         ) : (
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -220,22 +323,29 @@ export default function AbyssScreen() {
                     <Text style={styles.completedIcon}>🏆</Text>
                     <Text style={styles.completedTitle}>ABYSS CONQUERED!</Text>
                     <Text style={styles.completedText}>
-                      You have defeated all 1000 levels of the Abyss!
+                      You have reached the deepest depth - 1000m!
+                    </Text>
+                    <Text style={styles.completedSubtext}>
+                      You are a true master of the Abyss
                     </Text>
                   </View>
                 ) : abyssData.current_boss && (
                   <>
-                    {/* Level Info */}
+                    {/* Depth Level Info */}
                     <View style={styles.levelInfo}>
-                      <Text style={styles.levelNumber}>Level {abyssData.current_level}</Text>
+                      <View style={styles.depthIndicator}>
+                        <Ionicons name="arrow-down" size={20} color={COLORS.cave.glow} />
+                        <Text style={styles.levelNumber}>Depth {abyssData.current_level}m</Text>
+                        <Ionicons name="arrow-down" size={20} color={COLORS.cave.glow} />
+                      </View>
                       {abyssData.current_boss.is_milestone && (
                         <View style={styles.milestoneBadge}>
-                          <Text style={styles.milestoneBadgeText}>🔥 MILESTONE</Text>
+                          <Text style={styles.milestoneBadgeText}>⭐ MILESTONE BOSS</Text>
                         </View>
                       )}
                     </View>
 
-                    {/* Boss Card */}
+                    {/* Boss Card - Cave themed */}
                     <Animated.View 
                       style={[
                         styles.bossCard,
@@ -243,11 +353,20 @@ export default function AbyssScreen() {
                       ]}
                     >
                       <LinearGradient 
-                        colors={[COLORS.abyss.darkPurple, COLORS.navy.darkest]} 
+                        colors={[getDepthColor(abyssData.current_level), COLORS.cave.darkest]} 
                         style={styles.bossCardGradient}
                       >
+                        {/* Cave decorations */}
+                        <View style={styles.caveDecoration}>
+                          <Text style={styles.caveRock}>🪨</Text>
+                          <Text style={styles.caveRock}>💎</Text>
+                          <Text style={styles.caveRock}>🪨</Text>
+                        </View>
+                        
                         <View style={styles.bossHeader}>
-                          <Text style={styles.bossEmoji}>👹</Text>
+                          <View style={styles.bossIconContainer}>
+                            <Text style={styles.bossEmoji}>👹</Text>
+                          </View>
                           <View style={styles.bossInfo}>
                             <Text style={styles.bossName}>{abyssData.current_boss.name}</Text>
                             <View style={[styles.elementBadge, { backgroundColor: getElementColor(abyssData.current_boss.element) }]}>
@@ -258,16 +377,24 @@ export default function AbyssScreen() {
 
                         {/* HP Bar */}
                         <View style={styles.hpContainer}>
-                          <Text style={styles.hpLabel}>HP</Text>
+                          <View style={styles.hpLabelRow}>
+                            <Ionicons name="heart" size={14} color="#e74c3c" />
+                            <Text style={styles.hpLabel}>HP</Text>
+                          </View>
                           <View style={styles.hpBar}>
-                            <View style={[styles.hpFill, { width: '100%' }]} />
+                            <LinearGradient 
+                              colors={['#e74c3c', '#c0392b']} 
+                              start={{x: 0, y: 0}} 
+                              end={{x: 1, y: 0}}
+                              style={[styles.hpFill, { width: '100%' }]} 
+                            />
                           </View>
                           <Text style={styles.hpText}>{formatNumber(abyssData.current_boss.max_hp)}</Text>
                         </View>
 
                         {/* Attack stat */}
                         <View style={styles.statRow}>
-                          <Ionicons name="flash" size={16} color={COLORS.abyss.red} />
+                          <Ionicons name="flash" size={16} color={COLORS.cave.magma} />
                           <Text style={styles.statText}>ATK: {formatNumber(abyssData.current_boss.atk)}</Text>
                         </View>
                       </LinearGradient>
@@ -301,10 +428,10 @@ export default function AbyssScreen() {
                         {attackResult.boss_defeated ? (
                           <>
                             <Text style={styles.victoryTitle}>🎉 VICTORY!</Text>
-                            <Text style={styles.victoryText}>Level {attackResult.level} Cleared!</Text>
+                            <Text style={styles.victoryText}>Depth {attackResult.level}m Cleared!</Text>
                             {attackResult.is_first_server_clear && (
                               <View style={styles.firstClearBadge}>
-                                <Text style={styles.firstClearText}>⭐ First Clear on Server!</Text>
+                                <Text style={styles.firstClearText}>⭐ First to reach this depth!</Text>
                               </View>
                             )}
                             <View style={styles.rewardsGrid}>
@@ -323,7 +450,7 @@ export default function AbyssScreen() {
                               Dealt {formatNumber(attackResult.damage_dealt)} damage
                             </Text>
                             <Text style={styles.hintText}>
-                              Need {formatNumber(attackResult.damage_needed)} more damage to defeat
+                              Need {formatNumber(attackResult.damage_needed)} more damage
                             </Text>
                           </>
                         )}
@@ -337,15 +464,15 @@ export default function AbyssScreen() {
                       disabled={isAttacking}
                     >
                       <LinearGradient
-                        colors={isAttacking ? ['#555', '#333'] : [COLORS.abyss.purple, COLORS.abyss.darkPurple]}
+                        colors={isAttacking ? ['#555', '#333'] : [COLORS.cave.glow, '#2f855a']}
                         style={styles.attackButtonGradient}
                       >
                         {isAttacking ? (
                           <ActivityIndicator color={COLORS.cream.pure} />
                         ) : (
                           <>
-                            <Ionicons name="skull" size={24} color={COLORS.cream.pure} />
-                            <Text style={styles.attackButtonText}>CHALLENGE</Text>
+                            <Ionicons name="arrow-down-circle" size={24} color={COLORS.cream.pure} />
+                            <Text style={styles.attackButtonText}>DESCEND</Text>
                           </>
                         )}
                       </LinearGradient>
@@ -354,7 +481,7 @@ export default function AbyssScreen() {
                     {/* Rewards Preview */}
                     {abyssData.rewards_preview && (
                       <View style={styles.rewardsPreview}>
-                        <Text style={styles.rewardsPreviewTitle}>Clear Rewards:</Text>
+                        <Text style={styles.rewardsPreviewTitle}>🎁 Clear Rewards:</Text>
                         <View style={styles.rewardsPreviewGrid}>
                           {Object.entries(abyssData.rewards_preview).map(([key, value]) => (
                             <Text key={key} style={styles.rewardsPreviewItem}>
@@ -370,14 +497,14 @@ export default function AbyssScreen() {
                 {/* Milestone First Clears */}
                 {abyssData.milestone_first_clears && abyssData.milestone_first_clears.length > 0 && (
                   <View style={styles.firstClearsSection}>
-                    <Text style={styles.sectionTitle}>🏆 Server First Clears</Text>
+                    <Text style={styles.sectionTitle}>🏆 Server First Explorers</Text>
                     {abyssData.milestone_first_clears.slice(0, 5).map((fc: any, idx: number) => (
                       <TouchableOpacity 
                         key={idx} 
                         style={styles.firstClearItem}
                         onPress={() => loadLevelRecords(fc.level)}
                       >
-                        <Text style={styles.firstClearLevel}>Lv.{fc.level}</Text>
+                        <Text style={styles.firstClearLevel}>{fc.level}m</Text>
                         <Text style={styles.firstClearPlayer}>{fc.cleared_by}</Text>
                         <Ionicons name="chevron-forward" size={16} color={COLORS.cream.dark} />
                       </TouchableOpacity>
@@ -390,31 +517,38 @@ export default function AbyssScreen() {
             {activeTab === 'records' && abyssData && (
               <View style={styles.recordsContainer}>
                 <View style={styles.statsCard}>
-                  <Text style={styles.statsTitle}>Your Progress</Text>
+                  <Text style={styles.statsTitle}>⛏️ Your Expedition</Text>
                   <View style={styles.statsGrid}>
                     <View style={styles.statItem}>
-                      <Text style={styles.statValue}>{abyssData.highest_cleared}</Text>
-                      <Text style={styles.statLabel}>Highest Level</Text>
+                      <Text style={styles.statValue}>{abyssData.highest_cleared}m</Text>
+                      <Text style={styles.statLabel}>Deepest Reached</Text>
                     </View>
                     <View style={styles.statItem}>
                       <Text style={styles.statValue}>{formatNumber(abyssData.total_damage_dealt || 0)}</Text>
                       <Text style={styles.statLabel}>Total Damage</Text>
                     </View>
                   </View>
-                  <View style={styles.progressBar}>
-                    <View 
-                      style={[
-                        styles.progressFill, 
-                        { width: `${(abyssData.highest_cleared / 1000) * 100}%` }
-                      ]} 
-                    />
+                  
+                  {/* Progress visualization */}
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressBar}>
+                      <LinearGradient 
+                        colors={[COLORS.cave.glow, '#2f855a']}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 0}}
+                        style={[
+                          styles.progressFill, 
+                          { width: `${depthPercentage}%` }
+                        ]} 
+                      />
+                    </View>
+                    <Text style={styles.progressText}>
+                      {depthPercentage.toFixed(1)}% of Abyss Explored
+                    </Text>
                   </View>
-                  <Text style={styles.progressText}>
-                    {((abyssData.highest_cleared / 1000) * 100).toFixed(1)}% Complete
-                  </Text>
                 </View>
 
-                <Text style={styles.sectionTitle}>View Level Records</Text>
+                <Text style={styles.sectionTitle}>View Depth Records</Text>
                 <View style={styles.levelButtons}>
                   {[50, 100, 150, 200, 250, 300, 500, 1000].map(level => (
                     <TouchableOpacity
@@ -426,7 +560,7 @@ export default function AbyssScreen() {
                       onPress={() => loadLevelRecords(level)}
                       disabled={level > abyssData.highest_cleared}
                     >
-                      <Text style={styles.levelButtonText}>Lv.{level}</Text>
+                      <Text style={styles.levelButtonText}>{level}m</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -437,7 +571,7 @@ export default function AbyssScreen() {
               <View style={styles.leaderboardContainer}>
                 {leaderboard ? (
                   <>
-                    <Text style={styles.sectionTitle}>🏆 Server Rankings</Text>
+                    <Text style={styles.sectionTitle}>🏆 Deepest Explorers</Text>
                     {leaderboard.leaderboard.map((player: any) => (
                       <View 
                         key={player.rank} 
@@ -456,14 +590,14 @@ export default function AbyssScreen() {
                         </Text>
                         <View style={styles.leaderboardInfo}>
                           <Text style={styles.leaderboardName}>{player.username}</Text>
-                          <Text style={styles.leaderboardLevel}>Level {player.highest_cleared}</Text>
+                          <Text style={styles.leaderboardLevel}>Depth: {player.highest_cleared}m</Text>
                         </View>
                         <Text style={styles.leaderboardDamage}>{formatNumber(player.total_damage)}</Text>
                       </View>
                     ))}
                   </>
                 ) : (
-                  <ActivityIndicator size="large" color={COLORS.abyss.purple} />
+                  <ActivityIndicator size="large" color={COLORS.cave.glow} />
                 )}
               </View>
             )}
@@ -479,44 +613,48 @@ export default function AbyssScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Level {levelRecords?.level} Records</Text>
-                <TouchableOpacity onPress={() => setShowRecordsModal(false)}>
-                  <Ionicons name="close" size={24} color={COLORS.cream.pure} />
-                </TouchableOpacity>
-              </View>
-
-              {levelRecords?.first_clear && (
-                <View style={styles.recordSection}>
-                  <Text style={styles.recordSectionTitle}>⭐ First Clear</Text>
-                  <View style={styles.recordCard}>
-                    <Text style={styles.recordPlayer}>{levelRecords.first_clear.username}</Text>
-                    <Text style={styles.recordPower}>Power: {formatNumber(levelRecords.first_clear.power_rating)}</Text>
-                    <View style={styles.heroesUsed}>
-                      {levelRecords.first_clear.heroes_used?.map((hero: any, idx: number) => (
-                        <Text key={idx} style={styles.heroName}>{hero.name} (Lv.{hero.level})</Text>
-                      ))}
-                    </View>
-                  </View>
+              <LinearGradient colors={[COLORS.cave.mid, COLORS.cave.deep]} style={styles.modalGradient}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Depth {levelRecords?.level}m Records</Text>
+                  <TouchableOpacity onPress={() => setShowRecordsModal(false)}>
+                    <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                  </TouchableOpacity>
                 </View>
-              )}
 
-              {levelRecords?.recent_clears && levelRecords.recent_clears.length > 0 && (
-                <View style={styles.recordSection}>
-                  <Text style={styles.recordSectionTitle}>📜 Recent Clears</Text>
-                  {levelRecords.recent_clears.map((clear: any, idx: number) => (
-                    <View key={idx} style={styles.recordCard}>
-                      <Text style={styles.recordPlayer}>{clear.username}</Text>
-                      <Text style={styles.recordPower}>Power: {formatNumber(clear.power_rating)}</Text>
-                      <View style={styles.heroesUsed}>
-                        {clear.heroes_used?.map((hero: any, hidx: number) => (
-                          <Text key={hidx} style={styles.heroName}>{hero.name}</Text>
-                        ))}
+                <ScrollView style={styles.modalScroll}>
+                  {levelRecords?.first_clear && (
+                    <View style={styles.recordSection}>
+                      <Text style={styles.recordSectionTitle}>⭐ First Explorer</Text>
+                      <View style={styles.recordCard}>
+                        <Text style={styles.recordPlayer}>{levelRecords.first_clear.username}</Text>
+                        <Text style={styles.recordPower}>Power: {formatNumber(levelRecords.first_clear.power_rating)}</Text>
+                        <View style={styles.heroesUsed}>
+                          {levelRecords.first_clear.heroes_used?.map((hero: any, idx: number) => (
+                            <Text key={idx} style={styles.heroName}>{hero.name} (Lv.{hero.level})</Text>
+                          ))}
+                        </View>
                       </View>
                     </View>
-                  ))}
-                </View>
-              )}
+                  )}
+
+                  {levelRecords?.recent_clears && levelRecords.recent_clears.length > 0 && (
+                    <View style={styles.recordSection}>
+                      <Text style={styles.recordSectionTitle}>📜 Recent Clears</Text>
+                      {levelRecords.recent_clears.map((clear: any, idx: number) => (
+                        <View key={idx} style={styles.recordCard}>
+                          <Text style={styles.recordPlayer}>{clear.username}</Text>
+                          <Text style={styles.recordPower}>Power: {formatNumber(clear.power_rating)}</Text>
+                          <View style={styles.heroesUsed}>
+                            {clear.heroes_used?.map((hero: any, hidx: number) => (
+                              <Text key={hidx} style={styles.heroName}>{hero.name}</Text>
+                            ))}
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </ScrollView>
+              </LinearGradient>
             </View>
           </View>
         </Modal>
@@ -538,64 +676,191 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.abyss.purple + '40',
+    borderBottomColor: COLORS.cave.glow + '30',
   },
   backButton: { padding: 8 },
+  headerCenter: { alignItems: 'center', flex: 1 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
-  levelBadge: { backgroundColor: COLORS.abyss.purple, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  levelBadgeText: { color: COLORS.cream.pure, fontWeight: 'bold', fontSize: 12 },
+  zoneText: { fontSize: 12, color: COLORS.cave.glow, marginTop: 2 },
+  depthBadge: { 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    backgroundColor: COLORS.cave.deep, 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.cave.glow + '50',
+  },
+  depthBadgeText: { color: COLORS.cave.glow, fontWeight: 'bold', fontSize: 14, marginLeft: 4 },
+  
+  // Depth Meter
+  depthMeterContainer: {
+    position: 'absolute',
+    right: 8,
+    top: 120,
+    bottom: 80,
+    width: 30,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  depthMeterTrack: {
+    flex: 1,
+    width: 8,
+    backgroundColor: COLORS.cave.deep,
+    borderRadius: 4,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  depthMeterFill: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderRadius: 4,
+  },
+  depthMarker: {
+    position: 'absolute',
+    right: -8,
+    width: 16,
+    alignItems: 'center',
+  },
+  depthMarkerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.cave.shallow,
+  },
+  depthMarkerDotCleared: {
+    backgroundColor: COLORS.cave.glow,
+  },
+  depthMeterLabels: {
+    position: 'absolute',
+    left: -30,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'space-between',
+  },
+  depthLabel: {
+    fontSize: 8,
+    color: COLORS.cream.dark,
+  },
   
   // Tabs
-  tabs: { flexDirection: 'row', padding: 8, gap: 8 },
-  tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: COLORS.navy.medium },
-  tabActive: { backgroundColor: COLORS.abyss.purple },
-  tabText: { color: COLORS.cream.dark, fontWeight: '500' },
-  tabTextActive: { color: COLORS.cream.pure },
+  tabs: { flexDirection: 'row', padding: 8, gap: 8, marginRight: 40 },
+  tab: { 
+    flex: 1, 
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10, 
+    gap: 6,
+    borderRadius: 8, 
+    backgroundColor: COLORS.cave.deep,
+  },
+  tabActive: { backgroundColor: COLORS.cave.glow + '30', borderWidth: 1, borderColor: COLORS.cave.glow },
+  tabText: { color: COLORS.cream.dark, fontWeight: '500', fontSize: 13 },
+  tabTextActive: { color: COLORS.cave.glow },
   
   // Loading
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: COLORS.cream.soft, marginTop: 12 },
   
-  scrollView: { flex: 1, padding: 16 },
+  scrollView: { flex: 1, padding: 16, paddingRight: 50 },
   
   // Level Info
   levelInfo: { alignItems: 'center', marginBottom: 16 },
+  depthIndicator: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8,
+  },
   levelNumber: { fontSize: 28, fontWeight: 'bold', color: COLORS.cream.pure },
-  milestoneBadge: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: 4 },
-  milestoneBadgeText: { color: COLORS.navy.darkest, fontWeight: 'bold', fontSize: 12 },
+  milestoneBadge: { 
+    backgroundColor: COLORS.gold.primary, 
+    paddingHorizontal: 16, 
+    paddingVertical: 6, 
+    borderRadius: 16, 
+    marginTop: 8,
+  },
+  milestoneBadgeText: { color: COLORS.cave.darkest, fontWeight: 'bold', fontSize: 12 },
   
   // Boss Card
   bossCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 16 },
   bossCardGradient: { padding: 20 },
+  caveDecoration: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    opacity: 0.5,
+  },
+  caveRock: { fontSize: 20 },
   bossHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  bossEmoji: { fontSize: 48, marginRight: 16 },
+  bossIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: COLORS.cave.darkest,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: COLORS.cave.glow + '50',
+  },
+  bossEmoji: { fontSize: 36 },
   bossInfo: { flex: 1 },
-  bossName: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 4 },
-  elementBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  bossName: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 6 },
+  elementBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
   elementText: { color: COLORS.cream.pure, fontWeight: '600', fontSize: 12 },
   
   // HP Bar
-  hpContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  hpLabel: { color: COLORS.abyss.red, fontWeight: 'bold', width: 30 },
-  hpBar: { flex: 1, height: 12, backgroundColor: COLORS.navy.dark, borderRadius: 6, overflow: 'hidden' },
-  hpFill: { height: '100%', backgroundColor: COLORS.abyss.red, borderRadius: 6 },
-  hpText: { color: COLORS.cream.pure, fontWeight: '600', width: 70, textAlign: 'right' },
+  hpContainer: { marginBottom: 12 },
+  hpLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  hpLabel: { color: '#e74c3c', fontWeight: 'bold', fontSize: 12 },
+  hpBar: { height: 16, backgroundColor: COLORS.cave.darkest, borderRadius: 8, overflow: 'hidden' },
+  hpFill: { height: '100%', borderRadius: 8 },
+  hpText: { color: COLORS.cream.pure, fontWeight: '600', marginTop: 4, textAlign: 'right', fontSize: 12 },
   
   statRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statText: { color: COLORS.cream.soft, fontSize: 14 },
   
   // Damage Popup
-  damagePopup: { position: 'absolute', top: 180, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
-  damageText: { fontSize: 32, fontWeight: 'bold', color: COLORS.cream.pure, textShadowColor: '#000', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 },
-  criticalText: { color: COLORS.gold.primary, fontSize: 36 },
+  damagePopup: { position: 'absolute', top: 200, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
+  damageText: { 
+    fontSize: 32, 
+    fontWeight: 'bold', 
+    color: COLORS.cream.pure, 
+    textShadowColor: '#000', 
+    textShadowOffset: { width: 2, height: 2 }, 
+    textShadowRadius: 4,
+  },
+  criticalText: { color: COLORS.gold.primary, fontSize: 38 },
   
   // Result Card
-  resultCard: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, marginBottom: 16, alignItems: 'center' },
-  victoryCard: { backgroundColor: COLORS.abyss.purple + '40', borderWidth: 2, borderColor: COLORS.gold.primary },
-  victoryTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary, marginBottom: 4 },
+  resultCard: { 
+    backgroundColor: COLORS.cave.deep, 
+    borderRadius: 12, 
+    padding: 16, 
+    marginBottom: 16, 
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.cave.shallow,
+  },
+  victoryCard: { 
+    backgroundColor: COLORS.cave.glow + '20', 
+    borderWidth: 2, 
+    borderColor: COLORS.cave.glow,
+  },
+  victoryTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.cave.glow, marginBottom: 4 },
   victoryText: { fontSize: 16, color: COLORS.cream.pure, marginBottom: 8 },
-  firstClearBadge: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginBottom: 12 },
-  firstClearText: { color: COLORS.navy.darkest, fontWeight: 'bold' },
+  firstClearBadge: { 
+    backgroundColor: COLORS.gold.primary, 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8, 
+    marginBottom: 12,
+  },
+  firstClearText: { color: COLORS.cave.darkest, fontWeight: 'bold' },
   rewardsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
   rewardItem: { alignItems: 'center', minWidth: 70 },
   rewardValue: { fontSize: 16, fontWeight: 'bold', color: COLORS.gold.primary },
@@ -607,11 +872,24 @@ const styles = StyleSheet.create({
   // Attack Button
   attackButton: { borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
   attackButtonDisabled: { opacity: 0.6 },
-  attackButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 10 },
+  attackButtonGradient: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: 18, 
+    gap: 10,
+  },
   attackButtonText: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, letterSpacing: 2 },
   
   // Rewards Preview
-  rewardsPreview: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 12, marginBottom: 16 },
+  rewardsPreview: { 
+    backgroundColor: COLORS.cave.deep, 
+    borderRadius: 12, 
+    padding: 12, 
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.cave.shallow,
+  },
   rewardsPreviewTitle: { fontSize: 12, color: COLORS.cream.dark, marginBottom: 8 },
   rewardsPreviewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   rewardsPreviewItem: { fontSize: 12, color: COLORS.gold.light },
@@ -619,8 +897,17 @@ const styles = StyleSheet.create({
   // First Clears Section
   firstClearsSection: { marginTop: 16 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
-  firstClearItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, padding: 12, borderRadius: 8, marginBottom: 8 },
-  firstClearLevel: { fontSize: 14, fontWeight: 'bold', color: COLORS.gold.primary, width: 60 },
+  firstClearItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.cave.deep, 
+    padding: 12, 
+    borderRadius: 8, 
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.cave.shallow,
+  },
+  firstClearLevel: { fontSize: 14, fontWeight: 'bold', color: COLORS.cave.glow, width: 60 },
   firstClearPlayer: { flex: 1, fontSize: 14, color: COLORS.cream.pure },
   
   // Completed
@@ -628,26 +915,52 @@ const styles = StyleSheet.create({
   completedIcon: { fontSize: 64, marginBottom: 16 },
   completedTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary, marginBottom: 8 },
   completedText: { fontSize: 16, color: COLORS.cream.soft, textAlign: 'center' },
+  completedSubtext: { fontSize: 14, color: COLORS.cave.glow, marginTop: 8 },
   
   // Records Tab
   recordsContainer: { paddingBottom: 32 },
-  statsCard: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, marginBottom: 16 },
+  statsCard: { 
+    backgroundColor: COLORS.cave.deep, 
+    borderRadius: 12, 
+    padding: 16, 
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.cave.glow + '30',
+  },
   statsTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12, textAlign: 'center' },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 },
   statItem: { alignItems: 'center' },
-  statValue: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary },
+  statValue: { fontSize: 24, fontWeight: 'bold', color: COLORS.cave.glow },
   statLabel: { fontSize: 12, color: COLORS.cream.dark },
-  progressBar: { height: 8, backgroundColor: COLORS.navy.dark, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
-  progressFill: { height: '100%', backgroundColor: COLORS.abyss.purple },
+  progressContainer: { marginTop: 8 },
+  progressBar: { height: 10, backgroundColor: COLORS.cave.darkest, borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
+  progressFill: { height: '100%', borderRadius: 5 },
   progressText: { fontSize: 12, color: COLORS.cream.soft, textAlign: 'center' },
   levelButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  levelButton: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: COLORS.navy.medium, borderRadius: 8, opacity: 0.5 },
-  levelButtonCleared: { opacity: 1, backgroundColor: COLORS.abyss.purple },
+  levelButton: { 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    backgroundColor: COLORS.cave.deep, 
+    borderRadius: 8, 
+    opacity: 0.5,
+    borderWidth: 1,
+    borderColor: COLORS.cave.shallow,
+  },
+  levelButtonCleared: { opacity: 1, backgroundColor: COLORS.cave.glow + '30', borderColor: COLORS.cave.glow },
   levelButtonText: { color: COLORS.cream.pure, fontWeight: '600' },
   
   // Leaderboard
   leaderboardContainer: { paddingBottom: 32 },
-  leaderboardItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, padding: 12, borderRadius: 8, marginBottom: 8 },
+  leaderboardItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: COLORS.cave.deep, 
+    padding: 12, 
+    borderRadius: 8, 
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.cave.shallow,
+  },
   topRankItem: { borderWidth: 1, borderColor: COLORS.gold.dark },
   rankText: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, width: 40 },
   goldRank: { color: '#FFD700' },
@@ -655,19 +968,28 @@ const styles = StyleSheet.create({
   bronzeRank: { color: '#CD7F32' },
   leaderboardInfo: { flex: 1, marginLeft: 8 },
   leaderboardName: { fontSize: 14, fontWeight: '600', color: COLORS.cream.pure },
-  leaderboardLevel: { fontSize: 12, color: COLORS.abyss.purple },
+  leaderboardLevel: { fontSize: 12, color: COLORS.cave.glow },
   leaderboardDamage: { fontSize: 12, color: COLORS.cream.dark },
   
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContent: { backgroundColor: COLORS.navy.primary, borderRadius: 16, padding: 20, width: '100%', maxWidth: 400, maxHeight: '80%' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { width: '100%', maxWidth: 400, maxHeight: '80%', borderRadius: 16, overflow: 'hidden' },
+  modalGradient: { padding: 20 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure },
+  modalScroll: { maxHeight: 400 },
   recordSection: { marginBottom: 16 },
-  recordSectionTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.gold.primary, marginBottom: 8 },
-  recordCard: { backgroundColor: COLORS.navy.medium, borderRadius: 8, padding: 12 },
+  recordSectionTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cave.glow, marginBottom: 8 },
+  recordCard: { backgroundColor: COLORS.cave.deep, borderRadius: 8, padding: 12 },
   recordPlayer: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
-  recordPower: { fontSize: 12, color: COLORS.abyss.purple, marginBottom: 4 },
+  recordPower: { fontSize: 12, color: COLORS.cave.glow, marginBottom: 4 },
   heroesUsed: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  heroName: { fontSize: 11, color: COLORS.cream.dark, backgroundColor: COLORS.navy.dark, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  heroName: { 
+    fontSize: 11, 
+    color: COLORS.cream.dark, 
+    backgroundColor: COLORS.cave.darkest, 
+    paddingHorizontal: 6, 
+    paddingVertical: 2, 
+    borderRadius: 4,
+  },
 });

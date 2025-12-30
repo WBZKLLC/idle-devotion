@@ -406,6 +406,31 @@ const styles = StyleSheet.create({
   achievementInfo: { flex: 1 },
   achievementName: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 2 },
   achievementDesc: { fontSize: 12, color: COLORS.cream.dark },
+  
+  // Redeem Code Section
+  redeemButton: { borderRadius: 12, overflow: 'hidden' },
+  redeemButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 10 },
+  redeemButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
+  redeemHint: { fontSize: 12, color: COLORS.cream.dark, textAlign: 'center', marginTop: 8 },
+  
+  // Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: COLORS.navy.primary, borderRadius: 16, padding: 20, width: '100%', maxWidth: 400, borderWidth: 2, borderColor: COLORS.gold.dark },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
+  codeInput: { backgroundColor: COLORS.navy.dark, borderRadius: 12, padding: 16, fontSize: 18, color: COLORS.cream.pure, borderWidth: 1, borderColor: COLORS.gold.dark + '60', textAlign: 'center', letterSpacing: 2, marginBottom: 16 },
+  resultBox: { flexDirection: 'row', alignItems: 'flex-start', padding: 12, borderRadius: 8, marginBottom: 16, gap: 10 },
+  resultSuccess: { backgroundColor: '#2ecc7120', borderWidth: 1, borderColor: '#2ecc71' },
+  resultError: { backgroundColor: '#e74c3c20', borderWidth: 1, borderColor: '#e74c3c' },
+  resultTextContainer: { flex: 1 },
+  resultMessage: { fontSize: 14, color: COLORS.cream.pure, fontWeight: '500' },
+  rewardsContainer: { marginTop: 8, gap: 4 },
+  rewardItem: { fontSize: 13, color: COLORS.gold.primary, fontWeight: '600' },
+  submitButton: { borderRadius: 12, overflow: 'hidden' },
+  submitButtonDisabled: { opacity: 0.6 },
+  submitButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 14, gap: 8 },
+  submitButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
+  
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.error, borderRadius: 12, padding: 16, marginTop: 16, gap: 8 },
   logoutText: { color: COLORS.cream.pure, fontSize: 16, fontWeight: 'bold' },
   versionText: { textAlign: 'center', color: COLORS.navy.light, fontSize: 12, marginTop: 24, marginBottom: 16 },

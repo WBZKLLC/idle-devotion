@@ -252,6 +252,33 @@ backend:
         agent: "testing"
         comment: "✅ TESTED: Abyss system fully functional on mobile (390x844). Cave dive theme displays correctly with 'The Abyss' header, zone indicators, and depth meter visualization. Boss card shows with HP bar and ATK stats. DESCEND button is clickable and executes attacks. All 3 tabs (Descend, Records, Rankings) are accessible and working. Mobile-responsive design confirmed."
 
+  - task: "Divine Summons new rate system with filler rewards"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ IMPLEMENTED: New Divine Summons rates - UR+ 0.8%, UR 2.7%, Crystal jackpots (8K/5K/3K), 90.6% filler rewards (divine essence, gold, coins, hero shards). Frontend updated to display new rates and filler rewards in summon modal."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Divine Summon system fully functional. Multi-pull working, response includes both heroes and filler rewards with is_filler: true flag. Rate distribution correct (~90% filler, ~10% heroes). Crystal jackpots and currency rewards working correctly."
+
+  - task: "Guild War UI"
+    implemented: true
+    working: true
+    file: "/app/frontend/app/guild-war.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ IMPLEMENTED: Full Guild War UI with war status/registration, match display, attack interface, leaderboard rankings, and attack history. Red/flame themed design. Navigation link added to home screen."
+
 frontend:
   - task: "Navigation structure with tabs"
     implemented: true

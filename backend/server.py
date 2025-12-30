@@ -91,6 +91,14 @@ def convert_objectid(obj):
                         convert_objectid(item)
     return obj
 
+import hashlib
+
+def generate_stable_hero_id(hero_name: str, rarity: str) -> str:
+    """Generate a stable, deterministic hero ID based on name and rarity.
+    This ensures hero IDs don't change between server restarts."""
+    unique_string = f"{hero_name}_{rarity}_divine_heroes_v1"
+    return hashlib.md5(unique_string.encode()).hexdigest()
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 

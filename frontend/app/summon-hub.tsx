@@ -177,7 +177,7 @@ export default function SummonHubScreen() {
           <View style={styles.bannerCard}>
             <LinearGradient colors={selectedBanner === 'divine' ? [COLORS.gold.dark, COLORS.navy.primary] : selectedBanner === 'premium' ? ['#6b5b95', COLORS.navy.primary] : [COLORS.navy.medium, COLORS.navy.primary]} style={styles.bannerGradient}>
               <Text style={styles.bannerTitle}>{selectedBanner === 'divine' ? 'Divine Summon' : selectedBanner === 'premium' ? 'Crystal Summon' : 'Coin Summon'}</Text>
-              <Text style={styles.bannerDesc}>{selectedBanner === 'divine' ? 'Guaranteed UR+ heroes' : selectedBanner === 'premium' ? 'Premium pool with UR heroes' : 'Standard pool with SSR+ heroes'}</Text>
+              <Text style={styles.bannerDesc}>{selectedBanner === 'divine' ? 'UR+ heroes, crystals & rewards!' : selectedBanner === 'premium' ? 'Premium pool with UR heroes' : 'Standard pool with SSR+ heroes'}</Text>
               <View style={styles.ratesBox}>
                 <Text style={styles.ratesTitle}>Pull Rates</Text>
                 <View style={styles.ratesRow}>

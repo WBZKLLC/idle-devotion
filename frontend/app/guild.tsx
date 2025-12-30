@@ -226,6 +226,12 @@ export default function GuildScreen() {
         const result = await response.json();
         setLastAttackResult(result);
         
+        // Update attack count
+        if (result.attacks_remaining !== undefined) {
+          setAttacksRemaining(result.attacks_remaining);
+          setMaxAttacks(result.attacks_max);
+        }
+        
         // Update boss HP
         setBossData((prev: any) => ({
           ...prev,
@@ -244,7 +250,7 @@ export default function GuildScreen() {
         fetchUser();
       } else {
         const error = await response.json();
-        Alert.alert('Error', error.detail || 'Attack failed');
+        Alert.alert('Attack Failed', error.detail || 'Attack failed');
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to attack boss');

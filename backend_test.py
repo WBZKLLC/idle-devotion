@@ -11,7 +11,7 @@ from datetime import datetime
 import sys
 
 # Configuration
-BASE_URL = "https://gacha-guardian.preview.emergentagent.com/api"
+BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
 TEST_USERNAME = "testplayer"
 
 class GachaGameTester:

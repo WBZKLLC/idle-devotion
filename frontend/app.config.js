@@ -50,7 +50,7 @@ module.exports = ({ config }) => {
       eas: {
         projectId: 'divine-heroes-gacha',
       },
-      BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://gacha-guardian.preview.emergentagent.com',
+      BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://male-heroes-game.preview.emergentagent.com',
       REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',
     },
   };

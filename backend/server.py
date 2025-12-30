@@ -4147,6 +4147,188 @@ async def reset_resource_bag(username: str):
     
     return {"success": True, "message": "Resource bag reset", "resource_bag": new_bag}
 
+# ==================== REDEMPTION CODE SYSTEM ====================
+
+# 12 unique codes for the year - moderate rewards to keep players engaged
+REDEMPTION_CODES = {
+    # Q1 - New Year & Valentines
+    "NEWYEAR2025": {
+        "rewards": {"crystals": 500, "coins": 50000, "gold": 25000},
+        "description": "New Year 2025 Celebration",
+        "max_uses": None,  # Unlimited
+        "expires": "2025-02-28"
+    },
+    "VALENTINE25": {
+        "rewards": {"crystals": 300, "divine_essence": 5, "gold": 30000},
+        "description": "Valentine's Day Special",
+        "max_uses": None,
+        "expires": "2025-03-15"
+    },
+    "SPRING2025": {
+        "rewards": {"coins": 100000, "gold": 50000, "crystals": 200},
+        "description": "Spring Festival Rewards",
+        "max_uses": None,
+        "expires": "2025-04-30"
+    },
+    
+    # Q2 - Spring & Summer
+    "HEROLAUNCH": {
+        "rewards": {"crystals": 1000, "coins": 75000},
+        "description": "Thank you for playing Divine Heroes!",
+        "max_uses": None,
+        "expires": "2025-12-31"
+    },
+    "SUMMERVIBES": {
+        "rewards": {"gold": 75000, "divine_essence": 3, "coins": 50000},
+        "description": "Summer Event Code",
+        "max_uses": None,
+        "expires": "2025-08-31"
+    },
+    "GUILDPOWER": {
+        "rewards": {"crystals": 400, "gold": 40000, "coins": 40000},
+        "description": "Guild Wars Launch Celebration",
+        "max_uses": None,
+        "expires": "2025-07-31"
+    },
+    
+    # Q3 - Summer & Fall
+    "BOSSRUSH25": {
+        "rewards": {"divine_essence": 10, "crystals": 300, "gold": 35000},
+        "description": "Boss Rush Event Code",
+        "max_uses": None,
+        "expires": "2025-09-30"
+    },
+    "AUTUMN2025": {
+        "rewards": {"coins": 80000, "crystals": 250, "gold": 30000},
+        "description": "Autumn Harvest Festival",
+        "max_uses": None,
+        "expires": "2025-11-15"
+    },
+    "HALLOWEEN25": {
+        "rewards": {"divine_essence": 8, "crystals": 500, "coins": 25000},
+        "description": "Halloween Spooky Rewards",
+        "max_uses": None,
+        "expires": "2025-11-07"
+    },
+    
+    # Q4 - Winter & Holidays
+    "THANKFUL25": {
+        "rewards": {"gold": 60000, "coins": 60000, "crystals": 300},
+        "description": "Thanksgiving Special",
+        "max_uses": None,
+        "expires": "2025-12-05"
+    },
+    "XMAS2025": {
+        "rewards": {"crystals": 800, "divine_essence": 12, "gold": 50000, "coins": 50000},
+        "description": "Christmas Holiday Rewards",
+        "max_uses": None,
+        "expires": "2026-01-10"
+    },
+    "YEAREND25": {
+        "rewards": {"divine_essence": 15, "crystals": 600, "gold": 40000, "coins": 40000},
+        "description": "Year End Celebration",
+        "max_uses": None,
+        "expires": "2026-01-31"
+    },
+}
+
+@api_router.get("/codes/list")
+async def list_redemption_codes():
+    """Get list of active redemption codes (for admin)"""
+    now = datetime.utcnow()
+    active_codes = []
+    for code, data in REDEMPTION_CODES.items():
+        expires = datetime.strptime(data["expires"], "%Y-%m-%d") if data.get("expires") else None
+        if not expires or expires > now:
+            active_codes.append({
+                "code": code,
+                "description": data["description"],
+                "expires": data["expires"],
+                "rewards": data["rewards"]
+            })
+    return {"codes": active_codes}
+
+@api_router.post("/codes/redeem")
+async def redeem_code(username: str, code: str):
+    """Redeem a code for rewards"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Normalize code (uppercase)
+    code = code.strip().upper()
+    
+    # Check if code exists
+    if code not in REDEMPTION_CODES:
+        raise HTTPException(status_code=400, detail="Invalid redemption code")
+    
+    code_data = REDEMPTION_CODES[code]
+    
+    # Check expiration
+    if code_data.get("expires"):
+        expires = datetime.strptime(code_data["expires"], "%Y-%m-%d")
+        if datetime.utcnow() > expires:
+            raise HTTPException(status_code=400, detail="This code has expired")
+    
+    # Check if user already redeemed this code
+    redeemed_codes = user.get("redeemed_codes", [])
+    if code in redeemed_codes:
+        raise HTTPException(status_code=400, detail="You have already redeemed this code")
+    
+    # Check max uses (global limit)
+    if code_data.get("max_uses"):
+        use_count = await db.code_redemptions.count_documents({"code": code})
+        if use_count >= code_data["max_uses"]:
+            raise HTTPException(status_code=400, detail="This code has reached its maximum redemptions")
+    
+    # Apply rewards
+    rewards = code_data["rewards"]
+    update_fields = {}
+    for reward_type, amount in rewards.items():
+        update_fields[reward_type] = amount
+    
+    # Update user with rewards and mark code as redeemed
+    await db.users.update_one(
+        {"username": username},
+        {
+            "$inc": update_fields,
+            "$push": {"redeemed_codes": code}
+        }
+    )
+    
+    # Log redemption
+    await db.code_redemptions.insert_one({
+        "code": code,
+        "username": username,
+        "user_id": user["id"],
+        "rewards": rewards,
+        "redeemed_at": datetime.utcnow()
+    })
+    
+    return {
+        "success": True,
+        "message": f"Code redeemed successfully! {code_data['description']}",
+        "rewards": rewards
+    }
+
+@api_router.get("/codes/history/{username}")
+async def get_redemption_history(username: str):
+    """Get user's code redemption history"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    history = await db.code_redemptions.find({"username": username}).sort("redeemed_at", -1).to_list(50)
+    
+    return {
+        "redeemed_codes": user.get("redeemed_codes", []),
+        "history": [{
+            "code": h["code"],
+            "rewards": h["rewards"],
+            "redeemed_at": h["redeemed_at"].isoformat() if h.get("redeemed_at") else None
+        } for h in history]
+    }
+
 # ==================== GUILD WAR SYSTEM ====================
 
 GUILD_WAR_SEASONS = {

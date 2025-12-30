@@ -284,54 +284,28 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ isHydrated: true });
     }
   },
-          } catch (e) {
-            await AsyncStorage.removeItem('divine_heroes_username');
-          }
-          set({ isHydrated: true });
-        }
-      } else {
-        console.log('restoreSession: no saved username');
-        set({ isHydrated: true });
-      }
-    } catch (error) {
-      console.error('Error restoring session:', error);
-      set({ isHydrated: true });
-    }
-  },
 
-  initUser: async (username: string) => {
+  // Legacy initUser - now redirects to proper auth flow
+  initUser: async (username: string, password?: string) => {
     set({ isLoading: true, error: null });
+    
+    // If password provided, use the new auth flow
+    if (password) {
+      const result = await get().loginWithPassword(username, password);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return;
+    }
+    
+    // Legacy flow for backwards compatibility (will be phased out)
     try {
-      // Try to get existing user
       const response = await axios.get(`${BACKEND_URL}/api/user/${username}`);
       set({ user: response.data, isLoading: false });
-      // Save to storage (both localStorage for web and AsyncStorage for native)
-      if (typeof window !== 'undefined') {
-        try {
-          window.localStorage.setItem('divine_heroes_username', username);
-        } catch (e) {
-          await AsyncStorage.setItem('divine_heroes_username', username);
-        }
-      }
+      await saveAuthData(username, '');  // Save username without token for legacy
     } catch (error: any) {
-      if (error.response?.status === 404) {
-        // Register new user
-        const registerResponse = await axios.post(
-          `${BACKEND_URL}/api/user/register?username=${username}`
-        );
-        set({ user: registerResponse.data, isLoading: false });
-        // Save to storage
-        if (typeof window !== 'undefined') {
-          try {
-            window.localStorage.setItem('divine_heroes_username', username);
-          } catch (e) {
-            await AsyncStorage.setItem('divine_heroes_username', username);
-          }
-        }
-      } else {
-        set({ error: 'Failed to initialize user', isLoading: false });
-        throw error;
-      }
+      set({ error: 'Failed to initialize user', isLoading: false });
+      throw error;
     }
   },
 
@@ -344,7 +318,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       const response = await axios.post(
         `${BACKEND_URL}/api/user/${user.username}/login`
       );
-      // Refresh user data after login
       await get().fetchUser();
       set({ isLoading: false });
       return response.data;
@@ -355,10 +328,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   logout: async () => {
-    if (typeof window !== 'undefined') {
-      await AsyncStorage.removeItem('divine_heroes_username');
-    }
-    set({ user: null, userHeroes: [], allHeroes: [] });
+    await clearAuthData();
+    set({ user: null, userHeroes: [], allHeroes: [], authToken: null, needsPassword: false });
   },
 
   fetchUser: async () => {

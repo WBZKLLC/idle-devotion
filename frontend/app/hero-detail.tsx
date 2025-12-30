@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   skillsList: { gap: 12, marginBottom: 16 },
   skillCard: { 
     flexDirection: 'row', 
-    alignItems: 'center', 
+    alignItems: 'flex-start', 
     backgroundColor: COLORS.navy.medium, 
     borderRadius: 12, 
     padding: 12 
@@ -542,10 +542,24 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'center' 
   },
+  skillIconPassive: {
+    backgroundColor: '#9b59b620',
+    borderWidth: 1,
+    borderColor: '#9b59b6',
+  },
   skillInfo: { flex: 1, marginLeft: 12 },
+  skillHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   skillName: { fontSize: 14, fontWeight: '600', color: COLORS.cream.pure },
-  skillDesc: { fontSize: 12, color: COLORS.cream.dark },
+  skillTypeBadge: { backgroundColor: COLORS.gold.dark, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  skillTypeBadgePassive: { backgroundColor: '#9b59b6' },
+  skillTypeText: { fontSize: 8, fontWeight: 'bold', color: COLORS.cream.pure },
+  skillDesc: { fontSize: 12, color: COLORS.cream.soft, marginBottom: 4, lineHeight: 16 },
+  skillStats: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  skillStatText: { fontSize: 11, color: COLORS.gold.primary, fontWeight: '600' },
+  skillUnlock: { fontSize: 10, color: COLORS.cream.dark, marginTop: 4 },
   skillLevel: { fontSize: 12, color: COLORS.gold.primary, fontWeight: '600' },
+  noSkillsContainer: { alignItems: 'center', paddingVertical: 30 },
+  noSkillsText: { fontSize: 14, color: COLORS.cream.dark, marginTop: 8 },
   
   // Equipment
   equipGrid: { 

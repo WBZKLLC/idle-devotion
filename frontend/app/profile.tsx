@@ -264,11 +264,106 @@ export default function ProfileScreen() {
             </View>
           </View>
 
+          {/* Redeem Code Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🎁 Redeem Code</Text>
+            <TouchableOpacity 
+              style={styles.redeemButton}
+              onPress={() => {
+                setShowCodeModal(true);
+                setRedeemResult(null);
+                setCodeInput('');
+              }}
+            >
+              <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.redeemButtonGradient}>
+                <Ionicons name="gift" size={24} color={COLORS.navy.darkest} />
+                <Text style={styles.redeemButtonText}>Enter Redemption Code</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <Text style={styles.redeemHint}>
+              Got a code? Enter it to claim free rewards!
+            </Text>
+          </View>
+
           {/* Logout Button */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={24} color={COLORS.cream.pure} />
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
+
+          {/* Code Redemption Modal */}
+          <Modal
+            visible={showCodeModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowCodeModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>🎁 Redeem Code</Text>
+                  <TouchableOpacity onPress={() => setShowCodeModal(false)}>
+                    <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                  </TouchableOpacity>
+                </View>
+                
+                <TextInput
+                  style={styles.codeInput}
+                  value={codeInput}
+                  onChangeText={setCodeInput}
+                  placeholder="Enter your code"
+                  placeholderTextColor={COLORS.navy.light}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                />
+                
+                {redeemResult && (
+                  <View style={[
+                    styles.resultBox, 
+                    redeemResult.success ? styles.resultSuccess : styles.resultError
+                  ]}>
+                    <Ionicons 
+                      name={redeemResult.success ? "checkmark-circle" : "alert-circle"} 
+                      size={20} 
+                      color={redeemResult.success ? "#2ecc71" : "#e74c3c"} 
+                    />
+                    <View style={styles.resultTextContainer}>
+                      <Text style={styles.resultMessage}>{redeemResult.message}</Text>
+                      {redeemResult.rewards && (
+                        <View style={styles.rewardsContainer}>
+                          {Object.entries(redeemResult.rewards).map(([key, value]) => (
+                            <Text key={key} style={styles.rewardItem}>
+                              +{formatNumber(value as number)} {key}
+                            </Text>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                )}
+                
+                <TouchableOpacity
+                  style={[styles.submitButton, isRedeeming && styles.submitButtonDisabled]}
+                  onPress={handleRedeemCode}
+                  disabled={isRedeeming}
+                >
+                  <LinearGradient 
+                    colors={isRedeeming ? ['#666', '#444'] : [COLORS.gold.primary, COLORS.gold.dark]} 
+                    style={styles.submitButtonGradient}
+                  >
+                    {isRedeeming ? (
+                      <ActivityIndicator color={COLORS.cream.pure} />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark" size={20} color={COLORS.navy.darkest} />
+                        <Text style={styles.submitButtonText}>Redeem</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           {/* Version Info */}
           <Text style={styles.versionText}>Divine Heroes v1.0</Text>

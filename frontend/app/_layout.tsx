@@ -152,6 +152,12 @@ export default function Layout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="combat"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

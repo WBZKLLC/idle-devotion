@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Alert,
   TextInput,
   Modal,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,9 +27,27 @@ export default function GuildScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showDonateModal, setShowDonateModal] = useState(false);
   const [guildName, setGuildName] = useState('');
   const [guildDescription, setGuildDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'info' | 'boss' | 'donate'>('info');
+  
+  // Boss state
+  const [bossData, setBossData] = useState<any>(null);
+  const [isAttacking, setIsAttacking] = useState(false);
+  const [lastAttackResult, setLastAttackResult] = useState<any>(null);
+  
+  // Donation state
+  const [donationType, setDonationType] = useState<'coins' | 'gold'>('coins');
+  const [donationAmount, setDonationAmount] = useState('1000');
+  const [donationHistory, setDonationHistory] = useState<any[]>([]);
+  const [isDonating, setIsDonating] = useState(false);
+  
+  // Boss animation
+  const bossShakeAnim = useRef(new Animated.Value(0)).current;
+  const damagePopAnim = useRef(new Animated.Value(0)).current;
+  const bossScaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (hydrated && user) {
@@ -37,29 +57,29 @@ export default function GuildScreen() {
     }
   }, [hydrated, user]);
 
+  useEffect(() => {
+    if (guildData && activeTab === 'boss') {
+      loadBossData();
+    }
+    if (guildData && activeTab === 'donate') {
+      loadDonationHistory();
+    }
+  }, [guildData, activeTab]);
+
   const loadGuildData = async () => {
-    setIsLoading(true);
     try {
-      // Check if user is in a guild
-      const guildResponse = await fetch(
+      const response = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}`
       );
-      
-      if (guildResponse.ok) {
-        const data = await guildResponse.json();
-        if (data && data.id) {
-          setGuildData(data);
-        } else {
-          setGuildData(null);
-          loadAvailableGuilds();
-        }
+      if (response.ok) {
+        const data = await response.json();
+        setGuildData(data);
       } else {
         setGuildData(null);
         loadAvailableGuilds();
       }
     } catch (error) {
       console.error('Failed to load guild:', error);
-      loadAvailableGuilds();
     } finally {
       setIsLoading(false);
     }
@@ -72,10 +92,38 @@ export default function GuildScreen() {
       );
       if (response.ok) {
         const data = await response.json();
-        setAvailableGuilds(data || []);
+        setAvailableGuilds(data);
       }
     } catch (error) {
       console.error('Failed to load guilds:', error);
+    }
+  };
+
+  const loadBossData = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/boss`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setBossData(data);
+      }
+    } catch (error) {
+      console.error('Failed to load boss:', error);
+    }
+  };
+
+  const loadDonationHistory = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/donations`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setDonationHistory(data.donations || []);
+      }
+    } catch (error) {
+      console.error('Failed to load donations:', error);
     }
   };
 
@@ -132,7 +180,7 @@ export default function GuildScreen() {
   const leaveGuild = async () => {
     Alert.alert(
       'Leave Guild',
-      'Are you sure you want to leave this guild?',
+      'Are you sure you want to leave the guild?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -144,9 +192,8 @@ export default function GuildScreen() {
                 `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/leave?username=${user?.username}`,
                 { method: 'POST' }
               );
-              
               if (response.ok) {
-                Alert.alert('Left Guild', 'You have left the guild');
+                Alert.alert('Success', 'You left the guild');
                 setGuildData(null);
                 loadAvailableGuilds();
               }
@@ -159,316 +206,596 @@ export default function GuildScreen() {
     );
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'leader': return COLORS.gold.primary;
-      case 'officer': return COLORS.rarity.UR;
-      default: return COLORS.cream.soft;
+  const attackBoss = async () => {
+    if (!bossData || bossData.defeated) return;
+    
+    setIsAttacking(true);
+    
+    // Play attack animation
+    playBossHitAnimation();
+    
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/boss/attack`,
+        { method: 'POST' }
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        setLastAttackResult(result);
+        
+        // Update boss HP
+        setBossData((prev: any) => ({
+          ...prev,
+          current_hp: result.boss_hp_remaining,
+          defeated: result.defeated
+        }));
+        
+        if (result.defeated) {
+          Alert.alert(
+            '🎉 Boss Defeated!',
+            `Your contribution: ${result.contribution_percent}%\nRewards: ${JSON.stringify(result.rewards)}`
+          );
+          loadBossData();
+        }
+        
+        fetchUser();
+      } else {
+        const error = await response.json();
+        Alert.alert('Error', error.detail || 'Attack failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to attack boss');
+    } finally {
+      setIsAttacking(false);
     }
   };
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'leader': return 'star';
-      case 'officer': return 'shield';
-      default: return 'person';
+  const playBossHitAnimation = () => {
+    // Shake animation
+    Animated.sequence([
+      Animated.timing(bossShakeAnim, { toValue: 15, duration: 50, useNativeDriver: true }),
+      Animated.timing(bossShakeAnim, { toValue: -15, duration: 50, useNativeDriver: true }),
+      Animated.timing(bossShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(bossShakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(bossShakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+
+    // Scale pop
+    Animated.sequence([
+      Animated.timing(bossScaleAnim, { toValue: 0.9, duration: 100, useNativeDriver: true }),
+      Animated.spring(bossScaleAnim, { toValue: 1, friction: 3, useNativeDriver: true }),
+    ]).start();
+
+    // Damage pop
+    damagePopAnim.setValue(0);
+    Animated.timing(damagePopAnim, {
+      toValue: 1,
+      duration: 600,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const makeDonation = async () => {
+    const amount = parseInt(donationAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+    
+    setIsDonating(true);
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/donate?currency_type=${donationType}&amount=${amount}`,
+        { method: 'POST' }
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        Alert.alert(
+          '💎 Donation Successful!',
+          `Donated ${amount.toLocaleString()} ${donationType}\nGuild Points earned: ${result.guild_points_earned}`
+        );
+        setShowDonateModal(false);
+        fetchUser();
+        loadDonationHistory();
+        loadGuildData();
+      } else {
+        const error = await response.json();
+        Alert.alert('Error', error.detail || 'Donation failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to donate');
+    } finally {
+      setIsDonating(false);
     }
   };
+
+  const getBossHealthPercent = () => {
+    if (!bossData) return 0;
+    return (bossData.current_hp / bossData.max_hp) * 100;
+  };
+
+  const getBossHealthColor = () => {
+    const percent = getBossHealthPercent();
+    if (percent > 60) return '#27ae60';
+    if (percent > 30) return '#f39c12';
+    return '#e74c3c';
+  };
+
+  if (!hydrated) {
+    return (
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={COLORS.gold.primary} />
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
+          <Ionicons name="lock-closed" size={48} color={COLORS.gold.primary} />
           <Text style={styles.errorText}>Please log in first</Text>
+          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/')}>
+            <Text style={styles.loginButtonText}>Go to Login</Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </LinearGradient>
     );
   }
 
-  // Guild Member View
-  if (guildData) {
-    return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.container}>
-          <ScrollView contentContainerStyle={styles.content}>
-            {/* Guild Header */}
-            <LinearGradient
-              colors={[COLORS.gold.primary, COLORS.gold.dark]}
-              style={styles.guildHeader}
-            >
-              <View style={styles.guildIcon}>
-                <Ionicons name="shield" size={40} color={COLORS.navy.darkest} />
-              </View>
-              <Text style={styles.guildName}>{guildData.name}</Text>
-              <Text style={styles.guildDesc}>{guildData.description}</Text>
-              <View style={styles.guildStats}>
-                <View style={styles.guildStat}>
-                  <Text style={styles.guildStatValue}>{guildData.member_count || 0}</Text>
-                  <Text style={styles.guildStatLabel}>Members</Text>
-                </View>
-                <View style={styles.guildStatDivider} />
-                <View style={styles.guildStat}>
-                  <Text style={styles.guildStatValue}>{guildData.level || 1}</Text>
-                  <Text style={styles.guildStatLabel}>Level</Text>
-                </View>
-                <View style={styles.guildStatDivider} />
-                <View style={styles.guildStat}>
-                  <Text style={styles.guildStatValue}>{guildData.total_power?.toLocaleString() || 0}</Text>
-                  <Text style={styles.guildStatLabel}>Power</Text>
-                </View>
-              </View>
-            </LinearGradient>
-            
-            {/* Guild Features */}
-            <View style={styles.featuresGrid}>
-              <TouchableOpacity style={styles.featureCard}>
-                <LinearGradient colors={[COLORS.rarity.SSR, COLORS.rarity.UR]} style={styles.featureGradient}>
-                  <Ionicons name="skull" size={28} color={COLORS.cream.pure} />
-                  <Text style={styles.featureTitle}>Guild Boss</Text>
-                  <Text style={styles.featureDesc}>Coming Soon</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.featureCard}>
-                <LinearGradient colors={[COLORS.success, '#0d5c2e']} style={styles.featureGradient}>
-                  <Ionicons name="gift" size={28} color={COLORS.cream.pure} />
-                  <Text style={styles.featureTitle}>Donations</Text>
-                  <Text style={styles.featureDesc}>Coming Soon</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.featureCard}>
-                <LinearGradient colors={[COLORS.rarity.UR, COLORS.rarity['UR+']]} style={styles.featureGradient}>
-                  <Ionicons name="trophy" size={28} color={COLORS.cream.pure} />
-                  <Text style={styles.featureTitle}>Guild Wars</Text>
-                  <Text style={styles.featureDesc}>Coming Soon</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.featureCard}>
-                <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.featureGradient}>
-                  <Ionicons name="cart" size={28} color={COLORS.navy.darkest} />
-                  <Text style={[styles.featureTitle, { color: COLORS.navy.darkest }]}>Shop</Text>
-                  <Text style={[styles.featureDesc, { color: COLORS.navy.dark }]}>Coming Soon</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Members List */}
-            <View style={styles.membersSection}>
-              <Text style={styles.sectionTitle}>Members</Text>
-              {guildData.members?.map((member: any, index: number) => (
-                <View key={member.user_id || index} style={styles.memberCard}>
-                  <View style={[styles.memberAvatar, { borderColor: getRoleColor(member.role) }]}>
-                    <Ionicons name={getRoleIcon(member.role) as any} size={20} color={getRoleColor(member.role)} />
-                  </View>
-                  <View style={styles.memberInfo}>
-                    <Text style={styles.memberName}>{member.username}</Text>
-                    <Text style={[styles.memberRole, { color: getRoleColor(member.role) }]}>
-                      {member.role?.charAt(0).toUpperCase() + member.role?.slice(1)}
-                    </Text>
-                  </View>
-                  <View style={styles.memberPower}>
-                    <Text style={styles.memberPowerValue}>{member.power?.toLocaleString() || 0}</Text>
-                    <Text style={styles.memberPowerLabel}>Power</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-            
-            {/* Leave Button */}
-            <TouchableOpacity style={styles.leaveButton} onPress={leaveGuild}>
-              <Text style={styles.leaveButtonText}>Leave Guild</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
-
-  // No Guild View
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Guild</Text>
-          <Text style={styles.subtitle}>Join or create a guild to unlock exclusive features!</Text>
-          
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
+          </TouchableOpacity>
+          <Text style={styles.title}>⚔️ Guild</Text>
+          <View style={styles.placeholder} />
+        </View>
+
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {isLoading ? (
             <ActivityIndicator size="large" color={COLORS.gold.primary} style={styles.loader} />
-          ) : (
+          ) : guildData ? (
             <>
-              {/* Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => setShowCreateModal(true)}
-                >
-                  <LinearGradient
-                    colors={[COLORS.gold.primary, COLORS.gold.dark]}
-                    style={styles.actionGradient}
-                  >
-                    <Ionicons name="add-circle" size={28} color={COLORS.navy.darkest} />
-                    <Text style={styles.actionTitle}>Create Guild</Text>
-                    <Text style={styles.actionDesc}>Start your own guild</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => setShowJoinModal(true)}
-                >
-                  <LinearGradient
-                    colors={[COLORS.rarity.UR, COLORS.rarity['UR+']]}
-                    style={styles.actionGradient}
-                  >
-                    <Ionicons name="search" size={28} color={COLORS.cream.pure} />
-                    <Text style={[styles.actionTitle, { color: COLORS.cream.pure }]}>Find Guild</Text>
-                    <Text style={[styles.actionDesc, { color: COLORS.cream.soft }]}>Browse available guilds</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-              
-              {/* Benefits */}
-              <View style={styles.benefitsSection}>
-                <Text style={styles.benefitsTitle}>Guild Benefits</Text>
-                <View style={styles.benefitsList}>
-                  <View style={styles.benefitItem}>
-                    <Ionicons name="people" size={24} color={COLORS.gold.primary} />
-                    <Text style={styles.benefitText}>Team up with other players</Text>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <Ionicons name="skull" size={24} color={COLORS.rarity.UR} />
-                    <Text style={styles.benefitText}>Fight powerful Guild Bosses</Text>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <Ionicons name="gift" size={24} color={COLORS.success} />
-                    <Text style={styles.benefitText}>Donate and request items</Text>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <Ionicons name="trophy" size={24} color={COLORS.gold.light} />
-                    <Text style={styles.benefitText}>Compete in Guild Wars</Text>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <Ionicons name="cart" size={24} color={COLORS.rarity['UR+']} />
-                    <Text style={styles.benefitText}>Access exclusive Guild Shop</Text>
+              {/* Guild Info Card */}
+              <LinearGradient
+                colors={[COLORS.gold.primary, COLORS.gold.dark]}
+                style={styles.guildCard}
+              >
+                <View style={styles.guildHeader}>
+                  <Ionicons name="shield" size={40} color={COLORS.navy.darkest} />
+                  <View style={styles.guildInfo}>
+                    <Text style={styles.guildName}>{guildData.name}</Text>
+                    <Text style={styles.guildLevel}>Level {guildData.level || 1}</Text>
                   </View>
                 </View>
+                <View style={styles.guildStats}>
+                  <View style={styles.guildStat}>
+                    <Text style={styles.guildStatValue}>{guildData.member_count || 0}</Text>
+                    <Text style={styles.guildStatLabel}>Members</Text>
+                  </View>
+                  <View style={styles.guildStat}>
+                    <Text style={styles.guildStatValue}>{(guildData.treasury_coins || 0).toLocaleString()}</Text>
+                    <Text style={styles.guildStatLabel}>Treasury</Text>
+                  </View>
+                  <View style={styles.guildStat}>
+                    <Text style={styles.guildStatValue}>{guildData.exp || 0}</Text>
+                    <Text style={styles.guildStatLabel}>EXP</Text>
+                  </View>
+                </View>
+              </LinearGradient>
+
+              {/* Tab Navigation */}
+              <View style={styles.tabBar}>
+                {(['info', 'boss', 'donate'] as const).map((tab) => (
+                  <TouchableOpacity
+                    key={tab}
+                    style={[styles.tab, activeTab === tab && styles.tabActive]}
+                    onPress={() => setActiveTab(tab)}
+                  >
+                    <Ionicons 
+                      name={tab === 'info' ? 'information-circle' : tab === 'boss' ? 'skull' : 'gift'} 
+                      size={20} 
+                      color={activeTab === tab ? COLORS.navy.darkest : COLORS.cream.soft} 
+                    />
+                    <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                      {tab === 'info' ? 'Info' : tab === 'boss' ? 'Boss' : 'Donate'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
+
+              {/* Tab Content */}
+              {activeTab === 'info' && (
+                <View style={styles.tabContent}>
+                  <Text style={styles.sectionTitle}>Guild Benefits</Text>
+                  {[
+                    { icon: 'people', text: 'Team up with other players' },
+                    { icon: 'skull', text: 'Fight powerful Guild Bosses' },
+                    { icon: 'gift', text: 'Donate and earn Guild Points' },
+                    { icon: 'trophy', text: 'Compete in Guild Wars' },
+                    { icon: 'cart', text: 'Access exclusive Guild Shop' },
+                  ].map((benefit, idx) => (
+                    <View key={idx} style={styles.benefitItem}>
+                      <Ionicons name={benefit.icon as any} size={20} color={COLORS.gold.primary} />
+                      <Text style={styles.benefitText}>{benefit.text}</Text>
+                    </View>
+                  ))}
+                  
+                  <TouchableOpacity style={styles.leaveButton} onPress={leaveGuild}>
+                    <Text style={styles.leaveButtonText}>Leave Guild</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {activeTab === 'boss' && (
+                <View style={styles.tabContent}>
+                  {bossData ? (
+                    <>
+                      {/* Boss Display */}
+                      <Animated.View 
+                        style={[
+                          styles.bossContainer,
+                          { 
+                            transform: [
+                              { translateX: bossShakeAnim },
+                              { scale: bossScaleAnim }
+                            ] 
+                          }
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={bossData.defeated ? ['#555', '#333'] : ['#8e44ad', '#6c3483']}
+                          style={styles.bossCard}
+                        >
+                          <View style={styles.bossIconContainer}>
+                            <Text style={styles.bossEmoji}>
+                              {bossData.boss_name?.includes('Dragon') ? '🐉' : 
+                               bossData.boss_name?.includes('Titan') ? '⚡' : '👹'}
+                            </Text>
+                          </View>
+                          <Text style={styles.bossName}>{bossData.boss_name}</Text>
+                          <Text style={styles.bossElement}>Element: {bossData.element}</Text>
+                          
+                          {/* HP Bar */}
+                          <View style={styles.bossHpContainer}>
+                            <View style={styles.bossHpBarOuter}>
+                              <View 
+                                style={[
+                                  styles.bossHpBarFill, 
+                                  { 
+                                    width: `${getBossHealthPercent()}%`,
+                                    backgroundColor: getBossHealthColor()
+                                  }
+                                ]} 
+                              />
+                            </View>
+                            <Text style={styles.bossHpText}>
+                              {bossData.current_hp?.toLocaleString()} / {bossData.max_hp?.toLocaleString()}
+                            </Text>
+                          </View>
+                          
+                          {bossData.defeated && (
+                            <View style={styles.defeatedBadge}>
+                              <Text style={styles.defeatedText}>DEFEATED</Text>
+                            </View>
+                          )}
+                        </LinearGradient>
+                        
+                        {/* Damage Popup */}
+                        {lastAttackResult && (
+                          <Animated.View 
+                            style={[
+                              styles.damagePopup,
+                              {
+                                opacity: damagePopAnim,
+                                transform: [{
+                                  translateY: damagePopAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, -50]
+                                  })
+                                }]
+                              }
+                            ]}
+                          >
+                            <Text style={[
+                              styles.damageText,
+                              lastAttackResult.is_critical && styles.criticalDamage
+                            ]}>
+                              {lastAttackResult.is_critical ? '💥 CRIT! ' : ''}-{lastAttackResult.damage_dealt?.toLocaleString()}
+                            </Text>
+                          </Animated.View>
+                        )}
+                      </Animated.View>
+                      
+                      {/* Attack Button */}
+                      <TouchableOpacity
+                        style={[styles.attackButton, (isAttacking || bossData.defeated) && styles.attackButtonDisabled]}
+                        onPress={attackBoss}
+                        disabled={isAttacking || bossData.defeated}
+                      >
+                        <LinearGradient
+                          colors={bossData.defeated ? ['#555', '#333'] : ['#e74c3c', '#c0392b']}
+                          style={styles.attackButtonGradient}
+                        >
+                          {isAttacking ? (
+                            <ActivityIndicator color={COLORS.cream.pure} />
+                          ) : (
+                            <>
+                              <Ionicons name="flash" size={24} color={COLORS.cream.pure} />
+                              <Text style={styles.attackButtonText}>
+                                {bossData.defeated ? 'Boss Defeated' : 'ATTACK!'}
+                              </Text>
+                            </>
+                          )}
+                        </LinearGradient>
+                      </TouchableOpacity>
+                      
+                      {/* Your Contribution */}
+                      {lastAttackResult && (
+                        <View style={styles.contributionCard}>
+                          <Text style={styles.contributionTitle}>Your Contribution</Text>
+                          <Text style={styles.contributionValue}>
+                            {lastAttackResult.your_total_damage?.toLocaleString()} damage
+                          </Text>
+                        </View>
+                      )}
+                      
+                      {/* Boss Rewards */}
+                      <View style={styles.rewardsPreview}>
+                        <Text style={styles.rewardsPreviewTitle}>Boss Rewards</Text>
+                        <View style={styles.rewardsRow}>
+                          {Object.entries(bossData.rewards || {}).map(([type, amount]) => (
+                            <View key={type} style={styles.rewardItem}>
+                              <Ionicons 
+                                name={type === 'crystals' ? 'diamond' : type === 'divine_essence' ? 'sparkles' : 'star'} 
+                                size={16} 
+                                color={COLORS.gold.primary} 
+                              />
+                              <Text style={styles.rewardText}>{(amount as number).toLocaleString()}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </>
+                  ) : (
+                    <ActivityIndicator size="large" color={COLORS.gold.primary} />
+                  )}
+                </View>
+              )}
+
+              {activeTab === 'donate' && (
+                <View style={styles.tabContent}>
+                  {/* Donation Card */}
+                  <View style={styles.donateCard}>
+                    <Text style={styles.donateTitle}>Support Your Guild</Text>
+                    <Text style={styles.donateSubtitle}>Donate to earn Guild Points!</Text>
+                    
+                    {/* Currency Selection */}
+                    <View style={styles.currencySelect}>
+                      <TouchableOpacity
+                        style={[styles.currencyOption, donationType === 'coins' && styles.currencyOptionActive]}
+                        onPress={() => setDonationType('coins')}
+                      >
+                        <Ionicons name="cash" size={24} color={donationType === 'coins' ? COLORS.navy.darkest : COLORS.cream.soft} />
+                        <Text style={[styles.currencyText, donationType === 'coins' && styles.currencyTextActive]}>Coins</Text>
+                        <Text style={[styles.currencyBalance, donationType === 'coins' && styles.currencyBalanceActive]}>
+                          {(user?.coins || 0).toLocaleString()}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.currencyOption, donationType === 'gold' && styles.currencyOptionActive]}
+                        onPress={() => setDonationType('gold')}
+                      >
+                        <Ionicons name="star" size={24} color={donationType === 'gold' ? COLORS.navy.darkest : COLORS.cream.soft} />
+                        <Text style={[styles.currencyText, donationType === 'gold' && styles.currencyTextActive]}>Gold</Text>
+                        <Text style={[styles.currencyBalance, donationType === 'gold' && styles.currencyBalanceActive]}>
+                          {(user?.gold || 0).toLocaleString()}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    
+                    {/* Amount Input */}
+                    <View style={styles.amountInputContainer}>
+                      <Text style={styles.amountLabel}>Amount to Donate</Text>
+                      <TextInput
+                        style={styles.amountInput}
+                        value={donationAmount}
+                        onChangeText={setDonationAmount}
+                        keyboardType="numeric"
+                        placeholder="Enter amount"
+                        placeholderTextColor={COLORS.navy.light}
+                      />
+                    </View>
+                    
+                    {/* Quick Amounts */}
+                    <View style={styles.quickAmounts}>
+                      {['1000', '5000', '10000', '50000'].map((amount) => (
+                        <TouchableOpacity
+                          key={amount}
+                          style={styles.quickAmountBtn}
+                          onPress={() => setDonationAmount(amount)}
+                        >
+                          <Text style={styles.quickAmountText}>{parseInt(amount).toLocaleString()}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    
+                    {/* Donate Button */}
+                    <TouchableOpacity
+                      style={[styles.donateButton, isDonating && styles.donateButtonDisabled]}
+                      onPress={makeDonation}
+                      disabled={isDonating}
+                    >
+                      <LinearGradient
+                        colors={[COLORS.gold.primary, COLORS.gold.dark]}
+                        style={styles.donateButtonGradient}
+                      >
+                        {isDonating ? (
+                          <ActivityIndicator color={COLORS.navy.darkest} />
+                        ) : (
+                          <>
+                            <Ionicons name="gift" size={20} color={COLORS.navy.darkest} />
+                            <Text style={styles.donateButtonText}>Donate</Text>
+                          </>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {/* Recent Donations */}
+                  <View style={styles.donationHistory}>
+                    <Text style={styles.historyTitle}>Recent Donations</Text>
+                    {donationHistory.length === 0 ? (
+                      <Text style={styles.noHistory}>No donations yet</Text>
+                    ) : (
+                      donationHistory.slice(0, 5).map((donation, idx) => (
+                        <View key={idx} style={styles.historyItem}>
+                          <Ionicons 
+                            name={donation.currency_type === 'coins' ? 'cash' : 'star'} 
+                            size={16} 
+                            color={COLORS.gold.primary} 
+                          />
+                          <Text style={styles.historyUsername}>{donation.username}</Text>
+                          <Text style={styles.historyAmount}>
+                            +{donation.amount?.toLocaleString()}
+                          </Text>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                </View>
+              )}
             </>
-          )}
-        </ScrollView>
-        
-        {/* Create Guild Modal */}
-        <Modal
-          visible={showCreateModal}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowCreateModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity 
-                style={styles.closeButton}
-                onPress={() => setShowCreateModal(false)}
+          ) : (
+            // No Guild - Show Create/Join options
+            <View style={styles.noGuild}>
+              <Ionicons name="shield-outline" size={80} color={COLORS.gold.primary} />
+              <Text style={styles.noGuildTitle}>Join a Guild</Text>
+              <Text style={styles.noGuildSubtitle}>Team up with other players!</Text>
+              
+              <TouchableOpacity
+                style={styles.createGuildButton}
+                onPress={() => setShowCreateModal(true)}
               >
-                <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                <LinearGradient
+                  colors={[COLORS.gold.primary, COLORS.gold.dark]}
+                  style={styles.createGuildGradient}
+                >
+                  <Ionicons name="add-circle" size={24} color={COLORS.navy.darkest} />
+                  <Text style={styles.createGuildText}>Create Guild</Text>
+                </LinearGradient>
               </TouchableOpacity>
               
-              <Text style={styles.modalTitle}>Create Guild</Text>
+              <TouchableOpacity
+                style={styles.findGuildButton}
+                onPress={() => { loadAvailableGuilds(); setShowJoinModal(true); }}
+              >
+                <Text style={styles.findGuildText}>Find Guild</Text>
+              </TouchableOpacity>
               
+              {/* Benefits Preview */}
+              <View style={styles.benefitsPreview}>
+                <Text style={styles.benefitsTitle}>Guild Benefits</Text>
+                {[
+                  { icon: 'people', text: 'Team up with other players' },
+                  { icon: 'skull', text: 'Fight powerful Guild Bosses' },
+                  { icon: 'gift', text: 'Donate and request items' },
+                  { icon: 'trophy', text: 'Compete in Guild Wars' },
+                  { icon: 'cart', text: 'Access exclusive Guild Shop' },
+                ].map((benefit, idx) => (
+                  <View key={idx} style={styles.benefitItem}>
+                    <Ionicons name={benefit.icon as any} size={20} color={COLORS.gold.primary} />
+                    <Text style={styles.benefitText}>{benefit.text}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Create Guild Modal */}
+        <Modal visible={showCreateModal} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Create Guild</Text>
               <TextInput
-                style={styles.input}
+                style={styles.modalInput}
                 placeholder="Guild Name"
                 placeholderTextColor={COLORS.navy.light}
                 value={guildName}
                 onChangeText={setGuildName}
-                maxLength={20}
               />
-              
               <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Guild Description (optional)"
+                style={[styles.modalInput, styles.modalTextArea]}
+                placeholder="Description (optional)"
                 placeholderTextColor={COLORS.navy.light}
                 value={guildDescription}
                 onChangeText={setGuildDescription}
                 multiline
-                numberOfLines={3}
-                maxLength={100}
               />
-              
-              <View style={styles.costInfo}>
-                <Ionicons name="cash" size={20} color={COLORS.gold.light} />
-                <Text style={styles.costText}>Cost: 10,000 Gold</Text>
-              </View>
-              
-              <TouchableOpacity
-                style={styles.createButton}
-                onPress={createGuild}
-                disabled={isCreating}
-              >
-                <LinearGradient
-                  colors={[COLORS.gold.primary, COLORS.gold.dark]}
-                  style={styles.createGradient}
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => setShowCreateModal(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalConfirmBtn, isCreating && styles.modalConfirmDisabled]}
+                  onPress={createGuild}
+                  disabled={isCreating}
                 >
                   {isCreating ? (
                     <ActivityIndicator color={COLORS.navy.darkest} />
                   ) : (
-                    <Text style={styles.createButtonText}>Create Guild</Text>
+                    <Text style={styles.modalConfirmText}>Create</Text>
                   )}
-                </LinearGradient>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
-        
+
         {/* Join Guild Modal */}
-        <Modal
-          visible={showJoinModal}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setShowJoinModal(false)}
-        >
+        <Modal visible={showJoinModal} transparent animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <TouchableOpacity 
-                style={styles.closeButton}
-                onPress={() => setShowJoinModal(false)}
-              >
-                <Ionicons name="close" size={24} color={COLORS.cream.pure} />
-              </TouchableOpacity>
-              
-              <Text style={styles.modalTitle}>Find Guild</Text>
-              
-              <ScrollView style={styles.guildsList}>
+              <Text style={styles.modalTitle}>Available Guilds</Text>
+              <ScrollView style={styles.guildList}>
                 {availableGuilds.length === 0 ? (
-                  <View style={styles.noGuilds}>
-                    <Ionicons name="search" size={48} color={COLORS.navy.light} />
-                    <Text style={styles.noGuildsText}>No guilds available</Text>
-                    <Text style={styles.noGuildsSubtext}>Be the first to create one!</Text>
-                  </View>
+                  <Text style={styles.noGuildsText}>No guilds available</Text>
                 ) : (
-                  availableGuilds.map((guild) => (
+                  availableGuilds.map((guild, idx) => (
                     <TouchableOpacity
-                      key={guild.id}
+                      key={idx}
                       style={styles.guildListItem}
                       onPress={() => joinGuild(guild.id)}
                     >
-                      <View style={styles.guildListIcon}>
-                        <Ionicons name="shield" size={24} color={COLORS.gold.primary} />
-                      </View>
+                      <Ionicons name="shield" size={24} color={COLORS.gold.primary} />
                       <View style={styles.guildListInfo}>
                         <Text style={styles.guildListName}>{guild.name}</Text>
-                        <Text style={styles.guildListDesc}>{guild.description}</Text>
-                        <Text style={styles.guildListMembers}>
-                          {guild.member_count || 0} members • Level {guild.level || 1}
-                        </Text>
+                        <Text style={styles.guildListMembers}>{guild.member_count} members</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={20} color={COLORS.cream.dark} />
                     </TouchableOpacity>
                   ))
                 )}
               </ScrollView>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowJoinModal(false)}
+              >
+                <Text style={styles.modalCancelText}>Close</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -479,67 +806,151 @@ export default function GuildScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 16, paddingTop: 60, paddingBottom: 100 },
-  title: { fontSize: 32, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
-  subtitle: { fontSize: 14, color: COLORS.cream.dark, textAlign: 'center', marginBottom: 24 },
+  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  backButton: { padding: 8 },
+  title: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
+  placeholder: { width: 40 },
+  content: { padding: 16, paddingTop: 0, paddingBottom: 100 },
   loader: { marginTop: 40 },
-  guildHeader: { borderRadius: 20, padding: 24, alignItems: 'center', marginBottom: 20 },
-  guildIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: COLORS.navy.darkest + '40', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  guildName: { fontSize: 28, fontWeight: 'bold', color: COLORS.navy.darkest, marginBottom: 4 },
-  guildDesc: { fontSize: 14, color: COLORS.navy.dark, textAlign: 'center', marginBottom: 16 },
-  guildStats: { flexDirection: 'row', alignItems: 'center' },
-  guildStat: { alignItems: 'center', paddingHorizontal: 20 },
-  guildStatValue: { fontSize: 24, fontWeight: 'bold', color: COLORS.navy.darkest },
+  
+  // Guild Card
+  guildCard: { borderRadius: 16, padding: 20, marginBottom: 16 },
+  guildHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  guildInfo: { marginLeft: 12 },
+  guildName: { fontSize: 20, fontWeight: 'bold', color: COLORS.navy.darkest },
+  guildLevel: { fontSize: 14, color: COLORS.navy.dark },
+  guildStats: { flexDirection: 'row', justifyContent: 'space-around' },
+  guildStat: { alignItems: 'center' },
+  guildStatValue: { fontSize: 18, fontWeight: 'bold', color: COLORS.navy.darkest },
   guildStatLabel: { fontSize: 12, color: COLORS.navy.dark },
-  guildStatDivider: { width: 1, height: 30, backgroundColor: COLORS.navy.darkest + '40' },
-  featuresGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 20 },
-  featureCard: { width: '48%', marginBottom: 12, borderRadius: 16, overflow: 'hidden' },
-  featureGradient: { padding: 16, alignItems: 'center', minHeight: 100 },
-  featureTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 8 },
-  featureDesc: { fontSize: 11, color: COLORS.cream.soft },
-  membersSection: { marginBottom: 20 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.gold.light, marginBottom: 12 },
-  memberCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
-  memberAvatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.navy.dark },
-  memberInfo: { flex: 1, marginLeft: 12 },
-  memberName: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
-  memberRole: { fontSize: 12 },
-  memberPower: { alignItems: 'flex-end' },
-  memberPowerValue: { fontSize: 14, fontWeight: 'bold', color: COLORS.gold.primary },
-  memberPowerLabel: { fontSize: 10, color: COLORS.cream.dark },
-  leaveButton: { backgroundColor: COLORS.error, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
-  leaveButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
-  actionButtons: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  actionButton: { flex: 1, borderRadius: 16, overflow: 'hidden' },
-  actionGradient: { padding: 20, alignItems: 'center' },
-  actionTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest, marginTop: 8 },
-  actionDesc: { fontSize: 12, color: COLORS.navy.dark },
-  benefitsSection: { backgroundColor: COLORS.navy.medium, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
-  benefitsTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 16, textAlign: 'center' },
-  benefitsList: { gap: 12 },
-  benefitItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  benefitText: { fontSize: 14, color: COLORS.cream.soft },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: COLORS.navy.primary, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingTop: 40, maxHeight: '80%' },
-  closeButton: { position: 'absolute', top: 16, right: 16, zIndex: 1 },
-  modalTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center', marginBottom: 20 },
-  input: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, fontSize: 16, color: COLORS.cream.pure, marginBottom: 12, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
-  textArea: { height: 80, textAlignVertical: 'top' },
-  costInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 },
-  costText: { fontSize: 14, color: COLORS.gold.light },
-  createButton: { borderRadius: 12, overflow: 'hidden' },
-  createGradient: { padding: 16, alignItems: 'center' },
-  createButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
-  guildsList: { maxHeight: 400 },
-  noGuilds: { alignItems: 'center', paddingVertical: 40 },
-  noGuildsText: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 12 },
-  noGuildsSubtext: { fontSize: 14, color: COLORS.cream.dark, marginTop: 4 },
-  guildListItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
-  guildListIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.gold.dark + '30', alignItems: 'center', justifyContent: 'center' },
+  
+  // Tab Bar
+  tabBar: { flexDirection: 'row', marginBottom: 16, backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 4 },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 8, gap: 6 },
+  tabActive: { backgroundColor: COLORS.gold.primary },
+  tabText: { fontSize: 14, fontWeight: '600', color: COLORS.cream.soft },
+  tabTextActive: { color: COLORS.navy.darkest },
+  tabContent: { flex: 1 },
+  
+  // Benefits
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
+  benefitItem: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12, backgroundColor: COLORS.navy.medium, padding: 12, borderRadius: 10 },
+  benefitText: { fontSize: 14, color: COLORS.cream.soft, flex: 1 },
+  
+  leaveButton: { marginTop: 20, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10 },
+  leaveButtonText: { color: '#e74c3c', fontSize: 14, fontWeight: '600' },
+  
+  // Boss
+  bossContainer: { alignItems: 'center', marginBottom: 20, position: 'relative' },
+  bossCard: { borderRadius: 20, padding: 24, alignItems: 'center', width: '100%' },
+  bossIconContainer: { marginBottom: 12 },
+  bossEmoji: { fontSize: 60 },
+  bossName: { fontSize: 24, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 4 },
+  bossElement: { fontSize: 14, color: COLORS.cream.soft, marginBottom: 16 },
+  bossHpContainer: { width: '100%' },
+  bossHpBarOuter: { height: 16, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 8, overflow: 'hidden', marginBottom: 4 },
+  bossHpBarFill: { height: '100%', borderRadius: 8 },
+  bossHpText: { fontSize: 12, color: COLORS.cream.soft, textAlign: 'center' },
+  defeatedBadge: { position: 'absolute', top: 10, right: 10, backgroundColor: '#555', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  defeatedText: { fontSize: 10, fontWeight: 'bold', color: COLORS.cream.pure },
+  
+  damagePopup: { position: 'absolute', top: 20 },
+  damageText: { fontSize: 24, fontWeight: 'bold', color: '#e74c3c' },
+  criticalDamage: { fontSize: 32, color: COLORS.gold.primary },
+  
+  attackButton: { borderRadius: 30, overflow: 'hidden', marginBottom: 16 },
+  attackButtonDisabled: { opacity: 0.6 },
+  attackButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 12 },
+  attackButtonText: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, letterSpacing: 1 },
+  
+  contributionCard: { backgroundColor: COLORS.navy.medium, padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 16 },
+  contributionTitle: { fontSize: 12, color: COLORS.cream.dark },
+  contributionValue: { fontSize: 20, fontWeight: 'bold', color: COLORS.gold.primary },
+  
+  rewardsPreview: { backgroundColor: COLORS.navy.medium, padding: 16, borderRadius: 12 },
+  rewardsPreviewTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 8 },
+  rewardsRow: { flexDirection: 'row', justifyContent: 'center', gap: 20 },
+  rewardItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rewardText: { fontSize: 14, color: COLORS.cream.soft },
+  
+  // Donate
+  donateCard: { backgroundColor: COLORS.navy.medium, borderRadius: 16, padding: 20, marginBottom: 16 },
+  donateTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
+  donateSubtitle: { fontSize: 12, color: COLORS.cream.dark, textAlign: 'center', marginBottom: 16 },
+  
+  currencySelect: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  currencyOption: { flex: 1, backgroundColor: COLORS.navy.primary, borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
+  currencyOptionActive: { backgroundColor: COLORS.gold.primary, borderColor: COLORS.gold.light },
+  currencyText: { fontSize: 14, fontWeight: '600', color: COLORS.cream.soft, marginTop: 4 },
+  currencyTextActive: { color: COLORS.navy.darkest },
+  currencyBalance: { fontSize: 12, color: COLORS.cream.dark },
+  currencyBalanceActive: { color: COLORS.navy.dark },
+  
+  amountInputContainer: { marginBottom: 12 },
+  amountLabel: { fontSize: 12, color: COLORS.cream.dark, marginBottom: 6 },
+  amountInput: { backgroundColor: COLORS.navy.primary, borderRadius: 10, padding: 14, color: COLORS.cream.pure, fontSize: 16, textAlign: 'center' },
+  
+  quickAmounts: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  quickAmountBtn: { flex: 1, backgroundColor: COLORS.navy.primary, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  quickAmountText: { fontSize: 12, color: COLORS.cream.soft },
+  
+  donateButton: { borderRadius: 25, overflow: 'hidden' },
+  donateButtonDisabled: { opacity: 0.6 },
+  donateButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
+  donateButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
+  
+  donationHistory: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16 },
+  historyTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
+  noHistory: { fontSize: 12, color: COLORS.cream.dark, textAlign: 'center' },
+  historyItem: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  historyUsername: { flex: 1, fontSize: 12, color: COLORS.cream.soft },
+  historyAmount: { fontSize: 12, color: COLORS.gold.primary, fontWeight: '600' },
+  
+  // No Guild
+  noGuild: { alignItems: 'center', paddingTop: 40 },
+  noGuildTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 16 },
+  noGuildSubtitle: { fontSize: 14, color: COLORS.cream.dark, marginBottom: 24 },
+  
+  createGuildButton: { borderRadius: 25, overflow: 'hidden', marginBottom: 12 },
+  createGuildGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 32, gap: 8 },
+  createGuildText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
+  
+  findGuildButton: { padding: 14 },
+  findGuildText: { fontSize: 16, color: COLORS.gold.primary },
+  
+  benefitsPreview: { marginTop: 32, width: '100%' },
+  benefitsTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12, textAlign: 'center' },
+  
+  // Modals
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', alignItems: 'center', justifyContent: 'center' },
+  modalContent: { backgroundColor: COLORS.navy.medium, borderRadius: 20, padding: 24, width: '85%', maxWidth: 400 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 16, textAlign: 'center' },
+  modalInput: { backgroundColor: COLORS.navy.primary, borderRadius: 10, padding: 14, color: COLORS.cream.pure, marginBottom: 12 },
+  modalTextArea: { height: 80, textAlignVertical: 'top' },
+  modalButtons: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  modalCancelBtn: { flex: 1, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: COLORS.cream.dark, borderRadius: 10 },
+  modalCancelText: { color: COLORS.cream.soft, fontSize: 14, fontWeight: '600' },
+  modalConfirmBtn: { flex: 1, backgroundColor: COLORS.gold.primary, padding: 14, alignItems: 'center', borderRadius: 10 },
+  modalConfirmDisabled: { opacity: 0.6 },
+  modalConfirmText: { color: COLORS.navy.darkest, fontSize: 14, fontWeight: '600' },
+  
+  guildList: { maxHeight: 300 },
+  noGuildsText: { fontSize: 14, color: COLORS.cream.dark, textAlign: 'center', paddingVertical: 20 },
+  guildListItem: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: COLORS.navy.primary, borderRadius: 10, marginBottom: 8 },
   guildListInfo: { flex: 1, marginLeft: 12 },
-  guildListName: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
-  guildListDesc: { fontSize: 12, color: COLORS.cream.soft, marginTop: 2 },
-  guildListMembers: { fontSize: 11, color: COLORS.cream.dark, marginTop: 4 },
+  guildListName: { fontSize: 14, fontWeight: '600', color: COLORS.cream.pure },
+  guildListMembers: { fontSize: 12, color: COLORS.cream.dark },
+  
+  // Error states
   errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
+  loginButton: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
+  loginButtonText: { color: COLORS.navy.darkest, fontSize: 16, fontWeight: 'bold' },
 });

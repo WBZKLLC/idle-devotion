@@ -1333,10 +1333,13 @@ async def pull_gacha(username: str, request: PullRequest):
             current_def=hero.get("base_def", 50)
         )
         
-        # Add hero name for frontend display
+        # Add hero info for frontend display
         user_hero_dict = user_hero.dict()
         user_hero_dict["hero_name"] = hero.get("name")
         user_hero_dict["rarity"] = hero.get("rarity")
+        user_hero_dict["image_url"] = hero.get("image_url")
+        user_hero_dict["element"] = hero.get("element")
+        user_hero_dict["hero_class"] = hero.get("hero_class")
         
         # Check for duplicates and merge
         existing_heroes = await db.user_heroes.find(

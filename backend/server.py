@@ -1148,9 +1148,9 @@ async def pull_gacha(username: str, request: PullRequest):
             marquee = MarqueeNotification(
                 server_id=user.server_id,
                 username=username,
-                hero_name=hero.name,
-                hero_rarity=hero.rarity,
-                message=f"🎉 {username} obtained {hero.rarity} {hero.name}!"
+                hero_name=hero.get("name"),
+                hero_rarity=hero.get("rarity"),
+                message=f"🎉 {username} obtained {hero.get('rarity')} {hero.get('name')}!"
             )
             await db.marquee_notifications.insert_one(marquee.dict())
         

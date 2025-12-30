@@ -3571,22 +3571,25 @@ async def get_guild_boss(username: str):
         raise HTTPException(status_code=400, detail="Not in a guild")
     
     # Get or create guild boss state
-    boss_state = await db.guild_bosses.find_one({"guild_id": guild["id"]})
+    boss_state = await db.guild_bosses.find_one({"guild_id": guild["id"], "defeated": False})
     
-    if not boss_state or boss_state.get("defeated", False):
-        # Spawn new boss
-        boss_template = random.choice(GUILD_BOSSES)
+    if not boss_state:
+        # Spawn new boss based on guild level
         guild_level = guild.get("level", 1)
+        boss_template = get_boss_for_guild_level(guild_level)
+        
+        level_multiplier = 1 + (guild_level - 1) * 0.15
         
         boss_state = {
             "id": str(uuid.uuid4()),
             "guild_id": guild["id"],
             "boss_id": boss_template["id"],
             "boss_name": boss_template["name"],
+            "tier": boss_template["tier"],
             "element": boss_template["element"],
-            "max_hp": int(boss_template["base_hp"] * (1 + guild_level * 0.1)),
-            "current_hp": int(boss_template["base_hp"] * (1 + guild_level * 0.1)),
-            "atk": int(boss_template["base_atk"] * (1 + guild_level * 0.1)),
+            "max_hp": int(boss_template["base_hp"] * level_multiplier),
+            "current_hp": int(boss_template["base_hp"] * level_multiplier),
+            "atk": int(boss_template["base_atk"] * level_multiplier),
             "rewards": boss_template["rewards"],
             "damage_contributors": {},
             "spawn_time": datetime.utcnow().isoformat(),
@@ -3594,10 +3597,7 @@ async def get_guild_boss(username: str):
             "defeated": False
         }
         
-        if await db.guild_bosses.find_one({"guild_id": guild["id"], "defeated": False}):
-            boss_state = await db.guild_bosses.find_one({"guild_id": guild["id"], "defeated": False})
-        else:
-            await db.guild_bosses.insert_one(boss_state)
+        await db.guild_bosses.insert_one(boss_state)
     
     return convert_objectid(boss_state)
 

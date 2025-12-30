@@ -894,6 +894,11 @@ const styles = StyleSheet.create({
   contributionTitle: { fontSize: 12, color: COLORS.cream.dark },
   contributionValue: { fontSize: 20, fontWeight: 'bold', color: COLORS.gold.primary },
   
+  // Attacks counter
+  attacksCounter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 },
+  attacksCounterText: { fontSize: 14, color: COLORS.cream.soft },
+  vipBonusText: { fontSize: 12, color: COLORS.gold.primary, marginLeft: 4 },
+  
   rewardsPreview: { backgroundColor: COLORS.navy.medium, padding: 16, borderRadius: 12 },
   rewardsPreviewTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 8 },
   rewardsRow: { flexDirection: 'row', justifyContent: 'center', gap: 20 },

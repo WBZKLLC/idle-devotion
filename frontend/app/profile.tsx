@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,32 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import COLORS from '../theme/colors';
 
+const API_BASE = '/api';
+
 export default function ProfileScreen() {
-  const { user, userHeroes, fetchUserHeroes } = useGameStore();
+  const { user, userHeroes, fetchUserHeroes, fetchUser, logout } = useGameStore();
+  const hydrated = useHydration();
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemResult, setRedeemResult] = useState<{success: boolean; message: string; rewards?: any} | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (hydrated && user) {
       fetchUserHeroes();
     }
-  }, [user]);
+  }, [hydrated, user?.username]);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -33,13 +44,53 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.removeItem('divine_heroes_username');
-            useGameStore.getState().setUser(null);
+            await logout();
           },
         },
       ],
       { cancelable: true }
     );
+  };
+
+  const handleRedeemCode = async () => {
+    if (!codeInput.trim()) {
+      Alert.alert('Error', 'Please enter a code');
+      return;
+    }
+    if (!user) return;
+
+    setIsRedeeming(true);
+    setRedeemResult(null);
+
+    try {
+      const response = await axios.post(
+        `${API_BASE}/codes/redeem?username=${encodeURIComponent(user.username)}&code=${encodeURIComponent(codeInput.trim())}`
+      );
+      
+      setRedeemResult({
+        success: true,
+        message: response.data.message,
+        rewards: response.data.rewards
+      });
+      
+      // Refresh user data to update currencies
+      await fetchUser();
+      setCodeInput('');
+    } catch (error: any) {
+      setRedeemResult({
+        success: false,
+        message: error.response?.data?.detail || 'Failed to redeem code'
+      });
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toLocaleString();
   };
 
   if (!user) {

@@ -255,6 +255,8 @@ const styles = StyleSheet.create({
   rarityText: { color: COLORS.cream.pure, fontSize: 10, fontWeight: 'bold' },
   heroImage: { width: 70, height: 70, borderRadius: 35, marginVertical: 8, borderWidth: 2, borderColor: COLORS.navy.light },
   heroImagePlaceholder: { width: 70, height: 70, borderRadius: 35, marginVertical: 8, backgroundColor: COLORS.navy.dark, justifyContent: 'center', alignItems: 'center' },
+  fillerIconContainer: { width: 70, height: 70, borderRadius: 35, marginVertical: 8, backgroundColor: COLORS.navy.dark, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.gold.dark },
+  fillerIcon: { fontSize: 36 },
   heroName: { color: COLORS.cream.soft, fontSize: 11, fontWeight: '600', textAlign: 'center', marginTop: 4 },
   heroElement: { fontSize: 10, fontWeight: '500', marginTop: 2 },
   closeResultsButton: { backgroundColor: COLORS.gold.primary, paddingVertical: 14, borderRadius: 12, marginTop: 20 },

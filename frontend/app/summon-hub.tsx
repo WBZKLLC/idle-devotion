@@ -78,6 +78,8 @@ export default function SummonHubScreen() {
     </Modal>
   );
 
+  if (!hydrated) return (<LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}><SafeAreaView style={styles.container}><ActivityIndicator size="large" color={COLORS.gold.primary} /></SafeAreaView></LinearGradient>);
+  
   if (!user) return (<LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}><SafeAreaView style={styles.container}><Text style={styles.loginText}>Please log in first</Text></SafeAreaView></LinearGradient>);
 
   return (

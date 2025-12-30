@@ -1,0 +1,71 @@
+// Dynamic Expo configuration for native builds with RevenueCat
+module.exports = ({ config }) => {
+  const isNativeBuild = process.env.EAS_BUILD === 'true';
+  
+  const baseConfig = {
+    ...config,
+    name: 'Divine Heroes',
+    slug: 'divine-heroes-gacha',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './assets/images/icon.png',
+    scheme: 'divineheroes',
+    userInterfaceStyle: 'dark',
+    newArchEnabled: true,
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: 'com.divineheroes.gacha',
+      buildNumber: '1',
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: './assets/images/adaptive-icon.png',
+        backgroundColor: '#0a1628',
+      },
+      edgeToEdgeEnabled: true,
+      package: 'com.divineheroes.gacha',
+      versionCode: 1,
+    },
+    web: {
+      bundler: 'metro',
+      output: 'static',
+      favicon: './assets/images/favicon.png',
+    },
+    plugins: [
+      'expo-router',
+      [
+        'expo-splash-screen',
+        {
+          image: './assets/images/splash-icon.png',
+          imageWidth: 200,
+          resizeMode: 'contain',
+          backgroundColor: '#0a1628',
+        },
+      ],
+    ],
+    experiments: {
+      typedRoutes: true,
+    },
+    extra: {
+      eas: {
+        projectId: 'divine-heroes-gacha',
+      },
+      BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://gacha-guardian.preview.emergentagent.com',
+      REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',
+    },
+  };
+
+  // Add RevenueCat plugin only for native EAS builds
+  if (isNativeBuild) {
+    const revenueCatApiKey = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_GHJByEeqdUHXOWbuvIWFFrQFXjB';
+    baseConfig.plugins.push([
+      'react-native-purchases',
+      {
+        ios: { apiKey: revenueCatApiKey },
+        android: { apiKey: revenueCatApiKey },
+      },
+    ]);
+  }
+
+  return baseConfig;
+};

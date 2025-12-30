@@ -3619,7 +3619,7 @@ async def get_guild_boss(username: str):
 
 @api_router.post("/guild/{username}/boss/attack")
 async def attack_guild_boss(username: str):
-    """Attack the guild boss"""
+    """Attack the guild boss (limited daily attacks based on VIP level)"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -3627,6 +3627,34 @@ async def attack_guild_boss(username: str):
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
         raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    # Calculate max daily attacks based on VIP level
+    vip_level = user.get("vip_level", 0)
+    max_attacks = 3  # Base attacks
+    if vip_level >= 15:
+        max_attacks += 4  # +2 at VIP 15
+    elif vip_level >= 11:
+        max_attacks += 2  # +2 at VIP 11
+    elif vip_level >= 9:
+        max_attacks += 2  # +1 at VIP 9, +1 at VIP 7
+    elif vip_level >= 7:
+        max_attacks += 1  # +1 at VIP 7
+    
+    # Check/reset daily attacks
+    today = datetime.utcnow().date()
+    last_reset = user.get("guild_boss_attack_last_reset")
+    attacks_today = user.get("guild_boss_attacks_today", 0)
+    
+    if last_reset:
+        last_reset_date = last_reset.date() if isinstance(last_reset, datetime) else datetime.fromisoformat(str(last_reset)).date()
+        if last_reset_date < today:
+            attacks_today = 0  # Reset for new day
+    
+    if attacks_today >= max_attacks:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Daily boss attacks exhausted ({attacks_today}/{max_attacks}). VIP {7 if max_attacks == 3 else 'higher'} unlocks more attacks!"
+        )
     
     boss_state = await db.guild_bosses.find_one({"guild_id": guild["id"], "defeated": False})
     if not boss_state:

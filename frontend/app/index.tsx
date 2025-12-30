@@ -98,11 +98,79 @@ export default function HomeScreen() {
     } catch (error) { console.error('CR error:', error); }
   };
 
+  const [password, setPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const { registerUser, loginWithPassword, setPasswordForLegacyAccount, needsPassword } = useGameStore();
+
   const handleStartGame = async () => {
-    if (!username.trim()) { Alert.alert('Enter Username', 'Please enter a username to begin'); return; }
-    try {
-      await initUser(username.trim());
-    } catch (error) { Alert.alert('Error', 'Failed to create account'); }
+    const trimmedUsername = username.trim();
+    if (!trimmedUsername) { 
+      Alert.alert('Enter Username', 'Please enter a username to begin'); 
+      return; 
+    }
+    if (!password) {
+      Alert.alert('Enter Password', 'Please enter a password to secure your account');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Password Too Short', 'Password must be at least 6 characters');
+      return;
+    }
+    
+    setAuthError('');
+    
+    if (isRegistering) {
+      // Registration flow
+      if (password !== confirmPassword) {
+        Alert.alert('Password Mismatch', 'Passwords do not match');
+        return;
+      }
+      
+      const result = await registerUser(trimmedUsername, password);
+      if (!result.success) {
+        setAuthError(result.error || 'Registration failed');
+      }
+    } else {
+      // Login flow
+      const result = await loginWithPassword(trimmedUsername, password);
+      if (!result.success) {
+        if (result.error === 'NEEDS_PASSWORD') {
+          // Legacy account - prompt to set password
+          Alert.alert(
+            'Account Security Upgrade',
+            'This account was created before passwords were required. Please set a password to secure your account.',
+            [
+              {
+                text: 'Set Password',
+                onPress: async () => {
+                  const setResult = await setPasswordForLegacyAccount(trimmedUsername, password);
+                  if (!setResult.success) {
+                    setAuthError(setResult.error || 'Failed to set password');
+                  } else {
+                    Alert.alert('Success', 'Password set successfully! Your account is now secure.');
+                  }
+                }
+              }
+            ]
+          );
+        } else if (result.error?.includes('Invalid username')) {
+          // User doesn't exist - offer to register
+          Alert.alert(
+            'Account Not Found',
+            'No account with this username exists. Would you like to create a new account?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Create Account', onPress: () => setIsRegistering(true) }
+            ]
+          );
+        } else {
+          setAuthError(result.error || 'Login failed');
+        }
+      }
+    }
   };
 
   if (!hydrated || isLoading) {

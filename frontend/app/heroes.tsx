@@ -179,7 +179,7 @@ export default function HeroesScreen() {
                   <TouchableOpacity
                     key={hero.id}
                     style={styles.heroCard}
-                    onPress={() => router.push(`/hero-upgrade?heroId=${hero.id}`)}
+                    onPress={() => router.push(`/hero-detail?id=${hero.id}`)}
                   >
                     <LinearGradient
                       colors={[getRarityColor(heroData?.rarity) + '40', COLORS.navy.dark]}

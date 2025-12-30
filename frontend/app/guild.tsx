@@ -526,12 +526,12 @@ export default function GuildScreen() {
                       
                       {/* Attack Button */}
                       <TouchableOpacity
-                        style={[styles.attackButton, (isAttacking || bossData.defeated) && styles.attackButtonDisabled]}
+                        style={[styles.attackButton, (isAttacking || bossData.defeated || attacksRemaining <= 0) && styles.attackButtonDisabled]}
                         onPress={attackBoss}
-                        disabled={isAttacking || bossData.defeated}
+                        disabled={isAttacking || bossData.defeated || attacksRemaining <= 0}
                       >
                         <LinearGradient
-                          colors={bossData.defeated ? ['#555', '#333'] : ['#e74c3c', '#c0392b']}
+                          colors={bossData.defeated ? ['#555', '#333'] : attacksRemaining <= 0 ? ['#666', '#444'] : ['#e74c3c', '#c0392b']}
                           style={styles.attackButtonGradient}
                         >
                           {isAttacking ? (
@@ -540,12 +540,23 @@ export default function GuildScreen() {
                             <>
                               <Ionicons name="flash" size={24} color={COLORS.cream.pure} />
                               <Text style={styles.attackButtonText}>
-                                {bossData.defeated ? 'Boss Defeated' : 'ATTACK!'}
+                                {bossData.defeated ? 'Boss Defeated' : attacksRemaining <= 0 ? 'No Attacks Left' : 'ATTACK!'}
                               </Text>
                             </>
                           )}
                         </LinearGradient>
                       </TouchableOpacity>
+                      
+                      {/* Attacks Remaining Counter */}
+                      <View style={styles.attacksCounter}>
+                        <Ionicons name="flame" size={16} color={attacksRemaining > 0 ? COLORS.gold.primary : '#666'} />
+                        <Text style={[styles.attacksCounterText, attacksRemaining <= 0 && { color: '#666' }]}>
+                          {attacksRemaining}/{maxAttacks} attacks today
+                        </Text>
+                        {user?.vip_level && user.vip_level >= 7 && (
+                          <Text style={styles.vipBonusText}>👑 VIP Bonus</Text>
+                        )}
+                      </View>
                       
                       {/* Your Contribution */}
                       {lastAttackResult && (

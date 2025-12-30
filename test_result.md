@@ -134,6 +134,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Gacha system working correctly. Single/multi pulls with crystals and coins work. Pity counter increments properly. API uses 'crystals' not 'gems' as currency name."
+      - working: true
+        agent: "testing"
+        comment: "✅ DIVINE SUMMON TESTED: Divine Summon system with new rate changes fully functional. User Adam has 2B divine essence from currency gift. Multi-pull (10x divine essence) working correctly. Response includes BOTH heroes AND filler rewards as required. Filler rewards have 'is_filler': true and 'display' field. Filler_rewards_collected populated with correct currency totals (crystals, gold, coins, divine_essence, hero_shards). Rate distribution correct: ~90% filler, ~10% heroes (UR+ 0.8%, UR 2.7%). Crystal jackpots and all filler reward types working. Divine essence cost correct (1 single, 10 multi). Successfully pulled UR+ Michael the Archangel and UR Seraphiel the Radiant during testing."
 
   - task: "Hero management and collection"
     implemented: true

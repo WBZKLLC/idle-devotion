@@ -1092,7 +1092,10 @@ async def pull_gacha(username: str, request: PullRequest):
     pulled_heroes = []
     for _ in range(num_pulls):
         pity_counter += 1
-        hero = get_random_hero(pity_counter, summon_type)
+        hero = await get_random_hero_from_db(pity_counter, summon_type)
+        
+        if not hero:
+            continue  # Skip if no hero found (shouldn't happen)
         
         # Reset pity based on pool type
         if summon_type == "divine":
@@ -1101,30 +1104,30 @@ async def pull_gacha(username: str, request: PullRequest):
                 pity_counter = 0
         elif summon_type == "premium":
             # Premium: reset on SSR or UR
-            if hero.rarity in ["SSR", "UR"]:
+            if hero.get("rarity") in ["SSR", "UR"]:
                 pity_counter = 0
         else:
             # Common: reset on SSR or SSR+
-            if hero.rarity in ["SSR", "SSR+"]:
+            if hero.get("rarity") in ["SSR", "SSR+"]:
                 pity_counter = 0
         
         # Create user hero instance
         user_hero = UserHero(
             user_id=user.id,
-            hero_id=hero.id,
-            current_hp=hero.base_hp,
-            current_atk=hero.base_atk,
-            current_def=hero.base_def
+            hero_id=hero.get("id"),
+            current_hp=hero.get("base_hp", 1000),
+            current_atk=hero.get("base_atk", 100),
+            current_def=hero.get("base_def", 50)
         )
         
         # Add hero name for frontend display
         user_hero_dict = user_hero.dict()
-        user_hero_dict["hero_name"] = hero.name
-        user_hero_dict["rarity"] = hero.rarity
+        user_hero_dict["hero_name"] = hero.get("name")
+        user_hero_dict["rarity"] = hero.get("rarity")
         
         # Check for duplicates and merge
         existing_heroes = await db.user_heroes.find(
-            {"user_id": user.id, "hero_id": hero.id}
+            {"user_id": user.id, "hero_id": hero.get("id")}
         ).to_list(100)
         
         if existing_heroes:

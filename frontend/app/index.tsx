@@ -196,7 +196,15 @@ export default function HomeScreen() {
             <Text style={styles.gameSubtitle}>Collect • Battle • Conquer</Text>
           </View>
           <View style={styles.loginCard}>
-            <Text style={styles.loginLabel}>Enter Your Name</Text>
+            <Text style={styles.loginLabel}>{isRegistering ? 'Create Account' : 'Login'}</Text>
+            
+            {authError ? (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle" size={16} color="#e74c3c" />
+                <Text style={styles.errorText}>{authError}</Text>
+              </View>
+            ) : null}
+            
             <TextInput
               style={styles.loginInput}
               value={username}
@@ -204,12 +212,68 @@ export default function HomeScreen() {
               placeholder="Username"
               placeholderTextColor={COLORS.navy.light}
               autoCapitalize="none"
+              autoCorrect={false}
             />
+            
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Password"
+                placeholderTextColor={COLORS.navy.light}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity 
+                style={styles.eyeButton} 
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons 
+                  name={showPassword ? 'eye-off' : 'eye'} 
+                  size={20} 
+                  color={COLORS.navy.light} 
+                />
+              </TouchableOpacity>
+            </View>
+            
+            {isRegistering && (
+              <TextInput
+                style={styles.loginInput}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm Password"
+                placeholderTextColor={COLORS.navy.light}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+            )}
+            
             <TouchableOpacity style={styles.loginButton} onPress={handleStartGame}>
               <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.loginButtonGradient}>
-                <Text style={styles.loginButtonText}>Begin Journey</Text>
+                <Text style={styles.loginButtonText}>
+                  {isRegistering ? 'Create Account' : 'Begin Journey'}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.switchAuthMode} 
+              onPress={() => {
+                setIsRegistering(!isRegistering);
+                setAuthError('');
+                setConfirmPassword('');
+              }}
+            >
+              <Text style={styles.switchAuthText}>
+                {isRegistering ? 'Already have an account? Login' : 'New player? Create Account'}
+              </Text>
+            </TouchableOpacity>
+            
+            <View style={styles.securityNote}>
+              <Ionicons name="shield-checkmark" size={14} color={COLORS.gold.primary} />
+              <Text style={styles.securityNoteText}>Your account is protected with a secure password</Text>
+            </View>
           </View>
         </SafeAreaView>
       </LinearGradient>

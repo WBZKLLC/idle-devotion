@@ -5,6 +5,12 @@ import { useState, useEffect } from 'react';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
+// Storage keys
+const STORAGE_KEYS = {
+  USERNAME: 'divine_heroes_username',
+  AUTH_TOKEN: 'divine_heroes_auth_token',
+};
+
 interface User {
   id: string;
   username: string;
@@ -20,6 +26,7 @@ interface User {
   last_login: string | null;
   daily_summons_claimed: number;
   profile_picture_hero_id: string | null;
+  vip_level?: number;
 }
 
 interface Hero {
@@ -56,9 +63,14 @@ interface GameState {
   isLoading: boolean;
   error: string | null;
   isHydrated: boolean;
+  authToken: string | null;
+  needsPassword: boolean;  // For legacy accounts without passwords
   
   // Actions
-  initUser: (username: string) => Promise<void>;
+  initUser: (username: string, password?: string) => Promise<void>;
+  registerUser: (username: string, password: string) => Promise<{success: boolean; error?: string}>;
+  loginWithPassword: (username: string, password: string) => Promise<{success: boolean; error?: string}>;
+  setPasswordForLegacyAccount: (username: string, password: string) => Promise<{success: boolean; error?: string}>;
   restoreSession: () => Promise<void>;
   login: () => Promise<any>;
   logout: () => Promise<void>;
@@ -74,6 +86,55 @@ interface GameState {
   setHydrated: (value: boolean) => void;
 }
 
+// Helper to save auth data
+const saveAuthData = async (username: string, token: string) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(STORAGE_KEYS.USERNAME, username);
+      window.localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    }
+    await AsyncStorage.setItem(STORAGE_KEYS.USERNAME, username);
+    await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+  } catch (e) {
+    console.error('Failed to save auth data:', e);
+  }
+};
+
+// Helper to clear auth data
+const clearAuthData = async () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(STORAGE_KEYS.USERNAME);
+      window.localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    }
+    await AsyncStorage.removeItem(STORAGE_KEYS.USERNAME);
+    await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+  } catch (e) {
+    console.error('Failed to clear auth data:', e);
+  }
+};
+
+// Helper to get stored auth data
+const getStoredAuthData = async (): Promise<{username: string | null; token: string | null}> => {
+  let username = null;
+  let token = null;
+  
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      username = window.localStorage.getItem(STORAGE_KEYS.USERNAME);
+      token = window.localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    }
+    if (!username) {
+      username = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
+      token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    }
+  } catch (e) {
+    console.error('Failed to get stored auth data:', e);
+  }
+  
+  return { username, token };
+};
+
 export const useGameStore = create<GameState>((set, get) => ({
   user: null,
   userHeroes: [],
@@ -81,12 +142,104 @@ export const useGameStore = create<GameState>((set, get) => ({
   isLoading: false,
   error: null,
   isHydrated: false,
+  authToken: null,
+  needsPassword: false,
 
   setHydrated: (value: boolean) => set({ isHydrated: value }),
 
+  // Register new user with password
+  registerUser: async (username: string, password: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      const response = await axios.post(`${BACKEND_URL}/api/user/register`, {
+        username,
+        password
+      });
+      
+      const { user, token } = response.data;
+      
+      // Save auth data
+      await saveAuthData(username, token);
+      
+      set({ user, authToken: token, isLoading: false, needsPassword: false });
+      
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || 'Registration failed';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Login with password
+  loginWithPassword: async (username: string, password: string) => {
+    try {
+      set({ isLoading: true, error: null, needsPassword: false });
+      
+      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
+        username,
+        password
+      });
+      
+      const { user, token } = response.data;
+      
+      // Save auth data
+      await saveAuthData(username, token);
+      
+      set({ user, authToken: token, isLoading: false });
+      
+      // Trigger daily login
+      try {
+        await axios.post(`${BACKEND_URL}/api/user/${username}/login`);
+      } catch (e) {
+        console.log('Daily login call failed:', e);
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || 'Login failed';
+      
+      // Check if this is a legacy account needing password
+      if (error.response?.status === 403) {
+        set({ needsPassword: true, isLoading: false });
+        return { success: false, error: 'NEEDS_PASSWORD' };
+      }
+      
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Set password for legacy account
+  setPasswordForLegacyAccount: async (username: string, password: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      const response = await axios.post(
+        `${BACKEND_URL}/api/auth/set-password?username=${encodeURIComponent(username)}&new_password=${encodeURIComponent(password)}`
+      );
+      
+      const { token } = response.data;
+      
+      // Now login to get user data
+      const userResponse = await axios.get(`${BACKEND_URL}/api/user/${username}`);
+      
+      // Save auth data
+      await saveAuthData(username, token);
+      
+      set({ user: userResponse.data, authToken: token, isLoading: false, needsPassword: false });
+      
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || 'Failed to set password';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   restoreSession: async () => {
     try {
-      // Check if we're in a browser/client environment
       if (typeof window === 'undefined') {
         set({ isHydrated: true });
         return;
@@ -94,29 +247,43 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       console.log('restoreSession: starting');
       
-      // Try localStorage first (works better on web)
-      let savedUsername = null;
-      try {
-        savedUsername = window.localStorage.getItem('divine_heroes_username');
-        console.log('restoreSession: localStorage username=', savedUsername);
-      } catch (e) {
-        // Fall back to AsyncStorage for native
-        savedUsername = await AsyncStorage.getItem('divine_heroes_username');
-        console.log('restoreSession: AsyncStorage username=', savedUsername);
+      const { username, token } = await getStoredAuthData();
+      console.log('restoreSession: stored username=', username, 'has token=', !!token);
+      
+      if (username && token) {
+        // Verify token is still valid
+        try {
+          const verifyResponse = await axios.get(`${BACKEND_URL}/api/auth/verify`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (verifyResponse.data.valid) {
+            console.log('restoreSession: token valid, user restored');
+            set({ user: verifyResponse.data.user, authToken: token, isHydrated: true });
+            return;
+          }
+        } catch (e) {
+          console.log('restoreSession: token invalid, trying legacy restore');
+        }
+        
+        // Fall back to legacy username-based restore for old accounts
+        try {
+          const response = await axios.get(`${BACKEND_URL}/api/user/${username}`);
+          console.log('restoreSession: legacy user found', response.data.username);
+          set({ user: response.data, isHydrated: true });
+          return;
+        } catch (error) {
+          console.log('restoreSession: user not found, clearing storage');
+          await clearAuthData();
+        }
       }
       
-      if (savedUsername) {
-        // Try to fetch user data
-        try {
-          console.log('restoreSession: fetching user data');
-          const response = await axios.get(`${BACKEND_URL}/api/user/${savedUsername}`);
-          console.log('restoreSession: user found', response.data.username);
-          set({ user: response.data, isHydrated: true });
-        } catch (error) {
-          // User doesn't exist anymore, clear storage
-          console.log('restoreSession: user not found, clearing storage');
-          try {
-            window.localStorage.removeItem('divine_heroes_username');
+      set({ isHydrated: true });
+    } catch (error) {
+      console.error('restoreSession error:', error);
+      set({ isHydrated: true });
+    }
+  },
           } catch (e) {
             await AsyncStorage.removeItem('divine_heroes_username');
           }

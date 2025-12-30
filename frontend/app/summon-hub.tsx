@@ -54,6 +54,24 @@ export default function SummonHubScreen() {
   const getPityCounter = () => { if (!user) return 0; if (selectedBanner === 'divine') return user.pity_counter_divine || 0; if (selectedBanner === 'premium') return user.pity_counter_premium || 0; return user.pity_counter || 0; };
   const getPityMax = () => selectedBanner === 'divine' ? 40 : 50;
 
+  const getFillerRewardIcon = (type: string) => {
+    if (type.includes('crystals')) return '💎';
+    if (type.includes('divine_essence')) return '✨';
+    if (type.includes('gold')) return '🪙';
+    if (type.includes('coins')) return '💰';
+    if (type.includes('hero_shards')) return '⭐';
+    return '🎁';
+  };
+
+  const getFillerRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary': return '#ff6b35';
+      case 'epic': return '#9b4dca';
+      case 'rare': return '#3498db';
+      default: return '#95a5a6';
+    }
+  };
+
   const renderResultsModal = () => (
     <Modal visible={showResults} animationType="fade" transparent={true} onRequestClose={() => setShowResults(false)}>
       <View style={styles.modalOverlay}>
@@ -61,23 +79,47 @@ export default function SummonHubScreen() {
           <LinearGradient colors={[COLORS.navy.dark, COLORS.navy.primary]} style={styles.resultsGradient}>
             <Text style={styles.resultsTitle}>Summon Results</Text>
             <ScrollView horizontal contentContainerStyle={styles.resultsScroll} showsHorizontalScrollIndicator={false}>
-              {pullResults.map((hero, index) => (
-                <View key={index} style={[styles.heroResultCard, { borderColor: getRarityColor(hero.rarity || 'SR') }]}>
-                  <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(hero.rarity || 'SR') }]}><Text style={styles.rarityText}>{hero.rarity || 'SR'}</Text></View>
-                  {hero.image_url ? (
-                    <Image 
-                      source={{ uri: hero.image_url }} 
-                      style={styles.heroImage} 
-                      resizeMode="cover"
-                    />
+              {pullResults.map((item, index) => (
+                <View key={index} style={[
+                  styles.heroResultCard, 
+                  { borderColor: item.is_filler 
+                    ? getFillerRarityColor(item.rarity || 'common') 
+                    : getRarityColor(item.rarity || 'SR') 
+                  }
+                ]}>
+                  {item.is_filler ? (
+                    // Filler Reward Card
+                    <>
+                      <View style={[styles.rarityBadge, { backgroundColor: getFillerRarityColor(item.rarity || 'common') }]}>
+                        <Text style={styles.rarityText}>{item.rarity?.toUpperCase() || 'REWARD'}</Text>
+                      </View>
+                      <View style={styles.fillerIconContainer}>
+                        <Text style={styles.fillerIcon}>{getFillerRewardIcon(item.type)}</Text>
+                      </View>
+                      <Text style={styles.heroName} numberOfLines={2}>{item.display || 'Reward'}</Text>
+                    </>
                   ) : (
-                    <View style={styles.heroImagePlaceholder}>
-                      <Ionicons name="person" size={40} color={COLORS.cream.soft} />
-                    </View>
-                  )}
-                  <Text style={styles.heroName} numberOfLines={2}>{hero.hero_name || hero.name || 'Unknown'}</Text>
-                  {hero.element && (
-                    <Text style={[styles.heroElement, { color: getElementColor(hero.element) }]}>{hero.element}</Text>
+                    // Hero Card
+                    <>
+                      <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(item.rarity || 'SR') }]}>
+                        <Text style={styles.rarityText}>{item.rarity || 'SR'}</Text>
+                      </View>
+                      {item.image_url ? (
+                        <Image 
+                          source={{ uri: item.image_url }} 
+                          style={styles.heroImage} 
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={styles.heroImagePlaceholder}>
+                          <Ionicons name="person" size={40} color={COLORS.cream.soft} />
+                        </View>
+                      )}
+                      <Text style={styles.heroName} numberOfLines={2}>{item.hero_name || item.name || 'Unknown'}</Text>
+                      {item.element && (
+                        <Text style={[styles.heroElement, { color: getElementColor(item.element) }]}>{item.element}</Text>
+                      )}
+                    </>
                   )}
                 </View>
               ))}

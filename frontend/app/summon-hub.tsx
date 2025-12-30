@@ -64,8 +64,21 @@ export default function SummonHubScreen() {
               {pullResults.map((hero, index) => (
                 <View key={index} style={[styles.heroResultCard, { borderColor: getRarityColor(hero.rarity || 'SR') }]}>
                   <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(hero.rarity || 'SR') }]}><Text style={styles.rarityText}>{hero.rarity || 'SR'}</Text></View>
-                  <Ionicons name="person" size={40} color={COLORS.cream.soft} />
+                  {hero.image_url ? (
+                    <Image 
+                      source={{ uri: hero.image_url }} 
+                      style={styles.heroImage} 
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.heroImagePlaceholder}>
+                      <Ionicons name="person" size={40} color={COLORS.cream.soft} />
+                    </View>
+                  )}
                   <Text style={styles.heroName} numberOfLines={2}>{hero.hero_name || hero.name || 'Unknown'}</Text>
+                  {hero.element && (
+                    <Text style={[styles.heroElement, { color: getElementColor(hero.element) }]}>{hero.element}</Text>
+                  )}
                 </View>
               ))}
             </ScrollView>
@@ -77,6 +90,18 @@ export default function SummonHubScreen() {
       </View>
     </Modal>
   );
+
+  const getElementColor = (element: string) => {
+    const colors: {[key: string]: string} = {
+      Fire: '#e74c3c',
+      Water: '#3498db',
+      Earth: '#8b4513',
+      Wind: '#2ecc71',
+      Light: '#f1c40f',
+      Dark: '#9b59b6',
+    };
+    return colors[element] || COLORS.gold.primary;
+  };
 
   if (!hydrated) return (<LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}><SafeAreaView style={styles.container}><ActivityIndicator size="large" color={COLORS.gold.primary} /></SafeAreaView></LinearGradient>);
   

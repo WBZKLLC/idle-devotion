@@ -89,7 +89,7 @@ index 5d54e2e..e69de29 100644
 --+from datetime import datetime
 --+
 --+# Backend URL from frontend/.env
---+BACKEND_URL = "https://angel-idle.preview.emergentagent.com/api"
+--+BACKEND_URL = "https://gacha-guardian.preview.emergentagent.com/api"
 --+
 --+class ComprehensiveGachaGameTester:
 --+    def __init__(self):
@@ -3147,7 +3147,7 @@ index 5d54e2e..e69de29 100644
 ----------------+import random
 ----------------+
 ----------------+# Configuration
-----------------+BASE_URL = "https://angel-idle.preview.emergentagent.com/api"
+----------------+BASE_URL = "https://gacha-guardian.preview.emergentagent.com/api"
 ----------------+TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
 ----------------+
 ----------------+class ComprehensiveGachaTest:
@@ -3402,7 +3402,7 @@ index 5d54e2e..e69de29 100644
 ----------------+import requests
 ----------------+import json
 ----------------+
-----------------+BASE_URL = "https://angel-idle.preview.emergentagent.com/api"
+----------------+BASE_URL = "https://gacha-guardian.preview.emergentagent.com/api"
 ----------------+TEST_USERNAME = "testplayer"
 ----------------+
 ----------------+def test_endpoint(method, endpoint, **kwargs):

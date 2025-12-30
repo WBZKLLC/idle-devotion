@@ -3730,6 +3730,20 @@ async def attack_guild_boss(username: str):
         result["rewards"] = user_rewards
         result["contribution_percent"] = round(user_share * 100, 1)
     
+    # Increment daily attack counter
+    await db.users.update_one(
+        {"username": username},
+        {
+            "$set": {"guild_boss_attack_last_reset": datetime.utcnow()},
+            "$inc": {"guild_boss_attacks_today": 1}
+        }
+    )
+    
+    # Add attack info to result
+    result["attacks_used"] = attacks_today + 1
+    result["attacks_max"] = max_attacks
+    result["attacks_remaining"] = max_attacks - (attacks_today + 1)
+    
     return result
 
 # ==================== GUILD DONATION SYSTEM ====================

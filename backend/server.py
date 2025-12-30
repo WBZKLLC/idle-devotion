@@ -1360,26 +1360,60 @@ async def pull_gacha(username: str, request: PullRequest):
     
     # Perform pulls
     pulled_heroes = []
+    filler_rewards_collected = {
+        "crystals": 0,
+        "gold": 0,
+        "coins": 0,
+        "divine_essence": 0,
+        "hero_shards": 0
+    }
+    filler_display_items = []  # For showing in UI
+    
     for _ in range(num_pulls):
         pity_counter += 1
-        hero = await get_random_hero_from_db(pity_counter, summon_type)
         
-        if not hero:
-            continue  # Skip if no hero found (shouldn't happen)
-        
-        # Reset pity based on pool type
         if summon_type == "divine":
-            # Divine: always UR+, reset at 40 pity
-            if pity_counter >= PITY_THRESHOLD_DIVINE:
-                pity_counter = 0
-        elif summon_type == "premium":
-            # Premium: reset on SSR or UR
-            if hero.get("rarity") in ["SSR", "UR"]:
+            # Divine summon returns tuple: (hero_or_none, filler_reward_or_none)
+            result = await get_random_hero_from_db(pity_counter, summon_type)
+            hero, filler_reward = result
+            
+            if filler_reward:
+                # Add filler rewards to collection
+                for key in ["crystals", "gold", "coins", "divine_essence", "hero_shards"]:
+                    if key in filler_reward:
+                        filler_rewards_collected[key] += filler_reward[key]
+                
+                # Add display item for UI
+                filler_display_items.append({
+                    "type": filler_reward.get("type", "unknown"),
+                    "display": filler_reward.get("display", "Reward"),
+                    "rarity": filler_reward.get("rarity", "common"),
+                    "is_filler": True
+                })
+                continue  # No hero to process
+            
+            if not hero:
+                continue
+            
+            # Reset pity on UR+ hero
+            if hero.get("rarity") == "UR+":
                 pity_counter = 0
         else:
-            # Common: reset on SSR or SSR+
-            if hero.get("rarity") in ["SSR", "SSR+"]:
-                pity_counter = 0
+            # Premium/Common returns just hero
+            hero = await get_random_hero_from_db(pity_counter, summon_type)
+            
+            if not hero:
+                continue  # Skip if no hero found (shouldn't happen)
+            
+            # Reset pity based on pool type
+            if summon_type == "premium":
+                # Premium: reset on SSR or UR
+                if hero.get("rarity") in ["SSR", "UR"]:
+                    pity_counter = 0
+            else:
+                # Common: reset on SSR or SSR+
+                if hero.get("rarity") in ["SSR", "SSR+"]:
+                    pity_counter = 0
         
         # Create user hero instance
         user_hero = UserHero(

@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
@@ -18,15 +18,16 @@ import COLORS from '../theme/colors';
 export default function HeroesScreen() {
   const router = useRouter();
   const { user, userHeroes, fetchUserHeroes, isLoading } = useGameStore();
+  const hydrated = useHydration();
   const [filterRarity, setFilterRarity] = useState<string | null>(null);
   const [filterClass, setFilterClass] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'level' | 'rarity' | 'power'>('rarity');
 
   useEffect(() => {
-    if (user) {
+    if (hydrated && user) {
       fetchUserHeroes();
     }
-  }, [user]);
+  }, [hydrated, user?.username]);
 
   const getRarityColor = (rarity: string) => {
     return COLORS.rarity[rarity as keyof typeof COLORS.rarity] || COLORS.cream.dark;

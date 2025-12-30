@@ -237,6 +237,7 @@ AWAKENING_COSTS = {
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
+    password_hash: Optional[str] = None  # Hashed password for secure login
     server_id: str = "server_1"  # Server assignment with default
     crystals: int = 300  # Premium currency (renamed from gems)
     coins: int = 10000  # Regular currency

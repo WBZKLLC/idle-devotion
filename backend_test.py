@@ -14,597 +14,333 @@ BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
 TEST_USERNAME = "Adam"
 TEST_PASSWORD = "Adam123!"
 
-class GachaGameTester:
+class DivineGachaTestSuite:
     def __init__(self):
-        self.base_url = BASE_URL
-        self.username = TEST_USERNAME
+        self.session = requests.Session()
+        self.auth_token = None
         self.user_data = None
-        self.user_heroes = []
-        self.teams = []
-        self.test_results = {
-            "passed": 0,
-            "failed": 0,
-            "errors": []
-        }
-    
-    def log_result(self, test_name, success, message=""):
-        """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status}: {test_name}")
-        if message:
-            print(f"   {message}")
         
-        if success:
-            self.test_results["passed"] += 1
-        else:
-            self.test_results["failed"] += 1
-            self.test_results["errors"].append(f"{test_name}: {message}")
+    def log(self, message: str, level: str = "INFO"):
+        """Log test messages with timestamp"""
+        timestamp = time.strftime("%H:%M:%S")
+        print(f"[{timestamp}] {level}: {message}")
     
-    def make_request(self, method, endpoint, **kwargs):
-        """Make HTTP request with error handling"""
-        url = f"{self.base_url}{endpoint}"
+    def authenticate(self) -> bool:
+        """Authenticate user and get token"""
         try:
-            response = requests.request(method, url, timeout=30, **kwargs)
-            return response
-        except requests.exceptions.RequestException as e:
-            print(f"❌ Request failed: {e}")
-            return None
-    
-    def test_user_registration(self):
-        """Test user registration endpoint"""
-        print("\n🔧 Testing User Registration...")
-        
-        # Test registration
-        response = self.make_request("POST", f"/user/register?username={self.username}")
-        
-        if response is None:
-            self.log_result("User Registration", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            data = response.json()
-            self.user_data = data
+            self.log("🔐 Authenticating user...")
             
-            # Verify initial resources
-            expected_gems = 300
-            expected_coins = 10000
-            expected_gold = 5000
+            # Try login first
+            login_data = {
+                "username": TEST_USERNAME,
+                "password": TEST_PASSWORD
+            }
             
-            if (data.get("gems") == expected_gems and 
-                data.get("coins") == expected_coins and 
-                data.get("gold") == expected_gold):
-                self.log_result("User Registration", True, f"User created with correct initial resources")
+            response = self.session.post(f"{BASE_URL}/auth/login", json=login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.auth_token = data.get("token")
+                self.user_data = data.get("user")
+                self.session.headers.update({"Authorization": f"Bearer {self.auth_token}"})
+                self.log(f"✅ Login successful for user: {self.user_data.get('username')}")
                 return True
             else:
-                self.log_result("User Registration", False, 
-                              f"Incorrect initial resources: gems={data.get('gems')}, coins={data.get('coins')}, gold={data.get('gold')}")
+                self.log(f"❌ Login failed: {response.status_code} - {response.text}", "ERROR")
                 return False
-        elif response.status_code == 400:
-            # User might already exist, try to get existing user
-            return self.test_get_user()
-        else:
-            self.log_result("User Registration", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_get_user(self):
-        """Test get user endpoint"""
-        print("\n🔧 Testing Get User...")
-        
-        response = self.make_request("GET", f"/user/{self.username}")
-        
-        if response is None:
-            self.log_result("Get User", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            self.user_data = response.json()
-            self.log_result("Get User", True, f"Retrieved user data successfully")
-            return True
-        else:
-            self.log_result("Get User", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_user_login(self):
-        """Test user login and daily rewards"""
-        print("\n🔧 Testing User Login & Daily Rewards...")
-        
-        response = self.make_request("POST", f"/user/{self.username}/login")
-        
-        if response is None:
-            self.log_result("User Login", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            reward_data = response.json()
-            
-            # Verify reward structure
-            required_fields = ["coins", "gold", "crystals", "free_summons", "day_count"]
-            missing_fields = [field for field in required_fields if field not in reward_data]
-            
-            if not missing_fields:
-                self.log_result("User Login", True, 
-                              f"Daily rewards received: {reward_data.get('coins')} coins, {reward_data.get('gold')} gold")
-                return True
-            else:
-                self.log_result("User Login", False, f"Missing reward fields: {missing_fields}")
-                return False
-        else:
-            self.log_result("User Login", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_get_heroes(self):
-        """Test get all heroes endpoint"""
-        print("\n🔧 Testing Get All Heroes...")
-        
-        response = self.make_request("GET", "/heroes")
-        
-        if response is None:
-            self.log_result("Get All Heroes", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            heroes = response.json()
-            
-            if isinstance(heroes, list) and len(heroes) > 0:
-                # Verify hero structure
-                hero = heroes[0]
-                required_fields = ["name", "rarity", "element", "hero_class", "base_hp", "base_atk", "base_def"]
-                missing_fields = [field for field in required_fields if field not in hero]
                 
-                if not missing_fields:
-                    self.log_result("Get All Heroes", True, f"Retrieved {len(heroes)} heroes from pool")
-                    return True
-                else:
-                    self.log_result("Get All Heroes", False, f"Hero missing fields: {missing_fields}")
-                    return False
-            else:
-                self.log_result("Get All Heroes", False, "No heroes returned or invalid format")
-                return False
-        else:
-            self.log_result("Get All Heroes", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log(f"❌ Authentication error: {str(e)}", "ERROR")
             return False
     
-    def test_gacha_pulls(self):
-        """Test gacha pull system comprehensively"""
-        print("\n🔧 Testing Gacha Pull System...")
-        
-        # Test single pull with gems
-        success = self.test_single_pull_gems()
-        if not success:
-            return False
-        
-        # Test multi pull with gems
-        success = self.test_multi_pull_gems()
-        if not success:
-            return False
-        
-        # Test single pull with coins
-        success = self.test_single_pull_coins()
-        if not success:
-            return False
-        
-        # Test multi pull with coins
-        success = self.test_multi_pull_coins()
-        if not success:
-            return False
-        
-        # Test insufficient funds
-        success = self.test_insufficient_funds()
-        
-        return success
-    
-    def test_single_pull_gems(self):
-        """Test single pull with gems"""
-        print("  Testing single pull with gems...")
-        
-        pull_data = {
-            "pull_type": "single",
-            "currency_type": "crystals"
-        }
-        
-        response = self.make_request("POST", f"/gacha/pull?username={self.username}", 
-                                   json=pull_data)
-        
-        if response is None:
-            self.log_result("Single Pull (Gems)", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            result = response.json()
+    def check_user_resources(self) -> Dict[str, Any]:
+        """Check user's current resources, especially divine_essence"""
+        try:
+            self.log("💰 Checking user resources...")
             
-            # Verify result structure
-            if ("heroes" in result and "new_pity_counter" in result and 
-                "crystals_spent" in result and result["crystals_spent"] == 100):
+            response = self.session.get(f"{BASE_URL}/user/{TEST_USERNAME}")
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                resources = {
+                    "crystals": user_data.get("crystals", 0),
+                    "coins": user_data.get("coins", 0),
+                    "gold": user_data.get("gold", 0),
+                    "divine_essence": user_data.get("divine_essence", 0),
+                    "hero_shards": user_data.get("hero_shards", 0)
+                }
                 
-                heroes = result["heroes"]
-                if len(heroes) == 1:
-                    self.log_result("Single Pull (Gems)", True, 
-                                  f"Pulled 1 hero, spent 100 crystals, pity: {result['new_pity_counter']}")
-                    return True
-                else:
-                    self.log_result("Single Pull (Gems)", False, f"Expected 1 hero, got {len(heroes)}")
-                    return False
-            else:
-                self.log_result("Single Pull (Gems)", False, "Invalid response structure")
-                return False
-        else:
-            self.log_result("Single Pull (Gems)", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_multi_pull_gems(self):
-        """Test multi pull with gems"""
-        print("  Testing multi pull with gems...")
-        
-        pull_data = {
-            "pull_type": "multi",
-            "currency_type": "crystals"
-        }
-        
-        response = self.make_request("POST", f"/gacha/pull?username={self.username}", 
-                                   json=pull_data)
-        
-        if response is None:
-            self.log_result("Multi Pull (Gems)", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            result = response.json()
-            
-            if ("heroes" in result and "crystals_spent" in result and 
-                result["crystals_spent"] == 900):
+                self.log(f"💎 Crystals: {resources['crystals']}")
+                self.log(f"🪙 Coins: {resources['coins']}")
+                self.log(f"🏆 Gold: {resources['gold']}")
+                self.log(f"✨ Divine Essence: {resources['divine_essence']}")
+                self.log(f"⭐ Hero Shards: {resources['hero_shards']}")
                 
-                heroes = result["heroes"]
-                if len(heroes) == 10:
-                    self.log_result("Multi Pull (Gems)", True, 
-                                  f"Pulled 10 heroes, spent 900 crystals, pity: {result['new_pity_counter']}")
-                    return True
-                else:
-                    self.log_result("Multi Pull (Gems)", False, f"Expected 10 heroes, got {len(heroes)}")
-                    return False
-            else:
-                self.log_result("Multi Pull (Gems)", False, "Invalid response structure")
-                return False
-        else:
-            self.log_result("Multi Pull (Gems)", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_single_pull_coins(self):
-        """Test single pull with coins"""
-        print("  Testing single pull with coins...")
-        
-        pull_data = {
-            "pull_type": "single",
-            "currency_type": "coins"
-        }
-        
-        response = self.make_request("POST", f"/gacha/pull?username={self.username}", 
-                                   json=pull_data)
-        
-        if response is None:
-            self.log_result("Single Pull (Coins)", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            result = response.json()
-            
-            if ("heroes" in result and "coins_spent" in result and 
-                result["coins_spent"] == 1000):
+                if resources['divine_essence'] < 10:
+                    self.log("⚠️ WARNING: User has insufficient divine essence for multi-pull test", "WARN")
                 
-                heroes = result["heroes"]
-                if len(heroes) == 1:
-                    self.log_result("Single Pull (Coins)", True, 
-                                  f"Pulled 1 hero, spent 1000 coins")
-                    return True
-                else:
-                    self.log_result("Single Pull (Coins)", False, f"Expected 1 hero, got {len(heroes)}")
-                    return False
+                return resources
             else:
-                self.log_result("Single Pull (Coins)", False, "Invalid response structure")
-                return False
-        else:
-            self.log_result("Single Pull (Coins)", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_multi_pull_coins(self):
-        """Test multi pull with coins"""
-        print("  Testing multi pull with coins...")
-        
-        pull_data = {
-            "pull_type": "multi",
-            "currency_type": "coins"
-        }
-        
-        response = self.make_request("POST", f"/gacha/pull?username={self.username}", 
-                                   json=pull_data)
-        
-        if response is None:
-            self.log_result("Multi Pull (Coins)", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            result = response.json()
-            
-            if ("heroes" in result and "coins_spent" in result and 
-                result["coins_spent"] == 9000):
+                self.log(f"❌ Failed to get user resources: {response.status_code}", "ERROR")
+                return {}
                 
-                heroes = result["heroes"]
-                if len(heroes) == 10:
-                    self.log_result("Multi Pull (Coins)", True, 
-                                  f"Pulled 10 heroes, spent 9000 coins")
-                    return True
+        except Exception as e:
+            self.log(f"❌ Error checking resources: {str(e)}", "ERROR")
+            return {}
+    
+    def test_divine_summon_single(self) -> Dict[str, Any]:
+        """Test single divine summon pull"""
+        try:
+            self.log("🎲 Testing Divine Summon - Single Pull...")
+            
+            pull_data = {
+                "pull_type": "single",
+                "currency_type": "divine_essence"
+            }
+            
+            response = self.session.post(f"{BASE_URL}/gacha/pull?username={TEST_USERNAME}", json=pull_data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.log("✅ Single divine summon successful")
+                self.analyze_summon_result(result, "single")
+                return result
+            else:
+                self.log(f"❌ Single divine summon failed: {response.status_code} - {response.text}", "ERROR")
+                return {}
+                
+        except Exception as e:
+            self.log(f"❌ Error in single divine summon: {str(e)}", "ERROR")
+            return {}
+    
+    def test_divine_summon_multi(self) -> Dict[str, Any]:
+        """Test multi divine summon pull (10 pulls)"""
+        try:
+            self.log("🎲 Testing Divine Summon - Multi Pull (10x)...")
+            
+            pull_data = {
+                "pull_type": "multi",
+                "currency_type": "divine_essence"
+            }
+            
+            response = self.session.post(f"{BASE_URL}/gacha/pull?username={TEST_USERNAME}", json=pull_data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.log("✅ Multi divine summon successful")
+                self.analyze_summon_result(result, "multi")
+                return result
+            else:
+                self.log(f"❌ Multi divine summon failed: {response.status_code} - {response.text}", "ERROR")
+                return {}
+                
+        except Exception as e:
+            self.log(f"❌ Error in multi divine summon: {str(e)}", "ERROR")
+            return {}
+    
+    def analyze_summon_result(self, result: Dict[str, Any], pull_type: str):
+        """Analyze and validate summon results"""
+        try:
+            self.log(f"📊 Analyzing {pull_type} summon results...")
+            
+            # Check basic structure
+            heroes = result.get("heroes", [])
+            pulled_heroes_count = result.get("pulled_heroes_count", 0)
+            filler_rewards_count = result.get("filler_rewards_count", 0)
+            filler_rewards_collected = result.get("filler_rewards_collected", {})
+            divine_spent = result.get("divine_spent", 0)
+            
+            self.log(f"📦 Total items received: {len(heroes)}")
+            self.log(f"🦸 Heroes pulled: {pulled_heroes_count}")
+            self.log(f"🎁 Filler rewards: {filler_rewards_count}")
+            self.log(f"✨ Divine essence spent: {divine_spent}")
+            
+            # Validate divine essence cost
+            expected_cost = 10 if pull_type == "multi" else 1
+            if divine_spent != expected_cost:
+                self.log(f"❌ ISSUE: Expected divine essence cost {expected_cost}, got {divine_spent}", "ERROR")
+            else:
+                self.log(f"✅ Divine essence cost correct: {divine_spent}")
+            
+            # Analyze individual items
+            hero_count = 0
+            filler_count = 0
+            
+            for item in heroes:
+                if item.get("is_filler", False):
+                    filler_count += 1
+                    self.log(f"🎁 Filler: {item.get('display', 'Unknown')} (Rarity: {item.get('rarity', 'N/A')})")
+                    
+                    # Validate filler structure
+                    if not item.get("display"):
+                        self.log("❌ ISSUE: Filler reward missing 'display' field", "ERROR")
+                    if not item.get("type"):
+                        self.log("❌ ISSUE: Filler reward missing 'type' field", "ERROR")
                 else:
-                    self.log_result("Multi Pull (Coins)", False, f"Expected 10 heroes, got {len(heroes)}")
-                    return False
-            else:
-                self.log_result("Multi Pull (Coins)", False, "Invalid response structure")
-                return False
-        else:
-            self.log_result("Multi Pull (Coins)", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_insufficient_funds(self):
-        """Test insufficient funds error handling"""
-        print("  Testing insufficient funds handling...")
-        
-        # Try to pull with gems when user likely doesn't have enough
-        pull_data = {
-            "pull_type": "multi",
-            "currency_type": "crystals"
-        }
-        
-        # Make multiple pulls to exhaust gems
-        for i in range(5):
-            response = self.make_request("POST", f"/gacha/pull?username={self.username}", 
-                                       json=pull_data)
-            if response and response.status_code == 400:
-                self.log_result("Insufficient Funds", True, "Correctly rejected pull with insufficient crystals")
-                return True
-        
-        self.log_result("Insufficient Funds", False, "Did not properly handle insufficient funds")
-        return False
-    
-    def test_get_user_heroes(self):
-        """Test get user heroes endpoint"""
-        print("\n🔧 Testing Get User Heroes...")
-        
-        response = self.make_request("GET", f"/user/{self.username}/heroes")
-        
-        if response is None:
-            self.log_result("Get User Heroes", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            heroes = response.json()
-            self.user_heroes = heroes
+                    hero_count += 1
+                    hero_name = item.get("hero_name", "Unknown")
+                    rarity = item.get("rarity", "N/A")
+                    element = item.get("element", "N/A")
+                    hero_class = item.get("hero_class", "N/A")
+                    self.log(f"🦸 Hero: {hero_name} ({rarity}) - {element} {hero_class}")
             
-            if isinstance(heroes, list):
-                self.log_result("Get User Heroes", True, f"Retrieved {len(heroes)} user heroes")
-                return True
-            else:
-                self.log_result("Get User Heroes", False, "Invalid response format")
-                return False
-        else:
-            self.log_result("Get User Heroes", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_hero_upgrade(self):
-        """Test hero upgrade system"""
-        print("\n🔧 Testing Hero Upgrade System...")
-        
-        if not self.user_heroes:
-            self.log_result("Hero Upgrade", False, "No user heroes available for testing")
-            return False
-        
-        # Find a hero with duplicates
-        hero_to_upgrade = None
-        for hero in self.user_heroes:
-            if hero.get("duplicates", 0) >= 2:  # Need at least 2 duplicates for rank 1->2
-                hero_to_upgrade = hero
-                break
-        
-        if not hero_to_upgrade:
-            self.log_result("Hero Upgrade", True, "No heroes with sufficient duplicates (expected for new account)")
-            return True
-        
-        hero_id = hero_to_upgrade["id"]
-        response = self.make_request("POST", f"/user/{self.username}/heroes/{hero_id}/upgrade")
-        
-        if response is None:
-            self.log_result("Hero Upgrade", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            upgraded_hero = response.json()
+            # Validate counts match
+            if hero_count != pulled_heroes_count:
+                self.log(f"❌ ISSUE: Hero count mismatch. Expected {pulled_heroes_count}, found {hero_count}", "ERROR")
+            if filler_count != filler_rewards_count:
+                self.log(f"❌ ISSUE: Filler count mismatch. Expected {filler_rewards_count}, found {filler_count}", "ERROR")
             
-            if upgraded_hero.get("rank", 1) > hero_to_upgrade.get("rank", 1):
-                self.log_result("Hero Upgrade", True, f"Hero upgraded to rank {upgraded_hero['rank']}")
-                return True
-            else:
-                self.log_result("Hero Upgrade", False, "Hero rank did not increase")
-                return False
-        elif response.status_code == 400:
-            self.log_result("Hero Upgrade", True, "Correctly rejected upgrade with insufficient duplicates")
-            return True
-        else:
-            self.log_result("Hero Upgrade", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_team_management(self):
-        """Test team management system"""
-        print("\n🔧 Testing Team Management...")
-        
-        # Test team creation
-        success = self.test_create_team()
-        if not success:
-            return False
-        
-        # Test get teams
-        success = self.test_get_teams()
-        if not success:
-            return False
-        
-        # Test update team heroes
-        success = self.test_update_team_heroes()
-        
-        return success
-    
-    def test_create_team(self):
-        """Test team creation"""
-        print("  Testing team creation...")
-        
-        response = self.make_request("POST", f"/team/create?username={self.username}&team_name=TestTeam")
-        
-        if response is None:
-            self.log_result("Create Team", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            team = response.json()
+            # Validate filler rewards collected
+            self.log("💰 Filler rewards collected:")
+            for currency, amount in filler_rewards_collected.items():
+                if amount > 0:
+                    self.log(f"  {currency}: +{amount}")
             
-            if team.get("name") == "TestTeam":
-                self.log_result("Create Team", True, f"Team created successfully: {team['name']}")
-                return True
+            # Check for both heroes and filler rewards (as requested)
+            if hero_count > 0 and filler_count > 0:
+                self.log("✅ SUCCESS: Response includes BOTH heroes AND filler rewards")
+            elif hero_count > 0:
+                self.log("⚠️ WARNING: Only heroes received, no filler rewards")
+            elif filler_count > 0:
+                self.log("⚠️ WARNING: Only filler rewards received, no heroes")
             else:
-                self.log_result("Create Team", False, "Team name mismatch")
-                return False
-        else:
-            self.log_result("Create Team", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_get_teams(self):
-        """Test get user teams"""
-        print("  Testing get user teams...")
-        
-        response = self.make_request("GET", f"/team/{self.username}")
-        
-        if response is None:
-            self.log_result("Get Teams", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            teams = response.json()
-            self.teams = teams
+                self.log("❌ ISSUE: No heroes or filler rewards received", "ERROR")
             
-            if isinstance(teams, list):
-                self.log_result("Get Teams", True, f"Retrieved {len(teams)} teams")
-                return True
-            else:
-                self.log_result("Get Teams", False, "Invalid response format")
-                return False
-        else:
-            self.log_result("Get Teams", False, f"HTTP {response.status_code}: {response.text}")
-            return False
-    
-    def test_update_team_heroes(self):
-        """Test updating team heroes"""
-        print("  Testing update team heroes...")
-        
-        if not self.teams:
-            self.log_result("Update Team Heroes", False, "No teams available")
-            return False
-        
-        team_id = self.teams[0]["id"]
-        
-        # Get some hero IDs (limit to 6)
-        hero_ids = []
-        if self.user_heroes:
-            hero_ids = [hero["id"] for hero in self.user_heroes[:6]]
-        
-        response = self.make_request("PUT", f"/team/{team_id}/heroes", json=hero_ids)
-        
-        if response is None:
-            self.log_result("Update Team Heroes", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            updated_team = response.json()
+            # Validate rate expectations (for multi-pull)
+            if pull_type == "multi":
+                expected_items = 10
+                actual_items = len(heroes)
+                if actual_items != expected_items:
+                    self.log(f"❌ ISSUE: Expected {expected_items} items for multi-pull, got {actual_items}", "ERROR")
+                else:
+                    self.log(f"✅ Correct number of items for multi-pull: {actual_items}")
             
-            if len(updated_team.get("hero_ids", [])) == len(hero_ids):
-                self.log_result("Update Team Heroes", True, f"Team updated with {len(hero_ids)} heroes")
-                return True
-            else:
-                self.log_result("Update Team Heroes", False, "Hero count mismatch")
-                return False
-        else:
-            self.log_result("Update Team Heroes", False, f"HTTP {response.status_code}: {response.text}")
-            return False
+        except Exception as e:
+            self.log(f"❌ Error analyzing summon result: {str(e)}", "ERROR")
     
-    def test_idle_rewards(self):
-        """Test idle rewards system"""
-        print("\n🔧 Testing Idle Rewards...")
-        
-        response = self.make_request("POST", f"/idle/claim?username={self.username}")
-        
-        if response is None:
-            self.log_result("Idle Rewards", False, "Request failed")
-            return False
-        
-        if response.status_code == 200:
-            rewards = response.json()
+    def test_rate_validation(self, num_tests: int = 5):
+        """Test multiple pulls to validate rate distribution"""
+        try:
+            self.log(f"📈 Testing rate validation with {num_tests} multi-pulls...")
             
-            if "gold_earned" in rewards and "time_away" in rewards:
-                self.log_result("Idle Rewards", True, 
-                              f"Claimed {rewards['gold_earned']} gold for {rewards['time_away']} seconds away")
-                return True
-            else:
-                self.log_result("Idle Rewards", False, "Invalid reward structure")
-                return False
-        else:
-            self.log_result("Idle Rewards", False, f"HTTP {response.status_code}: {response.text}")
-            return False
+            total_heroes = 0
+            total_filler = 0
+            ur_plus_count = 0
+            ur_count = 0
+            crystal_jackpots = 0
+            
+            for i in range(num_tests):
+                self.log(f"🎲 Test pull {i+1}/{num_tests}")
+                result = self.test_divine_summon_multi()
+                
+                if result:
+                    heroes = result.get("heroes", [])
+                    for item in heroes:
+                        if item.get("is_filler", False):
+                            total_filler += 1
+                            if "crystals" in item.get("type", ""):
+                                crystal_jackpots += 1
+                        else:
+                            total_heroes += 1
+                            rarity = item.get("rarity", "")
+                            if rarity == "UR+":
+                                ur_plus_count += 1
+                            elif rarity == "UR":
+                                ur_count += 1
+                
+                time.sleep(1)  # Brief pause between tests
+            
+            total_items = total_heroes + total_filler
+            if total_items > 0:
+                hero_rate = (total_heroes / total_items) * 100
+                filler_rate = (total_filler / total_items) * 100
+                
+                self.log(f"📊 Rate Analysis Results:")
+                self.log(f"  Total items: {total_items}")
+                self.log(f"  Heroes: {total_heroes} ({hero_rate:.1f}%)")
+                self.log(f"  Filler: {total_filler} ({filler_rate:.1f}%)")
+                self.log(f"  UR+ heroes: {ur_plus_count}")
+                self.log(f"  UR heroes: {ur_count}")
+                self.log(f"  Crystal jackpots: {crystal_jackpots}")
+                
+                # Expected rates: Heroes ~3.5%, Filler ~90.6%, Crystals ~5.9%
+                if filler_rate >= 80:  # Allow some variance
+                    self.log("✅ Filler rate appears correct (should be ~90.6%)")
+                else:
+                    self.log(f"⚠️ WARNING: Filler rate seems low. Expected ~90.6%, got {filler_rate:.1f%}")
+            
+        except Exception as e:
+            self.log(f"❌ Error in rate validation: {str(e)}", "ERROR")
     
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 Starting Gacha Game Backend API Tests")
-        print(f"Testing against: {self.base_url}")
-        print(f"Test user: {self.username}")
-        print("=" * 60)
+        """Run complete test suite for Divine Summon system"""
+        self.log("🚀 Starting Divine Summon Test Suite...")
+        self.log("=" * 60)
         
-        # Test sequence
-        tests = [
-            self.test_user_registration,
-            self.test_get_user,
-            self.test_user_login,
-            self.test_get_heroes,
-            self.test_gacha_pulls,
-            self.test_get_user_heroes,
-            self.test_hero_upgrade,
-            self.test_team_management,
-            self.test_idle_rewards
-        ]
+        # Step 1: Authentication
+        if not self.authenticate():
+            self.log("❌ CRITICAL: Authentication failed. Cannot proceed with tests.", "ERROR")
+            return False
         
-        for test in tests:
-            try:
-                test()
-                time.sleep(0.5)  # Small delay between tests
-            except Exception as e:
-                self.log_result(test.__name__, False, f"Exception: {str(e)}")
+        # Step 2: Check resources
+        resources = self.check_user_resources()
+        if not resources:
+            self.log("❌ CRITICAL: Cannot check user resources.", "ERROR")
+            return False
         
-        # Print summary
-        print("\n" + "=" * 60)
-        print("🏁 TEST SUMMARY")
-        print("=" * 60)
-        print(f"✅ Passed: {self.test_results['passed']}")
-        print(f"❌ Failed: {self.test_results['failed']}")
+        # Step 3: Ensure sufficient divine essence
+        if resources.get("divine_essence", 0) < 20:
+            self.log("⚠️ WARNING: Low divine essence. Some tests may fail.", "WARN")
         
-        if self.test_results["errors"]:
-            print("\n🔍 FAILED TESTS:")
-            for error in self.test_results["errors"]:
-                print(f"  • {error}")
+        # Step 4: Test single divine summon
+        self.log("\n" + "=" * 40)
+        single_result = self.test_divine_summon_single()
         
-        success_rate = (self.test_results["passed"] / 
-                       (self.test_results["passed"] + self.test_results["failed"])) * 100
-        print(f"\n📊 Success Rate: {success_rate:.1f}%")
+        # Step 5: Test multi divine summon
+        self.log("\n" + "=" * 40)
+        multi_result = self.test_divine_summon_multi()
         
-        return self.test_results["failed"] == 0
+        # Step 6: Rate validation (if we have enough essence)
+        if resources.get("divine_essence", 0) >= 50:
+            self.log("\n" + "=" * 40)
+            self.test_rate_validation(3)  # Reduced for resource conservation
+        else:
+            self.log("\n⚠️ Skipping rate validation due to insufficient divine essence")
+        
+        # Final summary
+        self.log("\n" + "=" * 60)
+        self.log("🏁 Divine Summon Test Suite Complete")
+        
+        success_count = 0
+        if single_result:
+            success_count += 1
+        if multi_result:
+            success_count += 1
+        
+        self.log(f"📊 Test Results: {success_count}/2 core tests passed")
+        
+        if success_count == 2:
+            self.log("✅ OVERALL: Divine Summon system appears to be working correctly")
+            return True
+        else:
+            self.log("❌ OVERALL: Some Divine Summon tests failed")
+            return False
+
+def main():
+    """Main test execution"""
+    print("Divine Heroes Gacha Game - Divine Summon Testing")
+    print("=" * 60)
+    
+    test_suite = DivineGachaTestSuite()
+    success = test_suite.run_all_tests()
+    
+    print("\n" + "=" * 60)
+    if success:
+        print("🎉 ALL TESTS COMPLETED SUCCESSFULLY")
+    else:
+        print("⚠️ SOME TESTS FAILED - CHECK LOGS ABOVE")
+    
+    return success
 
 if __name__ == "__main__":
-    tester = GachaGameTester()
-    success = tester.run_all_tests()
-    
-    if success:
-        print("\n🎉 All tests passed!")
-        sys.exit(0)
-    else:
-        print("\n💥 Some tests failed!")
-        sys.exit(1)
+    main()

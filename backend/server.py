@@ -902,7 +902,7 @@ async def startup_event():
     await init_heroes()
     await init_islands_and_chapters()
 
-def get_random_hero(pity_counter: int, summon_type: str = "common") -> Hero:
+async def get_random_hero_from_db(pity_counter: int, summon_type: str = "common"):
     """Select a random hero based on gacha rates with pity system
     
     Args:
@@ -911,12 +911,12 @@ def get_random_hero(pity_counter: int, summon_type: str = "common") -> Hero:
     """
     if summon_type == "divine":
         # Divine pool: UR+ heroes ONLY - guaranteed UR+
-        available_heroes = [h for h in HERO_POOL if h.rarity == "UR+"]
-        return random.choice(available_heroes)
+        available_heroes = await db.heroes.find({"rarity": "UR+"}).to_list(100)
+        return random.choice(available_heroes) if available_heroes else None
     
     elif summon_type == "premium":
         # Premium pool: SR, SSR, UR (no UR+ - moved to divine)
-        available_heroes = [h for h in HERO_POOL if h.rarity in ["SR", "SSR", "UR"]]
+        available_heroes = await db.heroes.find({"rarity": {"$in": ["SR", "SSR", "UR"]}}).to_list(100)
         rates = GACHA_RATES_PREMIUM
         pity_threshold = PITY_THRESHOLD_PREMIUM
         
@@ -930,7 +930,7 @@ def get_random_hero(pity_counter: int, summon_type: str = "common") -> Hero:
     
     else:  # common
         # Common pool: SR, SSR, and SSR+ heroes only (no UR/UR+)
-        available_heroes = [h for h in HERO_POOL if h.rarity in ["SR", "SSR", "SSR+"]]
+        available_heroes = await db.heroes.find({"rarity": {"$in": ["SR", "SSR", "SSR+"]}}).to_list(100)
         rates = GACHA_RATES_COMMON
         pity_threshold = PITY_THRESHOLD_COMMON
         
@@ -945,13 +945,13 @@ def get_random_hero(pity_counter: int, summon_type: str = "common") -> Hero:
     selected_rarity = random.choices(rarities, weights=weights)[0]
     
     # Get all heroes of selected rarity from available pool
-    rarity_heroes = [h for h in available_heroes if h.rarity == selected_rarity]
+    rarity_heroes = [h for h in available_heroes if h.get("rarity") == selected_rarity]
     
     if not rarity_heroes:
         # Fallback to SR if no heroes found (shouldn't happen)
-        rarity_heroes = [h for h in available_heroes if h.rarity == "SR"]
+        rarity_heroes = [h for h in available_heroes if h.get("rarity") == "SR"]
     
-    return random.choice(rarity_heroes)
+    return random.choice(rarity_heroes) if rarity_heroes else None
 
 # API Routes
 @api_router.post("/user/register")

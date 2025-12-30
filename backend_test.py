@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend API Testing for Gacha Game
-Tests all backend endpoints with realistic data
+Backend Testing Script for Divine Heroes Gacha Game
+Focus: Divine Summon System Testing with New Rate Changes
 """
 
 import requests
 import json
 import time
-from datetime import datetime
-import sys
+from typing import Dict, Any, List
 
 # Configuration
 BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
-TEST_USERNAME = "testplayer"
+TEST_USERNAME = "Adam"
+TEST_PASSWORD = "Adam123!"
 
 class GachaGameTester:
     def __init__(self):

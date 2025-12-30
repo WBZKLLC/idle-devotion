@@ -211,6 +211,18 @@ class User(BaseModel):
     # Active Button System (instant 120min collection)
     active_uses_today: int = 0
     active_last_reset: Optional[datetime] = None  # Last daily reset
+    # Guild Boss Attack System
+    guild_boss_attacks_today: int = 0  # Daily attack counter
+    guild_boss_attack_last_reset: Optional[datetime] = None  # Last daily reset
+    # Resource Bag (track collected resources)
+    resource_bag: dict = Field(default_factory=lambda: {
+        "coins_collected": 0,
+        "gold_collected": 0,
+        "crystals_collected": 0,
+        "exp_collected": 0,
+        "materials_collected": 0,
+        "last_updated": None
+    })
     # Chat unlock system
     tutorial_completed: bool = False
     chat_unlock_time: Optional[datetime] = None  # When chat becomes available

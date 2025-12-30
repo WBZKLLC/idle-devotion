@@ -4330,6 +4330,365 @@ async def get_redemption_history(username: str):
         } for h in history]
     }
 
+# ==================== ABYSS SYSTEM (1000 Levels) ====================
+
+ABYSS_CONFIG = {
+    "total_levels": 1000,
+    "milestone_levels": 50,  # Every 50th level gives server-wide 100 crystals for first clear
+    "base_boss_hp": 5000,
+    "hp_scaling_per_level": 1.08,  # 8% HP increase per level
+    "base_boss_atk": 100,
+    "atk_scaling_per_level": 1.05,
+    "rewards_per_level": {
+        "coins": 1000,  # Base coins per level
+        "gold": 500,
+        "exp": 100,
+    }
+}
+
+def generate_abyss_boss(level: int) -> dict:
+    """Generate boss stats for an abyss level"""
+    # Boss names based on level tiers
+    boss_tiers = [
+        (1, 100, ["Shadow Imp", "Dark Sprite", "Cursed Wisp", "Void Wraith", "Night Stalker"]),
+        (101, 200, ["Flame Demon", "Frost Giant", "Thunder Beast", "Stone Golem", "Wind Elemental"]),
+        (201, 300, ["Blood Knight", "Bone Dragon", "Soul Reaper", "Plague Bearer", "Doom Bringer"]),
+        (301, 400, ["Abyssal Lord", "Chaos Titan", "Void Monarch", "Shadow Emperor", "Death Sovereign"]),
+        (401, 500, ["Infernal King", "Celestial Fallen", "Primordial Beast", "Elder God", "Cosmic Horror"]),
+        (501, 600, ["World Eater", "Reality Breaker", "Time Devourer", "Dimension Walker", "Entropy Lord"]),
+        (601, 700, ["Oblivion Knight", "Armageddon Angel", "Apocalypse Rider", "Extinction Beast", "Annihilation Sage"]),
+        (701, 800, ["Universal Tyrant", "Infinite Darkness", "Eternal Flame", "Absolute Zero", "Perfect Storm"]),
+        (801, 900, ["Divine Nemesis", "Sacred Destroyer", "Holy Corruptor", "Blessed Curse", "Heaven's Fall"]),
+        (901, 1000, ["Final Judgment", "Ultimate End", "Supreme Void", "Absolute Chaos", "The Last One"]),
+    ]
+    
+    # Find appropriate tier
+    boss_names = ["Unknown Boss"]
+    for min_lvl, max_lvl, names in boss_tiers:
+        if min_lvl <= level <= max_lvl:
+            boss_names = names
+            break
+    
+    # Pick boss name based on level within tier
+    boss_index = (level - 1) % len(boss_names)
+    boss_name = boss_names[boss_index]
+    
+    # Add level suffix for uniqueness
+    if level % 50 == 0:
+        boss_name = f"🔥 {boss_name} the Unstoppable"  # Milestone boss
+    elif level % 10 == 0:
+        boss_name = f"⚔️ {boss_name} Elite"  # Mini-boss
+    
+    # Calculate scaled stats
+    hp = int(ABYSS_CONFIG["base_boss_hp"] * (ABYSS_CONFIG["hp_scaling_per_level"] ** (level - 1)))
+    atk = int(ABYSS_CONFIG["base_boss_atk"] * (ABYSS_CONFIG["atk_scaling_per_level"] ** (level - 1)))
+    
+    # Element based on level
+    elements = ["Fire", "Water", "Earth", "Wind", "Light", "Dark"]
+    element = elements[(level - 1) % len(elements)]
+    
+    return {
+        "level": level,
+        "name": boss_name,
+        "element": element,
+        "max_hp": hp,
+        "current_hp": hp,
+        "atk": atk,
+        "is_milestone": level % ABYSS_CONFIG["milestone_levels"] == 0
+    }
+
+def calculate_abyss_rewards(level: int, is_first_clear: bool = False) -> dict:
+    """Calculate rewards for clearing an abyss level"""
+    base = ABYSS_CONFIG["rewards_per_level"]
+    multiplier = 1 + (level * 0.01)  # 1% increase per level
+    
+    rewards = {
+        "coins": int(base["coins"] * multiplier),
+        "gold": int(base["gold"] * multiplier),
+        "exp": int(base["exp"] * multiplier),
+    }
+    
+    # Bonus rewards for milestone levels
+    if level % 50 == 0:
+        rewards["crystals"] = 50 + (level // 50) * 10
+        rewards["divine_essence"] = level // 100
+    elif level % 10 == 0:
+        rewards["crystals"] = 10 + (level // 10)
+    
+    return rewards
+
+@api_router.get("/abyss/{username}/status")
+async def get_abyss_status(username: str):
+    """Get user's abyss progress"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user's abyss progress
+    abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    
+    if not abyss_progress:
+        # Initialize abyss progress for new user
+        abyss_progress = {
+            "user_id": user["id"],
+            "username": username,
+            "server_id": user.get("server_id", "server_1"),
+            "current_level": 1,
+            "highest_cleared": 0,
+            "total_damage_dealt": 0,
+            "clear_history": []  # Will store {level, cleared_at, heroes_used, power_rating}
+        }
+        await db.abyss_progress.insert_one(abyss_progress)
+    
+    # Get current boss info
+    current_level = abyss_progress.get("highest_cleared", 0) + 1
+    if current_level > ABYSS_CONFIG["total_levels"]:
+        current_level = ABYSS_CONFIG["total_levels"]
+        boss = None  # Completed all levels
+    else:
+        boss = generate_abyss_boss(current_level)
+    
+    # Get first clears for milestones
+    server_id = user.get("server_id", "server_1")
+    first_clears = await db.abyss_first_clears.find(
+        {"server_id": server_id}
+    ).sort("level", 1).to_list(100)
+    
+    return {
+        "current_level": current_level,
+        "highest_cleared": abyss_progress.get("highest_cleared", 0),
+        "total_levels": ABYSS_CONFIG["total_levels"],
+        "total_damage_dealt": abyss_progress.get("total_damage_dealt", 0),
+        "current_boss": boss,
+        "rewards_preview": calculate_abyss_rewards(current_level) if boss else None,
+        "is_completed": current_level > ABYSS_CONFIG["total_levels"],
+        "milestone_first_clears": [{
+            "level": fc["level"],
+            "cleared_by": fc["username"],
+            "cleared_at": fc["cleared_at"].isoformat() if fc.get("cleared_at") else None
+        } for fc in first_clears if fc["level"] % 50 == 0]
+    }
+
+@api_router.get("/abyss/{username}/records")
+async def get_abyss_records(username: str, level: int = None):
+    """Get clear records for abyss levels"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    server_id = user.get("server_id", "server_1")
+    
+    if level:
+        # Get records for specific level
+        first_clear = await db.abyss_first_clears.find_one({"server_id": server_id, "level": level})
+        recent_clears = await db.abyss_clears.find(
+            {"server_id": server_id, "level": level}
+        ).sort("cleared_at", -1).limit(2).to_list(2)
+        
+        return {
+            "level": level,
+            "first_clear": {
+                "username": first_clear["username"],
+                "heroes_used": first_clear.get("heroes_used", []),
+                "power_rating": first_clear.get("power_rating", 0),
+                "cleared_at": first_clear["cleared_at"].isoformat() if first_clear.get("cleared_at") else None
+            } if first_clear else None,
+            "recent_clears": [{
+                "username": rc["username"],
+                "heroes_used": rc.get("heroes_used", []),
+                "power_rating": rc.get("power_rating", 0),
+                "cleared_at": rc["cleared_at"].isoformat() if rc.get("cleared_at") else None
+            } for rc in recent_clears]
+        }
+    else:
+        # Get user's own clear history
+        abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+        clear_history = abyss_progress.get("clear_history", []) if abyss_progress else []
+        
+        return {
+            "total_cleared": abyss_progress.get("highest_cleared", 0) if abyss_progress else 0,
+            "clear_history": clear_history[-20:]  # Last 20 clears
+        }
+
+@api_router.post("/abyss/{username}/attack")
+async def attack_abyss_boss(username: str):
+    """Attack the current abyss boss"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user's abyss progress
+    abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    if not abyss_progress:
+        # Initialize
+        abyss_progress = {
+            "user_id": user["id"],
+            "username": username,
+            "server_id": user.get("server_id", "server_1"),
+            "current_level": 1,
+            "highest_cleared": 0,
+            "total_damage_dealt": 0,
+            "clear_history": []
+        }
+        await db.abyss_progress.insert_one(abyss_progress)
+    
+    current_level = abyss_progress.get("highest_cleared", 0) + 1
+    
+    if current_level > ABYSS_CONFIG["total_levels"]:
+        raise HTTPException(status_code=400, detail="You have conquered all 1000 levels of the Abyss!")
+    
+    # Get user's heroes for battle
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+    if not user_heroes:
+        raise HTTPException(status_code=400, detail="No heroes to battle with")
+    
+    # Calculate team power
+    total_power = 0
+    heroes_used = []
+    for uh in user_heroes[:5]:  # Use up to 5 heroes
+        hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+        if hero_data:
+            power = (uh.get("current_hp", 1000) + uh.get("current_atk", 100) * 5 + uh.get("current_def", 50) * 3)
+            power *= (1 + uh.get("level", 1) * 0.1)
+            total_power += power
+            heroes_used.append({
+                "name": hero_data.get("name"),
+                "level": uh.get("level", 1),
+                "rarity": hero_data.get("rarity")
+            })
+    
+    # Generate boss
+    boss = generate_abyss_boss(current_level)
+    
+    # Calculate damage (simplified battle)
+    base_damage = int(total_power * random.uniform(0.8, 1.2))
+    is_critical = random.random() < 0.15
+    if is_critical:
+        base_damage = int(base_damage * 1.5)
+    
+    # Check if boss is defeated
+    boss_defeated = base_damage >= boss["max_hp"]
+    
+    result = {
+        "level": current_level,
+        "boss_name": boss["name"],
+        "damage_dealt": base_damage,
+        "is_critical": is_critical,
+        "boss_max_hp": boss["max_hp"],
+        "boss_defeated": boss_defeated,
+        "heroes_used": heroes_used,
+        "power_rating": int(total_power)
+    }
+    
+    if boss_defeated:
+        # Calculate rewards
+        server_id = user.get("server_id", "server_1")
+        
+        # Check if this is the server's first clear of this level
+        existing_first_clear = await db.abyss_first_clears.find_one({
+            "server_id": server_id,
+            "level": current_level
+        })
+        
+        is_first_clear = existing_first_clear is None
+        rewards = calculate_abyss_rewards(current_level, is_first_clear)
+        
+        # Record the clear
+        clear_record = {
+            "user_id": user["id"],
+            "username": username,
+            "server_id": server_id,
+            "level": current_level,
+            "heroes_used": heroes_used,
+            "power_rating": int(total_power),
+            "damage_dealt": base_damage,
+            "cleared_at": datetime.utcnow()
+        }
+        await db.abyss_clears.insert_one(clear_record)
+        
+        # If first clear, record it and give server-wide rewards for milestones
+        if is_first_clear:
+            await db.abyss_first_clears.insert_one(clear_record.copy())
+            
+            # Milestone first clear - give 100 crystals to ALL players on server
+            if current_level % ABYSS_CONFIG["milestone_levels"] == 0:
+                await db.users.update_many(
+                    {"server_id": server_id},
+                    {"$inc": {"crystals": 100}}
+                )
+                result["milestone_reward"] = {
+                    "message": f"🎉 FIRST CLEAR! All players on your server received 100 crystals!",
+                    "level": current_level
+                }
+        
+        # Update user progress
+        await db.abyss_progress.update_one(
+            {"user_id": user["id"]},
+            {
+                "$set": {"highest_cleared": current_level},
+                "$inc": {"total_damage_dealt": base_damage},
+                "$push": {
+                    "clear_history": {
+                        "$each": [{
+                            "level": current_level,
+                            "cleared_at": datetime.utcnow().isoformat(),
+                            "heroes_used": heroes_used,
+                            "power_rating": int(total_power)
+                        }],
+                        "$slice": -50  # Keep last 50 clears
+                    }
+                }
+            }
+        )
+        
+        # Give rewards to user
+        await db.users.update_one(
+            {"username": username},
+            {"$inc": rewards}
+        )
+        
+        result["rewards"] = rewards
+        result["is_first_server_clear"] = is_first_clear
+        result["next_level"] = current_level + 1 if current_level < ABYSS_CONFIG["total_levels"] else None
+    else:
+        # Boss not defeated - record damage dealt
+        await db.abyss_progress.update_one(
+            {"user_id": user["id"]},
+            {"$inc": {"total_damage_dealt": base_damage}}
+        )
+        result["boss_remaining_hp"] = boss["max_hp"] - base_damage
+        result["damage_needed"] = boss["max_hp"] - base_damage
+    
+    return result
+
+@api_router.get("/abyss/leaderboard/{server_id}")
+async def get_abyss_leaderboard(server_id: str = "server_1"):
+    """Get abyss leaderboard for a server"""
+    # Get top players by highest cleared level
+    top_players = await db.abyss_progress.find(
+        {"server_id": server_id}
+    ).sort("highest_cleared", -1).limit(50).to_list(50)
+    
+    # Get milestone first clears
+    first_clears = await db.abyss_first_clears.find(
+        {"server_id": server_id, "level": {"$mod": [50, 0]}}
+    ).sort("level", 1).to_list(20)
+    
+    return {
+        "server_id": server_id,
+        "leaderboard": [{
+            "rank": i + 1,
+            "username": p["username"],
+            "highest_cleared": p["highest_cleared"],
+            "total_damage": p.get("total_damage_dealt", 0)
+        } for i, p in enumerate(top_players)],
+        "milestone_first_clears": [{
+            "level": fc["level"],
+            "username": fc["username"],
+            "cleared_at": fc["cleared_at"].isoformat() if fc.get("cleared_at") else None
+        } for fc in first_clears]
+    }
+
 # ==================== GUILD WAR SYSTEM ====================
 
 GUILD_WAR_SEASONS = {

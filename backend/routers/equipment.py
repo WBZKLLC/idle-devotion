@@ -5,14 +5,13 @@ import random
 import uuid
 from datetime import datetime
 
-from ..core.database import db, convert_objectid
-from ..core.config import (
+from core.database import db, convert_objectid
+from core.config import (
     EQUIPMENT_SLOTS, EQUIPMENT_SLOT_STATS, EQUIPMENT_RARITIES,
     EQUIPMENT_RARITY_MULTIPLIERS, EQUIPMENT_BASE_STATS, EQUIPMENT_MAX_LEVEL,
     EQUIPMENT_ENHANCE_COSTS, EQUIPMENT_SETS, RUNE_TYPES, RUNE_RARITIES,
     SOCKET_REQUIREMENTS
 )
-from ..models.requests import EquipRequest, EnhanceEquipmentRequest, SocketRuneRequest
 
 router = APIRouter(prefix="/equipment", tags=["Equipment"])
 

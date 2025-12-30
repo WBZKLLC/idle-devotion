@@ -37,6 +37,8 @@ export default function GuildScreen() {
   const [bossData, setBossData] = useState<any>(null);
   const [isAttacking, setIsAttacking] = useState(false);
   const [lastAttackResult, setLastAttackResult] = useState<any>(null);
+  const [attacksRemaining, setAttacksRemaining] = useState<number>(3);
+  const [maxAttacks, setMaxAttacks] = useState<number>(3);
   
   // Donation state
   const [donationType, setDonationType] = useState<'coins' | 'gold'>('coins');

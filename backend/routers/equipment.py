@@ -315,7 +315,7 @@ async def craft_equipment(username: str, slot: str, rarity: str = "common", set_
         raise HTTPException(status_code=400, detail=f"Invalid set. Must be one of: {list(EQUIPMENT_SETS.keys())}")
     
     equipment = generate_equipment(slot, rarity, set_id, user["id"])
-    await db.equipment.insert_one(equipment)
+    await db.equipment.insert_one(equipment.copy())  # Use copy to avoid _id modification
     return {"success": True, "equipment": equipment}
 
 @router.post("/{username}/craft-rune")

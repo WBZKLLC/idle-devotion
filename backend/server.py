@@ -1031,11 +1031,37 @@ async def get_random_hero_from_db(pity_counter: int, summon_type: str = "common"
     Args:
         pity_counter: Number of pulls since last high-tier hero
         summon_type: "common" (coins), "premium" (crystals/UR), or "divine" (divine essence/UR+)
+    
+    Returns:
+        For divine summons: tuple (hero_or_none, filler_reward_or_none)
+        For other summons: hero dict
     """
     if summon_type == "divine":
-        # Divine pool: UR+ heroes ONLY - guaranteed UR+
-        available_heroes = await db.heroes.find({"rarity": "UR+"}).to_list(100)
-        return random.choice(available_heroes) if available_heroes else None
+        # Divine pool: Mixed rewards - Heroes (UR+/UR) + Crystals + Filler
+        # Pity system: guarantee UR+ at threshold
+        if pity_counter >= PITY_THRESHOLD_DIVINE:
+            # Pity hit - guaranteed UR+ hero
+            available_heroes = await db.heroes.find({"rarity": "UR+"}).to_list(100)
+            hero = random.choice(available_heroes) if available_heroes else None
+            return (hero, None)
+        
+        # Roll for reward type
+        reward_types = list(GACHA_RATES_DIVINE.keys())
+        weights = list(GACHA_RATES_DIVINE.values())
+        selected_reward = random.choices(reward_types, weights=weights)[0]
+        
+        # Check if it's a hero roll
+        if selected_reward in ["UR+", "UR"]:
+            available_heroes = await db.heroes.find({"rarity": selected_reward}).to_list(100)
+            hero = random.choice(available_heroes) if available_heroes else None
+            return (hero, None)
+        
+        # It's a filler reward (crystals, gold, essence, shards)
+        filler_data = DIVINE_FILLER_REWARDS.get(selected_reward, {})
+        return (None, {
+            "type": selected_reward,
+            **filler_data
+        })
     
     elif summon_type == "premium":
         # Premium pool: SR, SSR, UR (no UR+ - moved to divine)

@@ -12,7 +12,14 @@ const COLORS = {
 
 const COMMON_RATES = { "SR": 90.8, "SSR": 8, "SSR+": 1.2 };
 const PREMIUM_RATES = { "SR": 66.8, "SSR": 32, "UR": 1.2 };
-const DIVINE_RATES = { "UR+": 100 };
+const DIVINE_RATES = { 
+  "UR+": 0.8, 
+  "UR": 2.7, 
+  "💎8K": 1.2, 
+  "💎5K": 1.7, 
+  "💎3K": 3, 
+  "Filler": 90.6 
+};
 
 export default function SummonHubScreen() {
   const { user, fetchUser } = useGameStore();

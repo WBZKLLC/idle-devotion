@@ -37,6 +37,17 @@
           "resizeMode": "contain",
           "backgroundColor": "#0a1628"
         }
+      ],
+      [
+        "react-native-purchases",
+        {
+          "ios": {
+            "apiKey": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
+          },
+          "android": {
+            "apiKey": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
+          }
+        }
       ]
     ],
     "experiments": {

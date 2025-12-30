@@ -3836,6 +3836,116 @@ async def get_guild_donations(username: str, limit: int = 20):
         "total_donated": guild.get("total_donations", 0)
     }
 
+# ==================== RESOURCE BAG SYSTEM ====================
+
+@api_router.get("/resource-bag/{username}")
+async def get_resource_bag(username: str):
+    """Get user's resource bag (farming tracker)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get or initialize resource bag
+    resource_bag = user.get("resource_bag", {
+        "coins_collected": 0,
+        "gold_collected": 0,
+        "crystals_collected": 0,
+        "exp_collected": 0,
+        "materials_collected": 0,
+        "last_updated": None
+    })
+    
+    # Calculate VIP bonus multipliers
+    vip_level = user.get("vip_level", 0)
+    vip_bonus = 1.0 + (vip_level * 0.05)  # 5% per VIP level
+    
+    # Get daily limits
+    daily_coin_limit = int(50000 * vip_bonus)
+    daily_gold_limit = int(25000 * vip_bonus)
+    daily_exp_limit = int(10000 * vip_bonus)
+    
+    return {
+        "resource_bag": resource_bag,
+        "vip_level": vip_level,
+        "vip_bonus_percent": int((vip_bonus - 1) * 100),
+        "daily_limits": {
+            "coins": daily_coin_limit,
+            "gold": daily_gold_limit,
+            "exp": daily_exp_limit
+        },
+        "current_totals": {
+            "coins": user.get("coins", 0),
+            "gold": user.get("gold", 0),
+            "crystals": user.get("crystals", 0),
+            "divine_essence": user.get("divine_essence", 0)
+        }
+    }
+
+@api_router.post("/resource-bag/{username}/collect")
+async def collect_resources(username: str, resource_type: str, amount: int):
+    """Add collected resources to bag and update totals"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    valid_types = ["coins", "gold", "crystals", "exp", "materials"]
+    if resource_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid resource type. Must be one of: {valid_types}")
+    
+    # Get resource bag
+    resource_bag = user.get("resource_bag", {
+        "coins_collected": 0,
+        "gold_collected": 0,
+        "crystals_collected": 0,
+        "exp_collected": 0,
+        "materials_collected": 0,
+        "last_updated": None
+    })
+    
+    # Update collected amount
+    bag_key = f"{resource_type}_collected"
+    resource_bag[bag_key] = resource_bag.get(bag_key, 0) + amount
+    resource_bag["last_updated"] = datetime.utcnow().isoformat()
+    
+    # Update user's actual currency (except for exp and materials)
+    update_query = {"$set": {"resource_bag": resource_bag}}
+    if resource_type in ["coins", "gold", "crystals"]:
+        update_query["$inc"] = {resource_type: amount}
+    
+    await db.users.update_one({"username": username}, update_query)
+    
+    return {
+        "success": True,
+        "resource_type": resource_type,
+        "amount_added": amount,
+        "new_bag_total": resource_bag[bag_key],
+        "resource_bag": resource_bag
+    }
+
+@api_router.post("/resource-bag/{username}/reset")
+async def reset_resource_bag(username: str):
+    """Reset resource bag counters (typically called at daily reset)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Reset bag counters
+    new_bag = {
+        "coins_collected": 0,
+        "gold_collected": 0,
+        "crystals_collected": 0,
+        "exp_collected": 0,
+        "materials_collected": 0,
+        "last_updated": datetime.utcnow().isoformat()
+    }
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"resource_bag": new_bag}}
+    )
+    
+    return {"success": True, "message": "Resource bag reset", "resource_bag": new_bag}
+
 # ==================== GUILD WAR SYSTEM ====================
 
 GUILD_WAR_SEASONS = {

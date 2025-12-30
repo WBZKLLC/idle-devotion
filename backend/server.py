@@ -18,6 +18,10 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 import secrets
 
+# Import new modular routers
+from routers import equipment as equipment_router
+from routers import economy as economy_router
+
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

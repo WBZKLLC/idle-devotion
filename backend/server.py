@@ -3748,6 +3748,137 @@ async def get_guild_donations(username: str, limit: int = 20):
         "total_donated": guild.get("total_donations", 0)
     }
 
+# ==================== REVENUECAT PURCHASE VERIFICATION ====================
+
+class PurchaseVerification(BaseModel):
+    username: str
+    product_id: str
+    transaction_id: str
+    platform: str
+
+PRODUCT_REWARDS = {
+    "battle_pass_standard": {"type": "battle_pass", "tier": "standard", "crystals": 0},
+    "battle_pass_premium": {"type": "battle_pass", "tier": "premium", "bonus_levels": 10, "crystals": 500},
+    "crystal_pack_100": {"type": "crystals", "amount": 100},
+    "crystal_pack_500": {"type": "crystals", "amount": 500},
+    "crystal_pack_1000": {"type": "crystals", "amount": 1000},
+    "divine_pack_starter": {"type": "divine_essence", "amount": 10},
+    "divine_pack_deluxe": {"type": "divine_essence", "amount": 50},
+}
+
+@api_router.post("/purchase/verify")
+async def verify_purchase(purchase: PurchaseVerification):
+    """Verify and process a RevenueCat purchase"""
+    user = await db.users.find_one({"username": purchase.username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if transaction already processed
+    existing = await db.purchases.find_one({"transaction_id": purchase.transaction_id})
+    if existing:
+        return {"success": True, "message": "Purchase already processed", "duplicate": True}
+    
+    # Get product rewards
+    rewards = PRODUCT_REWARDS.get(purchase.product_id)
+    if not rewards:
+        raise HTTPException(status_code=400, detail="Unknown product")
+    
+    # Process based on reward type
+    result = {"success": True, "rewards": {}}
+    
+    if rewards["type"] == "crystals":
+        await db.users.update_one(
+            {"username": purchase.username},
+            {"$inc": {"crystals": rewards["amount"]}}
+        )
+        result["rewards"]["crystals"] = rewards["amount"]
+    
+    elif rewards["type"] == "divine_essence":
+        await db.users.update_one(
+            {"username": purchase.username},
+            {"$inc": {"divine_essence": rewards["amount"]}}
+        )
+        result["rewards"]["divine_essence"] = rewards["amount"]
+    
+    elif rewards["type"] == "battle_pass":
+        # Update battle pass status
+        await db.battle_pass_status.update_one(
+            {"user_id": user["id"]},
+            {
+                "$set": {
+                    "is_premium": True,
+                    "tier": rewards["tier"],
+                    "purchase_date": datetime.utcnow().isoformat()
+                },
+                "$inc": {"level": rewards.get("bonus_levels", 0)}
+            },
+            upsert=True
+        )
+        
+        if rewards.get("crystals", 0) > 0:
+            await db.users.update_one(
+                {"username": purchase.username},
+                {"$inc": {"crystals": rewards["crystals"]}}
+            )
+            result["rewards"]["crystals"] = rewards["crystals"]
+        
+        result["rewards"]["battle_pass"] = rewards["tier"]
+        result["rewards"]["bonus_levels"] = rewards.get("bonus_levels", 0)
+    
+    # Record purchase
+    await db.purchases.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "username": purchase.username,
+        "product_id": purchase.product_id,
+        "transaction_id": purchase.transaction_id,
+        "platform": purchase.platform,
+        "timestamp": datetime.utcnow().isoformat(),
+        "rewards": result["rewards"]
+    })
+    
+    # Add VIP XP for purchases
+    vip_xp = {
+        "crystal_pack_100": 100,
+        "crystal_pack_500": 500,
+        "crystal_pack_1000": 1000,
+        "battle_pass_standard": 1000,
+        "battle_pass_premium": 2000,
+        "divine_pack_starter": 500,
+        "divine_pack_deluxe": 2500,
+    }.get(purchase.product_id, 0)
+    
+    if vip_xp > 0:
+        current_vip_xp = user.get("vip_xp", 0) + vip_xp
+        new_vip_level = min(10, current_vip_xp // 1000)
+        
+        await db.users.update_one(
+            {"username": purchase.username},
+            {
+                "$set": {"vip_level": new_vip_level},
+                "$inc": {"vip_xp": vip_xp}
+            }
+        )
+        result["rewards"]["vip_xp"] = vip_xp
+    
+    return result
+
+@api_router.get("/purchase/history/{username}")
+async def get_purchase_history(username: str, limit: int = 20):
+    """Get user's purchase history"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    purchases = await db.purchases.find(
+        {"user_id": user["id"]}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return {
+        "purchases": [convert_objectid(p) for p in purchases],
+        "total_purchases": len(purchases)
+    }
+
 DAILY_QUESTS = [
     {"id": "summon_5", "name": "Summoner", "description": "Perform 5 summons", "target": 5, "reward_type": "crystals", "reward_amount": 50},
     {"id": "arena_3", "name": "Arena Fighter", "description": "Win 3 Arena battles", "target": 3, "reward_type": "crystals", "reward_amount": 30},

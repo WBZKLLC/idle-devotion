@@ -1,22 +1,26 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "Divine Heroes",
+    "slug": "divine-heroes-gacha",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+    "scheme": "divineheroes",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.divineheroes.gacha",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#0a1628"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.divineheroes.gacha",
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
@@ -31,12 +35,28 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#0a1628"
+        }
+      ],
+      [
+        "react-native-purchases",
+        {
+          "ios": {
+            "apiKey": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
+          },
+          "android": {
+            "apiKey": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
+          }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "divine-heroes-gacha"
+      }
     }
   }
 }

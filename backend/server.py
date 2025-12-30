@@ -4150,25 +4150,26 @@ async def reset_resource_bag(username: str):
 # ==================== REDEMPTION CODE SYSTEM ====================
 
 # 12 unique codes for the year - moderate rewards to keep players engaged
+# All codes never expire (expires set to None)
 REDEMPTION_CODES = {
     # Q1 - New Year & Valentines
     "NEWYEAR2025": {
         "rewards": {"crystals": 500, "coins": 50000, "gold": 25000},
         "description": "New Year 2025 Celebration",
         "max_uses": None,  # Unlimited
-        "expires": "2025-02-28"
+        "expires": None  # Never expires
     },
     "VALENTINE25": {
         "rewards": {"crystals": 300, "divine_essence": 5, "gold": 30000},
         "description": "Valentine's Day Special",
         "max_uses": None,
-        "expires": "2025-03-15"
+        "expires": None
     },
     "SPRING2025": {
         "rewards": {"coins": 100000, "gold": 50000, "crystals": 200},
         "description": "Spring Festival Rewards",
         "max_uses": None,
-        "expires": "2025-04-30"
+        "expires": None
     },
     
     # Q2 - Spring & Summer
@@ -4176,19 +4177,19 @@ REDEMPTION_CODES = {
         "rewards": {"crystals": 1000, "coins": 75000},
         "description": "Thank you for playing Divine Heroes!",
         "max_uses": None,
-        "expires": "2025-12-31"
+        "expires": None
     },
     "SUMMERVIBES": {
         "rewards": {"gold": 75000, "divine_essence": 3, "coins": 50000},
         "description": "Summer Event Code",
         "max_uses": None,
-        "expires": "2025-08-31"
+        "expires": None
     },
     "GUILDPOWER": {
         "rewards": {"crystals": 400, "gold": 40000, "coins": 40000},
         "description": "Guild Wars Launch Celebration",
         "max_uses": None,
-        "expires": "2025-07-31"
+        "expires": None
     },
     
     # Q3 - Summer & Fall
@@ -4196,19 +4197,19 @@ REDEMPTION_CODES = {
         "rewards": {"divine_essence": 10, "crystals": 300, "gold": 35000},
         "description": "Boss Rush Event Code",
         "max_uses": None,
-        "expires": "2025-09-30"
+        "expires": None
     },
     "AUTUMN2025": {
         "rewards": {"coins": 80000, "crystals": 250, "gold": 30000},
         "description": "Autumn Harvest Festival",
         "max_uses": None,
-        "expires": "2025-11-15"
+        "expires": None
     },
     "HALLOWEEN25": {
         "rewards": {"divine_essence": 8, "crystals": 500, "coins": 25000},
         "description": "Halloween Spooky Rewards",
         "max_uses": None,
-        "expires": "2025-11-07"
+        "expires": None
     },
     
     # Q4 - Winter & Holidays
@@ -4216,19 +4217,19 @@ REDEMPTION_CODES = {
         "rewards": {"gold": 60000, "coins": 60000, "crystals": 300},
         "description": "Thanksgiving Special",
         "max_uses": None,
-        "expires": "2025-12-05"
+        "expires": None
     },
     "XMAS2025": {
         "rewards": {"crystals": 800, "divine_essence": 12, "gold": 50000, "coins": 50000},
         "description": "Christmas Holiday Rewards",
         "max_uses": None,
-        "expires": "2026-01-10"
+        "expires": None
     },
     "YEAREND25": {
         "rewards": {"divine_essence": 15, "crystals": 600, "gold": 40000, "coins": 40000},
         "description": "Year End Celebration",
         "max_uses": None,
-        "expires": "2026-01-31"
+        "expires": None
     },
 }
 

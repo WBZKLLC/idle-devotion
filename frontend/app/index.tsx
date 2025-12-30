@@ -239,16 +239,38 @@ export default function HomeScreen() {
                 <Text style={styles.quickLinkText}>Guild</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/events')}>
-              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
-                <Ionicons name="sparkles" size={22} color={COLORS.gold.light} />
-                <Text style={styles.quickLinkText}>Events</Text>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/resource-bag')}>
+              <LinearGradient colors={['#27ae60', '#1e8449']} style={styles.quickLinkGradient}>
+                <Ionicons name="cube" size={22} color={COLORS.cream.pure} />
+                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Bag</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/store')}>
               <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
                 <Ionicons name="cart" size={22} color={COLORS.gold.light} />
                 <Text style={styles.quickLinkText}>Store</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Third Row - Events */}
+          <View style={styles.quickLinks}>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/events')}>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="sparkles" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>Events</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/battle-pass')}>
+              <LinearGradient colors={['#9b59b6', '#8e44ad']} style={styles.quickLinkGradient}>
+                <Ionicons name="trophy" size={22} color={COLORS.cream.pure} />
+                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Pass</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickLink} onPress={() => setSidebarVisible(true)}>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="menu" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>More</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

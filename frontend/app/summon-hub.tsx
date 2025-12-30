@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../stores/gameStore';
 
 const COLORS = {
   navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },
@@ -16,12 +16,13 @@ const DIVINE_RATES = { "UR+": 100 };
 
 export default function SummonHubScreen() {
   const { user, fetchUser } = useGameStore();
+  const hydrated = useHydration();
   const [selectedBanner, setSelectedBanner] = useState<'common' | 'premium' | 'divine'>('common');
   const [isLoading, setIsLoading] = useState(false);
   const [pullResults, setPullResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
 
-  useEffect(() => { if (user) fetchUser(); }, []);
+  useEffect(() => { if (hydrated && user) fetchUser(); }, [hydrated, user?.username]);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {

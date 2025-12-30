@@ -3778,6 +3778,208 @@ async def get_guild_donations(username: str, limit: int = 20):
         "total_donated": guild.get("total_donations", 0)
     }
 
+# ==================== GUILD WAR SYSTEM ====================
+
+GUILD_WAR_SEASONS = {
+    "duration_days": 7,
+    "matchmaking_power_range": 0.3,  # Match guilds within 30% power difference
+    "rewards_per_rank": {
+        1: {"crystals": 5000, "divine_essence": 50, "gold": 500000},
+        2: {"crystals": 3000, "divine_essence": 30, "gold": 300000},
+        3: {"crystals": 2000, "divine_essence": 20, "gold": 200000},
+        "top_10": {"crystals": 1000, "divine_essence": 10, "gold": 100000},
+        "participation": {"crystals": 200, "gold": 20000},
+    }
+}
+
+@api_router.get("/guild-war/status")
+async def get_guild_war_status():
+    """Get current guild war season status"""
+    current_war = await db.guild_wars.find_one({"status": "active"})
+    
+    if not current_war:
+        # Check if we should start a new war
+        last_war = await db.guild_wars.find_one(
+            {"status": "completed"},
+            sort=[("end_time", -1)]
+        )
+        
+        # Start new war if none exists or last one ended
+        current_war = {
+            "id": str(uuid.uuid4()),
+            "season": (last_war.get("season", 0) + 1) if last_war else 1,
+            "status": "active",
+            "start_time": datetime.utcnow().isoformat(),
+            "end_time": (datetime.utcnow() + timedelta(days=GUILD_WAR_SEASONS["duration_days"])).isoformat(),
+            "participating_guilds": [],
+            "matches": [],
+            "leaderboard": []
+        }
+        await db.guild_wars.insert_one(current_war)
+    
+    return convert_objectid(current_war)
+
+@api_router.post("/guild-war/register/{username}")
+async def register_guild_for_war(username: str):
+    """Register guild for current war season"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    # Check if user is guild leader
+    if guild.get("leader_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="Only guild leader can register")
+    
+    current_war = await db.guild_wars.find_one({"status": "active"})
+    if not current_war:
+        raise HTTPException(status_code=400, detail="No active guild war")
+    
+    # Check if already registered
+    if guild["id"] in current_war.get("participating_guilds", []):
+        raise HTTPException(status_code=400, detail="Guild already registered")
+    
+    # Calculate guild power
+    member_count = len(guild.get("member_ids", []))
+    guild_power = guild.get("total_power", 0) or member_count * 1000
+    
+    # Register guild
+    await db.guild_wars.update_one(
+        {"id": current_war["id"]},
+        {
+            "$push": {
+                "participating_guilds": guild["id"],
+                "leaderboard": {
+                    "guild_id": guild["id"],
+                    "guild_name": guild["name"],
+                    "power": guild_power,
+                    "wins": 0,
+                    "losses": 0,
+                    "points": 0,
+                    "damage_dealt": 0
+                }
+            }
+        }
+    )
+    
+    return {"success": True, "message": "Guild registered for war!", "season": current_war["season"]}
+
+@api_router.get("/guild-war/leaderboard")
+async def get_guild_war_leaderboard(limit: int = 50):
+    """Get guild war leaderboard"""
+    current_war = await db.guild_wars.find_one({"status": "active"})
+    if not current_war:
+        return {"leaderboard": [], "season": 0}
+    
+    leaderboard = sorted(
+        current_war.get("leaderboard", []),
+        key=lambda x: (-x.get("points", 0), -x.get("wins", 0), -x.get("damage_dealt", 0))
+    )[:limit]
+    
+    # Add ranks
+    for i, entry in enumerate(leaderboard):
+        entry["rank"] = i + 1
+    
+    return {
+        "leaderboard": leaderboard,
+        "season": current_war["season"],
+        "end_time": current_war.get("end_time"),
+        "total_guilds": len(current_war.get("participating_guilds", []))
+    }
+
+@api_router.post("/guild-war/attack/{username}")
+async def guild_war_attack(username: str, target_guild_id: str):
+    """Attack another guild in the war"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    current_war = await db.guild_wars.find_one({"status": "active"})
+    if not current_war:
+        raise HTTPException(status_code=400, detail="No active guild war")
+    
+    # Check if guild is registered
+    if guild["id"] not in current_war.get("participating_guilds", []):
+        raise HTTPException(status_code=400, detail="Guild not registered for war")
+    
+    # Check if target is registered
+    if target_guild_id not in current_war.get("participating_guilds", []):
+        raise HTTPException(status_code=400, detail="Target guild not in war")
+    
+    if guild["id"] == target_guild_id:
+        raise HTTPException(status_code=400, detail="Cannot attack your own guild")
+    
+    # Get user's combat power
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+    user_power = 0
+    for uh in user_heroes[:6]:
+        hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+        if hero_data:
+            level_mult = 1 + (uh.get("level", 1) - 1) * 0.05
+            user_power += (hero_data["base_hp"] + hero_data["base_atk"] * 3 + hero_data["base_def"] * 2) * level_mult
+    
+    # Calculate damage
+    base_damage = int(user_power * random.uniform(0.8, 1.2))
+    is_critical = random.random() < 0.15
+    damage = int(base_damage * (1.8 if is_critical else 1.0))
+    
+    # Points earned
+    points_earned = damage // 1000
+    
+    # Update attacker stats
+    await db.guild_wars.update_one(
+        {"id": current_war["id"], "leaderboard.guild_id": guild["id"]},
+        {
+            "$inc": {
+                "leaderboard.$.damage_dealt": damage,
+                "leaderboard.$.points": points_earned
+            }
+        }
+    )
+    
+    # Record the attack
+    attack_record = {
+        "id": str(uuid.uuid4()),
+        "war_id": current_war["id"],
+        "attacker_guild_id": guild["id"],
+        "attacker_user_id": user["id"],
+        "attacker_username": username,
+        "target_guild_id": target_guild_id,
+        "damage": damage,
+        "is_critical": is_critical,
+        "points_earned": points_earned,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    await db.guild_war_attacks.insert_one(attack_record)
+    
+    return {
+        "success": True,
+        "damage": damage,
+        "is_critical": is_critical,
+        "points_earned": points_earned,
+        "total_points": 0  # Would need to query to get updated total
+    }
+
+@api_router.get("/guild-war/history/{username}")
+async def get_guild_war_history(username: str, limit: int = 20):
+    """Get user's guild war attack history"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    attacks = await db.guild_war_attacks.find(
+        {"attacker_user_id": user["id"]}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return {"attacks": [convert_objectid(a) for a in attacks]}
+
 # ==================== REVENUECAT PURCHASE VERIFICATION ====================
 
 class PurchaseVerification(BaseModel):

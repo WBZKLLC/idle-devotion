@@ -3257,7 +3257,496 @@ async def simulate_combat(username: str, enemy_power: int = 1000):
         "turns_taken": random.randint(5, 15)
     }
 
-# ==================== DAILY QUEST SYSTEM ====================
+# ==================== ENHANCED COMBAT WITH AI NARRATION ====================
+
+class CombatAction(BaseModel):
+    turn: int
+    actor: str
+    actor_class: str
+    target: str
+    action_type: str  # "attack", "skill", "heal", "buff"
+    damage: int = 0
+    healing: int = 0
+    skill_name: Optional[str] = None
+    is_critical: bool = False
+    remaining_hp_actor: int = 0
+    remaining_hp_target: int = 0
+
+class DetailedCombatResult(BaseModel):
+    victory: bool
+    team_power: int
+    enemy_power: int
+    turns: List[CombatAction]
+    total_damage_dealt: int
+    total_damage_taken: int
+    hero_final_states: List[Dict]
+    enemy_final_states: List[Dict]
+    battle_duration_seconds: float
+    narration: Optional[str] = None
+    rewards: Dict = {}
+
+async def generate_battle_narration(heroes: List[Dict], enemy_name: str, victory: bool, turns: List[Dict]) -> str:
+    """Generate AI-powered battle narration"""
+    if not AI_ENABLED:
+        return None
+    
+    try:
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            return None
+        
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"battle-{uuid.uuid4()}",
+            system_message="You are a dramatic battle narrator for an anime gacha game. Create exciting, concise battle narration in 2-3 sentences. Use dramatic language fitting the heroes' classes and abilities. Keep it under 100 words."
+        ).with_model("openai", "gpt-4.1-mini")
+        
+        hero_names = [h["name"] for h in heroes[:3]]
+        hero_summary = ", ".join(hero_names)
+        outcome = "emerged victorious" if victory else "were defeated"
+        
+        prompt = f"Narrate a battle: Heroes {hero_summary} fought against {enemy_name}. They {outcome} after {len(turns)} rounds of combat."
+        
+        user_message = UserMessage(text=prompt)
+        response = await chat.send_message(user_message)
+        return response
+    except Exception as e:
+        print(f"AI narration error: {e}")
+        return None
+
+@api_router.post("/combat/detailed")
+async def detailed_combat(username: str, enemy_name: str = "Dark Lord", enemy_power: int = 1500):
+    """Enhanced combat simulation with turn-by-turn details and AI narration"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get heroes for battle
+    team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
+    
+    if team:
+        frontline = team.get("frontline", [])
+        backline = team.get("backline", [])
+        hero_ids = frontline + backline
+        hero_ids = [h for h in hero_ids if h]
+    else:
+        user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+        hero_powers = []
+        for uh in user_heroes:
+            hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+            if hero_data:
+                level_mult = 1 + (uh.get("level", 1) - 1) * 0.05
+                power = (hero_data["base_hp"] + hero_data["base_atk"] * 3 + hero_data["base_def"] * 2) * level_mult
+                hero_powers.append((uh["id"], power))
+        hero_powers.sort(key=lambda x: x[1], reverse=True)
+        hero_ids = [hp[0] for hp in hero_powers[:6]]
+    
+    # Build hero battle states
+    heroes_battle = []
+    team_power = 0
+    
+    for idx, hero_id in enumerate(hero_ids):
+        user_hero = await db.user_heroes.find_one({"id": hero_id})
+        if not user_hero:
+            continue
+        hero_data = await db.heroes.find_one({"id": user_hero["hero_id"]})
+        if not hero_data:
+            continue
+        
+        level_mult = 1 + (user_hero.get("level", 1) - 1) * 0.05
+        star_mult = 1 + user_hero.get("stars", 0) * 0.1
+        
+        hero_hp = int(hero_data["base_hp"] * level_mult * star_mult)
+        hero_atk = int(hero_data["base_atk"] * level_mult * star_mult)
+        hero_def = int(hero_data["base_def"] * level_mult * star_mult)
+        hero_speed = hero_data.get("base_speed", 100) + random.randint(-10, 10)
+        
+        heroes_battle.append({
+            "id": hero_id,
+            "name": hero_data["name"],
+            "class": hero_data["hero_class"],
+            "element": hero_data["element"],
+            "max_hp": hero_hp,
+            "current_hp": hero_hp,
+            "atk": hero_atk,
+            "def": hero_def,
+            "speed": hero_speed,
+            "position": "frontline" if idx < 3 else "backline",
+            "skills": hero_data.get("skills", ["Basic Attack"])
+        })
+        team_power += hero_hp + hero_atk * 3 + hero_def * 2
+    
+    if not heroes_battle:
+        raise HTTPException(status_code=400, detail="No heroes available for battle")
+    
+    # Create enemies
+    enemies_battle = []
+    num_enemies = min(3, max(1, enemy_power // 1000))
+    enemy_hp_each = enemy_power // num_enemies
+    
+    enemy_types = ["Shadow Knight", "Dark Mage", "Corrupted Archer", "Demon Lord", "Fallen Angel"]
+    for i in range(num_enemies):
+        enemy_name_i = f"{random.choice(enemy_types)}" if i > 0 else enemy_name
+        enemies_battle.append({
+            "id": f"enemy_{i}",
+            "name": enemy_name_i,
+            "class": random.choice(["Warrior", "Mage", "Archer"]),
+            "max_hp": enemy_hp_each,
+            "current_hp": enemy_hp_each,
+            "atk": enemy_power // (num_enemies * 3),
+            "def": enemy_power // (num_enemies * 5),
+            "speed": 80 + random.randint(0, 40)
+        })
+    
+    # Simulate turn-by-turn combat
+    turns = []
+    turn_number = 0
+    max_turns = 20
+    
+    while turn_number < max_turns:
+        turn_number += 1
+        
+        # Get all alive combatants sorted by speed
+        all_combatants = []
+        for h in heroes_battle:
+            if h["current_hp"] > 0:
+                all_combatants.append(("hero", h))
+        for e in enemies_battle:
+            if e["current_hp"] > 0:
+                all_combatants.append(("enemy", e))
+        
+        if not all_combatants:
+            break
+        
+        all_combatants.sort(key=lambda x: x[1]["speed"], reverse=True)
+        
+        for combatant_type, combatant in all_combatants:
+            if combatant["current_hp"] <= 0:
+                continue
+            
+            # Determine target
+            if combatant_type == "hero":
+                alive_enemies = [e for e in enemies_battle if e["current_hp"] > 0]
+                if not alive_enemies:
+                    break
+                target = random.choice(alive_enemies)
+                target_type = "enemy"
+            else:
+                # Enemies prefer frontline targets
+                frontline_heroes = [h for h in heroes_battle if h["current_hp"] > 0 and h["position"] == "frontline"]
+                backline_heroes = [h for h in heroes_battle if h["current_hp"] > 0 and h["position"] == "backline"]
+                
+                if frontline_heroes:
+                    target = random.choice(frontline_heroes)
+                elif backline_heroes:
+                    target = random.choice(backline_heroes)
+                else:
+                    break
+                target_type = "hero"
+            
+            # Calculate damage
+            is_critical = random.random() < 0.15
+            base_damage = max(1, combatant["atk"] - target.get("def", 0) // 2)
+            damage = int(base_damage * (1.5 if is_critical else 1) * random.uniform(0.9, 1.1))
+            
+            # Determine action type
+            action_type = "attack"
+            skill_name = None
+            if random.random() < 0.3 and combatant_type == "hero":
+                skills = combatant.get("skills", ["Basic Attack"])
+                if skills:
+                    skill_name = random.choice(skills)
+                    action_type = "skill"
+                    damage = int(damage * 1.3)
+            
+            target["current_hp"] = max(0, target["current_hp"] - damage)
+            
+            turns.append({
+                "turn": turn_number,
+                "actor": combatant["name"],
+                "actor_class": combatant["class"],
+                "target": target["name"],
+                "action_type": action_type,
+                "damage": damage,
+                "skill_name": skill_name,
+                "is_critical": is_critical,
+                "remaining_hp_actor": combatant["current_hp"],
+                "remaining_hp_target": target["current_hp"]
+            })
+        
+        # Check win/lose conditions
+        heroes_alive = any(h["current_hp"] > 0 for h in heroes_battle)
+        enemies_alive = any(e["current_hp"] > 0 for e in enemies_battle)
+        
+        if not enemies_alive:
+            break
+        if not heroes_alive:
+            break
+    
+    # Determine outcome
+    victory = any(h["current_hp"] > 0 for h in heroes_battle) and not any(e["current_hp"] > 0 for e in enemies_battle)
+    
+    total_damage_dealt = sum(t["damage"] for t in turns if t["actor"] in [h["name"] for h in heroes_battle])
+    total_damage_taken = sum(t["damage"] for t in turns if t["actor"] not in [h["name"] for h in heroes_battle])
+    
+    # Generate AI narration
+    narration = await generate_battle_narration(heroes_battle, enemy_name, victory, turns)
+    
+    # Calculate rewards
+    rewards = {}
+    if victory:
+        rewards = {
+            "gold": int(enemy_power * random.uniform(0.5, 1.0)),
+            "exp": int(enemy_power * 0.1),
+            "coins": int(enemy_power * random.uniform(0.1, 0.3))
+        }
+        # Award rewards
+        await db.users.update_one(
+            {"username": username},
+            {"$inc": {"gold": rewards["gold"], "coins": rewards["coins"]}}
+        )
+    
+    return {
+        "victory": victory,
+        "team_power": team_power,
+        "enemy_power": enemy_power,
+        "turns": turns,
+        "total_damage_dealt": total_damage_dealt,
+        "total_damage_taken": total_damage_taken,
+        "hero_final_states": [{"name": h["name"], "hp": h["current_hp"], "max_hp": h["max_hp"]} for h in heroes_battle],
+        "enemy_final_states": [{"name": e["name"], "hp": e["current_hp"], "max_hp": e["max_hp"]} for e in enemies_battle],
+        "battle_duration_seconds": len(turns) * 0.8,
+        "narration": narration,
+        "rewards": rewards
+    }
+
+# ==================== GUILD BOSS FIGHT SYSTEM ====================
+
+GUILD_BOSSES = [
+    {"id": "dragon_ancient", "name": "Ancient Dragon", "base_hp": 1000000, "base_atk": 5000, "element": "Fire", "rewards": {"crystals": 500, "gold": 50000}},
+    {"id": "titan_storm", "name": "Storm Titan", "base_hp": 1500000, "base_atk": 4000, "element": "Lightning", "rewards": {"crystals": 750, "gold": 75000}},
+    {"id": "void_emperor", "name": "Void Emperor", "base_hp": 2000000, "base_atk": 6000, "element": "Dark", "rewards": {"divine_essence": 10, "crystals": 1000}},
+]
+
+@api_router.get("/guild/{username}/boss")
+async def get_guild_boss(username: str):
+    """Get current guild boss status"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Find user's guild
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    # Get or create guild boss state
+    boss_state = await db.guild_bosses.find_one({"guild_id": guild["id"]})
+    
+    if not boss_state or boss_state.get("defeated", False):
+        # Spawn new boss
+        boss_template = random.choice(GUILD_BOSSES)
+        guild_level = guild.get("level", 1)
+        
+        boss_state = {
+            "id": str(uuid.uuid4()),
+            "guild_id": guild["id"],
+            "boss_id": boss_template["id"],
+            "boss_name": boss_template["name"],
+            "element": boss_template["element"],
+            "max_hp": int(boss_template["base_hp"] * (1 + guild_level * 0.1)),
+            "current_hp": int(boss_template["base_hp"] * (1 + guild_level * 0.1)),
+            "atk": int(boss_template["base_atk"] * (1 + guild_level * 0.1)),
+            "rewards": boss_template["rewards"],
+            "damage_contributors": {},
+            "spawn_time": datetime.utcnow().isoformat(),
+            "expires_at": (datetime.utcnow() + timedelta(days=3)).isoformat(),
+            "defeated": False
+        }
+        
+        if await db.guild_bosses.find_one({"guild_id": guild["id"], "defeated": False}):
+            boss_state = await db.guild_bosses.find_one({"guild_id": guild["id"], "defeated": False})
+        else:
+            await db.guild_bosses.insert_one(boss_state)
+    
+    return convert_objectid(boss_state)
+
+@api_router.post("/guild/{username}/boss/attack")
+async def attack_guild_boss(username: str):
+    """Attack the guild boss"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    boss_state = await db.guild_bosses.find_one({"guild_id": guild["id"], "defeated": False})
+    if not boss_state:
+        raise HTTPException(status_code=400, detail="No active boss")
+    
+    # Get user's team power
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+    total_power = 0
+    heroes_used = []
+    
+    for uh in user_heroes[:6]:
+        hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
+        if hero_data:
+            level_mult = 1 + (uh.get("level", 1) - 1) * 0.05
+            power = (hero_data["base_hp"] + hero_data["base_atk"] * 3 + hero_data["base_def"] * 2) * level_mult
+            total_power += power
+            heroes_used.append(hero_data["name"])
+    
+    if total_power == 0:
+        raise HTTPException(status_code=400, detail="No heroes to attack with")
+    
+    # Calculate damage (power-based with variance)
+    base_damage = int(total_power * random.uniform(0.8, 1.2))
+    is_critical = random.random() < 0.1
+    damage = int(base_damage * (2.0 if is_critical else 1.0))
+    
+    # Apply damage
+    new_hp = max(0, boss_state["current_hp"] - damage)
+    defeated = new_hp <= 0
+    
+    # Track contribution
+    contributors = boss_state.get("damage_contributors", {})
+    contributors[user["id"]] = contributors.get(user["id"], 0) + damage
+    
+    await db.guild_bosses.update_one(
+        {"id": boss_state["id"]},
+        {
+            "$set": {
+                "current_hp": new_hp,
+                "defeated": defeated,
+                "damage_contributors": contributors
+            }
+        }
+    )
+    
+    result = {
+        "damage_dealt": damage,
+        "is_critical": is_critical,
+        "boss_hp_remaining": new_hp,
+        "boss_max_hp": boss_state["max_hp"],
+        "defeated": defeated,
+        "heroes_used": heroes_used,
+        "your_total_damage": contributors[user["id"]]
+    }
+    
+    # If defeated, distribute rewards
+    if defeated:
+        total_damage = sum(contributors.values())
+        base_rewards = boss_state.get("rewards", {})
+        
+        # Calculate user's share
+        user_share = contributors.get(user["id"], 0) / max(total_damage, 1)
+        user_rewards = {}
+        
+        for reward_type, amount in base_rewards.items():
+            user_amount = int(amount * (0.2 + user_share * 0.8))  # Min 20% + share-based
+            user_rewards[reward_type] = user_amount
+            await db.users.update_one(
+                {"username": username},
+                {"$inc": {reward_type: user_amount}}
+            )
+        
+        result["rewards"] = user_rewards
+        result["contribution_percent"] = round(user_share * 100, 1)
+    
+    return result
+
+# ==================== GUILD DONATION SYSTEM ====================
+
+@api_router.post("/guild/{username}/donate")
+async def donate_to_guild(username: str, currency_type: str = "coins", amount: int = 1000):
+    """Donate currency to guild"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    if currency_type not in ["coins", "gold"]:
+        raise HTTPException(status_code=400, detail="Can only donate coins or gold")
+    
+    if user.get(currency_type, 0) < amount:
+        raise HTTPException(status_code=400, detail=f"Not enough {currency_type}")
+    
+    # Deduct from user
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {currency_type: -amount}}
+    )
+    
+    # Add to guild treasury
+    await db.guilds.update_one(
+        {"id": guild["id"]},
+        {
+            "$inc": {
+                f"treasury_{currency_type}": amount,
+                "total_donations": amount,
+                "exp": amount // 100  # Guild gains XP from donations
+            }
+        }
+    )
+    
+    # Track individual contribution
+    await db.guild_donations.insert_one({
+        "id": str(uuid.uuid4()),
+        "guild_id": guild["id"],
+        "user_id": user["id"],
+        "username": username,
+        "currency_type": currency_type,
+        "amount": amount,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
+    # Reward donor with guild points
+    guild_points = amount // 50
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"guild_points": guild_points}}
+    )
+    
+    return {
+        "success": True,
+        "donated": amount,
+        "currency_type": currency_type,
+        "guild_points_earned": guild_points,
+        "guild_treasury": {
+            "coins": guild.get("treasury_coins", 0) + (amount if currency_type == "coins" else 0),
+            "gold": guild.get("treasury_gold", 0) + (amount if currency_type == "gold" else 0)
+        }
+    }
+
+@api_router.get("/guild/{username}/donations")
+async def get_guild_donations(username: str, limit: int = 20):
+    """Get recent guild donations"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    donations = await db.guild_donations.find(
+        {"guild_id": guild["id"]}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return {
+        "donations": [convert_objectid(d) for d in donations],
+        "treasury": {
+            "coins": guild.get("treasury_coins", 0),
+            "gold": guild.get("treasury_gold", 0)
+        },
+        "total_donated": guild.get("total_donations", 0)
+    }
 
 DAILY_QUESTS = [
     {"id": "summon_5", "name": "Summoner", "description": "Perform 5 summons", "target": 5, "reward_type": "crystals", "reward_amount": 50},

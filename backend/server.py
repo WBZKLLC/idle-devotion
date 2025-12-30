@@ -1144,7 +1144,7 @@ async def pull_gacha(username: str, request: PullRequest):
             await db.user_heroes.insert_one(user_hero.dict())
         
         # Create server-wide marquee notification for UR or UR+ pulls
-        if hero.rarity in ["UR", "UR+"]:
+        if hero.get("rarity") in ["UR", "UR+"]:
             marquee = MarqueeNotification(
                 server_id=user.server_id,
                 username=username,

@@ -285,18 +285,51 @@ export default function HeroDetailScreen() {
 
           {activeTab === 'skills' && (
             <View style={styles.skillsList}>
-              {(heroData.skills || ['Basic Attack']).map((skill: string, idx: number) => (
+              {(heroData.skills && heroData.skills.length > 0) ? heroData.skills.map((skill: any, idx: number) => (
                 <View key={idx} style={styles.skillCard}>
-                  <View style={styles.skillIcon}>
-                    <Ionicons name="flash" size={20} color={COLORS.gold.primary} />
+                  <View style={[styles.skillIcon, skill.skill_type === 'passive' && styles.skillIconPassive]}>
+                    <Ionicons 
+                      name={skill.skill_type === 'passive' ? 'sparkles' : 'flash'} 
+                      size={20} 
+                      color={skill.skill_type === 'passive' ? '#9b59b6' : COLORS.gold.primary} 
+                    />
                   </View>
                   <View style={styles.skillInfo}>
-                    <Text style={styles.skillName}>{skill}</Text>
-                    <Text style={styles.skillDesc}>Deal damage to enemy</Text>
+                    <View style={styles.skillHeader}>
+                      <Text style={styles.skillName}>{skill.name}</Text>
+                      <View style={[styles.skillTypeBadge, skill.skill_type === 'passive' && styles.skillTypeBadgePassive]}>
+                        <Text style={styles.skillTypeText}>{skill.skill_type?.toUpperCase()}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.skillDesc}>{skill.description}</Text>
+                    {skill.damage_multiplier && skill.damage_multiplier > 0 && (
+                      <View style={styles.skillStats}>
+                        <Text style={styles.skillStatText}>DMG: {(skill.damage_multiplier * 100).toFixed(0)}%</Text>
+                        {skill.cooldown > 0 && <Text style={styles.skillStatText}>CD: {skill.cooldown} turns</Text>}
+                      </View>
+                    )}
+                    {skill.buff_type && (
+                      <View style={styles.skillStats}>
+                        <Text style={styles.skillStatText}>Buff: +{(skill.buff_percent * 100).toFixed(0)}% {skill.buff_type.toUpperCase()}</Text>
+                      </View>
+                    )}
+                    {skill.heal_percent > 0 && (
+                      <View style={styles.skillStats}>
+                        <Text style={[styles.skillStatText, { color: '#2ecc71' }]}>Heal: {(skill.heal_percent * 100).toFixed(0)}%</Text>
+                      </View>
+                    )}
+                    <Text style={styles.skillUnlock}>
+                      {skill.unlock_level > 1 ? `Unlock at Lv.${skill.unlock_level}` : 
+                       skill.unlock_stars > 0 ? `Unlock at ${skill.unlock_stars}★` : 'Available'}
+                    </Text>
                   </View>
-                  <Text style={styles.skillLevel}>Lv.1</Text>
                 </View>
-              ))}
+              )) : (
+                <View style={styles.noSkillsContainer}>
+                  <Ionicons name="flash-off" size={32} color={COLORS.navy.light} />
+                  <Text style={styles.noSkillsText}>No skills data available</Text>
+                </View>
+              )}
             </View>
           )}
 

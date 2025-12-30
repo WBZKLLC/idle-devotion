@@ -1021,17 +1021,138 @@ async def get_random_hero_from_db(pity_counter: int, summon_type: str = "common"
     
     return random.choice(rarity_heroes) if rarity_heroes else None
 
-# API Routes
+# API Routes - Authentication Models
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class AuthResponse(BaseModel):
+    user: dict
+    token: str
+    message: str
+
 @api_router.post("/user/register")
-async def register_user(username: str):
-    """Register a new user"""
-    existing = await db.users.find_one({"username": username})
+async def register_user(request: RegisterRequest):
+    """Register a new user with password"""
+    username = request.username.strip()
+    password = request.password
+    
+    # Validate username
+    if len(username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
+    if len(username) > 20:
+        raise HTTPException(status_code=400, detail="Username must be less than 20 characters")
+    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        raise HTTPException(status_code=400, detail="Username can only contain letters, numbers, and underscores")
+    
+    # Validate password
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Check if username exists
+    existing = await db.users.find_one({"username": {"$regex": f"^{username}$", "$options": "i"}})
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
     
-    user = User(username=username)
+    # Create user with hashed password
+    user = User(
+        username=username,
+        password_hash=hash_password(password)
+    )
     await db.users.insert_one(user.dict())
-    return user
+    
+    # Create JWT token
+    token = create_access_token(data={"sub": username})
+    
+    user_dict = user.dict()
+    del user_dict["password_hash"]  # Don't send password hash to client
+    
+    return {
+        "user": user_dict,
+        "token": token,
+        "message": "Account created successfully"
+    }
+
+@api_router.post("/auth/login")
+async def auth_login(request: LoginRequest):
+    """Authenticate user with password and return JWT token"""
+    username = request.username.strip()
+    password = request.password
+    
+    # Find user (case-insensitive)
+    user = await db.users.find_one({"username": {"$regex": f"^{username}$", "$options": "i"}})
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Check if user has a password set
+    if not user.get("password_hash"):
+        # Legacy user without password - require password setup
+        raise HTTPException(
+            status_code=403, 
+            detail="This account requires a password. Please set a password to continue."
+        )
+    
+    # Verify password
+    if not verify_password(password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # Create JWT token
+    token = create_access_token(data={"sub": user["username"]})
+    
+    # Return user data without password hash
+    user_data = convert_objectid(user.copy())
+    if "password_hash" in user_data:
+        del user_data["password_hash"]
+    
+    return {
+        "user": user_data,
+        "token": token,
+        "message": "Login successful"
+    }
+
+@api_router.post("/auth/set-password")
+async def set_password(username: str, new_password: str):
+    """Set password for a legacy account (users without passwords)"""
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    user = await db.users.find_one({"username": {"$regex": f"^{username}$", "$options": "i"}})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.get("password_hash"):
+        raise HTTPException(status_code=400, detail="Account already has a password")
+    
+    # Set the password
+    await db.users.update_one(
+        {"username": user["username"]},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    
+    # Create JWT token
+    token = create_access_token(data={"sub": user["username"]})
+    
+    return {
+        "message": "Password set successfully",
+        "token": token
+    }
+
+@api_router.get("/auth/verify")
+async def verify_auth(current_user: dict = Depends(get_current_user)):
+    """Verify JWT token is valid and return user data"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    user_data = convert_objectid(current_user.copy())
+    if "password_hash" in user_data:
+        del user_data["password_hash"]
+    
+    return {"valid": True, "user": user_data}
 
 @api_router.get("/user/{username}")
 async def get_user(username: str):

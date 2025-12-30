@@ -3520,13 +3520,43 @@ async def detailed_combat(username: str, enemy_name: str = "Dark Lord", enemy_po
         "rewards": rewards
     }
 
-# ==================== GUILD BOSS FIGHT SYSTEM ====================
+# ==================== GUILD BOSS FIGHT SYSTEM (EXPANDED) ====================
 
 GUILD_BOSSES = [
-    {"id": "dragon_ancient", "name": "Ancient Dragon", "base_hp": 1000000, "base_atk": 5000, "element": "Fire", "rewards": {"crystals": 500, "gold": 50000}},
-    {"id": "titan_storm", "name": "Storm Titan", "base_hp": 1500000, "base_atk": 4000, "element": "Lightning", "rewards": {"crystals": 750, "gold": 75000}},
-    {"id": "void_emperor", "name": "Void Emperor", "base_hp": 2000000, "base_atk": 6000, "element": "Dark", "rewards": {"divine_essence": 10, "crystals": 1000}},
+    # Tier 1 - Easy (Levels 1-5)
+    {"id": "shadow_knight", "name": "Shadow Knight", "tier": 1, "base_hp": 500000, "base_atk": 2500, "element": "Dark", "rewards": {"crystals": 200, "gold": 25000, "coins": 50000}},
+    {"id": "flame_golem", "name": "Flame Golem", "tier": 1, "base_hp": 600000, "base_atk": 2000, "element": "Fire", "rewards": {"crystals": 250, "gold": 30000, "coins": 60000}},
+    {"id": "frost_wyrm", "name": "Frost Wyrm", "tier": 1, "base_hp": 550000, "base_atk": 2200, "element": "Water", "rewards": {"crystals": 220, "gold": 28000, "coins": 55000}},
+    
+    # Tier 2 - Medium (Levels 6-10)
+    {"id": "dragon_ancient", "name": "Ancient Dragon", "tier": 2, "base_hp": 1000000, "base_atk": 5000, "element": "Fire", "rewards": {"crystals": 500, "gold": 50000, "divine_essence": 3}},
+    {"id": "titan_storm", "name": "Storm Titan", "tier": 2, "base_hp": 1200000, "base_atk": 4500, "element": "Lightning", "rewards": {"crystals": 600, "gold": 60000, "divine_essence": 4}},
+    {"id": "sea_leviathan", "name": "Sea Leviathan", "tier": 2, "base_hp": 1100000, "base_atk": 4800, "element": "Water", "rewards": {"crystals": 550, "gold": 55000, "divine_essence": 3}},
+    
+    # Tier 3 - Hard (Levels 11-15)
+    {"id": "void_emperor", "name": "Void Emperor", "tier": 3, "base_hp": 2000000, "base_atk": 7000, "element": "Dark", "rewards": {"crystals": 1000, "gold": 100000, "divine_essence": 10}},
+    {"id": "celestial_guardian", "name": "Celestial Guardian", "tier": 3, "base_hp": 2200000, "base_atk": 6500, "element": "Light", "rewards": {"crystals": 1100, "gold": 110000, "divine_essence": 12}},
+    {"id": "chaos_demon", "name": "Chaos Demon", "tier": 3, "base_hp": 2500000, "base_atk": 7500, "element": "Dark", "rewards": {"crystals": 1200, "gold": 120000, "divine_essence": 15}},
+    
+    # Tier 4 - Nightmare (Levels 16+)
+    {"id": "world_serpent", "name": "World Serpent Jörmungandr", "tier": 4, "base_hp": 5000000, "base_atk": 10000, "element": "Water", "rewards": {"crystals": 2500, "gold": 250000, "divine_essence": 30}},
+    {"id": "fallen_seraph", "name": "Fallen Seraph Lucifer", "tier": 4, "base_hp": 6000000, "base_atk": 12000, "element": "Dark", "rewards": {"crystals": 3000, "gold": 300000, "divine_essence": 40}},
+    {"id": "primordial_titan", "name": "Primordial Titan Kronos", "tier": 4, "base_hp": 8000000, "base_atk": 15000, "element": "Fire", "rewards": {"crystals": 4000, "gold": 400000, "divine_essence": 50}},
 ]
+
+def get_boss_for_guild_level(guild_level: int):
+    """Select appropriate boss based on guild level"""
+    if guild_level <= 5:
+        tier = 1
+    elif guild_level <= 10:
+        tier = 2
+    elif guild_level <= 15:
+        tier = 3
+    else:
+        tier = 4
+    
+    tier_bosses = [b for b in GUILD_BOSSES if b["tier"] == tier]
+    return random.choice(tier_bosses) if tier_bosses else random.choice(GUILD_BOSSES)
 
 @api_router.get("/guild/{username}/boss")
 async def get_guild_boss(username: str):

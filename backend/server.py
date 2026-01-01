@@ -8117,12 +8117,16 @@ app.include_router(admin_router.router, prefix="/api")
 app.include_router(campaign_router.router, prefix="/api")
 app.include_router(battle_router.router, prefix="/api")
 app.include_router(gacha_router.router, prefix="/api")
+app.include_router(auth_router.router)
+app.include_router(guild_router.router)
 
 # Set database references for modular routers
 admin_router.set_database(db)
 campaign_router.set_database(db)
 battle_router.set_database(db)
 gacha_router.set_database(db)
+auth_router.set_database(db)
+guild_router.set_database(db)
 
 app.add_middleware(
     CORSMiddleware,

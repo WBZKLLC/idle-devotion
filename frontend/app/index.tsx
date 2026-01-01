@@ -394,13 +394,13 @@ export default function HomeScreen() {
 
           {/* FEATURED: Launch Banner & Journey */}
           <View style={styles.quickLinks}>
-            <TouchableOpacity style={[styles.quickLink, { flex: 2 }]} onPress={() => router.push('/launch-banner')}>
-              <LinearGradient colors={['#7c3aed', '#5b21b6', '#1a0a2e']} style={[styles.quickLinkGradient, { paddingVertical: 20 }]}>
+            <TouchableOpacity style={[styles.quickLink, { flex: 2 }]} onPress={() => router.push('/selene-banner')}>
+              <LinearGradient colors={['#6366f1', '#4338ca', '#1e1b4b']} style={[styles.quickLinkGradient, { paddingVertical: 20 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{ fontSize: 20 }}>✨</Text>
+                  <Text style={{ fontSize: 20 }}>⏳</Text>
                   <View>
-                    <Text style={[styles.quickLinkText, { color: COLORS.gold.light, fontSize: 14, fontWeight: 'bold' }]}>LIMITED BANNER</Text>
-                    <Text style={{ color: '#ef4444', fontSize: 10, fontWeight: 'bold' }}>72H ONLY!</Text>
+                    <Text style={[styles.quickLinkText, { color: '#a5b4fc', fontSize: 14, fontWeight: 'bold' }]}>FATED CHRONOLOGY</Text>
+                    <Text style={{ color: '#ef4444', fontSize: 10, fontWeight: 'bold' }}>7 DAYS ONLY!</Text>
                   </View>
                 </View>
               </LinearGradient>
@@ -413,8 +413,14 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Third Row - Events & Dungeons */}
+          {/* Second Featured Row - Aethon & Launch */}
           <View style={styles.quickLinks}>
+            <TouchableOpacity style={[styles.quickLink, { flex: 1 }]} onPress={() => router.push('/launch-banner')}>
+              <LinearGradient colors={['#7c3aed', '#5b21b6']} style={styles.quickLinkGradient}>
+                <Text style={{ fontSize: 16 }}>✨</Text>
+                <Text style={[styles.quickLinkText, { color: COLORS.gold.light, fontSize: 11 }]}>Aethon 72H</Text>
+              </LinearGradient>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/dungeons')}>
               <LinearGradient colors={['#22c55e', '#16a34a']} style={styles.quickLinkGradient}>
                 <Ionicons name="flash" size={22} color={COLORS.cream.pure} />
@@ -427,7 +433,7 @@ export default function HomeScreen() {
                 <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Pass</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/abyss')}>
+          </View>
               <LinearGradient colors={['#1a202c', '#0d0d12']} style={styles.quickLinkGradient}>
                 <Ionicons name="chevron-down-circle" size={22} color="#48bb78" />
                 <Text style={[styles.quickLinkText, { color: '#48bb78' }]}>Abyss</Text>

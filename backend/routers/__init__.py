@@ -6,5 +6,7 @@ from . import economy
 from . import stages
 from . import admin
 from . import campaign
+from . import battle
+from . import gacha
 
-__all__ = ['equipment', 'economy', 'stages', 'admin', 'campaign']
+__all__ = ['equipment', 'economy', 'stages', 'admin', 'campaign', 'battle', 'gacha']

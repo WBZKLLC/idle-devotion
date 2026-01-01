@@ -1440,9 +1440,14 @@ async def pull_gacha(username: str, request: PullRequest):
             
             if filler_reward:
                 # Add filler rewards to collection
-                for key in ["crystals", "gold", "coins", "divine_essence", "hero_shards"]:
+                for key in ["crystals", "gold", "coins", "divine_essence", "hero_shards", 
+                           "enhancement_stones", "skill_essence", "star_crystals", "hero_exp"]:
                     if key in filler_reward:
                         filler_rewards_collected[key] += filler_reward[key]
+                
+                # Handle rune drops separately (they're actual items, not currency)
+                if "rune" in filler_reward:
+                    runes_earned.append(filler_reward["rune"])
                 
                 # Add display item for UI
                 filler_display_items.append({

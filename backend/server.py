@@ -1584,6 +1584,7 @@ async def pull_gacha(username: str, request: PullRequest):
         "pulled_heroes_count": len(pulled_heroes),
         "filler_rewards_count": len(filler_display_items),
         "filler_rewards_collected": filler_rewards_collected,
+        "runes_earned": len(runes_earned),
         "new_pity_counter": pity_counter,
         "crystals_spent": crystals_spent,
         "coins_spent": coins_spent,

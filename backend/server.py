@@ -2064,27 +2064,6 @@ async def get_idle_status(username: str):
         "next_milestones": next_milestones,
         "vip_upgrade_info": vip_upgrade,
     }
-    
-    now = datetime.utcnow()
-    time_elapsed = (now - collection_started).total_seconds()
-    max_seconds = idle_cap_hours * 3600
-    
-    # Calculate pending gold with VIP rate bonus
-    capped_time = min(time_elapsed, max_seconds)
-    gold_per_minute = get_idle_gold_rate(vip_level)
-    gold_per_second = gold_per_minute / 60
-    gold_pending = int(gold_per_second * capped_time)
-    
-    return {
-        "is_collecting": True,
-        "gold_pending": gold_pending,
-        "time_elapsed": time_elapsed,
-        "hours_elapsed": time_elapsed / 3600,
-        "is_capped": time_elapsed >= max_seconds,
-        "vip_level": vip_level,
-        "max_hours": idle_cap_hours,
-        "time_until_cap": max(0, max_seconds - time_elapsed)
-    }
 
 @api_router.get("/vip/info/{username}")
 async def get_vip_info(username: str):

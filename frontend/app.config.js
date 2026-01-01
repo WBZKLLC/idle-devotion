@@ -46,7 +46,7 @@ module.exports = ({ config }) => {
     },
     extra: {
       eas: {
-        projectId: '59fe8d53-8818-4d41-a206-556a8f621bbd',
+        projectId: undefined,
       },
       BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://divinemobile.preview.emergentagent.com',
       REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',

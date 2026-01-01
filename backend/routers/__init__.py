@@ -8,5 +8,7 @@ from . import admin
 from . import campaign
 from . import battle
 from . import gacha
+from . import auth
+from . import guild
 
-__all__ = ['equipment', 'economy', 'stages', 'admin', 'campaign', 'battle', 'gacha']
+__all__ = ['equipment', 'economy', 'stages', 'admin', 'campaign', 'battle', 'gacha', 'auth', 'guild']

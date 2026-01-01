@@ -8,6 +8,7 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
+        "withoutCredentials": true,
         "gradleCommand": ":app:assembleRelease"
       },
       "env": {

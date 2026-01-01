@@ -7455,6 +7455,7 @@ async def get_campaign_chapters(username: str):
     progress = await db.campaign_progress.find_one({"user_id": user["id"]})
     completed_chapters = progress.get("completed_chapters", []) if progress else []
     current_chapter = progress.get("current_chapter", 1) if progress else 1
+    stage_progress = progress.get("stage_progress", {}) if progress else {}
     player_level = user.get("level", 1)
     
     chapters = []
@@ -7465,6 +7466,13 @@ async def get_campaign_chapters(username: str):
         
         is_unlocked = (prev_chapter is None or prev_chapter in completed_chapters) and player_level >= req_level
         is_completed = ch_id in completed_chapters
+        
+        # Count cleared stages for this chapter
+        cleared_count = 0
+        for stage_num in range(1, 22):
+            stage_id = f"{ch_id}-{stage_num}"
+            if stage_progress.get(stage_id, {}).get("cleared", False):
+                cleared_count += 1
         
         chapters.append({
             "id": ch_id,
@@ -7481,6 +7489,10 @@ async def get_campaign_chapters(username: str):
             "theme_color": ch_data["theme_color"],
             "completion_unlock": ch_data.get("completion_unlock"),
             "total_stages": 21,  # 20 + boss
+            "progress": {
+                "cleared": cleared_count,
+                "total": 21,
+            },
         })
     
     return {

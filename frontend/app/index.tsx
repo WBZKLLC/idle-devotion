@@ -385,12 +385,12 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Third Row - Events */}
+          {/* Third Row - Events & Dungeons */}
           <View style={styles.quickLinks}>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/events')}>
-              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
-                <Ionicons name="sparkles" size={22} color={COLORS.gold.light} />
-                <Text style={styles.quickLinkText}>Events</Text>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/dungeons')}>
+              <LinearGradient colors={['#22c55e', '#16a34a']} style={styles.quickLinkGradient}>
+                <Ionicons name="flash" size={22} color={COLORS.cream.pure} />
+                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Dungeons</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/battle-pass')}>

@@ -1872,14 +1872,32 @@ async def get_hero_change_logs(username: str, hero_id: str = None, limit: int = 
 
 @api_router.post("/idle/claim")
 async def claim_idle_rewards(username: str):
-    """Claim idle rewards - manual collection with VIP-based caps"""
+    """
+    Claim idle rewards with VIP-tiered rates and progression-based caps.
+    
+    VIP Rate Schedule:
+    - VIP 0-6: 5% base rate
+    - VIP 7: 15% rate
+    - VIP 8+: +5% per level (20%, 25%, etc.)
+    
+    Resources: Gold, Coins, Enhancement Stones, Skill Essence, Stamina, Rune Stones
+    Caps based on: Abyss floor, Dungeon tier, Campaign chapter
+    """
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     # Calculate VIP level
     vip_level = calculate_vip_level(user.get("total_spent", 0))
-    idle_cap_hours = get_idle_cap_hours(vip_level)
+    idle_max_hours = get_vip_idle_hours(vip_level)
+    
+    # Get progression data for caps
+    abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    abyss_floor = abyss_progress.get("highest_floor", 0) if abyss_progress else 0
+    
+    stage_progress = await db.stage_progress.find_one({"user_id": user["id"]})
+    dungeon_tier = stage_progress.get("dungeon_tier", 0) if stage_progress else 0
+    campaign_chapter = stage_progress.get("campaign_chapter", 0) if stage_progress else 0
     
     # Get idle collection start time
     collection_started = user.get("idle_collection_started_at")
@@ -1893,67 +1911,159 @@ async def claim_idle_rewards(username: str):
             }}
         )
         return {
-            "gold_earned": 0,
+            "resources": {},
             "time_away": 0,
             "collection_started": True,
             "vip_level": vip_level,
-            "max_hours": idle_cap_hours
+            "vip_rate": get_vip_idle_rate_display(vip_level),
+            "max_hours": idle_max_hours
         }
     
     # Calculate time since collection started
     now = datetime.utcnow()
-    time_away = (now - collection_started).total_seconds()
+    if isinstance(collection_started, str):
+        collection_started = datetime.fromisoformat(collection_started.replace("Z", "+00:00")).replace(tzinfo=None)
     
-    # Cap at VIP-based hours
-    max_seconds = idle_cap_hours * 3600
-    time_away = min(time_away, max_seconds)
+    time_away_seconds = (now - collection_started).total_seconds()
+    hours_elapsed = time_away_seconds / 3600
     
-    # Calculate gold earned with VIP rate bonus
-    gold_per_minute = get_idle_gold_rate(vip_level)
-    gold_per_second = gold_per_minute / 60
-    gold_earned = int(gold_per_second * time_away)
-    
-    # Update user gold and restart collection
-    await db.users.update_one(
-        {"username": username},
-        {
-            "$inc": {"gold": gold_earned},
-            "$set": {
-                "idle_collection_started_at": now,
-                "idle_collection_last_claimed": now,
-                "vip_level": vip_level
-            }
-        }
+    # Calculate resources using new system
+    idle_result = calculate_idle_resources(
+        hours_elapsed=hours_elapsed,
+        vip_level=vip_level,
+        abyss_floor=abyss_floor,
+        dungeon_tier=dungeon_tier,
+        campaign_chapter=campaign_chapter,
+        max_hours=idle_max_hours
     )
     
+    resources = idle_result["resources"]
+    
+    # Update user with all resources and restart collection
+    update_ops = {"$set": {
+        "idle_collection_started_at": now,
+        "idle_collection_last_claimed": now,
+        "vip_level": vip_level
+    }}
+    
+    # Build $inc for resources
+    inc_ops = {}
+    for resource, amount in resources.items():
+        if amount > 0:
+            inc_ops[resource] = amount
+    
+    if inc_ops:
+        update_ops["$inc"] = inc_ops
+    
+    await db.users.update_one({"username": username}, update_ops)
+    
+    # Refresh user for return
+    await db.users.find_one({"username": username})
+    
     return {
-        "gold_earned": gold_earned,
-        "time_away": int(time_away),
-        "hours_away": time_away / 3600,
-        "capped": time_away >= max_seconds,
+        "resources": resources,
+        "gold_earned": resources.get("gold", 0),  # Legacy compatibility
+        "time_away": int(time_away_seconds),
+        "hours_away": round(idle_result["hours_elapsed"], 2),
+        "is_time_capped": idle_result["is_time_capped"],
+        "resources_capped": idle_result["resources_capped"],
         "vip_level": vip_level,
-        "max_hours": idle_cap_hours
+        "vip_rate": idle_result["vip_rate_display"],
+        "max_hours": idle_max_hours,
+        "progression": {
+            "abyss_floor": abyss_floor,
+            "dungeon_tier": dungeon_tier,
+            "campaign_chapter": campaign_chapter,
+        }
     }
 
 @api_router.get("/idle/status/{username}")
 async def get_idle_status(username: str):
-    """Get current idle collection status"""
+    """Get current idle collection status with VIP rates and progression caps"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))
-    idle_cap_hours = get_idle_cap_hours(vip_level)
+    idle_max_hours = get_vip_idle_hours(vip_level)
+    
+    # Get progression data
+    abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
+    abyss_floor = abyss_progress.get("highest_floor", 0) if abyss_progress else 0
+    
+    stage_progress = await db.stage_progress.find_one({"user_id": user["id"]})
+    dungeon_tier = stage_progress.get("dungeon_tier", 0) if stage_progress else 0
+    campaign_chapter = stage_progress.get("campaign_chapter", 0) if stage_progress else 0
     
     collection_started = user.get("idle_collection_started_at")
     if not collection_started:
+        # Preview of potential earnings
+        preview = calculate_idle_preview(
+            vip_level=vip_level,
+            abyss_floor=abyss_floor,
+            dungeon_tier=dungeon_tier,
+            campaign_chapter=campaign_chapter,
+            hours=idle_max_hours
+        )
+        
         return {
             "is_collecting": False,
+            "pending_resources": {},
             "gold_pending": 0,
             "time_elapsed": 0,
             "vip_level": vip_level,
-            "max_hours": idle_cap_hours
+            "vip_rate": get_vip_idle_rate_display(vip_level),
+            "max_hours": idle_max_hours,
+            "max_potential": preview["resources"],
+            "caps": calculate_resource_caps(abyss_floor, dungeon_tier, campaign_chapter),
+            "progression": {
+                "abyss_floor": abyss_floor,
+                "dungeon_tier": dungeon_tier,
+                "campaign_chapter": campaign_chapter,
+            }
         }
+    
+    # Calculate current pending
+    now = datetime.utcnow()
+    if isinstance(collection_started, str):
+        collection_started = datetime.fromisoformat(collection_started.replace("Z", "+00:00")).replace(tzinfo=None)
+    
+    time_elapsed_seconds = (now - collection_started).total_seconds()
+    hours_elapsed = time_elapsed_seconds / 3600
+    
+    # Calculate pending resources
+    idle_result = calculate_idle_resources(
+        hours_elapsed=hours_elapsed,
+        vip_level=vip_level,
+        abyss_floor=abyss_floor,
+        dungeon_tier=dungeon_tier,
+        campaign_chapter=campaign_chapter,
+        max_hours=idle_max_hours
+    )
+    
+    # Get next milestone info
+    next_milestones = get_next_milestone_info(abyss_floor, dungeon_tier, campaign_chapter)
+    vip_upgrade = get_vip_upgrade_info(vip_level)
+    
+    return {
+        "is_collecting": True,
+        "pending_resources": idle_result["resources"],
+        "gold_pending": idle_result["resources"].get("gold", 0),
+        "time_elapsed": int(time_elapsed_seconds),
+        "hours_elapsed": round(hours_elapsed, 2),
+        "is_capped": idle_result["is_time_capped"],
+        "vip_level": vip_level,
+        "vip_rate": idle_result["vip_rate_display"],
+        "max_hours": idle_max_hours,
+        "caps": calculate_resource_caps(abyss_floor, dungeon_tier, campaign_chapter),
+        "progression": {
+            "abyss_floor": abyss_floor,
+            "dungeon_tier": dungeon_tier,
+            "campaign_chapter": campaign_chapter,
+        },
+        "next_milestones": next_milestones,
+        "vip_upgrade_info": vip_upgrade,
+    }
     
     now = datetime.utcnow()
     time_elapsed = (now - collection_started).total_seconds()

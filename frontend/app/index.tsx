@@ -303,25 +303,30 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Currency Bar */}
-        <View style={styles.currencyBar} key={`currency-${user.gems}-${user.gold}-${user.coins}`}>
+        {/* Currency Bar - Scrollable */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.currencyBarScroll}
+          contentContainerStyle={styles.currencyBarContent}
+        >
           <View style={styles.currencyItem}>
-            <Ionicons name="diamond" size={16} color="#9b4dca" />
+            <Ionicons name="diamond" size={14} color="#9b4dca" />
             <Text style={styles.currencyText}>{(user.gems || 0).toLocaleString()}</Text>
           </View>
           <View style={styles.currencyItem}>
-            <Ionicons name="logo-bitcoin" size={16} color={COLORS.gold.primary} />
+            <Ionicons name="logo-bitcoin" size={14} color={COLORS.gold.primary} />
             <Text style={styles.currencyText}>{(user.gold || 0).toLocaleString()}</Text>
           </View>
           <View style={styles.currencyItem}>
-            <Ionicons name="cash" size={16} color={COLORS.gold.light} />
+            <Ionicons name="cash" size={14} color={COLORS.gold.light} />
             <Text style={styles.currencyText}>{(user.coins || 0).toLocaleString()}</Text>
           </View>
           <View style={styles.currencyItem}>
-            <Ionicons name="star" size={16} color="#f59e0b" />
+            <Ionicons name="star" size={14} color="#f59e0b" />
             <Text style={styles.currencyText}>{(user.divine_essence || 0).toLocaleString()}</Text>
           </View>
-        </View>
+        </ScrollView>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Idle Rewards Card */}

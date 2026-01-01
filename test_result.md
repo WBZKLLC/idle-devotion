@@ -475,6 +475,8 @@ agent_communication:
   - agent: "main"
     message: "Phase 1 MVP implementation complete. All core backend endpoints implemented including user registration, gacha system with pity, hero management, rank up, daily rewards, idle generation, and team management. Frontend has complete UI with 5 screens (Home, Gacha, Heroes, Team, Profile) with tab navigation. Ready for backend testing."
   - agent: "main"
+    message: "NEW: Implemented Launch Exclusive Banner System and 7-Day Journey System. Backend APIs: /api/launch-banner/status, /api/launch-banner/pull, /api/launch-banner/bundles, /api/launch-banner/hero, /api/journey. Frontend screens: launch-banner.tsx (exclusive 72hr banner with Aethon hero, pity system, bundles), journey.tsx (7-day player journey with daily rewards). Updated index.tsx with navigation to both. Ready for testing."
+  - agent: "main"
     message: "Stability check performed: Backend is running and serving requests (200 OK responses observed). Frontend is running and viewable - confirmed via screenshot showing login screen and post-login dashboard. Ready for comprehensive backend testing before adding Store/VIP/Chat/Leaderboard UI features."
   - agent: "main"
     message: "Backend testing completed. Fixed Arena/Abyss battle endpoints parameter handling (changed from direct parameters to Pydantic request models). Added fallback logic to use all user heroes when no specific team is provided. All APIs now working correctly (100% success rate)."

@@ -385,6 +385,27 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* FEATURED: Launch Banner & Journey */}
+          <View style={styles.quickLinks}>
+            <TouchableOpacity style={[styles.quickLink, { flex: 2 }]} onPress={() => router.push('/launch-banner')}>
+              <LinearGradient colors={['#7c3aed', '#5b21b6', '#1a0a2e']} style={[styles.quickLinkGradient, { paddingVertical: 20 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={{ fontSize: 20 }}>✨</Text>
+                  <View>
+                    <Text style={[styles.quickLinkText, { color: COLORS.gold.light, fontSize: 14, fontWeight: 'bold' }]}>LIMITED BANNER</Text>
+                    <Text style={{ color: '#ef4444', fontSize: 10, fontWeight: 'bold' }}>72H ONLY!</Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/journey')}>
+              <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.quickLinkGradient}>
+                <Ionicons name="map" size={22} color={COLORS.cream.pure} />
+                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Journey</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
           {/* Third Row - Events & Dungeons */}
           <View style={styles.quickLinks}>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/dungeons')}>

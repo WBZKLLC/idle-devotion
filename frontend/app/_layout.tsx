@@ -133,11 +133,23 @@ export default function Layout() {
       <Tabs.Screen name="resource-bag" options={{ href: null }} />
       <Tabs.Screen name="campaign" options={{ href: null }} />
       <Tabs.Screen name="admin" options={{ href: null }} />
-    </Tabs>
+      </Tabs>
+    </SessionProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.navy.darkest,
+  },
+  loadingText: {
+    color: COLORS.gold.primary,
+    marginTop: 12,
+    fontSize: 16,
+  },
   tabBar: {
     backgroundColor: COLORS.navy.darkest,
     borderTopColor: COLORS.gold.primary + '30',

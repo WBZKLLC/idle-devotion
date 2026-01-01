@@ -6226,6 +6226,396 @@ async def story_battle(username: str, chapter: int, stage: int):
     
     return result
 
+# ==================== CRIMSON ECLIPSE EVENT BANNER ====================
+
+@api_router.get("/event/crimson-eclipse")
+async def get_crimson_eclipse_banner():
+    """Get the Crimson Eclipse limited-time banner details"""
+    banner = get_active_event_banner()
+    if not banner:
+        return {"active": False, "message": "Event has ended"}
+    
+    return {
+        "banner": banner,
+        "featured_hero": CRIMSON_ECLIPSE_BANNER["featured_hero"],
+        "rates": CRIMSON_ECLIPSE_BANNER["rates"],
+        "milestones": EVENT_MILESTONES.get("crimson_eclipse_2026_01", []),
+    }
+
+@api_router.get("/event/crimson-eclipse/shop")
+async def get_event_shop(username: str):
+    """Get event shop items with user's purchase history"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user's event purchases
+    purchases = await db.event_purchases.find_one({"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"})
+    purchased_items = purchases.get("items", {}) if purchases else {}
+    
+    # Get user's blood crystals
+    blood_crystals = user.get("blood_crystals", 0)
+    
+    return {
+        "blood_crystals": blood_crystals,
+        "items": get_shop_items(purchased_items),
+    }
+
+@api_router.post("/event/crimson-eclipse/pull")
+async def pull_crimson_eclipse(username: str, multi: bool = False):
+    """Pull on the Crimson Eclipse banner (SERVER-AUTHORITATIVE)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if banner is active
+    banner = get_active_event_banner()
+    if not banner:
+        raise HTTPException(status_code=400, detail="Event banner is not active")
+    
+    # Determine cost
+    cost = CRIMSON_ECLIPSE_BANNER["pull_cost"]["crystals_multi" if multi else "crystals_single"]
+    num_pulls = 10 if multi else 1
+    
+    # Verify currency
+    if user.get("crystals", 0) < cost:
+        raise HTTPException(status_code=400, detail=f"Not enough crystals. Need {cost}, have {user.get('crystals', 0)}")
+    
+    # Get user's pity
+    pity_data = await db.event_pity.find_one({"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"})
+    pity_counter = pity_data.get("pity_count", 0) if pity_data else 0
+    total_pulls = pity_data.get("total_pulls", 0) if pity_data else 0
+    
+    # Perform pulls (SERVER-AUTHORITATIVE RNG)
+    results = []
+    blood_crystals_earned = 0
+    
+    for _ in range(num_pulls):
+        result_type, result_data, new_pity, event_currency = perform_event_pull(pity_counter, "crimson_eclipse_2026_01")
+        
+        pity_counter = new_pity
+        blood_crystals_earned += event_currency
+        
+        if result_type == "featured_ur":
+            # Add Seraphina to user's heroes
+            hero_data = CRIMSON_ECLIPSE_BANNER["featured_hero"]
+            new_hero = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "hero_id": hero_data["id"],
+                "name": hero_data["name"],
+                "rarity": hero_data["rarity"],
+                "level": 1,
+                "rank": 1,
+                "awakening_level": 0,
+                "hero_data": hero_data,
+                "obtained_at": datetime.utcnow().isoformat(),
+                "obtained_from": "crimson_eclipse_banner",
+            }
+            await db.user_heroes.insert_one(new_hero)
+            results.append({
+                "type": "featured_ur",
+                "hero": hero_data,
+                "is_new": True,
+                "message": "🎉 JACKPOT! Seraphina, Blood Queen!"
+            })
+        else:
+            # Generate regular hero from pool
+            rarity = result_data.get("rarity", "R")
+            hero = await get_random_hero_from_db(pity_counter, "common")
+            if hero:
+                results.append({
+                    "type": result_type,
+                    "hero": hero,
+                    "rarity": rarity,
+                })
+    
+    # Bonus blood crystals for 10-pull
+    if multi:
+        blood_crystals_earned += CRIMSON_ECLIPSE_BANNER["event_currency"]["bonus_for_10x"]
+    
+    # Update user currencies
+    await db.users.update_one(
+        {"username": username},
+        {
+            "$inc": {
+                "crystals": -cost,
+                "blood_crystals": blood_crystals_earned,
+            }
+        }
+    )
+    
+    # Update pity counter
+    await db.event_pity.update_one(
+        {"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"},
+        {
+            "$set": {"pity_count": pity_counter},
+            "$inc": {"total_pulls": num_pulls}
+        },
+        upsert=True
+    )
+    
+    # Check milestone rewards
+    new_total_pulls = total_pulls + num_pulls
+    available_milestones = get_milestone_rewards(new_total_pulls, pity_data.get("claimed_milestones", []) if pity_data else [])
+    
+    # Audit log
+    await create_audit_log(
+        db, user["id"], "event_pull", "crimson_eclipse", 
+        "crimson_eclipse_2026_01",
+        {"pulls": num_pulls, "cost": cost, "results": [r["type"] for r in results]}
+    )
+    
+    return {
+        "results": results,
+        "crystals_spent": cost,
+        "blood_crystals_earned": blood_crystals_earned,
+        "new_pity": pity_counter,
+        "total_pulls": new_total_pulls,
+        "available_milestones": available_milestones,
+    }
+
+@api_router.post("/event/crimson-eclipse/claim-milestone")
+async def claim_event_milestone(username: str, milestone_pulls: int):
+    """Claim a milestone reward"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    pity_data = await db.event_pity.find_one({"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"})
+    if not pity_data:
+        raise HTTPException(status_code=400, detail="No pulls on this banner")
+    
+    total_pulls = pity_data.get("total_pulls", 0)
+    claimed = pity_data.get("claimed_milestones", [])
+    
+    if milestone_pulls > total_pulls:
+        raise HTTPException(status_code=400, detail="Milestone not reached")
+    
+    if milestone_pulls in claimed:
+        raise HTTPException(status_code=400, detail="Milestone already claimed")
+    
+    # Find milestone
+    milestones = EVENT_MILESTONES.get("crimson_eclipse_2026_01", [])
+    milestone = next((m for m in milestones if m["pulls"] == milestone_pulls), None)
+    
+    if not milestone:
+        raise HTTPException(status_code=400, detail="Invalid milestone")
+    
+    # Grant rewards
+    rewards = milestone["rewards"]
+    update_ops = {}
+    for key, value in rewards.items():
+        if key in ["crystals", "gold", "blood_crystals", "enhancement_stones", "skill_essence"]:
+            update_ops[key] = value
+    
+    if update_ops:
+        await db.users.update_one({"username": username}, {"$inc": update_ops})
+    
+    # Mark as claimed
+    await db.event_pity.update_one(
+        {"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"},
+        {"$push": {"claimed_milestones": milestone_pulls}}
+    )
+    
+    return {"success": True, "rewards": rewards}
+
+# ==================== PLAYER JOURNEY SYSTEM ====================
+
+@api_router.get("/journey/{username}")
+async def get_player_journey(username: str):
+    """Get player's first 7-day journey progress"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Calculate account age
+    created_at = user.get("created_at")
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    elif not created_at:
+        created_at = datetime.utcnow()
+    
+    account_age = (datetime.utcnow() - created_at.replace(tzinfo=None)).days + 1
+    current_day = min(account_age, 7)
+    
+    # Get claimed milestones
+    journey_progress = await db.journey_progress.find_one({"user_id": user["id"]})
+    claimed_milestones = journey_progress.get("claimed_milestones", []) if journey_progress else []
+    claimed_login_days = journey_progress.get("claimed_login_days", []) if journey_progress else []
+    
+    # Build journey response
+    days = {}
+    for day in range(1, 8):
+        day_config = FIRST_WEEK_JOURNEY.get(day, {})
+        days[day] = {
+            **day_config,
+            "day": day,
+            "is_unlocked": account_age >= day,
+            "is_current": current_day == day,
+            "login_claimed": day in claimed_login_days,
+        }
+    
+    return {
+        "account_age_days": account_age,
+        "current_day": current_day,
+        "days": days,
+        "claimed_milestones": claimed_milestones,
+        "total_journey_crystals": sum(d.get("total_milestone_crystals", 0) for d in FIRST_WEEK_JOURNEY.values()),
+    }
+
+@api_router.post("/journey/{username}/claim-login")
+async def claim_login_reward(username: str, day: int):
+    """Claim daily login reward for first 7 days"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Validate day
+    if day < 1 or day > 7:
+        raise HTTPException(status_code=400, detail="Invalid day")
+    
+    day_config = FIRST_WEEK_JOURNEY.get(day)
+    if not day_config:
+        raise HTTPException(status_code=400, detail="Day not configured")
+    
+    # Check account age
+    created_at = user.get("created_at")
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    elif not created_at:
+        created_at = datetime.utcnow()
+    
+    account_age = (datetime.utcnow() - created_at.replace(tzinfo=None)).days + 1
+    
+    if account_age < day:
+        raise HTTPException(status_code=400, detail="Day not yet unlocked")
+    
+    # Check if already claimed
+    progress = await db.journey_progress.find_one({"user_id": user["id"]})
+    claimed_days = progress.get("claimed_login_days", []) if progress else []
+    
+    if day in claimed_days:
+        raise HTTPException(status_code=400, detail="Already claimed")
+    
+    # Grant rewards
+    rewards = day_config["login_reward"]
+    update_ops = {}
+    for key, value in rewards.items():
+        if key in ["crystals", "gold", "coins", "stamina", "divine_essence", "skill_essence", 
+                   "guild_coins", "arena_tickets", "blood_crystals"]:
+            update_ops[key] = value
+    
+    if update_ops:
+        await db.users.update_one({"username": username}, {"$inc": update_ops})
+    
+    # Special Day 7 reward - SSR selector
+    granted_hero = None
+    if day == 7 and "guaranteed_ssr_selector" in rewards:
+        # Grant a random SSR hero
+        ssr_heroes = [h for h in HERO_POOL if h.rarity == "SSR"]
+        if ssr_heroes:
+            selected = random.choice(ssr_heroes)
+            new_hero = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "hero_id": selected.id,
+                "name": selected.name,
+                "rarity": selected.rarity,
+                "level": 1,
+                "rank": 1,
+                "hero_data": selected.dict(),
+                "obtained_at": datetime.utcnow().isoformat(),
+                "obtained_from": "day_7_reward",
+            }
+            await db.user_heroes.insert_one(new_hero)
+            granted_hero = selected.name
+    
+    # Update progress
+    await db.journey_progress.update_one(
+        {"user_id": user["id"]},
+        {"$push": {"claimed_login_days": day}},
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "day": day,
+        "rewards": rewards,
+        "granted_hero": granted_hero,
+    }
+
+@api_router.get("/journey/{username}/beginner-missions")
+async def get_beginner_missions(username: str):
+    """Get beginner missions progress"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get claimed missions
+    progress = await db.journey_progress.find_one({"user_id": user["id"]})
+    claimed_missions = progress.get("claimed_beginner_missions", []) if progress else []
+    
+    # Categorize missions
+    result = {
+        "immediate": [],
+        "early": [],
+        "progress": [],
+        "advanced": [],
+        "mastery": [],
+    }
+    
+    for mission in BEGINNER_MISSIONS:
+        mission_data = {
+            **mission,
+            "claimed": mission["id"] in claimed_missions,
+        }
+        result[mission["category"]].append(mission_data)
+    
+    return {
+        "missions": result,
+        "total_claimed": len(claimed_missions),
+        "total_missions": len(BEGINNER_MISSIONS),
+    }
+
+@api_router.get("/starter-packs")
+async def get_starter_packs(username: str):
+    """Get available starter packs for user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Calculate account age
+    created_at = user.get("created_at")
+    if isinstance(created_at, str):
+        created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    elif not created_at:
+        created_at = datetime.utcnow()
+    
+    account_age = (datetime.utcnow() - created_at.replace(tzinfo=None)).days + 1
+    
+    # Get purchased packs
+    purchases = await db.user_purchases.find({"user_id": user["id"]}).to_list(100)
+    purchased_packs = [p["pack_id"] for p in purchases]
+    
+    # Filter available packs
+    available = []
+    for pack_id, pack in STARTER_PACKS.items():
+        if pack_id in purchased_packs:
+            continue
+        
+        # Check availability window
+        if pack.get("available_days") and account_age > pack["available_days"]:
+            continue
+        
+        available.append({
+            "id": pack_id,
+            **pack,
+            "days_remaining": max(0, pack.get("available_days", 30) - account_age) if pack.get("available_days") else None,
+        })
+    
+    return {"packs": available}
+
 # Include the router in the main app
 app.include_router(api_router)
 

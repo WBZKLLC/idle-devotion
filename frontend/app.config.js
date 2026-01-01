@@ -40,7 +40,7 @@ module.exports = ({ config }) => {
           backgroundColor: '#0a1628',
         },
       ],
-      'react-native-reanimated/plugin',
+      'react-native-worklets/plugin',
     ],
     experiments: {
       typedRoutes: true,

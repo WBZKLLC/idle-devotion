@@ -427,6 +427,12 @@ export default function HomeScreen() {
                 <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Dungeons</Text>
               </LinearGradient>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/events')}>
+              <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.quickLinkGradient}>
+                <Ionicons name="sparkles" size={22} color={COLORS.cream.pure} />
+                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Events</Text>
+              </LinearGradient>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/battle-pass')}>
               <LinearGradient colors={['#9b59b6', '#8e44ad']} style={styles.quickLinkGradient}>
                 <Ionicons name="trophy" size={22} color={COLORS.cream.pure} />

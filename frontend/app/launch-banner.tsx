@@ -248,18 +248,18 @@ export default function LaunchBannerScreen() {
           <View style={styles.pitySection}>
             <View style={styles.pityHeader}>
               <Text style={styles.pityTitle}>Pity Progress</Text>
-              <Text style={styles.pityCount}>{bannerData?.pity_count || 0} / {bannerData?.hard_pity || 100}</Text>
+              <Text style={styles.pityCount}>{bannerData?.user_progress?.pity_counter || 0} / {bannerData?.banner?.pity?.hard_pity || 100}</Text>
             </View>
             <View style={styles.pityBar}>
               <LinearGradient
                 colors={['#FF6B00', '#FFD700']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.pityFill, { width: `${((bannerData?.pity_count || 0) / (bannerData?.hard_pity || 100)) * 100}%` }]}
+                style={[styles.pityFill, { width: `${((bannerData?.user_progress?.pity_counter || 0) / (bannerData?.banner?.pity?.hard_pity || 100)) * 100}%` }]}
               />
               {/* Soft pity marker */}
-              <View style={[styles.softPityMarker, { left: '75%' }]}>
-                <Text style={styles.softPityText}>75</Text>
+              <View style={[styles.softPityMarker, { left: '62.5%' }]}>
+                <Text style={styles.softPityText}>{bannerData?.banner?.pity?.soft_pity_start || 50}</Text>
               </View>
             </View>
             <Text style={styles.pityInfo}>

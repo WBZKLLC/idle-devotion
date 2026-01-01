@@ -303,6 +303,18 @@ backend:
         agent: "testing"
         comment: "✅ TESTED: Equipment system APIs fully functional. GET /api/equipment/{username} retrieves user equipment (3 items found). POST /api/equipment/{username}/craft successfully crafts equipment (tested Epic Warrior's Helmet and Rare Warrior's Chestplate with correct slot, rarity, and set_id). POST /api/equipment/{username}/craft-rune successfully crafts runes (tested Rare Power Rune). GET /api/equipment/{username}/runes retrieves user runes (1 rune found). POST /api/equipment/{username}/enhance successfully enhances equipment by 1 level. All endpoints working correctly with proper validation and response structure."
 
+  - task: "Dungeon/Stage System APIs with server-authoritative architecture"
+    implemented: true
+    working: true
+    file: "/app/backend/routers/stages.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Dungeon/Stage System APIs fully functional with server-authoritative architecture. All 7 test suites passed (100% success rate). Stage Information: GET /api/stages/info returns all stage definitions (10 exp, 10 gold, 10 equipment dungeons) with stamina costs. User Progress: GET /api/stages/{username}/progress tracks cleared stages. EXP Stages: POST /api/stages/{username}/exp/{stage_id} awards soul_dust and gold with server-side RNG variance (188-227 soul dust, 471-568 gold). Gold Stages: POST /api/stages/{username}/gold/{stage_id} awards gold and coins (1881 gold, 470 coins). Equipment Dungeons: POST /api/stages/{username}/equipment/{stage_id} generates server-side equipment drops with proper rarity, stats, and IDs. Sweep Feature: POST /api/stages/{username}/sweep/{stage_type}/{stage_id} correctly calculates total rewards for multiple runs (3x sweeps = 588 soul dust, 1473 gold). Server-side RNG confirmed through variance testing. Stamina validation working (deducts 10/10/15 stamina per stage type). Authentication with Adam/Adam123! successful. All rewards calculated server-side, no client-side values accepted."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

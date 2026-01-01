@@ -37,7 +37,9 @@ const COLORS = {
   },
 };
 
-const API_BASE = '/api';
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
+  : '/api';
 
 // Stage type configurations
 const STAGE_TYPES = {

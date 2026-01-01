@@ -772,38 +772,62 @@ GACHA_RATES_PREMIUM = {
 
 # Divine Summons (Divine Essence) - Mixed rewards pool
 # Heroes: UR+ 0.8%, UR 2.7% = 3.5% total heroes
-# Crystals: 8000 (1.2%), 5000 (1.7%), 3000 (3%) = 5.9% total crystals
-# Filler: 90.6% various resources
+# High-value: Crystals, Runes, etc. = ~12% total
+# Filler: ~84.5% various resources
 GACHA_RATES_DIVINE = {
-    # Heroes
+    # Heroes (3.5% total)
     "UR+": 0.8,           # 0.8% - Ultra rare divine heroes
     "UR": 2.7,            # 2.7% - Rare divine heroes
-    # Crystal Jackpots
+    # Crystal Jackpots (5.9% total)
     "crystals_8000": 1.2, # 1.2% - 8000 crystals jackpot
     "crystals_5000": 1.7, # 1.7% - 5000 crystals
     "crystals_3000": 3.0, # 3.0% - 3000 crystals
-    # Filler Rewards (90.6% total)
-    "divine_essence_10": 15.0,   # 15% - 10 Divine Essence (can pull again!)
-    "divine_essence_5": 20.0,    # 20% - 5 Divine Essence
-    "gold_500k": 12.0,           # 12% - 500,000 Gold
-    "gold_250k": 15.0,           # 15% - 250,000 Gold
-    "coins_100k": 10.0,          # 10% - 100,000 Coins
-    "hero_shards_50": 8.0,       # 8% - 50 Universal Hero Shards
-    "hero_shards_25": 10.6,      # 10.6% - 25 Universal Hero Shards
+    # Enhancement & Crafting Materials (12% total)
+    "enhance_stone_100": 2.0,     # 2% - 100 Enhancement Stones (rare)
+    "enhance_stone_50": 4.0,      # 4% - 50 Enhancement Stones
+    "rune_epic": 1.5,             # 1.5% - Epic Rune (random stat)
+    "rune_rare": 3.0,             # 3% - Rare Rune (random stat)
+    "skill_essence_500": 1.5,     # 1.5% - 500 Skill Essence
+    # Divine Essence (20% total - allows more pulls!)
+    "divine_essence_10": 8.0,    # 8% - 10 Divine Essence
+    "divine_essence_5": 12.0,    # 12% - 5 Divine Essence
+    # Gold & Currency (28% total)
+    "gold_500k": 6.0,            # 6% - 500,000 Gold
+    "gold_250k": 10.0,           # 10% - 250,000 Gold
+    "coins_100k": 6.0,           # 6% - 100,000 Coins
+    "star_crystals_100": 3.0,    # 3% - 100 Star Crystals (ascension)
+    "star_crystals_50": 3.0,     # 3% - 50 Star Crystals
+    # Hero Progression (18.6% total)
+    "hero_shards_50": 5.0,       # 5% - 50 Universal Hero Shards
+    "hero_shards_25": 8.0,       # 8% - 25 Universal Hero Shards
+    "hero_exp_50k": 5.6,         # 5.6% - 50,000 Hero EXP
 }
 
 # Divine summon filler reward definitions
 DIVINE_FILLER_REWARDS = {
+    # Crystal Jackpots
     "crystals_8000": {"crystals": 8000, "display": "💎 8,000 Crystals!", "rarity": "legendary"},
     "crystals_5000": {"crystals": 5000, "display": "💎 5,000 Crystals!", "rarity": "epic"},
     "crystals_3000": {"crystals": 3000, "display": "💎 3,000 Crystals!", "rarity": "rare"},
+    # Enhancement & Crafting
+    "enhance_stone_100": {"enhancement_stones": 100, "display": "🔨 100 Enhancement Stones!", "rarity": "epic"},
+    "enhance_stone_50": {"enhancement_stones": 50, "display": "🔨 50 Enhancement Stones", "rarity": "rare"},
+    "rune_epic": {"rune": "epic", "display": "🔮 Epic Rune!", "rarity": "epic"},
+    "rune_rare": {"rune": "rare", "display": "🔮 Rare Rune", "rarity": "rare"},
+    "skill_essence_500": {"skill_essence": 500, "display": "📖 500 Skill Essence!", "rarity": "epic"},
+    # Divine Essence
     "divine_essence_10": {"divine_essence": 10, "display": "✨ 10 Divine Essence!", "rarity": "epic"},
     "divine_essence_5": {"divine_essence": 5, "display": "✨ 5 Divine Essence", "rarity": "rare"},
+    # Gold & Currency
     "gold_500k": {"gold": 500000, "display": "🪙 500K Gold!", "rarity": "epic"},
     "gold_250k": {"gold": 250000, "display": "🪙 250K Gold", "rarity": "rare"},
     "coins_100k": {"coins": 100000, "display": "💰 100K Coins", "rarity": "uncommon"},
-    "hero_shards_50": {"hero_shards": 50, "display": "⭐ 50 Hero Shards!", "rarity": "epic"},
-    "hero_shards_25": {"hero_shards": 25, "display": "⭐ 25 Hero Shards", "rarity": "rare"},
+    "star_crystals_100": {"star_crystals": 100, "display": "⭐ 100 Star Crystals!", "rarity": "epic"},
+    "star_crystals_50": {"star_crystals": 50, "display": "⭐ 50 Star Crystals", "rarity": "rare"},
+    # Hero Progression
+    "hero_shards_50": {"hero_shards": 50, "display": "🌟 50 Hero Shards!", "rarity": "epic"},
+    "hero_shards_25": {"hero_shards": 25, "display": "🌟 25 Hero Shards", "rarity": "rare"},
+    "hero_exp_50k": {"hero_exp": 50000, "display": "📈 50K Hero EXP", "rarity": "rare"},
 }
 
 PITY_THRESHOLD_COMMON = 50   # Guaranteed SSR+ at 50 pulls for common

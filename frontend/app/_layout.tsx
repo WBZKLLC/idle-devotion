@@ -1,6 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, View, ActivityIndicator, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { useGameStore } from '../stores/gameStore';
 
 // Regal Color Palette
 const COLORS = {
@@ -9,18 +11,47 @@ const COLORS = {
   cream: { soft: '#f8f6f0' },
 };
 
+// Session Provider Component - ensures session is restored before rendering
+function SessionProvider({ children }: { children: React.ReactNode }) {
+  const { isHydrated, restoreSession, user } = useGameStore();
+  const [isRestoring, setIsRestoring] = useState(true);
+
+  useEffect(() => {
+    const restore = async () => {
+      if (!isHydrated) {
+        await restoreSession();
+      }
+      setIsRestoring(false);
+    };
+    restore();
+  }, []);
+
+  // Show loading while restoring session
+  if (isRestoring && !isHydrated) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.gold.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 export default function Layout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: COLORS.gold.primary,
-        tabBarInactiveTintColor: COLORS.cream.soft + '60',
-        tabBarStyle: styles.tabBar,
-        headerShown: false,
-        tabBarLabelStyle: styles.tabLabel,
-        tabBarIconStyle: styles.tabIcon,
-      }}
-    >
+    <SessionProvider>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: COLORS.gold.primary,
+          tabBarInactiveTintColor: COLORS.cream.soft + '60',
+          tabBarStyle: styles.tabBar,
+          headerShown: false,
+          tabBarLabelStyle: styles.tabLabel,
+          tabBarIconStyle: styles.tabIcon,
+        }}
+      >
       {/* ===== 6 MAIN VISIBLE TABS ===== */}
       <Tabs.Screen
         name="index"

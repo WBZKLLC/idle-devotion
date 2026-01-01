@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 
 // Regal Color Palette
 const COLORS = {
@@ -18,24 +18,16 @@ export default function Layout() {
         tabBarStyle: styles.tabBar,
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,
+        tabBarIconStyle: styles.tabIcon,
       }}
     >
-      {/* Main tabs visible in bottom bar */}
+      {/* ===== 6 MAIN VISIBLE TABS ===== */}
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="story"
-        options={{
-          title: 'Story',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map" size={size} color={color} />
           ),
         }}
       />
@@ -49,11 +41,11 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="abyss"
+        name="heroes"
         options={{
-          title: 'Abyss',
+          title: 'Heroes',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="flame" size={size} color={color} />
+            <Ionicons name="people" size={size} color={color} />
           ),
         }}
       />
@@ -67,11 +59,11 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="guild"
         options={{
-          title: 'Chat',
+          title: 'Guild',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
+            <Ionicons name="shield" size={size} color={color} />
           ),
         }}
       />
@@ -84,86 +76,29 @@ export default function Layout() {
           ),
         }}
       />
-      
-      {/* Hidden screens (accessible via navigation) */}
-      <Tabs.Screen
-        name="heroes"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="leaderboard"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="store"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="gacha"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="team"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="login-rewards"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="battle-pass"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="events"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="guild"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="team-builder"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="hero-upgrade"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="combat"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="hero-detail"
-        options={{
-          href: null,
-        }}
-      />
+
+      {/* ===== HIDDEN SCREENS (accessible via router.push) ===== */}
+      <Tabs.Screen name="story" options={{ href: null }} />
+      <Tabs.Screen name="abyss" options={{ href: null }} />
+      <Tabs.Screen name="chat" options={{ href: null }} />
+      <Tabs.Screen name="leaderboard" options={{ href: null }} />
+      <Tabs.Screen name="store" options={{ href: null }} />
+      <Tabs.Screen name="gacha" options={{ href: null }} />
+      <Tabs.Screen name="team" options={{ href: null }} />
+      <Tabs.Screen name="login-rewards" options={{ href: null }} />
+      <Tabs.Screen name="battle-pass" options={{ href: null }} />
+      <Tabs.Screen name="events" options={{ href: null }} />
+      <Tabs.Screen name="team-builder" options={{ href: null }} />
+      <Tabs.Screen name="hero-upgrade" options={{ href: null }} />
+      <Tabs.Screen name="combat" options={{ href: null }} />
+      <Tabs.Screen name="hero-detail" options={{ href: null }} />
+      <Tabs.Screen name="dungeons" options={{ href: null }} />
+      <Tabs.Screen name="equipment" options={{ href: null }} />
+      <Tabs.Screen name="guild-war" options={{ href: null }} />
+      <Tabs.Screen name="hero-manager" options={{ href: null }} />
+      <Tabs.Screen name="journey" options={{ href: null }} />
+      <Tabs.Screen name="launch-banner" options={{ href: null }} />
+      <Tabs.Screen name="resource-bag" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -173,12 +108,24 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navy.darkest,
     borderTopColor: COLORS.gold.primary + '30',
     borderTopWidth: 1,
-    height: 60,
-    paddingBottom: 6,
-    paddingTop: 6,
+    height: Platform.OS === 'web' ? 60 : 65,
+    paddingBottom: Platform.OS === 'web' ? 8 : 10,
+    paddingTop: 8,
+    ...Platform.select({
+      web: {
+        position: 'fixed' as any,
+        bottom: 0,
+        left: 0,
+        right: 0,
+      },
+    }),
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '600',
+    marginTop: 2,
+  },
+  tabIcon: {
+    marginBottom: -2,
   },
 });

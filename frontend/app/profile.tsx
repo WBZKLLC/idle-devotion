@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +26,7 @@ const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
   : '/api';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, userHeroes, fetchUserHeroes, fetchUser, logout } = useGameStore();
   const hydrated = useHydration();
   const [showCodeModal, setShowCodeModal] = useState(false);

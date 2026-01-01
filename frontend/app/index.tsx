@@ -435,14 +435,29 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Third Row - Abyss & More */}
+          {/* Campaign - Featured Row */}
           <View style={styles.quickLinks}>
+            <TouchableOpacity style={[styles.quickLink, { flex: 2 }]} onPress={() => router.push('/campaign')}>
+              <LinearGradient colors={['#1e40af', '#1e3a8a', '#172554']} style={[styles.quickLinkGradient, { paddingVertical: 18 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={{ fontSize: 24 }}>📖</Text>
+                  <View>
+                    <Text style={[styles.quickLinkText, { color: '#93c5fd', fontSize: 14, fontWeight: 'bold' }]}>STORY CAMPAIGN</Text>
+                    <Text style={{ color: '#60a5fa', fontSize: 10 }}>12 Chapters • Epic Adventure</Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/abyss')}>
               <LinearGradient colors={['#1a202c', '#0d0d12']} style={styles.quickLinkGradient}>
                 <Ionicons name="chevron-down-circle" size={22} color="#48bb78" />
                 <Text style={[styles.quickLinkText, { color: '#48bb78' }]}>Abyss</Text>
               </LinearGradient>
             </TouchableOpacity>
+          </View>
+
+          {/* Third Row - More Options */}
+          <View style={styles.quickLinks}>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/guild-war')}>
               <LinearGradient colors={['#dc2626', '#7f1d1d']} style={styles.quickLinkGradient}>
                 <Ionicons name="flame" size={22} color={COLORS.cream.pure} />
@@ -453,6 +468,12 @@ export default function HomeScreen() {
               <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
                 <Ionicons name="sparkles" size={22} color={COLORS.gold.light} />
                 <Text style={styles.quickLinkText}>Events</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/leaderboard')}>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="podium" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>Ranks</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => setSidebarVisible(true)}>

@@ -266,6 +266,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Divine Summon system fully functional. Multi-pull working, response includes both heroes and filler rewards with is_filler: true flag. Rate distribution correct (~90% filler, ~10% heroes). Crystal jackpots and currency rewards working correctly."
+      - working: true
+        agent: "testing"
+        comment: "✅ DIVINE SUMMONS UPDATED SYSTEM TESTED: Comprehensive testing of updated Divine Summons gacha system with new filler rewards completed successfully. Fixed missing hero_exp field in User model. Multi-pull (10x) tested with user Adam - 1 hero pulled, 9 filler rewards received. All new filler reward types verified: Enhancement Stones, Skill Essence, Star Crystals, Hero EXP (50K), Crystal jackpots (8K, 3K), Gold (500K, 250K), Hero Shards (50, 25). Response structure correct with filler_rewards_collected containing all 9 currency types. User resources properly updated: Divine Essence deducted (10), crystals increased (+11K), gold increased (+1M), hero_shards (+75), star_crystals (+50), hero_exp (+50K). Server-authoritative system working correctly. All requirements from review request met."
 
   - task: "Guild War UI"
     implemented: true

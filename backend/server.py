@@ -1540,6 +1540,31 @@ async def pull_gacha(username: str, request: PullRequest):
         user.coins += filler_rewards_collected.get("coins", 0)
         user.divine_essence += filler_rewards_collected.get("divine_essence", 0)
         user.hero_shards = getattr(user, 'hero_shards', 0) + filler_rewards_collected.get("hero_shards", 0)
+        # Apply new resource types
+        user.enhancement_stones = getattr(user, 'enhancement_stones', 0) + filler_rewards_collected.get("enhancement_stones", 0)
+        user.skill_essence = getattr(user, 'skill_essence', 0) + filler_rewards_collected.get("skill_essence", 0)
+        user.star_crystals = getattr(user, 'star_crystals', 0) + filler_rewards_collected.get("star_crystals", 0)
+        user.hero_exp = getattr(user, 'hero_exp', 0) + filler_rewards_collected.get("hero_exp", 0)
+        
+        # Create rune items for rune drops
+        for rune_rarity in runes_earned:
+            import random
+            rune_stats = ["ATK", "DEF", "HP", "SPD", "CRIT", "CRIT_DMG"]
+            main_stat = random.choice(rune_stats)
+            rune_value = {"epic": random.randint(8, 15), "rare": random.randint(5, 10)}.get(rune_rarity, 5)
+            
+            rune_item = {
+                "id": str(uuid.uuid4()),
+                "user_id": user.id,
+                "rarity": rune_rarity,
+                "main_stat": main_stat,
+                "main_value": rune_value,
+                "sub_stats": [],
+                "level": 0,
+                "equipped_to": None,
+                "created_at": datetime.utcnow().isoformat()
+            }
+            await db.user_runes.insert_one(rune_item)
     elif summon_type == "premium":
         user.pity_counter_premium = pity_counter
     else:

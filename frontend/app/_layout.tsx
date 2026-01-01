@@ -98,6 +98,7 @@ export default function Layout() {
       <Tabs.Screen name="hero-manager" options={{ href: null }} />
       <Tabs.Screen name="journey" options={{ href: null }} />
       <Tabs.Screen name="launch-banner" options={{ href: null }} />
+      <Tabs.Screen name="selene-banner" options={{ href: null }} />
       <Tabs.Screen name="resource-bag" options={{ href: null }} />
     </Tabs>
   );

@@ -12,7 +12,7 @@ import string
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://divinegacha.preview.emergentagent.com/api"
+BACKEND_URL = "https://game-server-refactor.preview.emergentagent.com/api"
 
 class ComprehensiveGachaGameTester:
     def __init__(self):

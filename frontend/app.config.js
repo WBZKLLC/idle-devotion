@@ -48,7 +48,7 @@ module.exports = ({ config }) => {
       eas: {
         projectId: undefined,
       },
-      BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://divinegacha.preview.emergentagent.com',
+      BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://game-server-refactor.preview.emergentagent.com',
       REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',
     },
   };

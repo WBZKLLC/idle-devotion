@@ -434,15 +434,15 @@ export default function HomeScreen() {
               </LinearGradient>
             </TouchableOpacity>
           </View>
+
+          {/* Third Row - Abyss & More */}
+          <View style={styles.quickLinks}>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/abyss')}>
               <LinearGradient colors={['#1a202c', '#0d0d12']} style={styles.quickLinkGradient}>
                 <Ionicons name="chevron-down-circle" size={22} color="#48bb78" />
                 <Text style={[styles.quickLinkText, { color: '#48bb78' }]}>Abyss</Text>
               </LinearGradient>
             </TouchableOpacity>
-          </View>
-
-          {/* Fourth Row - Guild War & More */}
-          <View style={styles.quickLinks}>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/guild-war')}>
               <LinearGradient colors={['#dc2626', '#7f1d1d']} style={styles.quickLinkGradient}>
                 <Ionicons name="flame" size={22} color={COLORS.cream.pure} />

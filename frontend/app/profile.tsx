@@ -185,14 +185,23 @@ export default function ProfileScreen() {
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          {/* Header */}
+          {/* Header with ProfileFrame */}
           <View style={styles.header}>
-            <View style={styles.avatarContainer}>
-              <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.avatarGradient}>
-                <Text style={styles.avatarText}>{user.username.charAt(0).toUpperCase()}</Text>
-              </LinearGradient>
-            </View>
+            <TouchableOpacity onPress={() => setShowFrameModal(true)} activeOpacity={0.8}>
+              <ProfileFrame 
+                username={user.username}
+                frameId={equippedFrame}
+                size="xlarge"
+                vipLevel={user.vip_level || 0}
+              />
+              <View style={styles.editFrameBadge}>
+                <Ionicons name="create" size={14} color={COLORS.cream.pure} />
+              </View>
+            </TouchableOpacity>
             <Text style={styles.username}>{user.username}</Text>
+            <View style={styles.vipBadgeHeader}>
+              <Text style={styles.vipText}>VIP {user.vip_level || 0}</Text>
+            </View>
             <View style={styles.dayBadge}>
               <Ionicons name="calendar" size={16} color={COLORS.gold.primary} />
               <Text style={styles.dayText}>Day {user.login_days}</Text>

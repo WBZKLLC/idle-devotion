@@ -277,6 +277,7 @@ class User(BaseModel):
     guild_coins: int = 0  # Source: guild activities, sink: guild shop
     pvp_medals: int = 0  # Source: Arena, sink: PvP shop
     enhancement_stones: int = 0  # For equipment enhancement
+    hero_exp: int = 0  # Hero experience points for leveling heroes
     
     # ==================== STAMINA SYSTEM ====================
     stamina: int = 100  # Max 100, regen 1 per 5 minutes

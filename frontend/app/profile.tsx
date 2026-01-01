@@ -623,6 +623,18 @@ const styles = StyleSheet.create({
   
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.error, borderRadius: 12, padding: 16, marginTop: 16, gap: 8 },
   logoutText: { color: COLORS.cream.pure, fontSize: 16, fontWeight: 'bold' },
+  
+  // Admin Button
+  adminButton: { borderRadius: 12, overflow: 'hidden', marginTop: 16 },
+  adminButtonGradient: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: 16, 
+    gap: 8 
+  },
+  adminButtonText: { color: COLORS.cream.pure, fontSize: 16, fontWeight: 'bold', flex: 1 },
+  
   versionText: { textAlign: 'center', color: COLORS.navy.light, fontSize: 12, marginTop: 24, marginBottom: 16 },
   noUserText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
   

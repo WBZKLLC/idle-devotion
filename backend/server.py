@@ -259,20 +259,40 @@ class User(BaseModel):
     username: str
     password_hash: Optional[str] = None  # Hashed password for secure login
     server_id: str = "server_1"  # Server assignment with default
+    
+    # ==================== CURRENCY SYSTEM ====================
     crystals: int = 300  # Premium currency (renamed from gems)
     coins: int = 10000  # Regular currency
-    gold: int = 5000  # Idle resource
+    gold: int = 5000  # Idle resource - sink: hero leveling, gear upgrades
     divine_essence: int = 0  # Ultra-rare currency for UR+ summons
     hero_shards: int = 0  # Universal hero shards for upgrades
     friendship_points: int = 0  # Friend currency
+    
+    # NEW CURRENCIES
+    soul_dust: int = 0  # Hero EXP currency - source: EXP stages, sink: hero level
+    skill_essence: int = 0  # Source: daily dungeons, sink: hero skill levels
+    star_crystals: int = 0  # Source: dismantling heroes, sink: star promotion
+    divine_gems: int = 100  # Premium - source: purchases/daily quests, sink: summons/shop refresh
+    guild_coins: int = 0  # Source: guild activities, sink: guild shop
+    pvp_medals: int = 0  # Source: Arena, sink: PvP shop
+    enhancement_stones: int = 0  # For equipment enhancement
+    
+    # ==================== STAMINA SYSTEM ====================
+    stamina: int = 100  # Max 100, regen 1 per 5 minutes
+    stamina_last_regen: Optional[datetime] = None
+    
+    # ==================== GACHA PITY ====================
     pity_counter: int = 0  # Counts towards guaranteed SSR at 50 (common)
     pity_counter_premium: int = 0  # Separate pity for premium summons (UR)
     pity_counter_divine: int = 0  # Pity for divine summons (UR+) - 40 pity
     total_pulls: int = 0
+    
+    # ==================== LOGIN/DAILY ====================
     login_days: int = 0
     last_login: Optional[datetime] = None
     daily_summons_claimed: int = 0  # Track daily free summons
     profile_picture_hero_id: Optional[str] = None  # Hero ID for profile picture
+    
     # VIP System
     vip_level: int = 0  # 0-15
     total_spent: float = 0.0  # Total USD spent
@@ -291,6 +311,12 @@ class User(BaseModel):
     # Guild Boss Attack System
     guild_boss_attacks_today: int = 0  # Daily attack counter
     guild_boss_attack_last_reset: Optional[datetime] = None  # Last daily reset
+    
+    # ==================== ARENA ====================
+    arena_rank: int = 0
+    arena_tickets_today: int = 5
+    arena_last_reset: Optional[datetime] = None
+    
     # Resource Bag (track collected resources)
     resource_bag: dict = Field(default_factory=lambda: {
         "coins_collected": 0,

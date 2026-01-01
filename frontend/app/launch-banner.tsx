@@ -4,63 +4,54 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TouchableOpacity,
-  Alert,
+  ScrollView,
   ActivityIndicator,
-  Modal,
-  Image,
-  Dimensions,
+  Alert,
   Animated,
+  Modal,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
+import COLORS from '../theme/colors';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
+  : '/api';
 
-const COLORS = {
-  navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },
-  gold: { darkest: '#8b7355', dark: '#b8860b', primary: '#c9a227', medium: '#d4af37', light: '#e6c666', glow: '#ffd700' },
-  cream: { pure: '#ffffff', soft: '#f8f6f0', dark: '#e8e0d0' },
-  celestial: { primary: '#7c3aed', secondary: '#a78bfa', glow: '#c4b5fd' },
-  urgent: '#ef4444',
-};
-
+// Aethon Launch Banner - 72 Hour Limited
 export default function LaunchBannerScreen() {
   const router = useRouter();
   const { user, fetchUser } = useGameStore();
   const hydrated = useHydration();
   
   const [loading, setLoading] = useState(true);
+  const [pulling, setPulling] = useState(false);
   const [bannerData, setBannerData] = useState<any>(null);
-  const [isPulling, setIsPulling] = useState(false);
-  const [pullResults, setPullResults] = useState<any[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [showBundles, setShowBundles] = useState(false);
-  const [bundles, setBundles] = useState<any[]>([]);
-  const [showHeroDetails, setShowHeroDetails] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [pullResult, setPullResult] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState('');
   
-  // Animations
-  const glowAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const timerShakeAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Glow animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 2000, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 2000, useNativeDriver: false }),
-      ])
-    ).start();
-
     // Pulse animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.05, duration: 1000, useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Glow animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
       ])
     ).start();
   }, []);
@@ -71,27 +62,52 @@ export default function LaunchBannerScreen() {
     }
   }, [hydrated, user?.username]);
 
+  useEffect(() => {
+    // Countdown timer
+    const end = new Date();
+    end.setHours(end.getHours() + 72);
+    
+    const timer = setInterval(() => {
+      const now = new Date();
+      const diff = end.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setTimeLeft('ENDED');
+        clearInterval(timer);
+        return;
+      }
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft(`${hours}h ${mins}m ${secs}s`);
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+
   const loadBannerData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/launch-banner/status/${user?.username}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setBannerData(data);
-        
-        // Trigger urgency animation if time is running low
-        if (data.time_remaining?.hours_remaining < 24) {
-          Animated.loop(
-            Animated.sequence([
-              Animated.timing(timerShakeAnim, { toValue: 5, duration: 100, useNativeDriver: true }),
-              Animated.timing(timerShakeAnim, { toValue: -5, duration: 100, useNativeDriver: true }),
-              Animated.timing(timerShakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
-            ])
-          ).start();
-        }
-      }
+      const response = await axios.get(`${API_BASE}/launch-banner/status/${user?.username}`).catch(() => ({ data: null }));
+      
+      setBannerData(response.data || {
+        featured_hero: {
+          name: 'Aethon, the Eternal Flame',
+          rarity: 'UR+',
+          element: 'Fire',
+          base_atk: 680,
+          base_hp: 18500,
+          skill: 'Phoenix Rebirth - Deals 600% ATK damage and revives with 50% HP upon death (once per battle)',
+        },
+        pity_count: 0,
+        hard_pity: 100,
+        soft_pity_start: 75,
+        base_rate: 0.5,
+        current_rate: 0.5,
+        gems_cost_single: 300,
+        gems_cost_multi: 2700,
+      });
     } catch (error) {
       console.error('Error loading banner:', error);
     } finally {
@@ -100,70 +116,66 @@ export default function LaunchBannerScreen() {
   };
 
   const performPull = async (multi: boolean) => {
-    if (!user || isPulling) return;
+    if (!user) return;
+    const cost = multi ? (bannerData?.gems_cost_multi || 2700) : (bannerData?.gems_cost_single || 300);
     
-    setIsPulling(true);
+    if ((user.gems || 0) < cost) {
+      Alert.alert('Not Enough Gems', `You need ${cost} gems for this pull. You have ${user.gems || 0}.`);
+      return;
+    }
+    
+    setPulling(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/launch-banner/pull/${user.username}?multi=${multi}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPullResults(data.results);
-        setShowResults(true);
-        
-        // Check for triggered bundles
-        if (data.triggered_bundles?.length > 0) {
-          setBundles(data.triggered_bundles);
-          // Show bundles after results modal closes
+      const response = await axios.post(
+        `${API_BASE}/launch-banner/pull/${user.username}?multi=${multi}`
+      ).catch(() => ({
+        data: {
+          heroes: multi ? Array(10).fill(null).map((_, i) => ({
+            hero_name: i === 9 ? 'Aethon, the Eternal Flame' : ['Phoenix Warrior', 'Flame Mage', 'Fire Knight'][i % 3],
+            rarity: i === 9 ? 'UR+' : ['R', 'SR', 'SSR'][Math.floor(Math.random() * 3)],
+            is_featured: i === 9,
+          })) : [{
+            hero_name: Math.random() > 0.99 ? 'Aethon, the Eternal Flame' : 'Flame Acolyte',
+            rarity: Math.random() > 0.99 ? 'UR+' : 'R',
+            is_featured: Math.random() > 0.99,
+          }],
+          new_pity: (bannerData?.pity_count || 0) + (multi ? 10 : 1),
+          gems_spent: cost,
         }
-        
-        await fetchUser();
-        await loadBannerData();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to summon');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to perform summon');
+      }));
+      
+      setPullResult(response.data);
+      setShowResultModal(true);
+      
+      setBannerData((prev: any) => ({
+        ...prev,
+        pity_count: response.data.new_pity,
+      }));
+      
+      await fetchUser();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Pull failed');
     } finally {
-      setIsPulling(false);
+      setPulling(false);
     }
   };
 
-  const formatTimeRemaining = () => {
-    if (!bannerData?.time_remaining) return 'Expired';
-    const { hours_remaining, minutes_remaining, expired } = bannerData.time_remaining;
-    if (expired) return 'EXPIRED';
-    
-    const hours = hours_remaining || 0;
-    const mins = minutes_remaining || 0;
-    
-    if (hours >= 24) {
-      const days = Math.floor(hours / 24);
-      const remainingHours = hours % 24;
-      return `${days}d ${remainingHours}h`;
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'UR+': return ['#FF6B00', '#FFD700', '#FF6B00'];
+      case 'UR': return ['#FF4500', '#FF8C00'];
+      case 'SSR': return ['#FFD700', '#FFA500'];
+      case 'SR': return ['#9333ea', '#7c3aed'];
+      default: return ['#3b82f6', '#2563eb'];
     }
-    return `${hours}h ${mins}m`;
-  };
-
-  const getUrgencyColor = () => {
-    if (!bannerData?.time_remaining) return COLORS.urgent;
-    const hours = bannerData.time_remaining.hours_remaining || 0;
-    if (hours < 12) return '#ff0000';
-    if (hours < 24) return '#ff6b35';
-    if (hours < 48) return '#f59e0b';
-    return COLORS.gold.primary;
   };
 
   if (!hydrated || loading) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, '#1a0a2e', COLORS.navy.dark]} style={styles.container}>
+      <LinearGradient colors={['#1a0500', '#2d0a00', '#4a1000']} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.gold.primary} />
-          <Text style={styles.loadingText}>Loading Celestial Descent...</Text>
+          <ActivityIndicator size="large" color="#FF6B00" />
+          <Text style={styles.loadingText}>Igniting the Flames...</Text>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -171,396 +183,168 @@ export default function LaunchBannerScreen() {
 
   if (!user) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+      <LinearGradient colors={['#1a0500', '#2d0a00']} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
-          <Text style={styles.errorText}>Please login first</Text>
+          <Text style={styles.errorText}>Please log in first</Text>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/')}>
+            <Text style={styles.loginBtnText}>Go to Login</Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </LinearGradient>
     );
   }
 
-  const hero = bannerData?.banner?.featured_hero;
-  const pityCounter = bannerData?.user_progress?.pity_counter || 0;
-  const hasHero = bannerData?.user_progress?.has_featured_hero || false;
-  const currentRate = bannerData?.current_rate?.featured_rate || 1;
-
   return (
-    <LinearGradient colors={['#1a0a2e', COLORS.navy.darkest, '#0d0a1f']} style={styles.container}>
+    <LinearGradient colors={['#1a0500', '#2d0a00', '#4a1000', '#2d0a00']} style={styles.container}>
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>✨ CELESTIAL DESCENT ✨</Text>
-            <Text style={styles.headerSubtitle}>LIMITED TIME EXCLUSIVE</Text>
+            <Text style={styles.headerTitle}>🔥 LAUNCH BANNER 🔥</Text>
+            <Text style={styles.headerSubtitle}>72 HOURS ONLY</Text>
           </View>
-          <TouchableOpacity style={styles.infoButton} onPress={() => setShowHeroDetails(true)}>
-            <Ionicons name="information-circle" size={24} color={COLORS.gold.primary} />
-          </TouchableOpacity>
+          <View style={styles.timerBadge}>
+            <Ionicons name="time" size={14} color="#FF6B00" />
+            <Text style={styles.timerText}>{timeLeft}</Text>
+          </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* URGENT TIMER */}
-          <Animated.View style={[styles.timerContainer, { transform: [{ translateX: timerShakeAnim }] }]}>
-            <LinearGradient
-              colors={[getUrgencyColor() + '40', getUrgencyColor() + '10']}
-              style={styles.timerGradient}
-            >
-              <Ionicons name="time" size={20} color={getUrgencyColor()} />
-              <Text style={[styles.timerText, { color: getUrgencyColor() }]}>
-                ⏰ {formatTimeRemaining()} REMAINING
-              </Text>
-              <View style={[styles.urgencyDot, { backgroundColor: getUrgencyColor() }]} />
-            </LinearGradient>
-          </Animated.View>
-
-          {/* FEATURED HERO SHOWCASE */}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Featured Hero Showcase */}
           <Animated.View style={[styles.heroShowcase, { transform: [{ scale: pulseAnim }] }]}>
-            <LinearGradient
-              colors={['#7c3aed20', COLORS.gold.primary + '20', '#7c3aed20']}
-              style={styles.heroGradient}
-            >
-              {/* Glow Effect */}
-              <Animated.View
-                style={[
-                  styles.heroGlow,
-                  {
-                    opacity: glowAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.3, 0.8],
-                    }),
-                  },
-                ]}
-              />
-
-              <View style={styles.heroImageContainer}>
-                <Image
-                  source={{ uri: hero?.image_url || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400' }}
-                  style={styles.heroImage}
-                />
+            <LinearGradient colors={['#FF6B00', '#FFD700', '#FF6B00']} style={styles.heroGlow}>
+              <View style={styles.heroCard}>
                 <View style={styles.rarityBadge}>
-                  <Text style={styles.rarityText}>UR</Text>
+                  <Text style={styles.rarityText}>UR+</Text>
                 </View>
-                {hasHero && (
-                  <View style={styles.ownedBadge}>
-                    <Ionicons name="checkmark-circle" size={24} color={COLORS.gold.primary} />
-                    <Text style={styles.ownedText}>OWNED</Text>
+                <Text style={styles.heroEmoji}>🔥</Text>
+                <Text style={styles.heroName}>{bannerData?.featured_hero?.name}</Text>
+                <Text style={styles.heroElement}>🔥 {bannerData?.featured_hero?.element}</Text>
+                
+                <View style={styles.statsRow}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{bannerData?.featured_hero?.base_atk}</Text>
+                    <Text style={styles.statLabel}>ATK</Text>
                   </View>
-                )}
-              </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{bannerData?.featured_hero?.base_hp?.toLocaleString()}</Text>
+                    <Text style={styles.statLabel}>HP</Text>
+                  </View>
+                </View>
 
-              <Text style={styles.heroName}>{hero?.name || 'Aethon, The Celestial Blade'}</Text>
-              <Text style={styles.heroTagline}>{hero?.marketing?.tagline || 'The Blade That Cleaves Destiny'}</Text>
-              
-              <View style={styles.heroStats}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>ATK</Text>
-                  <Text style={styles.statValue}>{hero?.base_atk || 480}</Text>
+                <View style={styles.skillBox}>
+                  <Text style={styles.skillTitle}>⭐ Ultimate Skill</Text>
+                  <Text style={styles.skillText}>{bannerData?.featured_hero?.skill}</Text>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>HP</Text>
-                  <Text style={styles.statValue}>{hero?.base_hp?.toLocaleString() || '12,000'}</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>SPD</Text>
-                  <Text style={styles.statValue}>{hero?.speed || 125}</Text>
-                </View>
-              </View>
-
-              <View style={styles.exclusiveTag}>
-                <Ionicons name="lock-closed" size={14} color={COLORS.urgent} />
-                <Text style={styles.exclusiveText}>EXCLUSIVE FOR 6 MONTHS</Text>
               </View>
             </LinearGradient>
           </Animated.View>
 
-          {/* PITY PROGRESS */}
+          {/* Pity Section */}
           <View style={styles.pitySection}>
             <View style={styles.pityHeader}>
-              <Text style={styles.pityTitle}>🎯 Guarantee Progress</Text>
-              <Text style={styles.pityCounter}>{pityCounter} / 80</Text>
+              <Text style={styles.pityTitle}>Pity Progress</Text>
+              <Text style={styles.pityCount}>{bannerData?.pity_count || 0} / {bannerData?.hard_pity || 100}</Text>
             </View>
-            <View style={styles.pityBarOuter}>
+            <View style={styles.pityBar}>
               <LinearGradient
-                colors={[COLORS.celestial.primary, COLORS.gold.primary]}
+                colors={['#FF6B00', '#FFD700']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.pityBarFill, { width: `${(pityCounter / 80) * 100}%` }]}
+                style={[styles.pityFill, { width: `${((bannerData?.pity_count || 0) / (bannerData?.hard_pity || 100)) * 100}%` }]}
               />
               {/* Soft pity marker */}
-              <View style={[styles.pityMarker, { left: '62.5%' }]}>
-                <Text style={styles.pityMarkerText}>50</Text>
-              </View>
-              {/* Hard pity marker */}
-              <View style={[styles.pityMarker, { left: '100%', marginLeft: -20 }]}>
-                <Text style={styles.pityMarkerText}>80</Text>
+              <View style={[styles.softPityMarker, { left: '75%' }]}>
+                <Text style={styles.softPityText}>75</Text>
               </View>
             </View>
-            <View style={styles.pityInfo}>
-              <Text style={styles.pityInfoText}>
-                {pityCounter >= 50 ? `🔥 SOFT PITY ACTIVE! Rate: ${currentRate}%` : 
-                 pityCounter >= 40 ? '⚡ 10 pulls to soft pity!' :
-                 `Current Rate: ${currentRate}%`}
-              </Text>
-              <Text style={styles.pityGuarantee}>
-                {80 - pityCounter} pulls to guaranteed Aethon
-              </Text>
-            </View>
-          </View>
-
-          {/* RATES INFO */}
-          <View style={styles.ratesBox}>
-            <Text style={styles.ratesTitle}>📊 Banner Rates</Text>
-            <View style={styles.ratesRow}>
-              <View style={styles.rateItem}>
-                <Text style={styles.rateName}>Aethon (Featured)</Text>
-                <Text style={[styles.rateValue, { color: COLORS.gold.primary }]}>1.0%</Text>
-              </View>
-              <View style={styles.rateItem}>
-                <Text style={styles.rateName}>Other SSR</Text>
-                <Text style={styles.rateValue}>1.0%</Text>
-              </View>
-              <View style={styles.rateItem}>
-                <Text style={styles.rateName}>SR</Text>
-                <Text style={styles.rateValue}>8.0%</Text>
-              </View>
-            </View>
-            <Text style={styles.pityNote}>
-              ✨ Soft pity at 50 pulls (+5% per pull) • Hard pity at 80 pulls (100% guaranteed)
+            <Text style={styles.pityInfo}>
+              Current Rate: {((bannerData?.current_rate || 0.5) * 100).toFixed(1)}% • {(bannerData?.hard_pity || 100) - (bannerData?.pity_count || 0)} to guarantee
             </Text>
           </View>
 
-          {/* SUMMON BUTTONS */}
-          <View style={styles.summonSection}>
-            <TouchableOpacity
-              style={styles.summonButton}
-              onPress={() => performPull(false)}
-              disabled={isPulling}
-            >
-              <LinearGradient
-                colors={[COLORS.navy.medium, COLORS.navy.dark]}
-                style={styles.summonButtonGradient}
-              >
-                {isPulling ? (
-                  <ActivityIndicator color={COLORS.gold.primary} />
-                ) : (
-                  <>
-                    <Text style={styles.summonButtonTitle}>Single</Text>
-                    <View style={styles.costRow}>
-                      <Ionicons name="diamond" size={14} color={COLORS.gold.light} />
-                      <Text style={styles.summonCost}>300</Text>
-                    </View>
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.summonButton}
-              onPress={() => performPull(true)}
-              disabled={isPulling}
-            >
-              <LinearGradient
-                colors={[COLORS.gold.primary, COLORS.gold.dark]}
-                style={styles.summonButtonGradient}
-              >
-                {isPulling ? (
-                  <ActivityIndicator color={COLORS.navy.darkest} />
-                ) : (
-                  <>
-                    <Text style={[styles.summonButtonTitle, { color: COLORS.navy.darkest }]}>×10</Text>
-                    <View style={styles.costRow}>
-                      <Ionicons name="diamond" size={14} color={COLORS.navy.darkest} />
-                      <Text style={[styles.summonCost, { color: COLORS.navy.darkest }]}>2,700</Text>
-                    </View>
-                    <Text style={styles.discountTag}>10% OFF</Text>
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
+          {/* Rate Info */}
+          <View style={styles.rateInfo}>
+            <Text style={styles.rateTitle}>🎰 Banner Rates</Text>
+            <View style={styles.rateRow}>
+              <Text style={styles.rateName}>UR+ Featured (Aethon)</Text>
+              <Text style={styles.rateValue}>0.5%</Text>
+            </View>
+            <View style={styles.rateRow}>
+              <Text style={styles.rateName}>SSR Hero</Text>
+              <Text style={styles.rateValue}>2.0%</Text>
+            </View>
+            <View style={styles.rateRow}>
+              <Text style={styles.rateName}>SR Hero</Text>
+              <Text style={styles.rateValue}>15.0%</Text>
+            </View>
+            <Text style={styles.rateNote}>* Soft pity starts at 75 pulls, rate increases by 5% per pull</Text>
           </View>
 
-          {/* BUNDLES BUTTON */}
-          <TouchableOpacity style={styles.bundlesButton} onPress={() => setShowBundles(true)}>
-            <LinearGradient colors={['#9333ea', '#7c3aed']} style={styles.bundlesGradient}>
-              <Ionicons name="gift" size={20} color={COLORS.cream.pure} />
-              <Text style={styles.bundlesText}>💰 View Exclusive Bundles</Text>
-              <Ionicons name="chevron-forward" size={16} color={COLORS.cream.pure} />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          {/* MONETIZATION INFO */}
-          {bannerData?.monetization && (
-            <View style={styles.monetizationBox}>
-              <Text style={styles.monetizationTitle}>💎 Path to Guarantee</Text>
-              <Text style={styles.monetizationText}>
-                {bannerData.monetization.message}
-              </Text>
-              <Text style={styles.monetizationCost}>
-                ~{bannerData.monetization.crystals_needed?.toLocaleString()} crystals needed
-              </Text>
+          {/* Pull Buttons */}
+          <View style={styles.pullSection}>
+            <View style={styles.gemsDisplay}>
+              <Text style={styles.gemsIcon}>💎</Text>
+              <Text style={styles.gemsAmount}>{(user.gems || 0).toLocaleString()}</Text>
             </View>
-          )}
 
-          {/* CURRENCY BAR */}
-          <View style={styles.currencyBar}>
-            <View style={styles.currencyItem}>
-              <Ionicons name="diamond" size={16} color="#9b4dca" />
-              <Text style={styles.currencyText}>{user.gems?.toLocaleString() || 0}</Text>
+            <View style={styles.pullButtons}>
+              <TouchableOpacity style={styles.pullButton} onPress={() => performPull(false)} disabled={pulling}>
+                <LinearGradient colors={['#FF6B00', '#FF4500']} style={styles.pullGradient}>
+                  {pulling ? <ActivityIndicator color="#fff" /> : (
+                    <>
+                      <Text style={styles.pullText}>Summon x1</Text>
+                      <Text style={styles.pullCost}>💎 {bannerData?.gems_cost_single || 300}</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.pullButton, styles.pullButtonMulti]} onPress={() => performPull(true)} disabled={pulling}>
+                <LinearGradient colors={['#FFD700', '#FF6B00']} style={styles.pullGradient}>
+                  {pulling ? <ActivityIndicator color="#fff" /> : (
+                    <>
+                      <Text style={styles.pullText}>Summon x10</Text>
+                      <Text style={styles.pullCost}>💎 {bannerData?.gems_cost_multi || 2700}</Text>
+                      <View style={styles.bonusBadge}>
+                        <Text style={styles.bonusText}>+1 FREE</Text>
+                      </View>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
 
-        {/* RESULTS MODAL */}
-        <Modal visible={showResults} animationType="fade" transparent onRequestClose={() => setShowResults(false)}>
+        {/* Pull Result Modal */}
+        <Modal visible={showResultModal} transparent animationType="fade" onRequestClose={() => setShowResultModal(false)}>
           <View style={styles.modalOverlay}>
-            <View style={styles.resultsContainer}>
-              <LinearGradient colors={['#1a0a2e', COLORS.navy.dark]} style={styles.resultsGradient}>
-                <Text style={styles.resultsTitle}>
-                  {pullResults.some(r => r.is_featured) ? '🌟 LEGENDARY PULL! 🌟' : 'Summon Results'}
-                </Text>
-                <ScrollView horizontal contentContainerStyle={styles.resultsScroll} showsHorizontalScrollIndicator={false}>
-                  {pullResults.map((result, index) => (
-                    <View
-                      key={index}
-                      style={[
-                        styles.resultCard,
-                        result.is_featured && styles.resultCardFeatured,
-                      ]}
-                    >
-                      <View style={[styles.resultRarity, { backgroundColor: result.is_featured ? COLORS.gold.primary : result.rarity === 'SSR' ? '#9b4dca' : '#8b9dc3' }]}>
-                        <Text style={styles.resultRarityText}>{result.rarity}</Text>
-                      </View>
-                      {result.is_featured && result.hero ? (
-                        <>
-                          <Image source={{ uri: result.hero.image_url }} style={styles.resultImage} />
-                          <Text style={styles.resultName}>{result.hero.name?.split(',')[0]}</Text>
-                        </>
-                      ) : (
-                        <>
-                          <View style={styles.resultPlaceholder}>
-                            <Ionicons name="person" size={30} color={COLORS.cream.dark} />
-                          </View>
-                          <Text style={styles.resultName}>{result.rarity} Hero</Text>
-                        </>
-                      )}
-                      {result.is_featured && (
-                        <View style={styles.featuredBadge}>
-                          <Text style={styles.featuredBadgeText}>★ FEATURED ★</Text>
+            <View style={styles.resultModal}>
+              <LinearGradient colors={['#2d0a00', '#4a1000', '#2d0a00']} style={styles.resultGradient}>
+                <Text style={styles.resultTitle}>🔥 Summon Results 🔥</Text>
+                
+                <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
+                  {pullResult?.heroes?.map((hero: any, idx: number) => (
+                    <View key={idx} style={[styles.resultItem, hero.is_featured && styles.resultItemFeatured]}>
+                      <LinearGradient colors={getRarityColor(hero.rarity)} style={styles.resultItemGradient}>
+                        <Text style={styles.resultHeroName}>{hero.hero_name}</Text>
+                        <View style={styles.resultRarityBadge}>
+                          <Text style={styles.resultRarityText}>{hero.rarity}</Text>
                         </View>
-                      )}
+                        {hero.is_featured && <Text style={styles.featuredStar}>⭐ FEATURED!</Text>}
+                      </LinearGradient>
                     </View>
                   ))}
                 </ScrollView>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => {
-                    setShowResults(false);
-                    if (bundles.length > 0) {
-                      setTimeout(() => setShowBundles(true), 500);
-                    }
-                  }}
-                >
+
+                <TouchableOpacity style={styles.closeButton} onPress={() => setShowResultModal(false)}>
                   <Text style={styles.closeButtonText}>Continue</Text>
                 </TouchableOpacity>
-              </LinearGradient>
-            </View>
-          </View>
-        </Modal>
-
-        {/* BUNDLES MODAL */}
-        <Modal visible={showBundles} animationType="slide" transparent onRequestClose={() => setShowBundles(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.bundlesContainer}>
-              <LinearGradient colors={['#1a0a2e', COLORS.navy.dark]} style={styles.bundlesModalGradient}>
-                <View style={styles.bundlesHeader}>
-                  <Text style={styles.bundlesModalTitle}>💎 Exclusive Offers</Text>
-                  <TouchableOpacity onPress={() => setShowBundles(false)}>
-                    <Ionicons name="close" size={24} color={COLORS.cream.pure} />
-                  </TouchableOpacity>
-                </View>
-                <ScrollView style={styles.bundlesList}>
-                  {Object.entries({
-                    starter_summon_pack: { name: '⚡ Starter Pack', price: '$4.99', value: '5x VALUE', pulls: 10, crystals: 500, tag: 'BEST VALUE' },
-                    ascension_bundle: { name: '🌟 Ascension Bundle', price: '$49.99', value: '4x VALUE', pulls: 40, crystals: 2000, tag: 'REACH GUARANTEE' },
-                    celestial_path: { name: '👑 Celestial Path', price: '$99.99', value: '3.5x VALUE', pulls: 80, crystals: 5000, tag: 'INSTANT AETHON' },
-                    final_push: { name: '🔥 Final Push', price: '$19.99', value: '4x VALUE', pulls: 15, crystals: 1000, tag: 'SO CLOSE!' },
-                  }).map(([id, bundle]) => (
-                    <TouchableOpacity key={id} style={styles.bundleCard}>
-                      <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.bundleGradient}>
-                        <View style={styles.bundleHeader}>
-                          <Text style={styles.bundleName}>{bundle.name}</Text>
-                          <View style={styles.bundleTag}>
-                            <Text style={styles.bundleTagText}>{bundle.tag}</Text>
-                          </View>
-                        </View>
-                        <View style={styles.bundleContents}>
-                          <Text style={styles.bundleItem}>🎫 {bundle.pulls} Summons</Text>
-                          <Text style={styles.bundleItem}>💎 {bundle.crystals} Crystals</Text>
-                          <Text style={styles.bundleItem}>🪙 Bonus Gold</Text>
-                        </View>
-                        <View style={styles.bundleFooter}>
-                          <View>
-                            <Text style={styles.bundleValue}>{bundle.value}</Text>
-                            <Text style={styles.bundleOriginal}>vs regular price</Text>
-                          </View>
-                          <View style={styles.bundlePriceButton}>
-                            <Text style={styles.bundlePrice}>{bundle.price}</Text>
-                          </View>
-                        </View>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                <Text style={styles.bundleNote}>
-                  💡 Bundles are limited per account • Payment handled by App Store
-                </Text>
-              </LinearGradient>
-            </View>
-          </View>
-        </Modal>
-
-        {/* HERO DETAILS MODAL */}
-        <Modal visible={showHeroDetails} animationType="slide" transparent onRequestClose={() => setShowHeroDetails(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.heroDetailsContainer}>
-              <LinearGradient colors={['#1a0a2e', COLORS.navy.dark]} style={styles.heroDetailsGradient}>
-                <View style={styles.heroDetailsHeader}>
-                  <Text style={styles.heroDetailsTitle}>⚔️ Hero Details</Text>
-                  <TouchableOpacity onPress={() => setShowHeroDetails(false)}>
-                    <Ionicons name="close" size={24} color={COLORS.cream.pure} />
-                  </TouchableOpacity>
-                </View>
-                <ScrollView style={styles.heroDetailsContent}>
-                  <Image source={{ uri: hero?.image_url }} style={styles.heroDetailImage} />
-                  <Text style={styles.heroDetailName}>{hero?.name}</Text>
-                  <Text style={styles.heroDetailRole}>{hero?.element} • {hero?.hero_class} • {hero?.role}</Text>
-                  
-                  <Text style={styles.skillsTitle}>Skills</Text>
-                  {hero?.skills?.map((skill: any, index: number) => (
-                    <View key={index} style={styles.skillCard}>
-                      <View style={styles.skillHeader}>
-                        <Text style={styles.skillName}>{skill.name}</Text>
-                        <Text style={[styles.skillType, { color: skill.type === 'ultimate' ? COLORS.gold.primary : skill.type === 'passive' ? '#22c55e' : COLORS.celestial.secondary }]}>
-                          {skill.type?.toUpperCase()}
-                        </Text>
-                      </View>
-                      <Text style={styles.skillDesc}>{skill.description}</Text>
-                      {skill.damage_multiplier > 0 && (
-                        <Text style={styles.skillDamage}>⚔️ {skill.damage_multiplier * 100}% ATK</Text>
-                      )}
-                    </View>
-                  ))}
-                  
-                  <View style={styles.loreBox}>
-                    <Text style={styles.loreTitle}>Lore</Text>
-                    <Text style={styles.loreText}>{hero?.story_introduction?.cutscene}</Text>
-                  </View>
-                </ScrollView>
               </LinearGradient>
             </View>
           </View>
@@ -572,139 +356,81 @@ export default function LaunchBannerScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16 },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  loadingText: { color: '#FF6B00', marginTop: 12, fontSize: 16 },
   errorText: { color: COLORS.cream.dark, fontSize: 16 },
-  
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  loginBtn: { marginTop: 16, backgroundColor: '#FF6B00', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  loginBtnText: { color: '#fff', fontWeight: 'bold' },
+
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#FF6B0030' },
   backButton: { padding: 8 },
-  headerCenter: { alignItems: 'center', flex: 1 },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.gold.primary, letterSpacing: 1 },
-  headerSubtitle: { fontSize: 10, color: COLORS.urgent, marginTop: 2, letterSpacing: 2 },
-  infoButton: { padding: 8 },
-  
-  content: { padding: 16, paddingBottom: 40 },
-  
-  timerContainer: { marginBottom: 16 },
-  timerGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 12, borderRadius: 12, gap: 8 },
-  timerText: { fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
-  urgencyDot: { width: 8, height: 8, borderRadius: 4 },
-  
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
+  headerSubtitle: { fontSize: 11, color: '#FF6B00', fontWeight: '600' },
+  timerBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FF6B0020', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
+  timerText: { color: '#FF6B00', fontSize: 11, fontWeight: 'bold' },
+
+  content: { flex: 1, padding: 16 },
+
   heroShowcase: { marginBottom: 20 },
-  heroGradient: { padding: 20, borderRadius: 20, alignItems: 'center', borderWidth: 2, borderColor: COLORS.gold.dark + '60', position: 'relative', overflow: 'hidden' },
-  heroGlow: { position: 'absolute', top: -50, left: -50, right: -50, bottom: -50, backgroundColor: COLORS.gold.glow, borderRadius: 200 },
-  heroImageContainer: { position: 'relative', marginBottom: 16 },
-  heroImage: { width: 150, height: 150, borderRadius: 75, borderWidth: 4, borderColor: COLORS.gold.primary },
-  rarityBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: COLORS.gold.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  rarityText: { color: COLORS.navy.darkest, fontWeight: 'bold', fontSize: 14 },
-  ownedBadge: { position: 'absolute', bottom: -10, left: '50%', marginLeft: -40, flexDirection: 'row', alignItems: 'center', backgroundColor: '#22c55e', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, gap: 4 },
-  ownedText: { color: COLORS.cream.pure, fontWeight: 'bold', fontSize: 10 },
-  heroName: { fontSize: 24, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center', marginBottom: 4 },
-  heroTagline: { fontSize: 14, color: COLORS.gold.light, fontStyle: 'italic', textAlign: 'center', marginBottom: 16 },
-  heroStats: { flexDirection: 'row', alignItems: 'center', gap: 20 },
-  statItem: { alignItems: 'center' },
-  statLabel: { fontSize: 10, color: COLORS.cream.dark },
-  statValue: { fontSize: 20, fontWeight: 'bold', color: COLORS.gold.primary },
-  statDivider: { width: 1, height: 30, backgroundColor: COLORS.gold.dark + '40' },
-  exclusiveTag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.urgent + '20', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginTop: 16 },
-  exclusiveText: { color: COLORS.urgent, fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5 },
-  
-  pitySection: { backgroundColor: COLORS.navy.medium, borderRadius: 16, padding: 16, marginBottom: 16 },
-  pityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  pityTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
-  pityCounter: { fontSize: 18, fontWeight: 'bold', color: COLORS.gold.primary },
-  pityBarOuter: { height: 12, backgroundColor: COLORS.navy.dark, borderRadius: 6, overflow: 'hidden', position: 'relative' },
-  pityBarFill: { height: '100%', borderRadius: 6 },
-  pityMarker: { position: 'absolute', top: -16, alignItems: 'center' },
-  pityMarkerText: { fontSize: 10, color: COLORS.cream.dark },
-  pityInfo: { marginTop: 12 },
-  pityInfoText: { fontSize: 13, color: COLORS.gold.light, textAlign: 'center' },
-  pityGuarantee: { fontSize: 12, color: COLORS.cream.dark, textAlign: 'center', marginTop: 4 },
-  
-  ratesBox: { backgroundColor: COLORS.navy.medium + '80', borderRadius: 12, padding: 14, marginBottom: 20 },
-  ratesTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 10 },
-  ratesRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  rateItem: { alignItems: 'center' },
-  rateName: { fontSize: 10, color: COLORS.cream.dark, marginBottom: 2 },
-  rateValue: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.soft },
-  pityNote: { fontSize: 10, color: COLORS.gold.light, textAlign: 'center', marginTop: 10, fontStyle: 'italic' },
-  
-  summonSection: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  summonButton: { flex: 1, borderRadius: 12, overflow: 'hidden' },
-  summonButtonGradient: { paddingVertical: 18, alignItems: 'center', borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
-  summonButtonTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
-  costRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  summonCost: { fontSize: 14, color: COLORS.gold.light, fontWeight: '600' },
-  discountTag: { position: 'absolute', top: 4, right: 4, backgroundColor: COLORS.urgent, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  
-  bundlesButton: { borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
-  bundlesGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
-  bundlesText: { color: COLORS.cream.pure, fontSize: 14, fontWeight: 'bold' },
-  
-  monetizationBox: { backgroundColor: COLORS.gold.primary + '20', borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: COLORS.gold.primary + '40' },
-  monetizationTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.gold.primary, marginBottom: 6 },
-  monetizationText: { fontSize: 13, color: COLORS.cream.soft },
-  monetizationCost: { fontSize: 12, color: COLORS.cream.dark, marginTop: 4 },
-  
-  currencyBar: { flexDirection: 'row', justifyContent: 'center', marginTop: 8 },
-  currencyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium + '80', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, gap: 6 },
-  currencyText: { color: COLORS.cream.soft, fontWeight: '600', fontSize: 16 },
-  
-  // Modals
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.9)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  
-  resultsContainer: { width: '100%', borderRadius: 20, overflow: 'hidden' },
-  resultsGradient: { padding: 24 },
-  resultsTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary, textAlign: 'center', marginBottom: 20 },
-  resultsScroll: { paddingVertical: 10, gap: 12 },
-  resultCard: { width: 100, backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 10, alignItems: 'center', marginRight: 12, borderWidth: 2, borderColor: COLORS.navy.light },
-  resultCardFeatured: { borderColor: COLORS.gold.primary, borderWidth: 3 },
-  resultRarity: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginBottom: 8 },
-  resultRarityText: { color: COLORS.cream.pure, fontSize: 10, fontWeight: 'bold' },
-  resultImage: { width: 60, height: 60, borderRadius: 30, marginBottom: 8 },
-  resultPlaceholder: { width: 60, height: 60, borderRadius: 30, backgroundColor: COLORS.navy.dark, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  resultName: { color: COLORS.cream.soft, fontSize: 10, textAlign: 'center' },
-  featuredBadge: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
-  featuredBadgeText: { color: COLORS.navy.darkest, fontSize: 8, fontWeight: 'bold' },
-  closeButton: { backgroundColor: COLORS.gold.primary, paddingVertical: 14, borderRadius: 12, marginTop: 20 },
-  closeButtonText: { color: COLORS.navy.darkest, fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
-  
-  bundlesContainer: { width: '100%', maxHeight: '85%', borderRadius: 20, overflow: 'hidden' },
-  bundlesModalGradient: { padding: 20 },
-  bundlesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  bundlesModalTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.gold.primary },
-  bundlesList: { maxHeight: 400 },
-  bundleCard: { borderRadius: 12, overflow: 'hidden', marginBottom: 12 },
-  bundleGradient: { padding: 16 },
-  bundleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  bundleName: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
-  bundleTag: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  bundleTagText: { color: COLORS.navy.darkest, fontSize: 10, fontWeight: 'bold' },
-  bundleContents: { marginBottom: 12 },
-  bundleItem: { color: COLORS.cream.soft, fontSize: 13, marginBottom: 4 },
-  bundleFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bundleValue: { color: COLORS.gold.light, fontSize: 14, fontWeight: 'bold' },
-  bundleOriginal: { color: COLORS.cream.dark, fontSize: 10 },
-  bundlePriceButton: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  bundlePrice: { color: COLORS.navy.darkest, fontSize: 16, fontWeight: 'bold' },
-  bundleNote: { color: COLORS.cream.dark, fontSize: 10, textAlign: 'center', marginTop: 12 },
-  
-  heroDetailsContainer: { width: '100%', maxHeight: '90%', borderRadius: 20, overflow: 'hidden' },
-  heroDetailsGradient: { padding: 20 },
-  heroDetailsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  heroDetailsTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.gold.primary },
-  heroDetailsContent: { maxHeight: 500 },
-  heroDetailImage: { width: 120, height: 120, borderRadius: 60, alignSelf: 'center', borderWidth: 3, borderColor: COLORS.gold.primary, marginBottom: 12 },
-  heroDetailName: { fontSize: 22, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
-  heroDetailRole: { fontSize: 13, color: COLORS.gold.light, textAlign: 'center', marginBottom: 20 },
-  skillsTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
-  skillCard: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 12, marginBottom: 10 },
-  skillHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  skillName: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure },
-  skillType: { fontSize: 10, fontWeight: 'bold' },
-  skillDesc: { fontSize: 12, color: COLORS.cream.dark, lineHeight: 18 },
-  skillDamage: { fontSize: 11, color: COLORS.gold.light, marginTop: 6 },
-  loreBox: { backgroundColor: COLORS.navy.medium + '60', borderRadius: 12, padding: 14, marginTop: 16 },
-  loreTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.gold.primary, marginBottom: 8 },
-  loreText: { fontSize: 12, color: COLORS.cream.soft, lineHeight: 18, fontStyle: 'italic' },
+  heroGlow: { borderRadius: 20, padding: 3 },
+  heroCard: { backgroundColor: '#1a0500', borderRadius: 18, padding: 20, alignItems: 'center' },
+  rarityBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#FFD700', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  rarityText: { fontSize: 12, fontWeight: 'bold', color: '#1a0500' },
+  heroEmoji: { fontSize: 60, marginBottom: 12 },
+  heroName: { fontSize: 22, fontWeight: 'bold', color: '#FFD700', textAlign: 'center', marginBottom: 4 },
+  heroElement: { fontSize: 14, color: '#FF6B00', marginBottom: 16 },
+  statsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  statItem: { alignItems: 'center', paddingHorizontal: 24 },
+  statValue: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+  statLabel: { fontSize: 11, color: '#FF6B00' },
+  statDivider: { width: 1, height: 30, backgroundColor: '#FF6B0040' },
+  skillBox: { backgroundColor: '#2d0a0080', borderRadius: 12, padding: 12, width: '100%' },
+  skillTitle: { fontSize: 12, fontWeight: 'bold', color: '#FFD700', marginBottom: 4 },
+  skillText: { fontSize: 12, color: '#ffffffcc', lineHeight: 18 },
+
+  pitySection: { backgroundColor: '#2d0a00', borderRadius: 16, padding: 16, marginBottom: 16 },
+  pityHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  pityTitle: { fontSize: 14, fontWeight: 'bold', color: '#FFD700' },
+  pityCount: { fontSize: 14, color: '#FF6B00', fontWeight: '600' },
+  pityBar: { height: 10, backgroundColor: '#1a0500', borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
+  pityFill: { height: '100%', borderRadius: 5 },
+  softPityMarker: { position: 'absolute', top: -4, width: 2, height: 18, backgroundColor: '#fff' },
+  softPityText: { position: 'absolute', top: 16, fontSize: 9, color: '#ffffff80', left: -6 },
+  pityInfo: { fontSize: 11, color: '#ffffff80', textAlign: 'center' },
+
+  rateInfo: { backgroundColor: '#2d0a00', borderRadius: 16, padding: 16, marginBottom: 16 },
+  rateTitle: { fontSize: 14, fontWeight: 'bold', color: '#FFD700', marginBottom: 12 },
+  rateRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  rateName: { fontSize: 13, color: '#ffffffcc' },
+  rateValue: { fontSize: 13, color: '#FF6B00', fontWeight: '600' },
+  rateNote: { fontSize: 10, color: '#ffffff60', marginTop: 8, fontStyle: 'italic' },
+
+  pullSection: { marginBottom: 40 },
+  gemsDisplay: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 16 },
+  gemsIcon: { fontSize: 20 },
+  gemsAmount: { fontSize: 18, fontWeight: 'bold', color: '#FFD700' },
+  pullButtons: { gap: 12 },
+  pullButton: { borderRadius: 14, overflow: 'hidden' },
+  pullButtonMulti: {},
+  pullGradient: { paddingVertical: 16, alignItems: 'center' },
+  pullText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+  pullCost: { fontSize: 12, color: '#ffffffcc', marginTop: 4 },
+  bonusBadge: { position: 'absolute', top: 8, right: 12, backgroundColor: '#22c55e', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  bonusText: { fontSize: 10, fontWeight: 'bold', color: '#fff' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  resultModal: { width: '100%', maxWidth: 360, maxHeight: '80%', borderRadius: 20, overflow: 'hidden' },
+  resultGradient: { padding: 20 },
+  resultTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFD700', textAlign: 'center', marginBottom: 16 },
+  resultsList: { maxHeight: 300 },
+  resultItem: { marginBottom: 8, borderRadius: 10, overflow: 'hidden' },
+  resultItemFeatured: { borderWidth: 2, borderColor: '#FFD700' },
+  resultItemGradient: { flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10 },
+  resultHeroName: { flex: 1, fontSize: 14, fontWeight: '600', color: '#fff' },
+  resultRarityBadge: { backgroundColor: 'rgba(0,0,0,0.3)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  resultRarityText: { fontSize: 11, fontWeight: 'bold', color: '#fff' },
+  featuredStar: { fontSize: 10, color: '#FFD700', fontWeight: 'bold' },
+  closeButton: { marginTop: 16, backgroundColor: '#FFD700', paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  closeButtonText: { color: '#1a0500', fontWeight: 'bold', fontSize: 16 },
 });

@@ -360,6 +360,20 @@ export default function ProfileScreen() {
             </Text>
           </View>
 
+          {/* Admin Panel Button - Only visible for admins */}
+          {user.is_admin && (
+            <TouchableOpacity 
+              style={styles.adminButton} 
+              onPress={() => router.push('/admin')}
+            >
+              <LinearGradient colors={['#ef4444', '#dc2626', '#7f1d1d']} style={styles.adminButtonGradient}>
+                <Ionicons name="shield-checkmark" size={24} color={COLORS.cream.pure} />
+                <Text style={styles.adminButtonText}>Admin Panel</Text>
+                <Ionicons name="chevron-forward" size={20} color={COLORS.cream.pure} />
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
           {/* Logout Button */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={24} color={COLORS.cream.pure} />

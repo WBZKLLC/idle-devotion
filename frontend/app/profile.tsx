@@ -229,6 +229,50 @@ export default function ProfileScreen() {
             </View>
           </View>
 
+          {/* Guild Info Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>⚔️ Guild</Text>
+            {loadingGuild ? (
+              <ActivityIndicator size="small" color={COLORS.gold.primary} />
+            ) : guildInfo ? (
+              <TouchableOpacity 
+                style={styles.guildCard} 
+                onPress={() => router.push('/guild')}
+                activeOpacity={0.8}
+              >
+                <LinearGradient 
+                  colors={[COLORS.gold.dark + '40', COLORS.navy.medium]} 
+                  style={styles.guildCardGradient}
+                >
+                  <View style={styles.guildCardLeft}>
+                    <Ionicons name="shield" size={36} color={COLORS.gold.primary} />
+                  </View>
+                  <View style={styles.guildCardInfo}>
+                    <Text style={styles.guildCardName}>{guildInfo.name}</Text>
+                    <Text style={styles.guildCardLevel}>Level {guildInfo.level || 1}</Text>
+                    <Text style={styles.guildCardMembers}>
+                      {guildInfo.member_count || 1} Member{guildInfo.member_count !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={24} color={COLORS.cream.dark} />
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.joinGuildCard}
+                onPress={() => router.push('/guild')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="shield-outline" size={32} color={COLORS.cream.dark} />
+                <View style={styles.joinGuildInfo}>
+                  <Text style={styles.joinGuildTitle}>No Guild</Text>
+                  <Text style={styles.joinGuildSubtitle}>Tap to join or create a guild!</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={24} color={COLORS.cream.dark} />
+              </TouchableOpacity>
+            )}
+          </View>
+
           {/* Currency Stats */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Resources</Text>

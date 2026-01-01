@@ -4,99 +4,120 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
   ActivityIndicator,
+  Modal,
+  Alert,
+  FlatList,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
+import COLORS from '../theme/colors';
 
-const COLORS = {
-  navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },
-  gold: { darkest: '#8b7355', dark: '#b8860b', primary: '#c9a227', medium: '#d4af37', light: '#e6c666' },
-  cream: { pure: '#ffffff', soft: '#f8f6f0', dark: '#e8e0d0' },
-};
-
-const API_BASE = '/api';
-
-interface ResourceBagData {
-  resource_bag: {
-    coins_collected: number;
-    gold_collected: number;
-    crystals_collected: number;
-    exp_collected: number;
-    materials_collected: number;
-    last_updated: string | null;
-  };
-  vip_level: number;
-  vip_bonus_percent: number;
-  daily_limits: {
-    coins: number;
-    gold: number;
-    exp: number;
-  };
-  current_totals: {
-    coins: number;
-    gold: number;
-    crystals: number;
-    divine_essence: number;
-  };
+interface ResourceItem {
+  id: string;
+  name: string;
+  type: 'currency' | 'material' | 'consumable' | 'ticket';
+  amount: number;
+  icon: string;
+  description: string;
+  rarity?: 'common' | 'rare' | 'epic' | 'legendary';
 }
 
 export default function ResourceBagScreen() {
   const router = useRouter();
-  const { user } = useGameStore();
+  const { user, fetchUser } = useGameStore();
   const hydrated = useHydration();
-  const [loading, setLoading] = useState(true);
-  const [resourceData, setResourceData] = useState<ResourceBagData | null>(null);
+  
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'currency' | 'material' | 'consumable' | 'ticket'>('all');
+  const [selectedItem, setSelectedItem] = useState<ResourceItem | null>(null);
+  const [resources, setResources] = useState<ResourceItem[]>([]);
 
   useEffect(() => {
     if (hydrated && user) {
-      fetchResourceBag();
+      buildResourceList();
     }
-  }, [hydrated, user?.username]);
+  }, [hydrated, user]);
 
-  const fetchResourceBag = async () => {
+  const buildResourceList = () => {
     if (!user) return;
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_BASE}/resource-bag/${user.username}`);
-      setResourceData(response.data);
-    } catch (error) {
-      console.error('Error fetching resource bag:', error);
-    } finally {
-      setLoading(false);
+    
+    const items: ResourceItem[] = [
+      // Currencies
+      { id: 'gems', name: 'Gems', type: 'currency', amount: user.gems || 0, icon: '💎', description: 'Premium currency for gacha pulls and special purchases', rarity: 'epic' },
+      { id: 'gold', name: 'Gold', type: 'currency', amount: user.gold || 0, icon: '⭐', description: 'Used for hero upgrades and enhancements', rarity: 'rare' },
+      { id: 'coins', name: 'Coins', type: 'currency', amount: user.coins || 0, icon: '🪙', description: 'Basic currency for everyday purchases', rarity: 'common' },
+      { id: 'crystals', name: 'Crystals', type: 'currency', amount: user.crystals || 0, icon: '🔮', description: 'Used for awakening and transcendence', rarity: 'legendary' },
+      { id: 'divine_essence', name: 'Divine Essence', type: 'currency', amount: user.divine_essence || 0, icon: '✨', description: 'Rare essence for divine summons', rarity: 'legendary' },
+      { id: 'arena_coins', name: 'Arena Coins', type: 'currency', amount: user.arena_coins || 0, icon: '🏆', description: 'Earned from PvP Arena battles', rarity: 'rare' },
+      { id: 'guild_coins', name: 'Guild Coins', type: 'currency', amount: user.guild_coins || 0, icon: '⚔️', description: 'Earned from Guild activities', rarity: 'rare' },
+      
+      // Materials
+      { id: 'enhancement_stones', name: 'Enhancement Stones', type: 'material', amount: user.enhancement_stones || 100, icon: '🔶', description: 'Used to level up equipment', rarity: 'common' },
+      { id: 'awakening_shards', name: 'Awakening Shards', type: 'material', amount: user.awakening_shards || 50, icon: '💫', description: 'Required for hero awakening', rarity: 'epic' },
+      { id: 'skill_books', name: 'Skill Books', type: 'material', amount: user.skill_books || 25, icon: '📖', description: 'Level up hero skills', rarity: 'rare' },
+      { id: 'rune_essence', name: 'Rune Essence', type: 'material', amount: user.rune_essence || 30, icon: '🔮', description: 'Craft and upgrade runes', rarity: 'epic' },
+      
+      // Consumables
+      { id: 'stamina_potion', name: 'Stamina Potion', type: 'consumable', amount: user.stamina_potions || 10, icon: '⚡', description: 'Restores 60 stamina', rarity: 'common' },
+      { id: 'exp_boost', name: 'EXP Boost (2x)', type: 'consumable', amount: user.exp_boosts || 5, icon: '📊', description: '2x EXP for 1 hour', rarity: 'rare' },
+      { id: 'gold_boost', name: 'Gold Boost (2x)', type: 'consumable', amount: user.gold_boosts || 3, icon: '💰', description: '2x Gold for 1 hour', rarity: 'rare' },
+      
+      // Tickets
+      { id: 'hero_ticket', name: 'Hero Ticket', type: 'ticket', amount: user.hero_tickets || 5, icon: '🎫', description: 'One free gacha pull', rarity: 'epic' },
+      { id: 'legendary_ticket', name: 'Legendary Ticket', type: 'ticket', amount: user.legendary_tickets || 1, icon: '🌟', description: 'Guaranteed SR+ hero', rarity: 'legendary' },
+      { id: 'equipment_ticket', name: 'Equipment Ticket', type: 'ticket', amount: user.equipment_tickets || 3, icon: '📦', description: 'Free equipment draw', rarity: 'rare' },
+    ];
+    
+    setResources(items);
+  };
+
+  const useConsumable = async (item: ResourceItem) => {
+    if (item.type !== 'consumable' || item.amount <= 0) return;
+    
+    Alert.alert(
+      `Use ${item.name}?`,
+      item.description,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Use', 
+          onPress: () => {
+            // Update local state
+            setResources(prev => prev.map(r => 
+              r.id === item.id ? { ...r, amount: r.amount - 1 } : r
+            ));
+            setSelectedItem(null);
+            Alert.alert('Used!', `${item.name} activated!`);
+          }
+        },
+      ]
+    );
+  };
+
+  const getRarityColor = (rarity?: string) => {
+    switch (rarity) {
+      case 'legendary': return ['#FFD700', '#FFA500'];
+      case 'epic': return ['#9333ea', '#7c3aed'];
+      case 'rare': return ['#3b82f6', '#2563eb'];
+      default: return [COLORS.navy.light, COLORS.navy.medium];
     }
   };
 
-  const resetBag = async () => {
-    if (!user) return;
-    try {
-      await axios.post(`${API_BASE}/resource-bag/${user.username}/reset`);
-      fetchResourceBag();
-    } catch (error) {
-      console.error('Error resetting resource bag:', error);
-    }
-  };
+  const filteredResources = activeTab === 'all' 
+    ? resources 
+    : resources.filter(r => r.type === activeTab);
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toLocaleString();
-  };
-
-  const getProgressPercent = (collected: number, limit: number) => {
-    return Math.min((collected / limit) * 100, 100);
-  };
-
-  if (!hydrated) {
+  if (!hydrated || loading) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.gold.primary} />
+          <Text style={styles.loadingText}>Loading Inventory...</Text>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -105,12 +126,28 @@ export default function ResourceBagScreen() {
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
           <Text style={styles.errorText}>Please log in first</Text>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/')}>
+            <Text style={styles.loginBtnText}>Go to Login</Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </LinearGradient>
     );
   }
+
+  const renderItem = ({ item }: { item: ResourceItem }) => (
+    <TouchableOpacity
+      style={styles.itemCard}
+      onPress={() => setSelectedItem(item)}
+    >
+      <LinearGradient colors={getRarityColor(item.rarity)} style={styles.itemGradient}>
+        <Text style={styles.itemIcon}>{item.icon}</Text>
+        <Text style={styles.itemAmount}>{item.amount.toLocaleString()}</Text>
+      </LinearGradient>
+      <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
@@ -120,181 +157,98 @@ export default function ResourceBagScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>📦 Resource Bag</Text>
-          <TouchableOpacity onPress={resetBag} style={styles.resetButton}>
-            <Ionicons name="refresh" size={20} color={COLORS.cream.pure} />
-          </TouchableOpacity>
+          <Text style={styles.headerTitle}>🎒 Resource Bag</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.gold.primary} />
-            <Text style={styles.loadingText}>Loading resources...</Text>
-          </View>
-        ) : resourceData ? (
-          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-            {/* VIP Status */}
-            <View style={styles.vipCard}>
-              <View style={styles.vipHeader}>
-                <Text style={styles.vipTitle}>👑 VIP {resourceData.vip_level}</Text>
-                <Text style={styles.vipBonus}>+{resourceData.vip_bonus_percent}% Bonus</Text>
-              </View>
-              <Text style={styles.vipDesc}>
-                Higher VIP levels increase your daily farming limits!
+        {/* Filter Tabs */}
+        <ScrollView horizontal style={styles.tabsContainer} showsHorizontalScrollIndicator={false}>
+          {(['all', 'currency', 'material', 'consumable', 'ticket'] as const).map(tab => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tab, activeTab === tab && styles.tabActive]}
+              onPress={() => setActiveTab(tab)}
+            >
+              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
-            </View>
-
-            {/* Current Totals */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>💰 Current Balance</Text>
-              <View style={styles.totalsGrid}>
-                <View style={styles.totalItem}>
-                  <Ionicons name="logo-bitcoin" size={24} color="#FFD700" />
-                  <Text style={styles.totalValue}>{formatNumber(resourceData.current_totals.coins)}</Text>
-                  <Text style={styles.totalLabel}>Coins</Text>
-                </View>
-                <View style={styles.totalItem}>
-                  <Ionicons name="diamond" size={24} color="#9b59b6" />
-                  <Text style={styles.totalValue}>{formatNumber(resourceData.current_totals.gold)}</Text>
-                  <Text style={styles.totalLabel}>Gold</Text>
-                </View>
-                <View style={styles.totalItem}>
-                  <Ionicons name="sparkles" size={24} color="#3498db" />
-                  <Text style={styles.totalValue}>{formatNumber(resourceData.current_totals.crystals)}</Text>
-                  <Text style={styles.totalLabel}>Crystals</Text>
-                </View>
-                <View style={styles.totalItem}>
-                  <Ionicons name="star" size={24} color="#e74c3c" />
-                  <Text style={styles.totalValue}>{formatNumber(resourceData.current_totals.divine_essence)}</Text>
-                  <Text style={styles.totalLabel}>Divine</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Daily Collection Tracker */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>📊 Today's Collection</Text>
-              
-              {/* Coins Progress */}
-              <View style={styles.resourceRow}>
-                <View style={styles.resourceInfo}>
-                  <Ionicons name="logo-bitcoin" size={20} color="#FFD700" />
-                  <Text style={styles.resourceName}>Coins</Text>
-                </View>
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
-                    <View 
-                      style={[
-                        styles.progressFill, 
-                        { 
-                          width: `${getProgressPercent(resourceData.resource_bag.coins_collected, resourceData.daily_limits.coins)}%`,
-                          backgroundColor: '#FFD700'
-                        }
-                      ]} 
-                    />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {formatNumber(resourceData.resource_bag.coins_collected)} / {formatNumber(resourceData.daily_limits.coins)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Gold Progress */}
-              <View style={styles.resourceRow}>
-                <View style={styles.resourceInfo}>
-                  <Ionicons name="diamond" size={20} color="#9b59b6" />
-                  <Text style={styles.resourceName}>Gold</Text>
-                </View>
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
-                    <View 
-                      style={[
-                        styles.progressFill, 
-                        { 
-                          width: `${getProgressPercent(resourceData.resource_bag.gold_collected, resourceData.daily_limits.gold)}%`,
-                          backgroundColor: '#9b59b6'
-                        }
-                      ]} 
-                    />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {formatNumber(resourceData.resource_bag.gold_collected)} / {formatNumber(resourceData.daily_limits.gold)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* EXP Progress */}
-              <View style={styles.resourceRow}>
-                <View style={styles.resourceInfo}>
-                  <Ionicons name="flash" size={20} color="#2ecc71" />
-                  <Text style={styles.resourceName}>EXP</Text>
-                </View>
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
-                    <View 
-                      style={[
-                        styles.progressFill, 
-                        { 
-                          width: `${getProgressPercent(resourceData.resource_bag.exp_collected, resourceData.daily_limits.exp)}%`,
-                          backgroundColor: '#2ecc71'
-                        }
-                      ]} 
-                    />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {formatNumber(resourceData.resource_bag.exp_collected)} / {formatNumber(resourceData.daily_limits.exp)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Crystals & Materials */}
-              <View style={styles.extraStats}>
-                <View style={styles.extraStatItem}>
-                  <Ionicons name="sparkles" size={18} color="#3498db" />
-                  <Text style={styles.extraStatValue}>{formatNumber(resourceData.resource_bag.crystals_collected)}</Text>
-                  <Text style={styles.extraStatLabel}>Crystals Today</Text>
-                </View>
-                <View style={styles.extraStatItem}>
-                  <Ionicons name="cube" size={18} color="#e67e22" />
-                  <Text style={styles.extraStatValue}>{formatNumber(resourceData.resource_bag.materials_collected)}</Text>
-                  <Text style={styles.extraStatLabel}>Materials Today</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Last Updated */}
-            {resourceData.resource_bag.last_updated && (
-              <Text style={styles.lastUpdated}>
-                Last updated: {new Date(resourceData.resource_bag.last_updated).toLocaleString()}
-              </Text>
-            )}
-
-            {/* Tips */}
-            <View style={styles.tipsSection}>
-              <Text style={styles.tipsTitle}>💡 Farming Tips</Text>
-              <View style={styles.tipItem}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.gold.primary} />
-                <Text style={styles.tipText}>Complete daily quests for bonus resources</Text>
-              </View>
-              <View style={styles.tipItem}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.gold.primary} />
-                <Text style={styles.tipText}>Idle collection rewards increase with VIP level</Text>
-              </View>
-              <View style={styles.tipItem}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.gold.primary} />
-                <Text style={styles.tipText}>Guild donations give guild points</Text>
-              </View>
-            </View>
-          </ScrollView>
-        ) : (
-          <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={48} color={COLORS.cream.dark} />
-            <Text style={styles.errorText}>Failed to load resource data</Text>
-            <TouchableOpacity onPress={fetchResourceBag} style={styles.retryButton}>
-              <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Resources Grid */}
+        <FlatList
+          data={filteredResources}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          numColumns={4}
+          contentContainerStyle={styles.gridContainer}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="cube-outline" size={48} color={COLORS.cream.dark} />
+              <Text style={styles.emptyText}>No items in this category</Text>
+            </View>
+          }
+        />
+
+        {/* Item Detail Modal */}
+        <Modal
+          visible={!!selectedItem}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSelectedItem(null)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.itemModal}>
+              <LinearGradient colors={[COLORS.navy.primary, COLORS.navy.dark]} style={styles.modalGradient}>
+                {selectedItem && (
+                  <>
+                    <TouchableOpacity style={styles.modalClose} onPress={() => setSelectedItem(null)}>
+                      <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                    </TouchableOpacity>
+                    
+                    <View style={styles.modalIconContainer}>
+                      <LinearGradient colors={getRarityColor(selectedItem.rarity)} style={styles.modalIconBg}>
+                        <Text style={styles.modalIcon}>{selectedItem.icon}</Text>
+                      </LinearGradient>
+                    </View>
+                    
+                    <Text style={styles.modalName}>{selectedItem.name}</Text>
+                    <Text style={styles.modalAmount}>x{selectedItem.amount.toLocaleString()}</Text>
+                    
+                    <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(selectedItem.rarity)[0] + '40' }]}>
+                      <Text style={[styles.rarityText, { color: getRarityColor(selectedItem.rarity)[0] }]}>
+                        {selectedItem.rarity?.toUpperCase() || 'COMMON'}
+                      </Text>
+                    </View>
+                    
+                    <Text style={styles.modalDesc}>{selectedItem.description}</Text>
+                    
+                    {selectedItem.type === 'consumable' && selectedItem.amount > 0 && (
+                      <TouchableOpacity style={styles.useButton} onPress={() => useConsumable(selectedItem)}>
+                        <LinearGradient colors={['#22c55e', '#16a34a']} style={styles.useButtonGradient}>
+                          <Text style={styles.useButtonText}>Use Item</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
+                    
+                    {selectedItem.type === 'ticket' && selectedItem.amount > 0 && (
+                      <TouchableOpacity style={styles.useButton} onPress={() => {
+                        setSelectedItem(null);
+                        router.push('/gacha');
+                      }}>
+                        <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.useButtonGradient}>
+                          <Text style={styles.useButtonText}>Go to Gacha</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
+              </LinearGradient>
+            </View>
           </View>
-        )}
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -302,136 +256,45 @@ export default function ResourceBagScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.navy.medium,
-  },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16 },
+  errorText: { color: COLORS.cream.dark, fontSize: 16 },
+  loginBtn: { marginTop: 16, backgroundColor: COLORS.gold.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  loginBtnText: { color: COLORS.navy.darkest, fontWeight: 'bold' },
+
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.gold.primary + '30' },
   backButton: { padding: 8 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
-  resetButton: { 
-    padding: 8, 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 8 
-  },
-  scrollView: { flex: 1, padding: 16 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: COLORS.cream.soft, marginTop: 12 },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: COLORS.cream.dark, fontSize: 16, marginTop: 12 },
-  retryButton: {
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: COLORS.gold.primary,
-    borderRadius: 8,
-  },
-  retryText: { color: COLORS.navy.darkest, fontWeight: 'bold' },
-  
-  // VIP Card
-  vipCard: {
-    backgroundColor: COLORS.navy.medium,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: COLORS.gold.dark,
-  },
-  vipHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  vipTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.gold.primary },
-  vipBonus: { 
-    fontSize: 14, 
-    color: COLORS.gold.light, 
-    backgroundColor: COLORS.gold.dark + '40',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  vipDesc: { fontSize: 12, color: COLORS.cream.dark },
-  
-  // Section
-  section: {
-    backgroundColor: COLORS.navy.primary,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
-  
-  // Totals Grid
-  totalsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  totalItem: {
-    width: '48%',
-    backgroundColor: COLORS.navy.medium,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  totalValue: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 4 },
-  totalLabel: { fontSize: 12, color: COLORS.cream.dark, marginTop: 2 },
-  
-  // Resource Row
-  resourceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  resourceInfo: { flexDirection: 'row', alignItems: 'center', width: 80 },
-  resourceName: { fontSize: 14, color: COLORS.cream.pure, marginLeft: 8 },
-  progressContainer: { flex: 1, marginLeft: 12 },
-  progressBar: {
-    height: 8,
-    backgroundColor: COLORS.navy.dark,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: { height: '100%', borderRadius: 4 },
-  progressText: { fontSize: 11, color: COLORS.cream.dark, marginTop: 4, textAlign: 'right' },
-  
-  // Extra Stats
-  extraStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.navy.medium,
-  },
-  extraStatItem: { alignItems: 'center' },
-  extraStatValue: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 4 },
-  extraStatLabel: { fontSize: 10, color: COLORS.cream.dark, marginTop: 2 },
-  
-  // Last Updated
-  lastUpdated: { 
-    fontSize: 11, 
-    color: COLORS.cream.dark, 
-    textAlign: 'center', 
-    marginBottom: 16 
-  },
-  
-  // Tips
-  tipsSection: {
-    backgroundColor: COLORS.navy.primary,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 32,
-  },
-  tipsTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
-  tipItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  tipText: { fontSize: 12, color: COLORS.cream.soft, marginLeft: 8 },
+
+  tabsContainer: { maxHeight: 50, paddingHorizontal: 12, paddingVertical: 8 },
+  tab: { paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, borderRadius: 20, backgroundColor: COLORS.navy.medium },
+  tabActive: { backgroundColor: COLORS.gold.primary },
+  tabText: { fontSize: 12, color: COLORS.cream.dark, fontWeight: '600' },
+  tabTextActive: { color: COLORS.navy.darkest },
+
+  gridContainer: { padding: 12 },
+  itemCard: { width: '25%', padding: 6 },
+  itemGradient: { aspectRatio: 1, borderRadius: 12, justifyContent: 'center', alignItems: 'center', padding: 8 },
+  itemIcon: { fontSize: 24, marginBottom: 4 },
+  itemAmount: { fontSize: 11, color: '#fff', fontWeight: 'bold' },
+  itemName: { fontSize: 10, color: COLORS.cream.dark, textAlign: 'center', marginTop: 4 },
+
+  emptyContainer: { alignItems: 'center', paddingTop: 60 },
+  emptyText: { color: COLORS.cream.dark, marginTop: 12 },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  itemModal: { width: '100%', maxWidth: 320, borderRadius: 20, overflow: 'hidden' },
+  modalGradient: { padding: 24, alignItems: 'center' },
+  modalClose: { position: 'absolute', top: 16, right: 16 },
+  modalIconContainer: { marginBottom: 16 },
+  modalIconBg: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center' },
+  modalIcon: { fontSize: 40 },
+  modalName: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 4 },
+  modalAmount: { fontSize: 16, color: COLORS.gold.primary, fontWeight: '600', marginBottom: 12 },
+  rarityBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginBottom: 12 },
+  rarityText: { fontSize: 11, fontWeight: 'bold' },
+  modalDesc: { fontSize: 13, color: COLORS.cream.dark, textAlign: 'center', lineHeight: 18, marginBottom: 20 },
+  useButton: { width: '100%', borderRadius: 12, overflow: 'hidden' },
+  useButtonGradient: { paddingVertical: 14, alignItems: 'center' },
+  useButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

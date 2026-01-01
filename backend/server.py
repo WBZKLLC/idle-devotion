@@ -22,6 +22,8 @@ import secrets
 from routers import equipment as equipment_router
 from routers import economy as economy_router
 from routers import stages as stages_router
+from routers import admin as admin_router
+from routers import campaign as campaign_router
 
 # Import security module
 from core.security import (

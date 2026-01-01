@@ -328,6 +328,30 @@ frontend:
         agent: "testing"
         comment: "✅ TESTED: Equipment screen fully functional on mobile (390x844). Successfully navigated via 'Gear' button from home screen. Header '⚔️ Equipment' displays correctly. Inventory tab selected by default with all 7 slot filter buttons (All, Weapon, Helmet, Chestplate, Gloves, Boots, Talisman) visible and functional. Sets tab working with all 4 expected set cards displayed: Warrior's Might, Arcane Vestments, Shadow's Edge, Guardian's Bastion. Each set shows piece count (X/6) and bonus tiers (2pc, 4pc, 6pc). Tab switching between Inventory and Sets working correctly. Equipment items display with proper rarity colors and stats. Mobile-responsive design confirmed. No critical errors found."
 
+  - task: "Dungeons/Stages UI for currency farming"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/dungeons.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ IMPLEMENTED: Complete Dungeons screen UI with fantasy theme. Features: 5 dungeon types (Soul Forge/EXP, Treasure Vault/Gold, Arcane Sanctum/Skills, Divine Forge/Equipment, Crystal Mines/Enhancement), stage selection grid with 10 levels each, stamina display, battle system, sweep function for cleared stages, reward modals. All connected to server-authoritative backend APIs."
+
+  - task: "Guild War UI"
+    implemented: true
+    working: true
+    file: "/app/frontend/app/guild-war.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ IMPLEMENTED: Full Guild War UI with war status/registration, match display, attack interface, leaderboard rankings, and attack history. Red/flame themed design. Navigation link added to home screen."
+
 frontend:
   - task: "Navigation structure with tabs"
     implemented: true

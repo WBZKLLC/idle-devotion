@@ -79,12 +79,10 @@ export default function HomeScreen() {
       loadIdleStatus();
     } catch (error) {
       console.error('Failed to claim idle rewards:', error);
+      Alert.alert('Error', 'Failed to claim rewards');
     } finally {
       setIsClaiming(false);
     }
-  };
-    } catch (error) { Alert.alert('Error', 'Failed to claim rewards'); }
-    finally { setIsClaiming(false); }
   };
 
   const handleLogin = async () => {

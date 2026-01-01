@@ -18,6 +18,13 @@ interface User {
   coins: number;
   gold: number;
   divine_essence?: number;
+  stamina?: number;
+  enhancement_stones?: number;
+  skill_essence?: number;
+  rune_stones?: number;
+  guild_coins?: number;
+  arena_tickets?: number;
+  blood_crystals?: number;
   pity_counter: number;
   pity_counter_premium?: number;
   pity_counter_divine?: number;
@@ -27,6 +34,7 @@ interface User {
   daily_summons_claimed: number;
   profile_picture_hero_id: string | null;
   vip_level?: number;
+  total_spent?: number;
 }
 
 interface Hero {

@@ -9,7 +9,7 @@ module.exports = ({ config }) => {
     icon: './assets/images/icon.png',
     scheme: 'divineheroes',
     userInterfaceStyle: 'dark',
-    newArchEnabled: true,
+    newArchEnabled: false,
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.divineheroes.gacha',

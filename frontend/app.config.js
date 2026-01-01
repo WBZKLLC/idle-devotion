@@ -1,7 +1,5 @@
-// Dynamic Expo configuration for native builds with RevenueCat
+// Dynamic Expo configuration for native builds
 module.exports = ({ config }) => {
-  const isNativeBuild = process.env.EAS_BUILD === 'true';
-  
   const baseConfig = {
     ...config,
     name: 'Divine Heroes',
@@ -54,18 +52,6 @@ module.exports = ({ config }) => {
       REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',
     },
   };
-
-  // Add RevenueCat plugin only for native EAS builds
-  if (isNativeBuild) {
-    const revenueCatApiKey = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_GHJByEeqdUHXOWbuvIWFFrQFXjB';
-    baseConfig.plugins.push([
-      'react-native-purchases',
-      {
-        ios: { apiKey: revenueCatApiKey },
-        android: { apiKey: revenueCatApiKey },
-      },
-    ]);
-  }
 
   return baseConfig;
 };

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Dungeon/Stage System APIs
-Testing server-authoritative architecture with user Adam/Adam123!
+Divine Summons Gacha System Test
+Tests the updated Divine Summons system with new filler rewards
 """
 
 import requests
@@ -9,413 +9,428 @@ import json
 import sys
 from typing import Dict, Any
 
-# Backend URL from frontend .env
+# Backend URL from frontend environment
 BACKEND_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 
 # Test credentials
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 
-class StageSystemTester:
+class DivineGachaTest:
     def __init__(self):
         self.session = requests.Session()
-        self.token = None
-        self.user_data = None
+        self.user_data_before = None
+        self.user_data_after = None
         
-    def login(self) -> bool:
-        """Login with test credentials"""
-        print(f"🔐 Logging in as {USERNAME}...")
+    def log(self, message: str, level: str = "INFO"):
+        """Log test messages"""
+        print(f"[{level}] {message}")
         
+    def test_user_login(self) -> bool:
+        """Test user authentication"""
         try:
-            response = self.session.post(
-                f"{BACKEND_URL}/auth/login",
-                json={"username": USERNAME, "password": PASSWORD},
-                timeout=10
-            )
+            self.log("Testing user authentication...")
             
-            if response.status_code == 200:
-                data = response.json()
-                self.token = data.get("token")
-                self.user_data = data.get("user")
-                
-                # Set authorization header for future requests
-                self.session.headers.update({
-                    "Authorization": f"Bearer {self.token}"
-                })
-                
-                print(f"✅ Login successful! User ID: {self.user_data.get('id')}")
-                print(f"   Stamina: {self.user_data.get('stamina', 'N/A')}")
-                print(f"   Soul Dust: {self.user_data.get('soul_dust', 0)}")
-                print(f"   Gold: {self.user_data.get('gold', 0)}")
-                return True
-            else:
-                print(f"❌ Login failed: {response.status_code} - {response.text}")
+            # Try to get user data first
+            response = self.session.get(f"{BACKEND_URL}/user/{USERNAME}")
+            if response.status_code != 200:
+                self.log(f"❌ User {USERNAME} not found", "ERROR")
                 return False
                 
+            self.log(f"✅ User {USERNAME} found")
+            return True
+            
         except Exception as e:
-            print(f"❌ Login error: {str(e)}")
+            self.log(f"❌ Authentication failed: {str(e)}", "ERROR")
             return False
     
-    def test_stage_info(self) -> bool:
-        """Test Suite 1: Stage Information"""
-        print("\n📋 Test Suite 1: Stage Information")
-        print("=" * 50)
-        
+    def add_divine_essence(self, amount: int = 100) -> bool:
+        """Add Divine Essence to user account for testing"""
         try:
-            # GET /api/stages/info
-            response = self.session.get(f"{BACKEND_URL}/stages/info", timeout=10)
+            self.log(f"Adding {amount} Divine Essence to {USERNAME}...")
             
-            if response.status_code == 200:
-                data = response.json()
-                print("✅ GET /api/stages/info - SUCCESS")
+            # Get current user data
+            response = self.session.get(f"{BACKEND_URL}/user/{USERNAME}")
+            if response.status_code != 200:
+                self.log("❌ Failed to get user data", "ERROR")
+                return False
                 
-                # Verify structure
-                required_keys = ["exp_stages", "gold_stages", "equipment_dungeons", "stamina_costs"]
-                for key in required_keys:
-                    if key in data:
-                        print(f"   ✓ {key}: {len(data[key])} stages")
+            user_data = response.json()
+            current_essence = user_data.get('divine_essence', 0)
+            
+            # Update divine essence directly in database (simulating admin action)
+            # Since there's no admin API, we'll use the economy router if available
+            try:
+                # Try using economy API to add divine essence
+                add_response = self.session.post(
+                    f"{BACKEND_URL}/economy/{USERNAME}/currencies/add",
+                    json={"divine_essence": amount}
+                )
+                
+                if add_response.status_code == 200:
+                    self.log(f"✅ Added {amount} Divine Essence via economy API")
+                    return True
+                else:
+                    self.log(f"⚠️ Economy API not available, user has {current_essence} Divine Essence")
+                    # If user already has enough, continue
+                    if current_essence >= 10:  # Need at least 10 for multi-pull
+                        self.log(f"✅ User has sufficient Divine Essence ({current_essence})")
+                        return True
                     else:
-                        print(f"   ❌ Missing {key}")
+                        self.log(f"❌ User needs more Divine Essence (has {current_essence}, needs 10+)", "ERROR")
                         return False
-                
-                # Check stamina costs
-                stamina_costs = data.get("stamina_costs", {})
-                print(f"   ✓ Stamina costs: {stamina_costs}")
-                
-                return True
-            else:
-                print(f"❌ GET /api/stages/info failed: {response.status_code}")
-                return False
-                
-        except Exception as e:
-            print(f"❌ Stage info test error: {str(e)}")
-            return False
-    
-    def test_user_progress(self) -> bool:
-        """Test user's stage progress"""
-        print(f"\n📊 Testing user progress for {USERNAME}")
-        
-        try:
-            # GET /api/stages/{username}/progress
-            response = self.session.get(f"{BACKEND_URL}/stages/{USERNAME}/progress", timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                print("✅ GET /api/stages/{username}/progress - SUCCESS")
-                
-                progress_keys = ["exp_stage", "gold_stage", "equipment_dungeon"]
-                for key in progress_keys:
-                    value = data.get(key, 0)
-                    print(f"   ✓ {key}: {value}")
-                
-                return True
-            else:
-                print(f"❌ User progress failed: {response.status_code}")
-                return False
-                
-        except Exception as e:
-            print(f"❌ User progress test error: {str(e)}")
-            return False
-    
-    def test_exp_stage(self, stage_id: int = 1) -> Dict[str, Any]:
-        """Test Suite 2: EXP Stages (Soul Dust farming)"""
-        print(f"\n⚔️ Test Suite 2: EXP Stage {stage_id}")
-        print("=" * 50)
-        
-        try:
-            # POST /api/stages/{username}/exp/{stage_id}
-            payload = {"stage_id": stage_id}
-            response = self.session.post(
-                f"{BACKEND_URL}/stages/{USERNAME}/exp/{stage_id}",
-                json=payload,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ POST /api/stages/{USERNAME}/exp/{stage_id} - SUCCESS")
-                
-                # Verify response structure
-                victory = data.get("victory")
-                rewards = data.get("rewards", {})
-                stamina_used = data.get("stamina_used")
-                
-                print(f"   ✓ Victory: {victory}")
-                print(f"   ✓ Stamina used: {stamina_used}")
-                
-                if victory:
-                    print(f"   ✓ Soul Dust earned: {rewards.get('soul_dust', 0)}")
-                    print(f"   ✓ Gold earned: {rewards.get('gold', 0)}")
-                    
-                    # Check for bonus rewards
-                    if "enhancement_stones" in rewards:
-                        print(f"   🎁 Bonus Enhancement Stones: {rewards['enhancement_stones']}")
-                else:
-                    print("   ⚠️ Battle lost - no rewards")
-                
-                return data
-            else:
-                print(f"❌ EXP stage battle failed: {response.status_code} - {response.text}")
-                return {}
-                
-        except Exception as e:
-            print(f"❌ EXP stage test error: {str(e)}")
-            return {}
-    
-    def test_gold_stage(self, stage_id: int = 1) -> Dict[str, Any]:
-        """Test Suite 3: Gold Stages (Gold farming)"""
-        print(f"\n💰 Test Suite 3: Gold Stage {stage_id}")
-        print("=" * 50)
-        
-        try:
-            # POST /api/stages/{username}/gold/{stage_id}
-            payload = {"stage_id": stage_id}
-            response = self.session.post(
-                f"{BACKEND_URL}/stages/{USERNAME}/gold/{stage_id}",
-                json=payload,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ POST /api/stages/{USERNAME}/gold/{stage_id} - SUCCESS")
-                
-                victory = data.get("victory")
-                rewards = data.get("rewards", {})
-                stamina_used = data.get("stamina_used")
-                
-                print(f"   ✓ Victory: {victory}")
-                print(f"   ✓ Stamina used: {stamina_used}")
-                
-                if victory:
-                    print(f"   ✓ Gold earned: {rewards.get('gold', 0)}")
-                    print(f"   ✓ Coins earned: {rewards.get('coins', 0)}")
-                    
-                    # Check for bonus divine gems
-                    if "divine_gems" in rewards:
-                        print(f"   🎁 Bonus Divine Gems: {rewards['divine_gems']}")
-                else:
-                    print("   ⚠️ Battle lost - no rewards")
-                
-                return data
-            else:
-                print(f"❌ Gold stage battle failed: {response.status_code} - {response.text}")
-                return {}
-                
-        except Exception as e:
-            print(f"❌ Gold stage test error: {str(e)}")
-            return {}
-    
-    def test_equipment_dungeon(self, stage_id: int = 1) -> Dict[str, Any]:
-        """Test Suite 4: Equipment Dungeon (Gear drops)"""
-        print(f"\n⚔️ Test Suite 4: Equipment Dungeon {stage_id}")
-        print("=" * 50)
-        
-        try:
-            # POST /api/stages/{username}/equipment/{stage_id}
-            payload = {"stage_id": stage_id}
-            response = self.session.post(
-                f"{BACKEND_URL}/stages/{USERNAME}/equipment/{stage_id}",
-                json=payload,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ POST /api/stages/{USERNAME}/equipment/{stage_id} - SUCCESS")
-                
-                victory = data.get("victory")
-                rewards = data.get("rewards", {})
-                equipment_dropped = data.get("equipment_dropped")
-                stamina_used = data.get("stamina_used")
-                
-                print(f"   ✓ Victory: {victory}")
-                print(f"   ✓ Stamina used: {stamina_used}")
-                
-                if victory:
-                    print(f"   ✓ Gold earned: {rewards.get('gold', 0)}")
-                    
-                    if equipment_dropped:
-                        print("   🎁 EQUIPMENT DROPPED (SERVER-GENERATED):")
-                        print(f"      - Name: {equipment_dropped.get('name')}")
-                        print(f"      - Rarity: {equipment_dropped.get('rarity')}")
-                        print(f"      - Slot: {equipment_dropped.get('slot')}")
-                        print(f"      - ID: {equipment_dropped.get('id')}")
                         
-                        # Verify server-side generation
-                        if equipment_dropped.get('primary_stat') and equipment_dropped.get('primary_value'):
-                            print(f"      - Primary Stat: {equipment_dropped.get('primary_stat')} +{equipment_dropped.get('primary_value')}")
-                        
-                        if equipment_dropped.get('sub_stats'):
-                            print(f"      - Sub Stats: {equipment_dropped.get('sub_stats')}")
-                    else:
-                        print("   ⚠️ No equipment dropped this run")
+            except Exception as e:
+                self.log(f"⚠️ Could not add Divine Essence via API: {str(e)}")
+                if current_essence >= 10:
+                    self.log(f"✅ User has sufficient Divine Essence ({current_essence})")
+                    return True
                 else:
-                    print("   ⚠️ Battle lost - no rewards")
-                
-                return data
-            else:
-                print(f"❌ Equipment dungeon failed: {response.status_code} - {response.text}")
-                return {}
+                    self.log(f"❌ User needs more Divine Essence (has {current_essence}, needs 10+)", "ERROR")
+                    return False
                 
         except Exception as e:
-            print(f"❌ Equipment dungeon test error: {str(e)}")
+            self.log(f"❌ Failed to add Divine Essence: {str(e)}", "ERROR")
+            return False
+    
+    def get_user_resources_before(self) -> Dict[str, Any]:
+        """Get user resources before summon"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/user/{USERNAME}")
+            if response.status_code != 200:
+                self.log("❌ Failed to get user data", "ERROR")
+                return {}
+                
+            user_data = response.json()
+            resources = {
+                'divine_essence': user_data.get('divine_essence', 0),
+                'crystals': user_data.get('crystals', 0),
+                'gold': user_data.get('gold', 0),
+                'coins': user_data.get('coins', 0),
+                'hero_shards': user_data.get('hero_shards', 0),
+                'enhancement_stones': user_data.get('enhancement_stones', 0),
+                'skill_essence': user_data.get('skill_essence', 0),
+                'star_crystals': user_data.get('star_crystals', 0),
+                'hero_exp': user_data.get('hero_exp', 0),
+            }
+            
+            self.log("📊 Resources before summon:")
+            for resource, amount in resources.items():
+                self.log(f"   {resource}: {amount}")
+                
+            self.user_data_before = resources
+            return resources
+            
+        except Exception as e:
+            self.log(f"❌ Failed to get user resources: {str(e)}", "ERROR")
             return {}
     
-    def test_sweep_feature(self, stage_type: str = "exp", stage_id: int = 1, count: int = 3) -> Dict[str, Any]:
-        """Test Suite 5: Sweep Feature (Auto-clear)"""
-        print(f"\n🔄 Test Suite 5: Sweep Feature ({stage_type} stage {stage_id}, {count}x)")
-        print("=" * 50)
-        
+    def test_divine_summon_multi_pull(self) -> Dict[str, Any]:
+        """Test Divine Summon Multi-Pull (10x)"""
         try:
-            # POST /api/stages/{username}/sweep/{stage_type}/{stage_id}
-            payload = {"stage_id": stage_id, "count": count}
+            self.log("🎲 Testing Divine Summon Multi-Pull (10x)...")
+            
+            # Perform 10x Divine Summon
+            pull_data = {
+                "pull_type": "multi",
+                "currency_type": "divine_essence"
+            }
+            
             response = self.session.post(
-                f"{BACKEND_URL}/stages/{USERNAME}/sweep/{stage_type}/{stage_id}",
-                json=payload,
-                timeout=10
+                f"{BACKEND_URL}/gacha/{USERNAME}/pull",
+                json=pull_data
             )
             
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ POST /api/stages/{USERNAME}/sweep/{stage_type}/{stage_id} - SUCCESS")
-                
-                success = data.get("success")
-                sweeps = data.get("sweeps")
-                total_stamina = data.get("total_stamina_used")
-                total_rewards = data.get("total_rewards", {})
-                
-                print(f"   ✓ Success: {success}")
-                print(f"   ✓ Sweeps completed: {sweeps}")
-                print(f"   ✓ Total stamina used: {total_stamina}")
-                print("   ✓ Total rewards:")
-                
-                for reward_type, amount in total_rewards.items():
-                    print(f"      - {reward_type}: {amount}")
-                
-                # Verify server calculated all rewards
-                if sweeps == count:
-                    print(f"   ✅ SERVER CALCULATED ALL {count} SWEEPS CORRECTLY")
-                else:
-                    print(f"   ⚠️ Expected {count} sweeps, got {sweeps}")
-                
-                return data
-            else:
-                print(f"❌ Sweep failed: {response.status_code} - {response.text}")
+            if response.status_code != 200:
+                self.log(f"❌ Divine Summon failed: {response.status_code} - {response.text}", "ERROR")
                 return {}
                 
+            result = response.json()
+            self.log("✅ Divine Summon Multi-Pull successful!")
+            
+            # Log basic results
+            heroes_count = result.get('pulled_heroes_count', 0)
+            filler_count = result.get('filler_rewards_count', 0)
+            runes_count = result.get('runes_earned', 0)
+            divine_spent = result.get('divine_spent', 0)
+            
+            self.log(f"📈 Pull Results:")
+            self.log(f"   Heroes pulled: {heroes_count}")
+            self.log(f"   Filler rewards: {filler_count}")
+            self.log(f"   Runes earned: {runes_count}")
+            self.log(f"   Divine Essence spent: {divine_spent}")
+            
+            return result
+            
         except Exception as e:
-            print(f"❌ Sweep test error: {str(e)}")
+            self.log(f"❌ Divine Summon test failed: {str(e)}", "ERROR")
             return {}
     
-    def verify_server_authority(self) -> bool:
-        """Verify that all RNG and rewards are server-side"""
-        print("\n🔒 Verifying Server-Authoritative Architecture")
-        print("=" * 50)
-        
-        # Test multiple runs of the same stage to verify server RNG
-        print("Testing server RNG variance...")
-        
-        results = []
-        for i in range(3):
-            print(f"   Run {i+1}/3...")
-            result = self.test_exp_stage(1)
-            if result.get("victory"):
-                soul_dust = result.get("rewards", {}).get("soul_dust", 0)
-                gold = result.get("rewards", {}).get("gold", 0)
-                results.append((soul_dust, gold))
-        
-        if len(results) >= 2:
-            # Check if rewards vary (indicating server-side RNG)
-            soul_dust_values = [r[0] for r in results]
-            gold_values = [r[1] for r in results]
+    def verify_response_structure(self, result: Dict[str, Any]) -> bool:
+        """Verify the response contains all required fields"""
+        try:
+            self.log("🔍 Verifying response structure...")
             
-            soul_dust_variance = len(set(soul_dust_values)) > 1
-            gold_variance = len(set(gold_values)) > 1
+            required_fields = [
+                'heroes', 'filler_rewards_collected', 'runes_earned'
+            ]
             
-            print(f"   ✓ Soul Dust variance detected: {soul_dust_variance}")
-            print(f"   ✓ Gold variance detected: {gold_variance}")
-            print(f"   ✓ Soul Dust values: {soul_dust_values}")
-            print(f"   ✓ Gold values: {gold_values}")
+            missing_fields = []
+            for field in required_fields:
+                if field not in result:
+                    missing_fields.append(field)
             
-            if soul_dust_variance or gold_variance:
-                print("   ✅ SERVER-SIDE RNG CONFIRMED")
-                return True
-            else:
-                print("   ⚠️ No variance detected - may indicate fixed rewards")
-                return True  # Still pass as rewards are being generated
-        
-        return False
+            if missing_fields:
+                self.log(f"❌ Missing required fields: {missing_fields}", "ERROR")
+                return False
+            
+            # Check filler_rewards_collected structure
+            filler_rewards = result.get('filler_rewards_collected', {})
+            expected_currencies = [
+                'crystals', 'gold', 'coins', 'divine_essence', 'hero_shards',
+                'enhancement_stones', 'skill_essence', 'star_crystals', 'hero_exp'
+            ]
+            
+            missing_currencies = []
+            for currency in expected_currencies:
+                if currency not in filler_rewards:
+                    missing_currencies.append(currency)
+            
+            if missing_currencies:
+                self.log(f"❌ Missing currency fields in filler_rewards_collected: {missing_currencies}", "ERROR")
+                return False
+            
+            self.log("✅ Response structure is correct")
+            return True
+            
+        except Exception as e:
+            self.log(f"❌ Response structure verification failed: {str(e)}", "ERROR")
+            return False
     
-    def run_all_tests(self) -> bool:
-        """Run all test suites"""
-        print("🧪 DUNGEON/STAGE SYSTEM API TESTING")
-        print("=" * 60)
-        print(f"Backend URL: {BACKEND_URL}")
-        print(f"Test User: {USERNAME}")
-        print("=" * 60)
+    def verify_filler_reward_types(self, result: Dict[str, Any]) -> bool:
+        """Verify new filler reward types are present"""
+        try:
+            self.log("🎁 Verifying filler reward types...")
+            
+            heroes = result.get('heroes', [])
+            filler_items = [item for item in heroes if item.get('is_filler', False)]
+            
+            if not filler_items:
+                self.log("⚠️ No filler rewards found in this pull")
+                return True  # Not an error, just RNG
+            
+            # Check for expected display texts
+            expected_reward_patterns = [
+                "Enhancement Stones", "Rune", "Skill Essence", 
+                "Star Crystals", "Hero EXP", "Crystals", "Gold", "Coins"
+            ]
+            
+            found_patterns = set()
+            for item in filler_items:
+                display = item.get('display', '')
+                self.log(f"   Filler reward: {display}")
+                
+                for pattern in expected_reward_patterns:
+                    if pattern in display:
+                        found_patterns.add(pattern)
+            
+            self.log(f"✅ Found {len(found_patterns)} different filler reward types")
+            
+            # Verify filler_rewards_collected totals
+            filler_collected = result.get('filler_rewards_collected', {})
+            total_rewards = sum(filler_collected.values())
+            
+            if total_rewards > 0:
+                self.log(f"✅ Total filler rewards collected: {total_rewards}")
+                self.log("📊 Filler rewards breakdown:")
+                for currency, amount in filler_collected.items():
+                    if amount > 0:
+                        self.log(f"   {currency}: {amount}")
+            else:
+                self.log("⚠️ No filler rewards collected (unusual but possible)")
+            
+            return True
+            
+        except Exception as e:
+            self.log(f"❌ Filler reward verification failed: {str(e)}", "ERROR")
+            return False
+    
+    def get_user_resources_after(self) -> Dict[str, Any]:
+        """Get user resources after summon"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/user/{USERNAME}")
+            if response.status_code != 200:
+                self.log("❌ Failed to get user data after summon", "ERROR")
+                return {}
+                
+            user_data = response.json()
+            resources = {
+                'divine_essence': user_data.get('divine_essence', 0),
+                'crystals': user_data.get('crystals', 0),
+                'gold': user_data.get('gold', 0),
+                'coins': user_data.get('coins', 0),
+                'hero_shards': user_data.get('hero_shards', 0),
+                'enhancement_stones': user_data.get('enhancement_stones', 0),
+                'skill_essence': user_data.get('skill_essence', 0),
+                'star_crystals': user_data.get('star_crystals', 0),
+                'hero_exp': user_data.get('hero_exp', 0),
+            }
+            
+            self.log("📊 Resources after summon:")
+            for resource, amount in resources.items():
+                self.log(f"   {resource}: {amount}")
+                
+            self.user_data_after = resources
+            return resources
+            
+        except Exception as e:
+            self.log(f"❌ Failed to get user resources after summon: {str(e)}", "ERROR")
+            return {}
+    
+    def verify_resource_updates(self) -> bool:
+        """Verify user resources were updated correctly"""
+        try:
+            self.log("💰 Verifying resource updates...")
+            
+            if not self.user_data_before or not self.user_data_after:
+                self.log("❌ Missing before/after resource data", "ERROR")
+                return False
+            
+            # Divine Essence should decrease by 10 (multi-pull cost)
+            essence_before = self.user_data_before['divine_essence']
+            essence_after = self.user_data_after['divine_essence']
+            essence_spent = essence_before - essence_after
+            
+            if essence_spent < 10:
+                self.log(f"❌ Divine Essence not properly deducted. Before: {essence_before}, After: {essence_after}", "ERROR")
+                return False
+            
+            self.log(f"✅ Divine Essence properly deducted: {essence_spent}")
+            
+            # Check for resource increases (from filler rewards)
+            increases_found = False
+            for resource in ['crystals', 'gold', 'coins', 'hero_shards', 'enhancement_stones', 
+                           'skill_essence', 'star_crystals', 'hero_exp']:
+                before = self.user_data_before[resource]
+                after = self.user_data_after[resource]
+                increase = after - before
+                
+                if increase > 0:
+                    self.log(f"✅ {resource} increased by {increase}")
+                    increases_found = True
+            
+            if not increases_found:
+                self.log("⚠️ No resource increases found (possible if only heroes were pulled)")
+            
+            return True
+            
+        except Exception as e:
+            self.log(f"❌ Resource update verification failed: {str(e)}", "ERROR")
+            return False
+    
+    def verify_rune_creation(self, runes_count: int) -> bool:
+        """Verify rune creation if runes were dropped"""
+        try:
+            if runes_count == 0:
+                self.log("ℹ️ No runes dropped in this pull")
+                return True
+                
+            self.log(f"🔮 Verifying {runes_count} rune(s) creation...")
+            
+            # Try to get user runes (if endpoint exists)
+            try:
+                response = self.session.get(f"{BACKEND_URL}/equipment/{USERNAME}/runes")
+                if response.status_code == 200:
+                    runes = response.json()
+                    self.log(f"✅ User has {len(runes)} total runes")
+                    
+                    # Show latest runes
+                    if runes:
+                        latest_runes = sorted(runes, key=lambda x: x.get('created_at', ''), reverse=True)[:runes_count]
+                        for rune in latest_runes:
+                            rarity = rune.get('rarity', 'unknown')
+                            main_stat = rune.get('main_stat', 'unknown')
+                            main_value = rune.get('main_value', 0)
+                            self.log(f"   Rune: {rarity} {main_stat} +{main_value}")
+                    
+                    return True
+                else:
+                    self.log(f"⚠️ Could not verify runes (endpoint returned {response.status_code})")
+                    return True  # Not a critical failure
+                    
+            except Exception as e:
+                self.log(f"⚠️ Could not verify runes: {str(e)}")
+                return True  # Not a critical failure
+                
+        except Exception as e:
+            self.log(f"❌ Rune verification failed: {str(e)}", "ERROR")
+            return False
+    
+    def run_comprehensive_test(self) -> bool:
+        """Run the complete Divine Summons test suite"""
+        self.log("🚀 Starting Divine Summons Gacha System Test")
+        self.log("=" * 60)
         
-        # Login first
-        if not self.login():
+        # Test 1: User Authentication
+        if not self.test_user_login():
             return False
         
-        test_results = []
+        # Test 2: Add Divine Essence
+        if not self.add_divine_essence(100):
+            return False
         
-        # Test Suite 1: Stage Information
-        test_results.append(self.test_stage_info())
+        # Test 3: Get resources before summon
+        if not self.get_user_resources_before():
+            return False
         
-        # Test user progress
-        test_results.append(self.test_user_progress())
+        # Test 4: Perform Divine Summon Multi-Pull
+        result = self.test_divine_summon_multi_pull()
+        if not result:
+            return False
         
-        # Test Suite 2: EXP Stages
-        exp_result = self.test_exp_stage(1)
-        test_results.append(bool(exp_result))
+        # Test 5: Verify response structure
+        if not self.verify_response_structure(result):
+            return False
         
-        # Test Suite 3: Gold Stages
-        gold_result = self.test_gold_stage(1)
-        test_results.append(bool(gold_result))
+        # Test 6: Verify filler reward types
+        if not self.verify_filler_reward_types(result):
+            return False
         
-        # Test Suite 4: Equipment Dungeon
-        equipment_result = self.test_equipment_dungeon(1)
-        test_results.append(bool(equipment_result))
+        # Test 7: Get resources after summon
+        if not self.get_user_resources_after():
+            return False
         
-        # Test Suite 5: Sweep Feature (only if we cleared a stage)
-        if exp_result.get("victory"):
-            sweep_result = self.test_sweep_feature("exp", 1, 3)
-            test_results.append(bool(sweep_result))
-        else:
-            print("\n⚠️ Skipping sweep test - need to clear stage first")
-            test_results.append(False)
+        # Test 8: Verify resource updates
+        if not self.verify_resource_updates():
+            return False
         
-        # Verify server authority
-        test_results.append(self.verify_server_authority())
+        # Test 9: Verify rune creation
+        runes_count = result.get('runes_earned', 0)
+        if not self.verify_rune_creation(runes_count):
+            return False
         
-        # Summary
-        passed = sum(test_results)
-        total = len(test_results)
-        
-        print(f"\n📊 TEST SUMMARY")
-        print("=" * 60)
-        print(f"Tests passed: {passed}/{total}")
-        print(f"Success rate: {(passed/total)*100:.1f}%")
-        
-        if passed == total:
-            print("🎉 ALL TESTS PASSED!")
-        else:
-            print("⚠️ Some tests failed - check logs above")
-        
-        return passed == total
+        self.log("=" * 60)
+        self.log("🎉 All Divine Summons tests passed successfully!")
+        return True
 
 def main():
-    """Main test runner"""
-    tester = StageSystemTester()
-    success = tester.run_all_tests()
+    """Main test execution"""
+    tester = DivineGachaTest()
     
-    if success:
-        print("\n✅ Stage System APIs are working correctly!")
-        sys.exit(0)
-    else:
-        print("\n❌ Stage System APIs have issues!")
+    try:
+        success = tester.run_comprehensive_test()
+        if success:
+            print("\n✅ DIVINE SUMMONS TEST SUITE: PASSED")
+            sys.exit(0)
+        else:
+            print("\n❌ DIVINE SUMMONS TEST SUITE: FAILED")
+            sys.exit(1)
+            
+    except KeyboardInterrupt:
+        print("\n⚠️ Test interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n💥 Test suite crashed: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":

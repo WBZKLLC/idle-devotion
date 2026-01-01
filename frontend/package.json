@@ -10,6 +10,11 @@
     "web": "expo start --web",
     "lint": "expo lint"
   },
+  "expo": {
+    "install": {
+      "exclude": ["react-native-reanimated"]
+    }
+  },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",
     "@expo/ngrok": "^4.1.3",

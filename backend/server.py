@@ -6012,6 +6012,7 @@ app.include_router(api_router)
 # Include modular routers
 app.include_router(equipment_router.router, prefix="/api")
 app.include_router(economy_router.router, prefix="/api")
+app.include_router(stages_router.router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

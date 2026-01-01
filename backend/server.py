@@ -42,6 +42,19 @@ from core.game_formulas import (
     get_subscription_status, MONTHLY_CARD_CONFIG
 )
 
+# Import event banner system
+from core.event_banners import (
+    CRIMSON_ECLIPSE_BANNER, EVENT_MILESTONES, EVENT_SHOP,
+    get_active_event_banner, perform_event_pull, get_milestone_rewards, get_shop_items
+)
+
+# Import player journey system
+from core.player_journey import (
+    FIRST_WEEK_JOURNEY, BEGINNER_MISSIONS, STARTER_PACKS,
+    calculate_level_up_cost, calculate_enhancement_cost, calculate_skill_upgrade_cost,
+    get_day_journey
+)
+
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

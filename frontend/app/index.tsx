@@ -343,22 +343,22 @@ export default function HomeScreen() {
 
           {/* Quick Links */}
           <View style={styles.quickLinks}>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/hero-manager')}>
+              <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.quickLinkGradient}>
+                <Ionicons name="people" size={22} color={COLORS.navy.darkest} />
+                <Text style={[styles.quickLinkText, { color: COLORS.navy.darkest }]}>Teams</Text>
+              </LinearGradient>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/heroes')}>
               <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
-                <Ionicons name="people" size={22} color={COLORS.gold.light} />
+                <Ionicons name="star" size={22} color={COLORS.gold.light} />
                 <Text style={styles.quickLinkText}>Heroes</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/combat')}>
-              <LinearGradient colors={['#e74c3c', '#c0392b']} style={styles.quickLinkGradient}>
-                <Ionicons name="flash" size={22} color={COLORS.cream.pure} />
-                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Combat</Text>
-              </LinearGradient>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/login-rewards')}>
-              <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.quickLinkGradient}>
-                <Ionicons name="calendar" size={22} color={COLORS.navy.darkest} />
-                <Text style={[styles.quickLinkText, { color: COLORS.navy.darkest }]}>Rewards</Text>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="calendar" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>Rewards</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

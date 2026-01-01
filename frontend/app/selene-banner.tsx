@@ -425,15 +425,15 @@ export default function SeleneBannerScreen() {
             </TouchableOpacity>
           )}
 
-          {/* MONETIZATION MESSAGE */}
+          {/* VIP PROGRESS MESSAGE */}
           {bannerData?.monetization && !hasSelene && (
             <View style={styles.monetizationBox}>
-              <Text style={styles.monetizationTitle}>💎 Path to Selene</Text>
+              <Text style={styles.monetizationTitle}>👑 VIP Progress</Text>
               <Text style={styles.monetizationText}>
-                {bannerData.monetization.message}
+                Continue summoning to increase your VIP level and unlock exclusive rewards!
               </Text>
               <Text style={styles.monetizationCost}>
-                ~${bannerData.monetization.estimated_usd} to guarantee
+                VIP Level Up: {Math.min(Math.floor(pityCounter / 10) + 1, 8)}/8
               </Text>
             </View>
           )}

@@ -1421,9 +1421,14 @@ async def pull_gacha(username: str, request: PullRequest):
         "gold": 0,
         "coins": 0,
         "divine_essence": 0,
-        "hero_shards": 0
+        "hero_shards": 0,
+        "enhancement_stones": 0,
+        "skill_essence": 0,
+        "star_crystals": 0,
+        "hero_exp": 0,
     }
     filler_display_items = []  # For showing in UI
+    runes_earned = []  # For rune drops
     
     for _ in range(num_pulls):
         pity_counter += 1

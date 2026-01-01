@@ -116,7 +116,7 @@ index 9653932..e69de29 100644
 ------+import sys
 ------+
 ------+# Configuration
-------+BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+------+BASE_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 ------+USERNAME = "Adam"
 ------+PASSWORD = "Adam123!"
 ------+
@@ -210,7 +210,7 @@ index 9653932..e69de29 100644
 ------+from datetime import datetime
 ------+
 ------+# Configuration
-------+BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+------+BASE_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 ------+USERNAME = "Adam"
 ------+PASSWORD = "Adam123!"
 ------+SERVER_ID = "server_1"
@@ -534,7 +534,7 @@ index 9653932..e69de29 100644
 ------+import sys
 ------+
 ------+# Configuration
-------+BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+------+BASE_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 ------+USERNAME = "Adam"
 ------+PASSWORD = "Adam123!"
 ------+
@@ -793,7 +793,7 @@ index 9653932..e69de29 100644
 ----------+from datetime import datetime
 ----------+
 ----------+# Backend URL from frontend/.env
-----------+BACKEND_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+----------+BACKEND_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 ----------+
 ----------+class ComprehensiveGachaGameTester:
 ----------+    def __init__(self):
@@ -3851,7 +3851,7 @@ index 9653932..e69de29 100644
 ------------------------+import random
 ------------------------+
 ------------------------+# Configuration
-------------------------+BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+------------------------+BASE_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 ------------------------+TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
 ------------------------+
 ------------------------+class ComprehensiveGachaTest:
@@ -4106,7 +4106,7 @@ index 9653932..e69de29 100644
 ------------------------+import requests
 ------------------------+import json
 ------------------------+
-------------------------+BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+------------------------+BASE_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 ------------------------+TEST_USERNAME = "testplayer"
 ------------------------+
 ------------------------+def test_endpoint(method, endpoint, **kwargs):

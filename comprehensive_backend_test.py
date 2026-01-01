@@ -12,7 +12,7 @@ import string
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+BACKEND_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 
 class ComprehensiveGachaGameTester:
     def __init__(self):

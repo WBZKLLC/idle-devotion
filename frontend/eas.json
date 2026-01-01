@@ -13,7 +13,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://male-heroes-game.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://mobile-rpg-4.preview.emergentagent.com",
         "EXPO_PUBLIC_REVENUECAT_API_KEY": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
       }
     },
@@ -26,7 +26,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://male-heroes-game.preview.emergentagent.com",
+        "EXPO_PUBLIC_BACKEND_URL": "https://mobile-rpg-4.preview.emergentagent.com",
         "EXPO_PUBLIC_REVENUECAT_API_KEY": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
       }
     },

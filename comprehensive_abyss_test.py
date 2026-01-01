@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
+BASE_URL = "https://mobile-rpg-4.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

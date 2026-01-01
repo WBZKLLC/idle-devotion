@@ -1,0 +1,106 @@
+# Divine Heroes - Battle Service Deployment with HPA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: battle-deployment
+  namespace: divine-heroes
+  labels:
+    app: divine-heroes
+    service: battle
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: divine-heroes
+      service: battle
+  template:
+    metadata:
+      labels:
+        app: divine-heroes
+        service: battle
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8002"
+        prometheus.io/path: "/metrics/prometheus"
+    spec:
+      containers:
+      - name: battle
+        image: divine-heroes/battle:latest
+        ports:
+        - containerPort: 8002
+          name: http
+        env:
+        - name: SERVICE_NAME
+          value: "battle-service"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        envFrom:
+        - configMapRef:
+            name: divine-heroes-config
+        - secretRef:
+            name: divine-heroes-secrets
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8002
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8002
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: battle-service
+  namespace: divine-heroes
+spec:
+  selector:
+    app: divine-heroes
+    service: battle
+  ports:
+  - port: 8002
+    targetPort: 8002
+  type: ClusterIP
+---
+# HPA for Battle Service - scales based on CPU
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: battle-hpa
+  namespace: divine-heroes
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: battle-deployment
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 30

@@ -1,0 +1,92 @@
+# Divine Heroes - Prometheus ServiceMonitor for metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: divine-heroes-monitor
+  namespace: divine-heroes
+  labels:
+    app: divine-heroes
+spec:
+  selector:
+    matchLabels:
+      app: divine-heroes
+  namespaceSelector:
+    matchNames:
+    - divine-heroes
+  endpoints:
+  - port: http
+    path: /metrics/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: divine-heroes-dashboard
+  namespace: divine-heroes
+  labels:
+    grafana_dashboard: "1"
+data:
+  divine-heroes.json: |
+    {
+      "dashboard": {
+        "title": "Divine Heroes Game Metrics",
+        "tags": ["divine-heroes", "game"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "rate(divine_heroes_request_success[5m])",
+                "legendFormat": "{{function}}"
+              }
+            ]
+          },
+          {
+            "title": "Response Time (p95)",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, divine_heroes_request_duration_ms_bucket)",
+                "legendFormat": "p95"
+              }
+            ]
+          },
+          {
+            "title": "Cache Hit Rate",
+            "type": "gauge",
+            "gridPos": {"x": 0, "y": 8, "w": 6, "h": 6},
+            "targets": [
+              {
+                "expr": "divine_heroes_cache_hit / (divine_heroes_cache_hit + divine_heroes_cache_miss)"
+              }
+            ]
+          },
+          {
+            "title": "Rate Limit Exceeded",
+            "type": "stat",
+            "gridPos": {"x": 6, "y": 8, "w": 6, "h": 6},
+            "targets": [
+              {
+                "expr": "sum(rate(divine_heroes_rate_limit_exceeded[5m]))"
+              }
+            ]
+          },
+          {
+            "title": "Pod Count by Service",
+            "type": "piechart",
+            "gridPos": {"x": 12, "y": 8, "w": 12, "h": 6},
+            "targets": [
+              {
+                "expr": "count by (service) (kube_pod_info{namespace=\"divine-heroes\"})"
+              }
+            ]
+          }
+        ]
+      }
+    }

@@ -1,0 +1,8 @@
+# Divine Heroes - Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: divine-heroes
+  labels:
+    app: divine-heroes
+    env: production

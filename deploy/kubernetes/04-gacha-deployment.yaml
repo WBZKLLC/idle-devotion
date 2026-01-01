@@ -1,0 +1,106 @@
+# Divine Heroes - Gacha Service Deployment with HPA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gacha-deployment
+  namespace: divine-heroes
+  labels:
+    app: divine-heroes
+    service: gacha
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: divine-heroes
+      service: gacha
+  template:
+    metadata:
+      labels:
+        app: divine-heroes
+        service: gacha
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8003"
+        prometheus.io/path: "/metrics/prometheus"
+    spec:
+      containers:
+      - name: gacha
+        image: divine-heroes/gacha:latest
+        ports:
+        - containerPort: 8003
+          name: http
+        env:
+        - name: SERVICE_NAME
+          value: "gacha-service"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        envFrom:
+        - configMapRef:
+            name: divine-heroes-config
+        - secretRef:
+            name: divine-heroes-secrets
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8003
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8003
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gacha-service
+  namespace: divine-heroes
+spec:
+  selector:
+    app: divine-heroes
+    service: gacha
+  ports:
+  - port: 8003
+    targetPort: 8003
+  type: ClusterIP
+---
+# HPA for Gacha Service - scales based on CPU
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gacha-hpa
+  namespace: divine-heroes
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gacha-deployment
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 30

@@ -1,0 +1,36 @@
+# Divine Heroes - PodDisruptionBudgets for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-pdb
+  namespace: divine-heroes
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: divine-heroes
+      service: api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: battle-pdb
+  namespace: divine-heroes
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: divine-heroes
+      service: battle
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gacha-pdb
+  namespace: divine-heroes
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: divine-heroes
+      service: gacha

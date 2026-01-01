@@ -1,0 +1,100 @@
+# Divine Heroes - Network Policies for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-network-policy
+  namespace: divine-heroes
+spec:
+  podSelector:
+    matchLabels:
+      service: api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8001
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          service: mongodb
+    ports:
+    - protocol: TCP
+      port: 27017
+  - to:
+    - podSelector:
+        matchLabels:
+          service: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: battle-network-policy
+  namespace: divine-heroes
+spec:
+  podSelector:
+    matchLabels:
+      service: battle
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          service: api
+    ports:
+    - protocol: TCP
+      port: 8002
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          service: mongodb
+    - podSelector:
+        matchLabels:
+          service: redis
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gacha-network-policy
+  namespace: divine-heroes
+spec:
+  podSelector:
+    matchLabels:
+      service: gacha
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          service: api
+    ports:
+    - protocol: TCP
+      port: 8003
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          service: mongodb
+    - podSelector:
+        matchLabels:
+          service: redis

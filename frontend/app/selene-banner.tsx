@@ -80,7 +80,7 @@ export default function SeleneBannerScreen() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/selene-banner/status/${user?.username}`
+        `${API_BASE}/selene-banner/status/${user?.username}`
       );
       if (response.ok) {
         const data = await response.json();

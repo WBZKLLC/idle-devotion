@@ -174,7 +174,7 @@ export default function CampaignScreen() {
         { stars: 3 } // Auto 3-star for MVP
       );
       
-      setBattleResult(response.data);
+      setBattleResult({...response.data, victory: response.data.success});
       
       // Show dialogue if first clear
       if (response.data.first_clear && response.data.dialogue) {

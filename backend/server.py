@@ -7343,6 +7343,380 @@ async def simulate_monetization():
         }
     }
 
+# ============================================================================
+# ADMIN SYSTEM
+# ============================================================================
+
+@api_router.post("/admin/grant-resources/{username}")
+async def admin_grant_resources(username: str, admin_key: str, resources: Dict[str, int] = None):
+    """Admin endpoint to grant resources to a user"""
+    # Verify admin key (in production, use proper auth)
+    admin_user = await db.users.find_one({"username": admin_key})
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if resources:
+        await db.users.update_one({"username": username}, {"$inc": resources})
+    
+    return {"success": True, "granted": resources}
+
+@api_router.post("/admin/set-vip/{username}")
+async def admin_set_vip(username: str, admin_key: str, vip_level: int):
+    """Admin endpoint to set VIP level"""
+    admin_user = await db.users.find_one({"username": admin_key})
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"vip_level": vip_level, "is_admin_set_vip": True}}
+    )
+    return {"success": True, "vip_level": vip_level}
+
+@api_router.post("/admin/ban-user/{username}")
+async def admin_ban_user(username: str, admin_key: str, reason: str = "Violation of terms"):
+    """Admin endpoint to ban a user"""
+    admin_user = await db.users.find_one({"username": admin_key})
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if "ban" not in admin_user.get("admin_permissions", []):
+        raise HTTPException(status_code=403, detail="No ban permission")
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"is_banned": True, "ban_reason": reason, "banned_at": datetime.utcnow().isoformat(), "banned_by": admin_key}}
+    )
+    return {"success": True, "banned": username, "reason": reason}
+
+@api_router.post("/admin/mute-user/{username}")
+async def admin_mute_user(username: str, admin_key: str, duration_hours: int = 24):
+    """Admin endpoint to mute a user in chat"""
+    admin_user = await db.users.find_one({"username": admin_key})
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if "mute" not in admin_user.get("admin_permissions", []):
+        raise HTTPException(status_code=403, detail="No mute permission")
+    
+    mute_until = datetime.utcnow() + timedelta(hours=duration_hours)
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"is_muted": True, "muted_until": mute_until.isoformat(), "muted_by": admin_key}}
+    )
+    return {"success": True, "muted": username, "until": mute_until.isoformat()}
+
+@api_router.delete("/admin/delete-account/{username}")
+async def admin_delete_account(username: str, admin_key: str):
+    """Admin endpoint to permanently delete an account"""
+    admin_user = await db.users.find_one({"username": admin_key})
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if "delete_account" not in admin_user.get("admin_permissions", []):
+        raise HTTPException(status_code=403, detail="No delete permission")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete from all collections
+    user_id = user["id"]
+    await db.users.delete_one({"username": username})
+    await db.user_heroes.delete_many({"user_id": user_id})
+    await db.user_equipment.delete_many({"owner_id": user_id})
+    await db.abyss_progress.delete_many({"user_id": user_id})
+    await db.stage_progress.delete_many({"user_id": user_id})
+    await db.campaign_progress.delete_many({"user_id": user_id})
+    
+    return {"success": True, "deleted": username}
+
+# ============================================================================
+# CAMPAIGN SYSTEM
+# ============================================================================
+
+from core.campaign import (
+    CHAPTER_DATA, generate_stage_data, generate_stage_rewards,
+    CHAPTER_DIALOGUES, CHAPTER_UNLOCKS, TUTORIAL_STAGES,
+    calculate_stage_difficulty
+)
+
+@api_router.get("/campaign/chapters")
+async def get_campaign_chapters(username: str):
+    """Get all campaign chapters with unlock status"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    progress = await db.campaign_progress.find_one({"user_id": user["id"]})
+    completed_chapters = progress.get("completed_chapters", []) if progress else []
+    current_chapter = progress.get("current_chapter", 1) if progress else 1
+    player_level = user.get("level", 1)
+    
+    chapters = []
+    for ch_id, ch_data in CHAPTER_DATA.items():
+        unlock_req = ch_data["unlock_requirements"]
+        prev_chapter = unlock_req.get("previous_chapter")
+        req_level = unlock_req.get("player_level", 1)
+        
+        is_unlocked = (prev_chapter is None or prev_chapter in completed_chapters) and player_level >= req_level
+        is_completed = ch_id in completed_chapters
+        
+        chapters.append({
+            "id": ch_id,
+            "title": ch_data["title"],
+            "subtitle": ch_data["subtitle"],
+            "act": ch_data["act"],
+            "act_name": ch_data["act_name"],
+            "summary": ch_data["summary"],
+            "is_unlocked": is_unlocked,
+            "is_completed": is_completed,
+            "is_current": ch_id == current_chapter,
+            "unlock_requirements": unlock_req,
+            "recommended_power": ch_data["recommended_power"],
+            "theme_color": ch_data["theme_color"],
+            "completion_unlock": ch_data.get("completion_unlock"),
+            "total_stages": 21,  # 20 + boss
+        })
+    
+    return {
+        "chapters": chapters,
+        "current_chapter": current_chapter,
+        "player_level": player_level,
+        "completed_count": len(completed_chapters),
+    }
+
+@api_router.get("/campaign/chapter/{chapter_id}")
+async def get_campaign_chapter(chapter_id: int, username: str):
+    """Get detailed chapter data with all stages"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if chapter_id not in CHAPTER_DATA:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+    
+    chapter = CHAPTER_DATA[chapter_id]
+    progress = await db.campaign_progress.find_one({"user_id": user["id"]})
+    
+    stage_progress = progress.get("stage_progress", {}) if progress else {}
+    
+    stages = []
+    for stage_num in range(1, 22):  # 1-20 + boss (21)
+        stage_data = generate_stage_data(chapter_id, stage_num)
+        stage_id = f"{chapter_id}-{stage_num}"
+        
+        stage_info = stage_progress.get(stage_id, {})
+        stages.append({
+            **stage_data,
+            "is_cleared": stage_info.get("cleared", False),
+            "stars": stage_info.get("stars", 0),
+            "best_time": stage_info.get("best_time"),
+            "clear_count": stage_info.get("clear_count", 0),
+        })
+    
+    # Get dialogues
+    dialogues = CHAPTER_DIALOGUES.get(chapter_id, {})
+    
+    return {
+        "chapter": {
+            "id": chapter_id,
+            "title": chapter["title"],
+            "subtitle": chapter["subtitle"],
+            "summary": chapter["summary"],
+            "story_heroes": chapter.get("story_heroes_introduced", []),
+            "mechanics_introduced": chapter.get("mechanics_introduced", []),
+            "boss": chapter.get("boss"),
+            "special_stage": chapter.get("special_stage"),
+            "branching_choice": chapter.get("branching_choice"),
+        },
+        "stages": stages,
+        "dialogues": dialogues,
+        "unlocks": CHAPTER_UNLOCKS.get(chapter_id, []),
+    }
+
+@api_router.get("/campaign/stage/{chapter_id}/{stage_num}")
+async def get_campaign_stage(chapter_id: int, stage_num: int, username: str):
+    """Get specific stage data with enemies and rewards"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    stage_data = generate_stage_data(chapter_id, stage_num)
+    if not stage_data:
+        raise HTTPException(status_code=404, detail="Stage not found")
+    
+    # Check for tutorial
+    stage_id = f"{chapter_id}-{stage_num}"
+    tutorial = TUTORIAL_STAGES.get(stage_id)
+    
+    # Get user's progress on this stage
+    progress = await db.campaign_progress.find_one({"user_id": user["id"]})
+    stage_progress = {}
+    if progress:
+        stage_progress = progress.get("stage_progress", {}).get(stage_id, {})
+    
+    return {
+        "stage": stage_data,
+        "tutorial": tutorial,
+        "user_progress": stage_progress,
+        "difficulty": calculate_stage_difficulty(chapter_id, stage_num),
+    }
+
+@api_router.post("/campaign/stage/{chapter_id}/{stage_num}/complete")
+async def complete_campaign_stage(
+    chapter_id: int,
+    stage_num: int,
+    username: str,
+    stars: int = 3,
+    time_seconds: int = 60
+):
+    """Mark a stage as completed and grant rewards"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    stage_data = generate_stage_data(chapter_id, stage_num)
+    if not stage_data:
+        raise HTTPException(status_code=404, detail="Stage not found")
+    
+    stage_id = f"{chapter_id}-{stage_num}"
+    
+    # Get or create campaign progress
+    progress = await db.campaign_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        progress = {
+            "user_id": user["id"],
+            "current_chapter": 1,
+            "completed_chapters": [],
+            "stage_progress": {},
+            "total_stars": 0,
+        }
+        await db.campaign_progress.insert_one(progress)
+    
+    stage_progress = progress.get("stage_progress", {}).get(stage_id, {})
+    is_first_clear = not stage_progress.get("cleared", False)
+    prev_stars = stage_progress.get("stars", 0)
+    
+    # Calculate rewards
+    rewards = {}
+    if is_first_clear:
+        rewards.update(stage_data["first_clear_rewards"])
+    
+    if stars == 3 and prev_stars < 3:
+        rewards.update(stage_data["three_star_bonus"])
+    
+    # Grant rewards
+    if rewards:
+        update_ops = {}
+        for key, value in rewards.items():
+            if isinstance(value, (int, float)) and key in ["gold", "gems", "coins", "hero_exp", "enhancement_stones"]:
+                update_ops[key] = value
+        if update_ops:
+            await db.users.update_one({"username": username}, {"$inc": update_ops})
+    
+    # Update stage progress
+    new_stage_progress = {
+        "cleared": True,
+        "stars": max(stars, prev_stars),
+        "best_time": min(time_seconds, stage_progress.get("best_time", 99999)),
+        "clear_count": stage_progress.get("clear_count", 0) + 1,
+        "last_cleared": datetime.utcnow().isoformat(),
+    }
+    
+    star_diff = max(0, stars - prev_stars)
+    
+    # Check if chapter is now complete
+    is_chapter_complete = stage_num == 21  # Boss stage
+    chapter_unlock = None
+    
+    update_data = {
+        f"stage_progress.{stage_id}": new_stage_progress,
+    }
+    
+    if star_diff > 0:
+        update_data["total_stars"] = progress.get("total_stars", 0) + star_diff
+    
+    if is_chapter_complete and chapter_id not in progress.get("completed_chapters", []):
+        update_data["completed_chapters"] = progress.get("completed_chapters", []) + [chapter_id]
+        update_data["current_chapter"] = chapter_id + 1
+        chapter_unlock = CHAPTER_DATA.get(chapter_id, {}).get("completion_unlock")
+        
+        # Update user's campaign chapter for idle caps
+        await db.stage_progress.update_one(
+            {"user_id": user["id"]},
+            {"$set": {"campaign_chapter": chapter_id}},
+            upsert=True
+        )
+    
+    await db.campaign_progress.update_one(
+        {"user_id": user["id"]},
+        {"$set": update_data}
+    )
+    
+    return {
+        "success": True,
+        "stage_id": stage_id,
+        "is_first_clear": is_first_clear,
+        "stars": stars,
+        "rewards": rewards,
+        "is_chapter_complete": is_chapter_complete,
+        "chapter_unlock": chapter_unlock,
+        "star_diff": star_diff,
+    }
+
+@api_router.post("/campaign/stage/{chapter_id}/{stage_num}/sweep")
+async def sweep_campaign_stage(chapter_id: int, stage_num: int, username: str, count: int = 1):
+    """Sweep (auto-complete) a previously 3-starred stage"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    progress = await db.campaign_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        raise HTTPException(status_code=400, detail="No campaign progress")
+    
+    stage_id = f"{chapter_id}-{stage_num}"
+    stage_progress = progress.get("stage_progress", {}).get(stage_id, {})
+    
+    if stage_progress.get("stars", 0) < 3:
+        raise HTTPException(status_code=400, detail="Stage must be 3-starred to sweep")
+    
+    stage_data = generate_stage_data(chapter_id, stage_num)
+    stamina_cost = stage_data["stamina_cost"] * count
+    
+    if user.get("stamina", 0) < stamina_cost:
+        raise HTTPException(status_code=400, detail=f"Need {stamina_cost} stamina")
+    
+    # Deduct stamina and grant sweep rewards
+    sweep_rewards = stage_data["sweep_rewards"]
+    rewards = {
+        "gold": int(sweep_rewards["gold"] * count),
+        "hero_exp": int(sweep_rewards["hero_exp"] * count),
+    }
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"stamina": -stamina_cost, **rewards}}
+    )
+    
+    # Update clear count
+    await db.campaign_progress.update_one(
+        {"user_id": user["id"]},
+        {"$inc": {f"stage_progress.{stage_id}.clear_count": count}}
+    )
+    
+    return {
+        "success": True,
+        "sweep_count": count,
+        "stamina_spent": stamina_cost,
+        "rewards": rewards,
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

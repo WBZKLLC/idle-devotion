@@ -415,10 +415,10 @@ export default function HomeScreen() {
                 <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>War</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/leaderboard')}>
-              <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.quickLinkGradient}>
-                <Ionicons name="podium" size={22} color={COLORS.navy.darkest} />
-                <Text style={[styles.quickLinkText, { color: COLORS.navy.darkest }]}>Ranks</Text>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/events')}>
+              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
+                <Ionicons name="sparkles" size={22} color={COLORS.gold.light} />
+                <Text style={styles.quickLinkText}>Events</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => setSidebarVisible(true)}>

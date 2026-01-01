@@ -407,17 +407,20 @@ export default function ChatScreen() {
             )}
           </ScrollView>
 
-          {/* Input Area */}
+          {/* Input Area - Fixed at bottom */}
           <View style={styles.inputArea}>
-            <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
                 value={newMessage}
                 onChangeText={setNewMessage}
-                placeholder="Type a message..."
-                placeholderTextColor={COLORS.cream.dark}
+                placeholder="Type your message here..."
+                placeholderTextColor="#888888"
                 maxLength={500}
                 multiline
+                returnKeyType="send"
+                onSubmitEditing={sendMessage}
+                blurOnSubmit={false}
               />
               <TouchableOpacity 
                 style={[styles.sendButton, !newMessage.trim() && styles.sendButtonDisabled]}

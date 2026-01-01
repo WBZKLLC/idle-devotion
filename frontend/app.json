@@ -37,7 +37,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#0a1628"
         }
-      ]
+      ],
+      "react-native-reanimated/plugin"
     ],
     "experiments": {
       "typedRoutes": true

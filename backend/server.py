@@ -5964,6 +5964,7 @@ async def pull_event_banner(banner_id: str, username: str, multi: bool = False):
         # Check if guaranteed featured
         if pity_count >= banner["guaranteed_featured_pity"] and featured_heroes:
             pulled_hero = random.choice(featured_heroes)
+            pulled_hero_name = pulled_hero.get("name") if isinstance(pulled_hero, dict) else pulled_hero.name
             pity_count = 0  # Reset pity
         else:
             # Normal pull with boosted rates for featured element
@@ -5982,9 +5983,10 @@ async def pull_event_banner(banner_id: str, username: str, multi: bool = False):
                 pulled_hero = random.choice(weighted_pool)
             else:
                 pulled_hero = random.choice(pool) if pool else HERO_POOL[0]
+            pulled_hero_name = pulled_hero.name if hasattr(pulled_hero, 'name') else pulled_hero.get("name", "Unknown")
         
         # Find in database
-        hero_doc = await db.heroes.find_one({"name": pulled_hero.name})
+        hero_doc = await db.heroes.find_one({"name": pulled_hero_name})
         if hero_doc:
             # Add to user's collection
             existing = await db.user_heroes.find_one({
@@ -6001,7 +6003,7 @@ async def pull_event_banner(banner_id: str, username: str, multi: bool = False):
                     "hero": convert_objectid(hero_doc),
                     "is_new": False,
                     "duplicates": existing.get("duplicates", 0) + 1,
-                    "is_featured": pulled_hero.name in banner["featured_heroes"]
+                    "is_featured": pulled_hero_name in banner["featured_heroes"]
                 })
             else:
                 new_hero = UserHero(
@@ -6016,7 +6018,7 @@ async def pull_event_banner(banner_id: str, username: str, multi: bool = False):
                     "hero": convert_objectid(hero_doc),
                     "is_new": True,
                     "duplicates": 0,
-                    "is_featured": pulled_hero.name in banner["featured_heroes"]
+                    "is_featured": pulled_hero_name in banner["featured_heroes"]
                 })
     
     # Deduct currency and update pity

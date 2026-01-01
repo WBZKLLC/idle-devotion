@@ -1,0 +1,131 @@
+# Divine Heroes - Docker Compose for local development
+# Production should use Kubernetes
+
+version: '3.8'
+
+services:
+  # Main API Service
+  api:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile.api
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/divine_heroes
+      - REDIS_URL=redis://redis:6379
+      - REDIS_ENABLED=true
+      - MQ_BACKEND=redis
+      - SERVICE_NAME=divine-heroes-api
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - divine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Battle Service (optional microservice mode)
+  battle-service:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile.battle
+    ports:
+      - "8002:8002"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/divine_heroes
+      - REDIS_URL=redis://redis:6379
+      - REDIS_ENABLED=true
+      - SERVICE_NAME=battle-service
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - divine-network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # Gacha Service (optional microservice mode)
+  gacha-service:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile.gacha
+    ports:
+      - "8003:8003"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/divine_heroes
+      - REDIS_URL=redis://redis:6379
+      - REDIS_ENABLED=true
+      - SERVICE_NAME=gacha-service
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - divine-network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - divine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  # Redis Cache & Message Queue
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - divine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # Nginx Load Balancer (optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - divine-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  divine-network:
+    driver: bridge

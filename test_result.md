@@ -501,6 +501,8 @@ agent_communication:
   - agent: "main"
     message: "NEW: Implemented Launch Exclusive Banner System and 7-Day Journey System. Backend APIs: /api/launch-banner/status, /api/launch-banner/pull, /api/launch-banner/bundles, /api/launch-banner/hero, /api/journey. Frontend screens: launch-banner.tsx (exclusive 72hr banner with Aethon hero, pity system, bundles), journey.tsx (7-day player journey with daily rewards). Updated index.tsx with navigation to both. Ready for testing."
   - agent: "main"
+    message: "FIXES APPLIED: 1) Removed expo-dev-client to enable Expo Go compatibility. 2) Fixed event banner pull API (AttributeError on pulled_hero.name). 3) Fixed tab navigation to show 6 tabs max. 4) Updated currency bar to show gems/gold/coins/divine_essence with live updates. 5) Fixed handleClaimIdle to properly refresh data."
+  - agent: "main"
     message: "Stability check performed: Backend is running and serving requests (200 OK responses observed). Frontend is running and viewable - confirmed via screenshot showing login screen and post-login dashboard. Ready for comprehensive backend testing before adding Store/VIP/Chat/Leaderboard UI features."
   - agent: "main"
     message: "Backend testing completed. Fixed Arena/Abyss battle endpoints parameter handling (changed from direct parameters to Pydantic request models). Added fallback logic to use all user heroes when no specific team is provided. All APIs now working correctly (100% success rate)."

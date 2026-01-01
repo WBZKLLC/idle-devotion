@@ -31,12 +31,62 @@ export default function ProfileScreen() {
   const [codeInput, setCodeInput] = useState('');
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [redeemResult, setRedeemResult] = useState<{success: boolean; message: string; rewards?: any} | null>(null);
+  
+  // Frame state
+  const [showFrameModal, setShowFrameModal] = useState(false);
+  const [availableFrames, setAvailableFrames] = useState<any[]>([]);
+  const [lockedFrames, setLockedFrames] = useState<any[]>([]);
+  const [equippedFrame, setEquippedFrame] = useState('default');
+  const [loadingFrames, setLoadingFrames] = useState(false);
 
   useEffect(() => {
     if (hydrated && user) {
       fetchUserHeroes();
+      loadUserFrames();
     }
   }, [hydrated, user?.username]);
+
+  const loadUserFrames = async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get(`${API_BASE}/user/${user.username}/frames`);
+      setAvailableFrames(response.data.available_frames || []);
+      setLockedFrames(response.data.locked_frames || []);
+      setEquippedFrame(response.data.equipped_frame || 'default');
+    } catch (error) {
+      console.error('Error loading frames:', error);
+    }
+  };
+
+  const equipFrame = async (frameId: string) => {
+    if (!user) return;
+    try {
+      setLoadingFrames(true);
+      await axios.post(`${API_BASE}/user/${user.username}/equip-frame?frame_id=${frameId}`);
+      setEquippedFrame(frameId);
+      await loadUserFrames();
+      Alert.alert('Success', 'Frame equipped successfully!');
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to equip frame');
+    } finally {
+      setLoadingFrames(false);
+    }
+  };
+
+  const unequipFrame = async () => {
+    if (!user) return;
+    try {
+      setLoadingFrames(true);
+      await axios.post(`${API_BASE}/user/${user.username}/unequip-frame`);
+      setEquippedFrame('default');
+      await loadUserFrames();
+      Alert.alert('Success', 'Frame unequipped');
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to unequip frame');
+    } finally {
+      setLoadingFrames(false);
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert(

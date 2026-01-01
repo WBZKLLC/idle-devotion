@@ -679,10 +679,26 @@ def get_idle_cap_hours(vip_level: int) -> int:
     """Get idle collection cap hours for VIP level"""
     return VIP_TIERS.get(vip_level, VIP_TIERS[0])["idle_hours"]
 
+# Import the new idle resource system
+from core.idle_resources import (
+    get_vip_idle_rate_multiplier,
+    get_vip_idle_rate_display,
+    calculate_resource_caps,
+    calculate_resource_caps_with_breakdown,
+    calculate_idle_resources,
+    calculate_idle_preview,
+    get_vip_idle_hours,
+    get_next_milestone_info,
+    get_vip_upgrade_info,
+    BASE_RATES_PER_HOUR,
+    RESOURCE_DISPLAY_INFO,
+)
+
 def get_idle_gold_rate(vip_level: int) -> float:
-    """Get idle gold generation rate per minute based on VIP level"""
-    base_rate = 100.0  # 100 gold per minute at VIP 0
-    bonus_multiplier = 1.0 + (vip_level * 0.10)  # +10% per VIP level
+    """Get idle gold generation rate per minute based on VIP level - LEGACY"""
+    # This is now handled by the new idle_resources system
+    base_rate = 100.0
+    bonus_multiplier = 1.0 + (vip_level * 0.10)
     return base_rate * bonus_multiplier
 
 def get_avatar_frame(vip_level: int) -> str:

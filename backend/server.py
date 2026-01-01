@@ -6914,6 +6914,330 @@ async def get_featured_hero():
         }
     }
 
+# ============================================================================
+# CHRONO-ARCHANGEL SELENE MONETIZATION SYSTEM
+# ============================================================================
+
+from core.selene_monetization import (
+    CHAR_SELENE_SSR, BANNER_LIMITED_SELENE, INITIAL_PLAYER_RESOURCES,
+    DYNAMIC_BUNDLES, PLAYER_JOURNEY_EVENT,
+    calculate_selene_banner_rate, perform_selene_banner_pull,
+    get_triggered_bundles as get_selene_bundles,
+    get_selene_banner_time_remaining, calculate_monetization_metrics,
+    calculate_gap_to_guarantee, simulate_player_journey
+)
+
+@api_router.get("/selene-banner/status/{username}")
+async def get_selene_banner_status(username: str):
+    """Get Selene banner status - triggers after Stage 2-10"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get or create banner progress
+    progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
+    
+    if not progress:
+        progress = {
+            "user_id": user["id"],
+            "username": username,
+            "pity_counter": 0,
+            "total_pulls": 0,
+            "has_selene": False,
+            "unlock_timestamp": None,
+            "purchased_bundles": [],
+            "total_spent_usd": 0,
+            "created_at": datetime.utcnow().isoformat(),
+        }
+        await db.selene_banner_progress.insert_one(progress)
+    
+    # Check if unlocked (Stage 2-10 cleared or auto-unlock for testing)
+    stage_progress = await db.stage_progress.find_one({"user_id": user["id"]})
+    is_unlocked = True  # For testing - in production: check stage_progress for "2-10"
+    
+    # Set unlock time if first unlock
+    if is_unlocked and not progress.get("unlock_timestamp"):
+        unlock_time = datetime.utcnow()
+        await db.selene_banner_progress.update_one(
+            {"user_id": user["id"]},
+            {"$set": {"unlock_timestamp": unlock_time.isoformat()}}
+        )
+        progress["unlock_timestamp"] = unlock_time.isoformat()
+    
+    # Calculate time remaining
+    time_info = {"is_active": False, "expired": True, "urgency_level": "EXPIRED"}
+    if progress.get("unlock_timestamp"):
+        unlock_time = progress["unlock_timestamp"]
+        if isinstance(unlock_time, str):
+            unlock_time = datetime.fromisoformat(unlock_time.replace("Z", "+00:00")).replace(tzinfo=None)
+        time_info = get_selene_banner_time_remaining(unlock_time)
+    
+    # Calculate current rate
+    pity_counter = progress.get("pity_counter", 0)
+    current_rate, rate_type = calculate_selene_banner_rate(pity_counter)
+    
+    # Get monetization metrics
+    metrics = calculate_monetization_metrics(
+        pity_counter,
+        progress.get("total_pulls", 0),
+        progress.get("has_selene", False),
+        progress.get("total_spent_usd", 0)
+    )
+    
+    # Get triggered bundles
+    bundles = get_selene_bundles(
+        pity_counter,
+        progress.get("total_pulls", 0),
+        progress.get("has_selene", False),
+        progress.get("purchased_bundles", [])
+    )
+    
+    return {
+        "banner": {
+            "id": BANNER_LIMITED_SELENE["banner_id"],
+            "name": BANNER_LIMITED_SELENE["name"],
+            "subtitle": BANNER_LIMITED_SELENE["subtitle"],
+            "duration_hours": BANNER_LIMITED_SELENE["duration_hours"],
+            "featured_character": CHAR_SELENE_SSR,
+            "rates": {
+                "base_ssr": BANNER_LIMITED_SELENE["base_SSR_rate"] * 100,
+                "featured": BANNER_LIMITED_SELENE["base_SSR_rate"] * BANNER_LIMITED_SELENE["featured_rate_share"] * 100,
+            },
+            "pity": {
+                "soft_start": BANNER_LIMITED_SELENE["soft_pity_start"],
+                "hard_max": BANNER_LIMITED_SELENE["pity_counter_max"],
+            },
+        },
+        "user_progress": {
+            "pity_counter": pity_counter,
+            "total_pulls": progress.get("total_pulls", 0),
+            "has_selene": progress.get("has_selene", False),
+            "purchased_bundles": progress.get("purchased_bundles", []),
+        },
+        "time_remaining": time_info,
+        "is_unlocked": is_unlocked,
+        "current_rate": {
+            "featured_rate": round(current_rate * 100, 2),
+            "rate_type": rate_type,
+        },
+        "monetization": metrics,
+        "triggered_bundles": bundles[:2],
+        "journey_event": PLAYER_JOURNEY_EVENT,
+    }
+
+@api_router.post("/selene-banner/pull/{username}")
+async def pull_selene_banner(username: str, multi: bool = False):
+    """Pull on the Selene banner with soft/hard pity"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get progress
+    progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        progress = {
+            "user_id": user["id"],
+            "pity_counter": 0,
+            "total_pulls": 0,
+            "has_selene": False,
+            "unlock_timestamp": datetime.utcnow().isoformat(),
+            "purchased_bundles": [],
+        }
+        await db.selene_banner_progress.insert_one(progress)
+    
+    # Check time
+    if progress.get("unlock_timestamp"):
+        unlock_time = progress["unlock_timestamp"]
+        if isinstance(unlock_time, str):
+            unlock_time = datetime.fromisoformat(unlock_time.replace("Z", "+00:00")).replace(tzinfo=None)
+        time_info = get_selene_banner_time_remaining(unlock_time)
+        if time_info.get("expired"):
+            raise HTTPException(status_code=400, detail="Banner has expired!")
+    
+    # Calculate cost
+    num_pulls = 10 if multi else 1
+    cost = BANNER_LIMITED_SELENE["multi_pull_cost" if multi else "single_pull_cost"]
+    
+    # Check currency (gems = premium_currency)
+    if user.get("gems", 0) < cost:
+        raise HTTPException(status_code=400, detail=f"Need {cost} crystals, have {user.get('gems', 0)}")
+    
+    # Deduct currency
+    await db.users.update_one({"username": username}, {"$inc": {"gems": -cost}})
+    
+    # Perform pulls
+    results = []
+    pity = progress.get("pity_counter", 0)
+    got_selene = progress.get("has_selene", False)
+    
+    for _ in range(num_pulls):
+        result = perform_selene_banner_pull(pity, got_selene)
+        results.append(result)
+        pity = result["new_pity"]
+        
+        if result["is_featured"]:
+            got_selene = True
+            # Add Selene to user's heroes
+            selene_hero = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "hero_id": CHAR_SELENE_SSR["id"],
+                "name": CHAR_SELENE_SSR["name"],
+                "rarity": CHAR_SELENE_SSR["rarity"],
+                "element": CHAR_SELENE_SSR["element"],
+                "hero_class": CHAR_SELENE_SSR["hero_class"],
+                "level": 1,
+                "rank": 1,
+                "duplicates": 0,
+                "current_hp": CHAR_SELENE_SSR["base_hp"],
+                "current_atk": CHAR_SELENE_SSR["base_atk"],
+                "current_def": CHAR_SELENE_SSR["base_def"],
+                "hero_data": CHAR_SELENE_SSR,
+                "obtained_at": datetime.utcnow().isoformat(),
+                "obtained_from": "banner_limited_selene",
+            }
+            await db.user_heroes.insert_one(selene_hero)
+        
+        # Log pull for analytics
+        await db.player_gacha_log.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "banner_id": BANNER_LIMITED_SELENE["banner_id"],
+            "pity_counter": pity,
+            "pull_result": result["rarity"],
+            "is_featured": result["is_featured"],
+            "character_id": CHAR_SELENE_SSR["id"] if result["is_featured"] else None,
+            "timestamp": datetime.utcnow().isoformat(),
+        })
+    
+    # Update progress
+    total_pulls = progress.get("total_pulls", 0) + num_pulls
+    await db.selene_banner_progress.update_one(
+        {"user_id": user["id"]},
+        {"$set": {
+            "pity_counter": pity,
+            "total_pulls": total_pulls,
+            "has_selene": got_selene,
+            "last_pull_at": datetime.utcnow().isoformat(),
+        }}
+    )
+    
+    # Get triggered bundles
+    bundles = get_selene_bundles(pity, total_pulls, got_selene, progress.get("purchased_bundles", []))
+    
+    return {
+        "results": results,
+        "cost": cost,
+        "new_pity": pity,
+        "total_pulls": total_pulls,
+        "has_selene": got_selene,
+        "triggered_bundles": bundles[:2],
+        "gap_to_guarantee": calculate_gap_to_guarantee(total_pulls, pity),
+    }
+
+@api_router.get("/selene-banner/bundles/{username}")
+async def get_selene_bundles_endpoint(username: str):
+    """Get available bundles based on player state"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        return {"bundles": list(DYNAMIC_BUNDLES.values())}
+    
+    bundles = get_selene_bundles(
+        progress.get("pity_counter", 0),
+        progress.get("total_pulls", 0),
+        progress.get("has_selene", False),
+        progress.get("purchased_bundles", [])
+    )
+    
+    return {
+        "triggered_bundles": bundles,
+        "all_bundles": list(DYNAMIC_BUNDLES.values()),
+        "monetization": calculate_monetization_metrics(
+            progress.get("pity_counter", 0),
+            progress.get("total_pulls", 0),
+            progress.get("has_selene", False),
+        ),
+    }
+
+@api_router.post("/selene-banner/purchase-bundle/{username}")
+async def purchase_selene_bundle(username: str, bundle_id: str):
+    """Purchase a bundle (simulated - integrates with RevenueCat in production)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    bundle = DYNAMIC_BUNDLES.get(bundle_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Bundle not found")
+    
+    progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
+    purchased = progress.get("purchased_bundles", []) if progress else []
+    
+    if purchased.count(bundle_id) >= bundle["limit_per_user"]:
+        raise HTTPException(status_code=400, detail="Bundle purchase limit reached")
+    
+    # Grant rewards (SIMULATED - verify payment in production)
+    contents = bundle["contents"]
+    update_ops = {}
+    if contents.get("summon_scrolls"):
+        update_ops["summon_scrolls"] = contents["summon_scrolls"]
+    if contents.get("premium_currency"):
+        update_ops["gems"] = contents["premium_currency"]
+    if contents.get("gold"):
+        update_ops["gold"] = contents["gold"]
+    if contents.get("enhancement_stones"):
+        update_ops["enhancement_stones"] = contents["enhancement_stones"]
+    
+    if update_ops:
+        await db.users.update_one({"username": username}, {"$inc": update_ops})
+    
+    # Track purchase
+    await db.selene_banner_progress.update_one(
+        {"user_id": user["id"]},
+        {
+            "$push": {"purchased_bundles": bundle_id},
+            "$inc": {"total_spent_usd": bundle["price_usd"]}
+        }
+    )
+    
+    return {
+        "success": True,
+        "bundle": bundle,
+        "rewards_granted": contents,
+        "message": f"Purchased {bundle['name']}!",
+    }
+
+@api_router.get("/selene-banner/character")
+async def get_selene_character():
+    """Get Selene character details"""
+    return {
+        "character": CHAR_SELENE_SSR,
+        "banner": {
+            "name": BANNER_LIMITED_SELENE["name"],
+            "duration_hours": BANNER_LIMITED_SELENE["duration_hours"],
+        },
+        "journey_event": PLAYER_JOURNEY_EVENT,
+    }
+
+@api_router.get("/selene-banner/simulate")
+async def simulate_monetization():
+    """Run monetization simulation (10,000 players)"""
+    results = simulate_player_journey(10000)
+    return {
+        "simulation_results": results,
+        "target_validation": {
+            "conversion_target": "≥15%",
+            "arppu_target": "≥$35",
+            "conversion_achieved": results["conversion_rate_percent"],
+            "arppu_achieved": results["arppu"],
+            "targets_met": results["targets_met"],
+        }
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

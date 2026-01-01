@@ -47,7 +47,9 @@ module.exports = ({ config }) => {
       typedRoutes: true,
     },
     extra: {
-      eas: {},
+      eas: {
+        projectId: '59fe8d53-8818-4d41-a206-556a8f621bbd',
+      },
       BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://mobile-rpg-4.preview.emergentagent.com',
       REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',
     },

@@ -318,6 +318,30 @@ backend:
         agent: "testing"
         comment: "✅ TESTED: Dungeon/Stage System APIs fully functional with server-authoritative architecture. All 7 test suites passed (100% success rate). Stage Information: GET /api/stages/info returns all stage definitions (10 exp, 10 gold, 10 equipment dungeons) with stamina costs. User Progress: GET /api/stages/{username}/progress tracks cleared stages. EXP Stages: POST /api/stages/{username}/exp/{stage_id} awards soul_dust and gold with server-side RNG variance (188-227 soul dust, 471-568 gold). Gold Stages: POST /api/stages/{username}/gold/{stage_id} awards gold and coins (1881 gold, 470 coins). Equipment Dungeons: POST /api/stages/{username}/equipment/{stage_id} generates server-side equipment drops with proper rarity, stats, and IDs. Sweep Feature: POST /api/stages/{username}/sweep/{stage_type}/{stage_id} correctly calculates total rewards for multiple runs (3x sweeps = 588 soul dust, 1473 gold). Server-side RNG confirmed through variance testing. Stamina validation working (deducts 10/10/15 stamina per stage type). Authentication with Adam/Adam123! successful. All rewards calculated server-side, no client-side values accepted."
 
+  - task: "Launch Banner System APIs"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Launch Banner System APIs fully functional. All 5 endpoints tested successfully (100% success rate). GET /api/launch-banner/hero returns correct featured hero 'Aethon, The Celestial Blade' (UR Light Warrior). GET /api/launch-banner/status/Adam returns banner status with pity counter (0), total pulls (0), time remaining, and banner active status. GET /api/launch-banner/bundles/Adam returns available bundles (1 available, 4 total). POST /api/launch-banner/pull/Adam single pull successful (cost: 300 crystals, pity counter incremented to 1). POST /api/launch-banner/pull/Adam?multi=true multi pull (10x) successful (cost: 2700 crystals, pity counter incremented to 11). Authentication with Adam/Adam123! working. User has sufficient crystals (2M+) for testing. Pity system tracking correctly. All requirements from review request met."
+
+  - task: "Journey System APIs"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Journey System APIs fully functional. All 2 endpoints tested successfully (100% success rate). GET /api/journey/Adam returns complete 7-day journey data with account age (4 days), current day (4), and all 7 days configured with proper structure (unlocked status, current status, login claimed status). Days 1-4 unlocked, Day 4 is current, Days 5-7 locked as expected. POST /api/journey/Adam/claim-login?day=1 successfully claims Day 1 login reward with rewards: 100 crystals, 50,000 gold, 100 stamina. Authentication with Adam/Adam123! working. Journey progression tracking correctly. All requirements from review request met."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

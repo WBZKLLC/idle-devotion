@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,150 +11,193 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Modal,
+  Animated,
+  FlatList,
 } from 'react-native';
-import { useGameStore } from '../stores/gameStore';
+import { useRouter } from 'expo-router';
+import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
 import COLORS from '../theme/colors';
+
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
+  : '/api';
 
 interface ChatMessage {
   id: string;
+  sender_id: string;
   sender_username: string;
   message: string;
   timestamp: string;
   language: string;
+  bubble?: ChatBubble;
+}
+
+interface ChatBubble {
+  bubble_id: string;
+  name: string;
+  colors: string[];
+  text_color: string;
+  border_color: string;
+  icon?: string;
+  glow_effect?: boolean;
+  animated?: boolean;
 }
 
 const CHANNELS = [
   { id: 'world', name: 'World', icon: 'globe', color: COLORS.gold.primary },
-  { id: 'local', name: 'Local', icon: 'location', color: COLORS.success },
-  { id: 'guild', name: 'Guild', icon: 'shield', color: COLORS.rarity.UR },
-  { id: 'private', name: 'Friends', icon: 'people', color: COLORS.rarity['UR+'] },
+  { id: 'local', name: 'Local', icon: 'location', color: '#22c55e' },
+  { id: 'guild', name: 'Guild', icon: 'shield', color: '#8b5cf6' },
 ];
 
 const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'fr', name: 'Français' },
-  { code: 'es', name: 'Español' },
-  { code: 'zh-CN', name: '简体中文' },
-  { code: 'zh-TW', name: '繁體中文' },
-  { code: 'ms', name: 'Malay' },
-  { code: 'fil', name: 'Filipino' },
-  { code: 'ru', name: 'Русский' },
-  { code: 'id', name: 'Indonesia' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'zh-CN', name: '简体中文', flag: '🇨🇳' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
 ];
 
+// Default bubble for users without a custom one
+const DEFAULT_BUBBLE: ChatBubble = {
+  bubble_id: 'default',
+  name: 'Basic Bubble',
+  colors: ['#FAF9F6', '#F5F5DC'],
+  text_color: '#1a1a1a',
+  border_color: '#d4d4d4',
+};
+
+// Cache for user bubbles
+const bubbleCache: { [username: string]: ChatBubble } = {};
+
 export default function ChatScreen() {
+  const router = useRouter();
   const { user } = useGameStore();
+  const hydrated = useHydration();
+  
   const [selectedChannel, setSelectedChannel] = useState('world');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
-  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-  const [chatUnlocked, setChatUnlocked] = useState(false);
-  const [unlockInfo, setUnlockInfo] = useState<any>(null);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showBubbleModal, setShowBubbleModal] = useState(false);
+  const [userBubbles, setUserBubbles] = useState<{ available: any[], locked: any[] }>({ available: [], locked: [] });
+  const [equippedBubble, setEquippedBubble] = useState<ChatBubble>(DEFAULT_BUBBLE);
+  
   const scrollViewRef = useRef<ScrollView>(null);
+  const rainbowAnim = useRef(new Animated.Value(0)).current;
+
+  // Rainbow animation for special bubbles
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rainbowAnim, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: false,
+      })
+    ).start();
+  }, []);
 
   useEffect(() => {
-    if (user) {
-      checkChatUnlock();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (chatUnlocked) {
+    if (hydrated && user) {
       loadMessages();
+      loadUserBubble();
       const interval = setInterval(loadMessages, 5000);
       return () => clearInterval(interval);
     }
-  }, [selectedChannel, chatUnlocked]);
+  }, [hydrated, user?.username, selectedChannel]);
 
-  const checkChatUnlock = async () => {
+  const loadUserBubble = async () => {
+    if (!user) return;
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user?.username}`
-      );
-      const userData = await response.json();
+      const response = await axios.get(`${API_BASE}/user/${user.username}/chat-bubbles`);
+      setUserBubbles({
+        available: response.data.available_bubbles || [],
+        locked: response.data.locked_bubbles || [],
+      });
       
-      const hasCompletedTutorial = userData.tutorial_completed || false;
-      const chatUnlockTime = userData.chat_unlock_time;
-      
-      if (hasCompletedTutorial && chatUnlockTime) {
-        const unlockDate = new Date(chatUnlockTime);
-        const now = new Date();
-        if (now >= unlockDate) {
-          setChatUnlocked(true);
-        } else {
-          setChatUnlocked(false);
-          setUnlockInfo({
-            remaining: Math.ceil((unlockDate.getTime() - now.getTime()) / (1000 * 60 * 60)),
-            tutorialCompleted: true
-          });
-        }
-      } else {
-        setChatUnlocked(false);
-        setUnlockInfo({
-          tutorialCompleted: hasCompletedTutorial,
-          remaining: hasCompletedTutorial ? 32 : null
-        });
-      }
-      
-      if (userData.login_days > 0) {
-        setChatUnlocked(true);
+      const equipped = response.data.available_bubbles?.find((b: any) => b.is_equipped);
+      if (equipped) {
+        setEquippedBubble(equipped);
+        bubbleCache[user.username] = equipped;
       }
     } catch (error) {
-      console.error('Failed to check chat unlock:', error);
-      setChatUnlocked(true);
+      console.error('Error loading bubbles:', error);
     }
   };
 
   const loadMessages = async () => {
+    if (!user) return;
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/chat/messages?channel_type=${selectedChannel}&limit=50`
-      );
-      const data = await response.json();
-      setMessages(data.reverse());
+      setLoading(true);
+      const response = await axios.get(`${API_BASE}/chat/messages`, {
+        params: {
+          channel_type: selectedChannel,
+          limit: 50,
+        }
+      });
       
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      // Fetch bubble info for each unique sender
+      const messagesWithBubbles = await Promise.all(
+        (response.data || []).map(async (msg: ChatMessage) => {
+          if (!bubbleCache[msg.sender_username]) {
+            try {
+              const bubbleRes = await axios.get(`${API_BASE}/chat/user-bubble/${msg.sender_username}`);
+              bubbleCache[msg.sender_username] = bubbleRes.data;
+            } catch {
+              bubbleCache[msg.sender_username] = DEFAULT_BUBBLE;
+            }
+          }
+          return { ...msg, bubble: bubbleCache[msg.sender_username] };
+        })
+      );
+      
+      setMessages(messagesWithBubbles);
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      console.error('Error loading messages:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || isSending) return;
+    if (!user || !newMessage.trim()) return;
     
-    setIsSending(true);
+    setSending(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/chat/send?username=${user?.username}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            channel_type: selectedChannel,
-            message: newMessage.trim(),
-            language: selectedLanguage,
-          }),
+      await axios.post(`${API_BASE}/chat/send`, null, {
+        params: {
+          username: user.username,
+          channel_type: selectedChannel,
+          message: newMessage.trim(),
+          language: selectedLanguage,
         }
-      );
+      });
       
-      if (response.ok) {
-        setNewMessage('');
-        loadMessages();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to send message');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send message');
+      setNewMessage('');
+      await loadMessages();
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to send message');
     } finally {
-      setIsSending(false);
+      setSending(false);
+    }
+  };
+
+  const equipBubble = async (bubbleId: string) => {
+    if (!user) return;
+    try {
+      await axios.post(`${API_BASE}/user/${user.username}/equip-chat-bubble?bubble_id=${bubbleId}`);
+      await loadUserBubble();
+      setShowBubbleModal(false);
+      Alert.alert('Success', 'Chat bubble equipped!');
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to equip bubble');
     }
   };
 
@@ -163,44 +206,124 @@ export default function ChatScreen() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const renderLockedChat = () => (
-    <View style={styles.lockedContainer}>
-      <View style={styles.lockedOverlay}>
-        <Ionicons name="lock-closed" size={64} color={COLORS.gold.primary} />
-        <Text style={styles.lockedTitle}>Chat Locked</Text>
-        <Text style={styles.lockedText}>
-          {!unlockInfo?.tutorialCompleted 
-            ? 'Complete Chapters 1 & 2 to unlock chat'
-            : `Chat unlocks in ${unlockInfo?.remaining || 0} hours`
-          }
-        </Text>
-        <View style={styles.unlockRequirements}>
-          <View style={styles.requirementRow}>
-            <Ionicons 
-              name={unlockInfo?.tutorialCompleted ? 'checkmark-circle' : 'ellipse-outline'} 
-              size={20} 
-              color={unlockInfo?.tutorialCompleted ? COLORS.success : COLORS.navy.light} 
-            />
-            <Text style={styles.requirementText}>Complete Chapters 1 & 2</Text>
+  // Render chat bubble
+  const renderMessage = (msg: ChatMessage, index: number) => {
+    const isOwn = msg.sender_username === user?.username;
+    const bubble = msg.bubble || DEFAULT_BUBBLE;
+    const isRainbow = bubble.bubble_id === 'admin_rainbow';
+    const isAnimated = bubble.animated;
+    
+    // Rainbow gradient interpolation
+    const rainbowColors = isRainbow ? rainbowAnim.interpolate({
+      inputRange: [0, 0.16, 0.33, 0.5, 0.66, 0.83, 1],
+      outputRange: ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#9400D3', '#FF0000'],
+    }) : null;
+
+    return (
+      <View key={msg.id || index} style={[styles.messageRow, isOwn && styles.messageRowOwn]}>
+        {/* Avatar */}
+        {!isOwn && (
+          <View style={[styles.avatar, { borderColor: bubble.border_color }]}>
+            <Text style={styles.avatarText}>{msg.sender_username.charAt(0).toUpperCase()}</Text>
           </View>
-          <View style={styles.requirementRow}>
-            <Ionicons 
-              name={chatUnlocked ? 'checkmark-circle' : 'ellipse-outline'} 
-              size={20} 
-              color={chatUnlocked ? COLORS.success : COLORS.navy.light} 
-            />
-            <Text style={styles.requirementText}>Wait 32 hours after tutorial</Text>
+        )}
+        
+        <View style={[styles.messageContainer, isOwn && styles.messageContainerOwn]}>
+          {/* Username */}
+          {!isOwn && (
+            <View style={styles.usernameRow}>
+              <Text style={[styles.username, { color: bubble.colors[0] }]}>
+                {bubble.icon && `${bubble.icon} `}{msg.sender_username}
+              </Text>
+              {isRainbow && <Text style={styles.uniqueBadge}>✦ UNIQUE</Text>}
+            </View>
+          )}
+          
+          {/* Message Bubble */}
+          <View style={[
+            styles.bubbleWrapper,
+            bubble.glow_effect && { shadowColor: bubble.colors[0], shadowOpacity: 0.8, shadowRadius: 10, elevation: 10 }
+          ]}>
+            <LinearGradient
+              colors={bubble.colors.length >= 2 ? bubble.colors.slice(0, 2) : [...bubble.colors, bubble.colors[0]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.messageBubble,
+                { borderColor: bubble.border_color },
+                isOwn && styles.messageBubbleOwn,
+              ]}
+            >
+              <Text style={[styles.messageText, { color: bubble.text_color }]}>
+                {msg.message}
+              </Text>
+              <Text style={[styles.timestamp, { color: bubble.text_color + '80' }]}>
+                {formatTime(msg.timestamp)}
+              </Text>
+            </LinearGradient>
           </View>
         </View>
+        
+        {isOwn && (
+          <View style={[styles.avatar, styles.avatarOwn, { borderColor: bubble.border_color }]}>
+            <Text style={styles.avatarText}>{msg.sender_username.charAt(0).toUpperCase()}</Text>
+          </View>
+        )}
       </View>
-    </View>
+    );
+  };
+
+  // Render bubble option
+  const renderBubbleOption = (bubble: any, isLocked: boolean) => (
+    <TouchableOpacity
+      key={bubble.id}
+      style={[
+        styles.bubbleOption,
+        bubble.is_equipped && styles.bubbleOptionEquipped,
+        isLocked && styles.bubbleOptionLocked,
+      ]}
+      onPress={() => !isLocked && equipBubble(bubble.id)}
+      disabled={isLocked}
+    >
+      <LinearGradient
+        colors={bubble.colors.slice(0, 2)}
+        style={styles.bubblePreview}
+      >
+        {bubble.icon && <Text style={styles.bubbleIcon}>{bubble.icon}</Text>}
+        {isLocked && (
+          <View style={styles.lockOverlay}>
+            <Ionicons name="lock-closed" size={16} color="#fff" />
+          </View>
+        )}
+      </LinearGradient>
+      <Text style={styles.bubbleName} numberOfLines={1}>{bubble.name}</Text>
+      {bubble.is_equipped && <Text style={styles.equippedLabel}>EQUIPPED</Text>}
+      {isLocked && bubble.unlock_hint && (
+        <Text style={styles.unlockHint} numberOfLines={2}>{bubble.unlock_hint}</Text>
+      )}
+      {bubble.unique && <Text style={styles.uniqueLabel}>???</Text>}
+    </TouchableOpacity>
   );
+
+  if (!hydrated) {
+    return (
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={COLORS.gold.primary} />
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
-          <Text style={styles.errorText}>Please log in first</Text>
+          <Ionicons name="chatbubbles" size={64} color={COLORS.cream.dark} />
+          <Text style={styles.noUserText}>Please log in to chat</Text>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/')}>
+            <Text style={styles.loginBtnText}>Go to Login</Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -210,163 +333,181 @@ export default function ChatScreen() {
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView 
-          style={styles.container}
+          style={styles.container} 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Chat</Text>
-            
-            {/* Channel Tabs */}
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              style={styles.channelContainer}
-            >
-              {CHANNELS.map((channel) => (
-                <TouchableOpacity
-                  key={channel.id}
-                  style={[
-                    styles.channelTab,
-                    selectedChannel === channel.id && styles.channelTabActive,
-                  ]}
-                  onPress={() => setSelectedChannel(channel.id)}
-                >
-                  <Ionicons 
-                    name={channel.icon as any} 
-                    size={16} 
-                    color={selectedChannel === channel.id ? COLORS.navy.darkest : channel.color} 
-                  />
-                  <Text style={[
-                    styles.channelText,
-                    selectedChannel === channel.id && styles.channelTextActive
-                  ]}>
-                    {channel.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>💬 Chat</Text>
+            <TouchableOpacity onPress={() => setShowBubbleModal(true)} style={styles.bubbleButton}>
+              <LinearGradient
+                colors={equippedBubble.colors.slice(0, 2)}
+                style={styles.bubbleButtonGradient}
+              >
+                {equippedBubble.icon && <Text style={{ fontSize: 12 }}>{equippedBubble.icon}</Text>}
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
-          {!chatUnlocked ? (
-            renderLockedChat()
-          ) : (
-            <>
-              {/* Messages */}
-              <ScrollView 
-                ref={scrollViewRef}
-                style={styles.messagesContainer}
-                contentContainerStyle={styles.messagesContent}
+          {/* Channel Tabs */}
+          <View style={styles.channelTabs}>
+            {CHANNELS.map(channel => (
+              <TouchableOpacity
+                key={channel.id}
+                style={[
+                  styles.channelTab,
+                  selectedChannel === channel.id && { borderBottomColor: channel.color, borderBottomWidth: 2 }
+                ]}
+                onPress={() => setSelectedChannel(channel.id)}
               >
-                {messages.length === 0 ? (
-                  <View style={styles.emptyMessages}>
-                    <Ionicons name="chatbubbles-outline" size={48} color={COLORS.navy.light} />
-                    <Text style={styles.emptyText}>No messages yet</Text>
-                    <Text style={styles.emptySubtext}>Be the first to say hello!</Text>
-                  </View>
-                ) : (
-                  messages.map((msg) => (
-                    <View 
-                      key={msg.id} 
-                      style={[
-                        styles.messageRow,
-                        msg.sender_username === user.username && styles.messageRowOwn
-                      ]}
-                    >
-                      <View style={[
-                        styles.messageBubble,
-                        msg.sender_username === user.username && styles.messageBubbleOwn
-                      ]}>
-                        <View style={styles.messageHeader}>
-                          <Text style={[
-                            styles.messageSender,
-                            msg.sender_username === user.username && styles.messageSenderOwn
-                          ]}>
-                            {msg.sender_username}
-                          </Text>
-                          <Text style={styles.messageTime}>{formatTime(msg.timestamp)}</Text>
-                        </View>
-                        <Text style={[
-                          styles.messageText,
-                          msg.sender_username === user.username && styles.messageTextOwn
-                        ]}>
-                          {msg.message}
-                        </Text>
-                      </View>
-                    </View>
-                  ))
-                )}
-              </ScrollView>
-
-              {/* Language Selector */}
-              {showLanguageSelector && (
-                <View style={styles.languageSelector}>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {LANGUAGES.map((lang) => (
-                      <TouchableOpacity
-                        key={lang.code}
-                        style={[
-                          styles.languageOption,
-                          selectedLanguage === lang.code && styles.languageOptionActive
-                        ]}
-                        onPress={() => {
-                          setSelectedLanguage(lang.code);
-                          setShowLanguageSelector(false);
-                        }}
-                      >
-                        <Text style={[
-                          styles.languageText,
-                          selectedLanguage === lang.code && styles.languageTextActive
-                        ]}>
-                          {lang.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-
-              {/* Input Area */}
-              <View style={styles.inputContainer}>
-                <TouchableOpacity
-                  style={styles.languageButton}
-                  onPress={() => setShowLanguageSelector(!showLanguageSelector)}
-                >
-                  <Ionicons name="language" size={20} color={COLORS.gold.light} />
-                  <Text style={styles.languageButtonText}>
-                    {LANGUAGES.find(l => l.code === selectedLanguage)?.name.slice(0, 2).toUpperCase()}
-                  </Text>
-                </TouchableOpacity>
-                
-                <TextInput
-                  style={styles.input}
-                  value={newMessage}
-                  onChangeText={setNewMessage}
-                  placeholder="Type a message..."
-                  placeholderTextColor={COLORS.navy.light}
-                  multiline
-                  maxLength={500}
+                <Ionicons 
+                  name={channel.icon as any} 
+                  size={16} 
+                  color={selectedChannel === channel.id ? channel.color : COLORS.cream.dark} 
                 />
-                
-                <TouchableOpacity
-                  style={[styles.sendButton, (!newMessage.trim() || isSending) && styles.sendButtonDisabled]}
-                  onPress={sendMessage}
-                  disabled={!newMessage.trim() || isSending}
-                >
-                  <LinearGradient
-                    colors={[COLORS.gold.primary, COLORS.gold.dark]}
-                    style={styles.sendButtonGradient}
+                <Text style={[
+                  styles.channelTabText,
+                  selectedChannel === channel.id && { color: channel.color }
+                ]}>
+                  {channel.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.languageButton} onPress={() => setShowLanguageModal(true)}>
+              <Text style={styles.languageFlag}>
+                {LANGUAGES.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Messages */}
+          <ScrollView 
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
+          >
+            {loading && messages.length === 0 ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={COLORS.gold.primary} />
+                <Text style={styles.loadingText}>Loading messages...</Text>
+              </View>
+            ) : messages.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="chatbubble-ellipses-outline" size={48} color={COLORS.cream.dark} />
+                <Text style={styles.emptyText}>No messages yet</Text>
+                <Text style={styles.emptySubtext}>Be the first to say something!</Text>
+              </View>
+            ) : (
+              messages.map((msg, idx) => renderMessage(msg, idx))
+            )}
+          </ScrollView>
+
+          {/* Input Area */}
+          <View style={styles.inputArea}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={newMessage}
+                onChangeText={setNewMessage}
+                placeholder="Type a message..."
+                placeholderTextColor={COLORS.cream.dark}
+                maxLength={500}
+                multiline
+              />
+              <TouchableOpacity 
+                style={[styles.sendButton, !newMessage.trim() && styles.sendButtonDisabled]}
+                onPress={sendMessage}
+                disabled={sending || !newMessage.trim()}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="send" size={20} color="#fff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Language Modal */}
+          <Modal
+            visible={showLanguageModal}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setShowLanguageModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.languageModal}>
+                <Text style={styles.modalTitle}>Select Language</Text>
+                {LANGUAGES.map(lang => (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                      styles.languageOption,
+                      selectedLanguage === lang.code && styles.languageOptionSelected
+                    ]}
+                    onPress={() => {
+                      setSelectedLanguage(lang.code);
+                      setShowLanguageModal(false);
+                    }}
                   >
-                    {isSending ? (
-                      <ActivityIndicator size="small" color={COLORS.navy.darkest} />
-                    ) : (
-                      <Ionicons name="send" size={20} color={COLORS.navy.darkest} />
+                    <Text style={styles.languageOptionFlag}>{lang.flag}</Text>
+                    <Text style={styles.languageOptionText}>{lang.name}</Text>
+                    {selectedLanguage === lang.code && (
+                      <Ionicons name="checkmark" size={20} color={COLORS.gold.primary} />
                     )}
-                  </LinearGradient>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity 
+                  style={styles.closeModalBtn}
+                  onPress={() => setShowLanguageModal(false)}
+                >
+                  <Text style={styles.closeModalText}>Close</Text>
                 </TouchableOpacity>
               </View>
-            </>
-          )}
+            </View>
+          </Modal>
+
+          {/* Bubble Selection Modal */}
+          <Modal
+            visible={showBubbleModal}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setShowBubbleModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.bubbleModal}>
+                <View style={styles.bubbleModalHeader}>
+                  <Text style={styles.modalTitle}>🎨 Chat Bubbles</Text>
+                  <TouchableOpacity onPress={() => setShowBubbleModal(false)}>
+                    <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                  </TouchableOpacity>
+                </View>
+                
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {/* Available Bubbles */}
+                  <Text style={styles.bubbleSectionTitle}>Available</Text>
+                  <View style={styles.bubblesGrid}>
+                    {userBubbles.available.map(bubble => renderBubbleOption(bubble, false))}
+                  </View>
+                  
+                  {/* Locked Bubbles */}
+                  {userBubbles.locked.length > 0 && (
+                    <>
+                      <Text style={styles.bubbleSectionTitle}>Locked</Text>
+                      <View style={styles.bubblesGrid}>
+                        {userBubbles.locked.map(bubble => renderBubbleOption(bubble, true))}
+                      </View>
+                    </>
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -375,47 +516,197 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12 },
-  title: { fontSize: 28, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center', marginBottom: 12, letterSpacing: 1 },
-  channelContainer: { flexDirection: 'row' },
-  channelTab: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: COLORS.gold.dark + '40', marginRight: 8, backgroundColor: COLORS.navy.medium, gap: 6 },
-  channelTabActive: { backgroundColor: COLORS.gold.primary, borderColor: COLORS.gold.primary },
-  channelText: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.soft },
-  channelTextActive: { color: COLORS.navy.darkest },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  noUserText: { color: COLORS.cream.dark, fontSize: 16, marginTop: 16 },
+  loginBtn: { marginTop: 16, backgroundColor: COLORS.gold.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  loginBtnText: { color: COLORS.navy.darkest, fontWeight: 'bold' },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gold.primary + '30',
+  },
+  backButton: { padding: 8 },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
+  bubbleButton: { padding: 4 },
+  bubbleButtonGradient: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.gold.primary,
+  },
+
+  // Channel Tabs
+  channelTabs: {
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+    backgroundColor: COLORS.navy.primary,
+  },
+  channelTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 4,
+  },
+  channelTabText: { fontSize: 12, color: COLORS.cream.dark, fontWeight: '600' },
+  languageButton: { paddingHorizontal: 12, justifyContent: 'center' },
+  languageFlag: { fontSize: 18 },
+
+  // Messages
   messagesContainer: { flex: 1 },
-  messagesContent: { padding: 16, paddingBottom: 20 },
-  emptyMessages: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 12 },
-  emptySubtext: { fontSize: 14, color: COLORS.cream.dark, marginTop: 4 },
-  messageRow: { marginBottom: 12, alignItems: 'flex-start' },
-  messageRowOwn: { alignItems: 'flex-end' },
-  messageBubble: { backgroundColor: COLORS.navy.medium, borderRadius: 16, borderTopLeftRadius: 4, padding: 12, maxWidth: '80%', borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
-  messageBubbleOwn: { backgroundColor: COLORS.gold.primary, borderTopLeftRadius: 16, borderTopRightRadius: 4, borderColor: COLORS.gold.dark },
-  messageHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4, gap: 12 },
-  messageSender: { fontSize: 12, fontWeight: 'bold', color: COLORS.gold.light },
-  messageSenderOwn: { color: COLORS.navy.darkest },
-  messageTime: { fontSize: 10, color: COLORS.cream.dark },
-  messageText: { fontSize: 14, color: COLORS.cream.pure, lineHeight: 20 },
-  messageTextOwn: { color: COLORS.navy.darkest },
-  languageSelector: { backgroundColor: COLORS.navy.medium, paddingVertical: 8, paddingHorizontal: 16 },
-  languageOption: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, marginRight: 8, backgroundColor: COLORS.navy.dark },
-  languageOptionActive: { backgroundColor: COLORS.gold.primary },
-  languageText: { fontSize: 12, color: COLORS.cream.soft },
-  languageTextActive: { fontWeight: 'bold', color: COLORS.navy.darkest },
-  inputContainer: { flexDirection: 'row', alignItems: 'flex-end', padding: 12, paddingBottom: 24, backgroundColor: COLORS.navy.medium, gap: 8, borderTopWidth: 1, borderTopColor: COLORS.gold.dark + '30' },
-  languageButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.dark, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 20, gap: 4, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
-  languageButtonText: { fontSize: 10, fontWeight: 'bold', color: COLORS.gold.light },
-  input: { flex: 1, backgroundColor: COLORS.navy.dark, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, maxHeight: 100, color: COLORS.cream.pure, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
-  sendButton: { borderRadius: 22, overflow: 'hidden' },
-  sendButtonGradient: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  sendButtonDisabled: { opacity: 0.5 },
-  lockedContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  lockedOverlay: { alignItems: 'center', padding: 40, borderRadius: 20, margin: 20, backgroundColor: COLORS.navy.medium, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
-  lockedTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary, marginTop: 16, marginBottom: 8 },
-  lockedText: { fontSize: 16, color: COLORS.cream.soft, textAlign: 'center', marginBottom: 20 },
-  unlockRequirements: { alignSelf: 'stretch' },
-  requirementRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-  requirementText: { fontSize: 14, color: COLORS.cream.soft },
-  errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
+  messagesContent: { padding: 12, paddingBottom: 20 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 40 },
+  loadingText: { color: COLORS.cream.dark, marginTop: 8 },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
+  emptyText: { color: COLORS.cream.pure, fontSize: 16, marginTop: 12 },
+  emptySubtext: { color: COLORS.cream.dark, fontSize: 13, marginTop: 4 },
+
+  // Message Row
+  messageRow: { flexDirection: 'row', marginBottom: 12, alignItems: 'flex-end' },
+  messageRowOwn: { flexDirection: 'row-reverse' },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.navy.medium,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    marginRight: 8,
+  },
+  avatarOwn: { marginRight: 0, marginLeft: 8 },
+  avatarText: { color: COLORS.cream.pure, fontWeight: 'bold', fontSize: 14 },
+  messageContainer: { flex: 1, maxWidth: '75%' },
+  messageContainerOwn: { alignItems: 'flex-end' },
+  usernameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 6 },
+  username: { fontSize: 12, fontWeight: 'bold' },
+  uniqueBadge: { fontSize: 8, color: COLORS.gold.primary, fontWeight: 'bold' },
+  bubbleWrapper: { borderRadius: 16 },
+  messageBubble: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderTopLeftRadius: 4,
+  },
+  messageBubbleOwn: { borderTopLeftRadius: 16, borderTopRightRadius: 4 },
+  messageText: { fontSize: 14, lineHeight: 20 },
+  timestamp: { fontSize: 10, marginTop: 4, textAlign: 'right' },
+
+  // Input
+  inputArea: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.navy.medium,
+    backgroundColor: COLORS.navy.primary,
+  },
+  inputContainer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  input: {
+    flex: 1,
+    backgroundColor: COLORS.navy.dark,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: COLORS.cream.pure,
+    fontSize: 14,
+    maxHeight: 100,
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.gold.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonDisabled: { backgroundColor: COLORS.navy.medium },
+
+  // Modals
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'flex-end',
+  },
+  languageModal: {
+    backgroundColor: COLORS.navy.primary,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 16, textAlign: 'center' },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: COLORS.navy.dark,
+  },
+  languageOptionSelected: { backgroundColor: COLORS.gold.primary + '30', borderWidth: 1, borderColor: COLORS.gold.primary },
+  languageOptionFlag: { fontSize: 24, marginRight: 12 },
+  languageOptionText: { flex: 1, fontSize: 16, color: COLORS.cream.pure },
+  closeModalBtn: { marginTop: 12, paddingVertical: 14, alignItems: 'center' },
+  closeModalText: { color: COLORS.cream.dark, fontSize: 16 },
+
+  // Bubble Modal
+  bubbleModal: {
+    backgroundColor: COLORS.navy.primary,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+    maxHeight: '80%',
+  },
+  bubbleModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  bubbleSectionTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.gold.primary, marginBottom: 12, marginTop: 8 },
+  bubblesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  bubbleOption: {
+    width: 90,
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: COLORS.navy.dark,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  bubbleOptionEquipped: { borderColor: COLORS.gold.primary, backgroundColor: COLORS.gold.dark + '20' },
+  bubbleOptionLocked: { opacity: 0.6 },
+  bubblePreview: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  bubbleIcon: { fontSize: 20 },
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bubbleName: { fontSize: 10, color: COLORS.cream.pure, textAlign: 'center' },
+  equippedLabel: { fontSize: 8, color: COLORS.gold.primary, fontWeight: 'bold', marginTop: 2 },
+  unlockHint: { fontSize: 8, color: COLORS.cream.dark, textAlign: 'center', marginTop: 2 },
+  uniqueLabel: { fontSize: 8, color: '#8b5cf6', fontWeight: 'bold', marginTop: 2 },
 });

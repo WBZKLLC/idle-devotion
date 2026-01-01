@@ -273,11 +273,35 @@ backend:
     file: "/app/frontend/app/guild-war.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "✅ IMPLEMENTED: Full Guild War UI with war status/registration, match display, attack interface, leaderboard rankings, and attack history. Red/flame themed design. Navigation link added to home screen."
+
+  - task: "Economy system APIs"
+    implemented: true
+    working: true
+    file: "/app/backend/routers/economy.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Economy system APIs fully functional. GET /api/economy/{username}/currencies returns all 13 currencies (gold, coins, crystals, divine_essence, soul_dust, skill_essence, star_crystals, divine_gems, guild_coins, pvp_medals, enhancement_stones, hero_shards, stamina). GET /api/economy/{username}/stamina returns stamina status (100/100 max). POST /api/economy/{username}/currencies/add successfully adds currencies (tested with 5000 Soul Dust and 100 Enhancement Stones). POST /api/economy/{username}/hero/{hero_id}/level-up successfully levels up heroes (tested 5 levels). All endpoints working correctly with proper authentication."
+
+  - task: "Equipment system APIs"
+    implemented: true
+    working: true
+    file: "/app/backend/routers/equipment.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Equipment system APIs fully functional. GET /api/equipment/{username} retrieves user equipment (3 items found). POST /api/equipment/{username}/craft successfully crafts equipment (tested Epic Warrior's Helmet and Rare Warrior's Chestplate with correct slot, rarity, and set_id). POST /api/equipment/{username}/craft-rune successfully crafts runes (tested Rare Power Rune). GET /api/equipment/{username}/runes retrieves user runes (1 rune found). POST /api/equipment/{username}/enhance successfully enhances equipment by 1 level. All endpoints working correctly with proper validation and response structure."
 
 frontend:
   - task: "Navigation structure with tabs"

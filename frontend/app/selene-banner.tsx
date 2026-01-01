@@ -29,6 +29,10 @@ const COLORS = {
   success: '#22c55e',
 };
 
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
+  : '/api';
+
 export default function SeleneBannerScreen() {
   const router = useRouter();
   const { user, fetchUser } = useGameStore();

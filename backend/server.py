@@ -6616,6 +6616,302 @@ async def get_starter_packs(username: str):
     
     return {"packs": available}
 
+# ============================================================================
+# LAUNCH EXCLUSIVE BANNER SYSTEM
+# ============================================================================
+
+# Import launch banner module
+from core.launch_banner import (
+    EXCLUSIVE_HERO, LAUNCH_EXCLUSIVE_BANNER, LAUNCH_BUNDLES,
+    FREE_LAUNCH_CURRENCY, TOTAL_FREE_PULLS_DAY1, PULLS_SHORT_OF_GUARANTEE,
+    calculate_launch_banner_rate, perform_launch_banner_pull,
+    get_bundle_triggers, check_banner_unlock, get_banner_time_remaining,
+    calculate_pulls_from_bundle, get_monetization_summary, track_banner_interaction
+)
+
+@api_router.get("/launch-banner/status/{username}")
+async def get_launch_banner_status(username: str):
+    """Get launch exclusive banner status for a user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get or create launch banner progress
+    progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
+    
+    if not progress:
+        # Initialize banner progress when user first views it
+        progress = {
+            "user_id": user["id"],
+            "username": username,
+            "pity_counter": 0,
+            "total_pulls": 0,
+            "has_featured_hero": False,
+            "first_unlock_time": None,
+            "purchased_bundles": [],
+            "created_at": datetime.utcnow().isoformat(),
+        }
+        await db.launch_banner_progress.insert_one(progress)
+    
+    # Check unlock status (requires stage 2-10)
+    user_progress = await db.user_progress.find_one({"user_id": user["id"]})
+    completed_stages = user_progress.get("completed_chapters", []) if user_progress else []
+    
+    # For demo purposes, consider banner unlocked for all users
+    is_unlocked = True  # In production: "2-10" in completed_stages
+    
+    # If unlocked and no first unlock time, set it now
+    if is_unlocked and not progress.get("first_unlock_time"):
+        first_unlock = datetime.utcnow()
+        await db.launch_banner_progress.update_one(
+            {"user_id": user["id"]},
+            {"$set": {"first_unlock_time": first_unlock.isoformat()}}
+        )
+        progress["first_unlock_time"] = first_unlock.isoformat()
+    
+    # Calculate time remaining
+    time_info = {"is_active": False, "expired": True}
+    if progress.get("first_unlock_time"):
+        unlock_time = progress["first_unlock_time"]
+        if isinstance(unlock_time, str):
+            unlock_time = datetime.fromisoformat(unlock_time.replace("Z", "+00:00")).replace(tzinfo=None)
+        time_info = get_banner_time_remaining(unlock_time)
+    
+    # Calculate pity rate
+    pity_counter = progress.get("pity_counter", 0)
+    current_rate, rate_type = calculate_launch_banner_rate(pity_counter)
+    
+    # Get monetization summary
+    monetization = get_monetization_summary(pity_counter)
+    
+    return {
+        "banner": {
+            "id": LAUNCH_EXCLUSIVE_BANNER["id"],
+            "name": LAUNCH_EXCLUSIVE_BANNER["name"],
+            "subtitle": LAUNCH_EXCLUSIVE_BANNER["subtitle"],
+            "featured_hero": EXCLUSIVE_HERO,
+            "rates": LAUNCH_EXCLUSIVE_BANNER["rates"],
+            "pity": LAUNCH_EXCLUSIVE_BANNER["pity"],
+            "pull_cost": LAUNCH_EXCLUSIVE_BANNER["pull_cost"],
+        },
+        "user_progress": {
+            "pity_counter": pity_counter,
+            "total_pulls": progress.get("total_pulls", 0),
+            "has_featured_hero": progress.get("has_featured_hero", False),
+            "purchased_bundles": progress.get("purchased_bundles", []),
+        },
+        "time_remaining": time_info,
+        "is_unlocked": is_unlocked,
+        "current_rate": {
+            "featured_rate": round(current_rate * 100, 2),
+            "rate_type": rate_type,
+        },
+        "monetization": monetization,
+    }
+
+@api_router.post("/launch-banner/pull/{username}")
+async def pull_launch_banner(username: str, multi: bool = False):
+    """Pull on the launch exclusive banner"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get progress
+    progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        progress = {
+            "user_id": user["id"],
+            "username": username,
+            "pity_counter": 0,
+            "total_pulls": 0,
+            "has_featured_hero": False,
+            "first_unlock_time": datetime.utcnow().isoformat(),
+            "purchased_bundles": [],
+        }
+        await db.launch_banner_progress.insert_one(progress)
+    
+    # Check time remaining
+    if progress.get("first_unlock_time"):
+        unlock_time = progress["first_unlock_time"]
+        if isinstance(unlock_time, str):
+            unlock_time = datetime.fromisoformat(unlock_time.replace("Z", "+00:00")).replace(tzinfo=None)
+        time_info = get_banner_time_remaining(unlock_time)
+        if time_info.get("expired"):
+            raise HTTPException(status_code=400, detail="Banner has expired for your account")
+    
+    # Calculate cost
+    num_pulls = 10 if multi else 1
+    cost = LAUNCH_EXCLUSIVE_BANNER["pull_cost"]["crystals_multi" if multi else "crystals_single"]
+    
+    # Check currency
+    user_crystals = user.get("gems", 0)  # gems = crystals in this game
+    if user_crystals < cost:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Insufficient crystals. Need {cost}, have {user_crystals}"
+        )
+    
+    # Deduct currency
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"gems": -cost}}
+    )
+    
+    # Perform pulls
+    results = []
+    pity_counter = progress.get("pity_counter", 0)
+    got_featured = progress.get("has_featured_hero", False)
+    
+    for _ in range(num_pulls):
+        result = perform_launch_banner_pull(pity_counter)
+        results.append(result)
+        pity_counter = result["new_pity"]
+        
+        if result.get("is_featured"):
+            got_featured = True
+            
+            # Add hero to user's collection
+            hero_data = result["hero"]
+            new_hero = {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "hero_id": hero_data["id"],
+                "name": hero_data["name"],
+                "rarity": hero_data["rarity"],
+                "element": hero_data["element"],
+                "hero_class": hero_data["hero_class"],
+                "level": 1,
+                "rank": 1,
+                "duplicates": 0,
+                "current_hp": hero_data["base_hp"],
+                "current_atk": hero_data["base_atk"],
+                "current_def": hero_data["base_def"],
+                "hero_data": hero_data,
+                "obtained_at": datetime.utcnow().isoformat(),
+                "obtained_from": "launch_exclusive_banner",
+            }
+            await db.user_heroes.insert_one(new_hero)
+    
+    # Update progress
+    total_pulls = progress.get("total_pulls", 0) + num_pulls
+    await db.launch_banner_progress.update_one(
+        {"user_id": user["id"]},
+        {"$set": {
+            "pity_counter": pity_counter,
+            "total_pulls": total_pulls,
+            "has_featured_hero": got_featured,
+            "last_pull_at": datetime.utcnow().isoformat(),
+        }}
+    )
+    
+    # Get triggered bundles after pull
+    triggered_bundles = get_bundle_triggers(
+        pity_counter, total_pulls, got_featured,
+        progress.get("purchased_bundles", [])
+    )
+    
+    return {
+        "results": results,
+        "cost": cost,
+        "new_pity": pity_counter,
+        "total_pulls": total_pulls,
+        "has_featured_hero": got_featured,
+        "triggered_bundles": triggered_bundles[:2],  # Show top 2 bundles
+    }
+
+@api_router.get("/launch-banner/bundles/{username}")
+async def get_launch_bundles(username: str):
+    """Get available bundles for the launch banner"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
+    if not progress:
+        return {"bundles": list(LAUNCH_BUNDLES.values())}
+    
+    # Get triggered bundles
+    bundles = get_bundle_triggers(
+        progress.get("pity_counter", 0),
+        progress.get("total_pulls", 0),
+        progress.get("has_featured_hero", False),
+        progress.get("purchased_bundles", [])
+    )
+    
+    return {"bundles": bundles, "all_bundles": list(LAUNCH_BUNDLES.values())}
+
+@api_router.post("/launch-banner/purchase-bundle/{username}")
+async def purchase_launch_bundle(username: str, bundle_id: str):
+    """Purchase a bundle (simulated - in production would use RevenueCat)"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get bundle info
+    bundle = LAUNCH_BUNDLES.get(bundle_id)
+    if not bundle:
+        raise HTTPException(status_code=404, detail="Bundle not found")
+    
+    # Get progress
+    progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
+    purchased_bundles = progress.get("purchased_bundles", []) if progress else []
+    
+    # Check limit
+    purchase_count = purchased_bundles.count(bundle_id)
+    if purchase_count >= bundle.get("limit_per_user", 1):
+        raise HTTPException(status_code=400, detail="Bundle purchase limit reached")
+    
+    # Grant rewards (SIMULATED - in production, verify payment first)
+    contents = bundle.get("contents", {})
+    update_ops = {}
+    
+    if contents.get("summon_tickets"):
+        # Convert tickets to direct pity progress or currency
+        update_ops["launch_tickets"] = contents["summon_tickets"]
+    if contents.get("crystals"):
+        update_ops["gems"] = contents["crystals"]
+    if contents.get("gold"):
+        update_ops["gold"] = contents["gold"]
+    if contents.get("enhancement_stones"):
+        update_ops["enhancement_stones"] = contents["enhancement_stones"]
+    if contents.get("skill_essence"):
+        update_ops["skill_essence"] = contents["skill_essence"]
+    
+    if update_ops:
+        await db.users.update_one({"username": username}, {"$inc": update_ops})
+    
+    # Track purchase
+    if progress:
+        await db.launch_banner_progress.update_one(
+            {"user_id": user["id"]},
+            {"$push": {"purchased_bundles": bundle_id}}
+        )
+    
+    # Track spending (for VIP)
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"total_spent": bundle["price_usd"]}}
+    )
+    
+    return {
+        "success": True,
+        "bundle": bundle,
+        "rewards_granted": contents,
+        "message": f"Successfully purchased {bundle['name']}!"
+    }
+
+@api_router.get("/launch-banner/hero")
+async def get_featured_hero():
+    """Get the featured hero details for the launch banner"""
+    return {
+        "hero": EXCLUSIVE_HERO,
+        "banner": {
+            "name": LAUNCH_EXCLUSIVE_BANNER["name"],
+            "subtitle": LAUNCH_EXCLUSIVE_BANNER["subtitle"],
+            "duration_hours": LAUNCH_EXCLUSIVE_BANNER["duration_hours"],
+        }
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

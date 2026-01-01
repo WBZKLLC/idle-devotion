@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -22,6 +22,14 @@ import secrets
 from routers import equipment as equipment_router
 from routers import economy as economy_router
 from routers import stages as stages_router
+
+# Import security module
+from core.security import (
+    sanitize_string, validate_username, validate_positive_int, validate_uuid,
+    check_rate_limit, record_suspicious_activity, create_audit_log,
+    verify_ownership, verify_currency_sufficient, apply_currency_change,
+    VALID_CURRENCIES, VALID_GAME_MODES, VALID_HERO_RARITIES
+)
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -464,10 +464,10 @@ export default function HomeScreen() {
                 <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>War</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/events')}>
-              <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
-                <Ionicons name="sparkles" size={22} color={COLORS.gold.light} />
-                <Text style={styles.quickLinkText}>Events</Text>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/chat')}>
+              <LinearGradient colors={['#0891b2', '#0e7490']} style={styles.quickLinkGradient}>
+                <Ionicons name="chatbubbles" size={22} color={COLORS.cream.pure} />
+                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Chat</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/leaderboard')}>

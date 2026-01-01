@@ -40,13 +40,32 @@ export default function ProfileScreen() {
   const [lockedFrames, setLockedFrames] = useState<any[]>([]);
   const [equippedFrame, setEquippedFrame] = useState('default');
   const [loadingFrames, setLoadingFrames] = useState(false);
+  
+  // Guild state
+  const [guildInfo, setGuildInfo] = useState<any>(null);
+  const [loadingGuild, setLoadingGuild] = useState(false);
 
   useEffect(() => {
     if (hydrated && user) {
       fetchUserHeroes();
       loadUserFrames();
+      loadGuildInfo();
     }
   }, [hydrated, user?.username]);
+  
+  const loadGuildInfo = async () => {
+    if (!user) return;
+    setLoadingGuild(true);
+    try {
+      const response = await axios.get(`${API_BASE}/guild/${user.username}`);
+      setGuildInfo(response.data);
+    } catch (error) {
+      // User not in a guild
+      setGuildInfo(null);
+    } finally {
+      setLoadingGuild(false);
+    }
+  };
 
   const loadUserFrames = async () => {
     if (!user) return;

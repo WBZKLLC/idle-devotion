@@ -40,13 +40,14 @@ module.exports = ({ config }) => {
           backgroundColor: '#0a1628',
         },
       ],
+      'react-native-reanimated/plugin',
     ],
     experiments: {
       typedRoutes: true,
     },
     extra: {
       eas: {
-        projectId: undefined,
+        projectId: '59fe8d53-8818-4d41-a206-556a8f621bbd',
       },
       BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://game-server-refactor.preview.emergentagent.com',
       REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',

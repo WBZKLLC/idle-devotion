@@ -8,111 +8,186 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
-  Modal,
+  RefreshControl,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import axios from 'axios';
 import COLORS from '../theme/colors';
-import { router } from 'expo-router';
+
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
+  : '/api';
+
+interface Event {
+  id: string;
+  name: string;
+  description: string;
+  type: 'login' | 'milestone' | 'limited' | 'special';
+  rewards: { type: string; amount: number }[];
+  start_date: string;
+  end_date: string;
+  progress?: number;
+  target?: number;
+  claimed?: boolean;
+}
+
+const MOCK_EVENTS: Event[] = [
+  {
+    id: 'daily_login',
+    name: '7-Day Login Bonus',
+    description: 'Log in daily to receive escalating rewards!',
+    type: 'login',
+    rewards: [{ type: 'gems', amount: 100 }, { type: 'hero_ticket', amount: 1 }],
+    start_date: '2025-01-01',
+    end_date: '2025-12-31',
+    progress: 4,
+    target: 7,
+  },
+  {
+    id: 'selene_event',
+    name: 'Fated Chronology',
+    description: 'Limited time banner featuring Chrono-Archangel Selene!',
+    type: 'limited',
+    rewards: [{ type: 'selene_shards', amount: 10 }, { type: 'crystals', amount: 500 }],
+    start_date: '2025-01-01',
+    end_date: '2025-01-07',
+  },
+  {
+    id: 'power_milestone',
+    name: 'Power Milestone',
+    description: 'Reach total power milestones for massive rewards!',
+    type: 'milestone',
+    rewards: [{ type: 'gold', amount: 50000 }, { type: 'enhancement_stones', amount: 100 }],
+    start_date: '2025-01-01',
+    end_date: '2025-12-31',
+    progress: 150000,
+    target: 200000,
+  },
+  {
+    id: 'new_year',
+    name: '🎉 New Year Celebration',
+    description: 'Special rewards to celebrate the new year!',
+    type: 'special',
+    rewards: [{ type: 'gems', amount: 500 }, { type: 'gold', amount: 100000 }],
+    start_date: '2025-01-01',
+    end_date: '2025-01-15',
+    claimed: false,
+  },
+];
 
 export default function EventsScreen() {
+  const router = useRouter();
   const { user, fetchUser } = useGameStore();
   const hydrated = useHydration();
-  const [banners, setBanners] = useState<any[]>([]);
-  const [selectedBanner, setSelectedBanner] = useState<any>(null);
-  const [bannerDetails, setBannerDetails] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPulling, setIsPulling] = useState(false);
-  const [pullResults, setPullResults] = useState<any[]>([]);
-  const [showResults, setShowResults] = useState(false);
+  
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [activeTab, setActiveTab] = useState<'all' | 'limited' | 'daily'>('all');
 
   useEffect(() => {
-    if (hydrated) {
-      loadBanners();
+    if (hydrated && user) {
+      loadEvents();
     }
-  }, [hydrated]);
+  }, [hydrated, user?.username]);
 
-  const loadBanners = async () => {
+  const loadEvents = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/event-banners`
-      );
-      const data = await response.json();
-      setBanners(data.banners || []);
+      // In production, fetch from API
+      await new Promise(r => setTimeout(r, 500));
+      setEvents(MOCK_EVENTS);
     } catch (error) {
-      console.error('Failed to load banners:', error);
+      console.error('Error loading events:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const loadBannerDetails = async (banner: any) => {
-    if (!user) return;
+  const claimReward = async (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
+    if (!event || event.claimed) return;
     
-    try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/event-banners/${banner.id}?username=${user.username}`
-      );
-      const data = await response.json();
-      setBannerDetails(data);
-      setSelectedBanner(banner);
-    } catch (error) {
-      console.error('Failed to load banner details:', error);
-    }
-  };
-
-  const pullBanner = async (multi: boolean) => {
-    if (!selectedBanner || !user) return;
-    
-    setIsPulling(true);
-    try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/event-banners/${selectedBanner.id}/pull?username=${user.username}&multi=${multi}`,
-        { method: 'POST' }
-      );
-      
-      if (response.ok) {
-        const result = await response.json();
-        setPullResults(result.results || []);
-        setShowResults(true);
-        loadBannerDetails(selectedBanner);
-        fetchUser();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Pull failed');
+    if (event.progress !== undefined && event.target !== undefined) {
+      if (event.progress < event.target) {
+        Alert.alert('Not Yet', `Complete the objective first! (${event.progress}/${event.target})`);
+        return;
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pull');
-    } finally {
-      setIsPulling(false);
+    }
+
+    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, claimed: true } : e));
+    
+    const rewardText = event.rewards.map(r => `${r.amount} ${r.type.replace('_', ' ')}`).join(', ');
+    Alert.alert('Claimed!', `You received: ${rewardText}`);
+  };
+
+  const getEventTypeColor = (type: string) => {
+    switch (type) {
+      case 'login': return ['#22c55e', '#16a34a'];
+      case 'limited': return ['#ef4444', '#dc2626'];
+      case 'milestone': return ['#f59e0b', '#d97706'];
+      case 'special': return ['#8b5cf6', '#7c3aed'];
+      default: return [COLORS.navy.medium, COLORS.navy.primary];
     }
   };
 
-  const getRarityColor = (rarity: string) => {
-    return COLORS.rarity[rarity as keyof typeof COLORS.rarity] || COLORS.cream.dark;
+  const getTimeRemaining = (endDate: string) => {
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Ended';
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) return `${days}d ${hours}h`;
+    return `${hours}h`;
   };
 
-  const getBannerGradient = (banner: any): [string, string] => {
-    if (banner.banner_type === 'divine') {
-      return [COLORS.rarity.UR, COLORS.rarity['UR+']];
-    }
-    const element = Object.keys(banner.rate_boosts || {})[0];
-    switch (element) {
-      case 'Light': return [COLORS.gold.primary, COLORS.gold.light];
-      case 'Dark': return ['#6b5b95', '#9b4dca'];
-      case 'Fire': return ['#FF6B35', '#FF9F43'];
-      case 'Water': return ['#4A90D9', '#54A0FF'];
-      default: return [COLORS.rarity.SSR, COLORS.rarity.UR];
+  const getRewardIcon = (type: string) => {
+    switch (type) {
+      case 'gems': return '💎';
+      case 'gold': return '⭐';
+      case 'coins': return '🪙';
+      case 'crystals': return '🔮';
+      case 'hero_ticket': return '🎫';
+      case 'selene_shards': return '⏳';
+      case 'enhancement_stones': return '🔶';
+      default: return '🎁';
     }
   };
+
+  const filteredEvents = events.filter(event => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'limited') return event.type === 'limited' || event.type === 'special';
+    if (activeTab === 'daily') return event.type === 'login';
+    return true;
+  });
+
+  if (!hydrated || loading) {
+    return (
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+        <SafeAreaView style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={COLORS.gold.primary} />
+          <Text style={styles.loadingText}>Loading Events...</Text>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
           <Text style={styles.errorText}>Please log in first</Text>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/')}>
+            <Text style={styles.loginBtnText}>Go to Login</Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -121,219 +196,103 @@ export default function EventsScreen() {
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Limited Events</Text>
-          <Text style={styles.subtitle}>Special banners with boosted rates!</Text>
-          
-          {isLoading ? (
-            <ActivityIndicator size="large" color={COLORS.gold.primary} style={styles.loader} />
-          ) : banners.length === 0 ? (
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>✨ Events</Text>
+          <TouchableOpacity onPress={loadEvents}>
+            <Ionicons name="refresh" size={24} color={COLORS.cream.pure} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.tabs}>
+          {(['all', 'limited', 'daily'] as const).map(tab => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tab, activeTab === tab && styles.tabActive]}
+              onPress={() => setActiveTab(tab)}
+            >
+              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Events List */}
+        <ScrollView
+          style={styles.eventsList}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadEvents(); }} tintColor={COLORS.gold.primary} />}
+          showsVerticalScrollIndicator={false}
+        >
+          {filteredEvents.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="calendar-outline" size={64} color={COLORS.navy.light} />
-              <Text style={styles.emptyText}>No active events</Text>
-              <Text style={styles.emptySubtext}>Check back later for special banners!</Text>
+              <Ionicons name="calendar-outline" size={48} color={COLORS.cream.dark} />
+              <Text style={styles.emptyText}>No events in this category</Text>
             </View>
           ) : (
-            banners.map((banner) => (
-              <TouchableOpacity
-                key={banner.id}
-                style={styles.bannerCard}
-                onPress={() => loadBannerDetails(banner)}
-              >
-                <LinearGradient
-                  colors={getBannerGradient(banner)}
-                  style={styles.bannerGradient}
-                >
-                  <View style={styles.bannerHeader}>
-                    <View style={styles.bannerInfo}>
-                      <Text style={styles.bannerName}>{banner.name}</Text>
-                      <Text style={styles.bannerDesc}>{banner.description}</Text>
-                    </View>
-                    <View style={styles.timerBadge}>
-                      <Ionicons name="time" size={14} color={COLORS.cream.pure} />
-                      <Text style={styles.timerText}>{banner.days_remaining}d left</Text>
+            filteredEvents.map(event => (
+              <View key={event.id} style={styles.eventCard}>
+                <LinearGradient colors={getEventTypeColor(event.type)} style={styles.eventGradient}>
+                  {/* Event Header */}
+                  <View style={styles.eventHeader}>
+                    <Text style={styles.eventName}>{event.name}</Text>
+                    <View style={styles.eventTimer}>
+                      <Ionicons name="time" size={12} color="#fff" />
+                      <Text style={styles.eventTimerText}>{getTimeRemaining(event.end_date)}</Text>
                     </View>
                   </View>
-                  
-                  <View style={styles.featuredHeroes}>
-                    <Text style={styles.featuredTitle}>Featured Heroes:</Text>
-                    <Text style={styles.featuredList}>
-                      {banner.featured_heroes?.join(' • ')}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.bannerFooter}>
-                    <View style={styles.rateBadge}>
-                      <Text style={styles.rateText}>
-                        {banner.banner_type === 'divine' ? 'Guaranteed UR+' : '2x Element Rate'}
+
+                  {/* Description */}
+                  <Text style={styles.eventDesc}>{event.description}</Text>
+
+                  {/* Progress Bar (if applicable) */}
+                  {event.progress !== undefined && event.target !== undefined && (
+                    <View style={styles.progressContainer}>
+                      <View style={styles.progressBar}>
+                        <View style={[styles.progressFill, { width: `${Math.min(100, (event.progress / event.target) * 100)}%` }]} />
+                      </View>
+                      <Text style={styles.progressText}>
+                        {event.progress.toLocaleString()} / {event.target.toLocaleString()}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={24} color={COLORS.cream.pure} />
+                  )}
+
+                  {/* Rewards */}
+                  <View style={styles.rewardsRow}>
+                    <Text style={styles.rewardsLabel}>Rewards:</Text>
+                    <View style={styles.rewardsList}>
+                      {event.rewards.map((reward, idx) => (
+                        <View key={idx} style={styles.rewardItem}>
+                          <Text style={styles.rewardIcon}>{getRewardIcon(reward.type)}</Text>
+                          <Text style={styles.rewardAmount}>{reward.amount}</Text>
+                        </View>
+                      ))}
+                    </View>
                   </View>
+
+                  {/* Claim Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.claimButton,
+                      event.claimed && styles.claimButtonClaimed,
+                      event.progress !== undefined && event.target !== undefined && event.progress < event.target && styles.claimButtonLocked
+                    ]}
+                    onPress={() => claimReward(event.id)}
+                    disabled={event.claimed}
+                  >
+                    <Text style={styles.claimButtonText}>
+                      {event.claimed ? '✓ Claimed' : event.type === 'limited' ? 'Go to Event' : 'Claim'}
+                    </Text>
+                  </TouchableOpacity>
                 </LinearGradient>
-              </TouchableOpacity>
+              </View>
             ))
           )}
         </ScrollView>
-        
-        {/* Banner Detail Modal */}
-        <Modal
-          visible={selectedBanner !== null}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setSelectedBanner(null)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity 
-                style={styles.closeButton}
-                onPress={() => setSelectedBanner(null)}
-              >
-                <Ionicons name="close" size={24} color={COLORS.cream.pure} />
-              </TouchableOpacity>
-              
-              {selectedBanner && (
-                <>
-                  <LinearGradient
-                    colors={getBannerGradient(selectedBanner)}
-                    style={styles.modalHeader}
-                  >
-                    <Text style={styles.modalTitle}>{selectedBanner.name}</Text>
-                    <Text style={styles.modalDesc}>{selectedBanner.description}</Text>
-                  </LinearGradient>
-                  
-                  <View style={styles.pitySection}>
-                    <Text style={styles.pityLabel}>Pity Counter</Text>
-                    <Text style={styles.pityValue}>
-                      {bannerDetails?.pity_count || 0} / {bannerDetails?.pity_threshold || 80}
-                    </Text>
-                    <View style={styles.pityBar}>
-                      <View 
-                        style={[
-                          styles.pityFill, 
-                          { width: `${((bannerDetails?.pity_count || 0) / (bannerDetails?.pity_threshold || 80)) * 100}%` }
-                        ]} 
-                      />
-                    </View>
-                  </View>
-                  
-                  <View style={styles.currencySection}>
-                    <Ionicons 
-                      name={selectedBanner.banner_type === 'divine' ? 'sparkles' : 'diamond'} 
-                      size={24} 
-                      color={selectedBanner.banner_type === 'divine' ? COLORS.gold.primary : COLORS.rarity['UR+']} 
-                    />
-                    <Text style={styles.currencyText}>
-                      {selectedBanner.banner_type === 'divine' 
-                        ? `Divine Essence: ${user.divine_essence || 0}`
-                        : `Crystals: ${user.gems || 0}`
-                      }
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.pullButtons}>
-                    <TouchableOpacity
-                      style={styles.pullButton}
-                      onPress={() => pullBanner(false)}
-                      disabled={isPulling}
-                    >
-                      <LinearGradient
-                        colors={[COLORS.navy.medium, COLORS.navy.primary]}
-                        style={styles.pullButtonGradient}
-                      >
-                        {isPulling ? (
-                          <ActivityIndicator color={COLORS.cream.pure} />
-                        ) : (
-                          <>
-                            <Text style={styles.pullButtonTitle}>Single</Text>
-                            <Text style={styles.pullButtonCost}>
-                              {selectedBanner.banner_type === 'divine' ? '1' : '100'}
-                            </Text>
-                          </>
-                        )}
-                      </LinearGradient>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      style={styles.pullButton}
-                      onPress={() => pullBanner(true)}
-                      disabled={isPulling}
-                    >
-                      <LinearGradient
-                        colors={getBannerGradient(selectedBanner)}
-                        style={styles.pullButtonGradient}
-                      >
-                        {isPulling ? (
-                          <ActivityIndicator color={COLORS.cream.pure} />
-                        ) : (
-                          <>
-                            <Text style={styles.pullButtonTitle}>10x Pull</Text>
-                            <Text style={styles.pullButtonCost}>
-                              {selectedBanner.banner_type === 'divine' ? '10' : '900'}
-                            </Text>
-                          </>
-                        )}
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
-            </View>
-          </View>
-        </Modal>
-        
-        {/* Pull Results Modal */}
-        <Modal
-          visible={showResults}
-          animationType="fade"
-          transparent={true}
-          onRequestClose={() => setShowResults(false)}
-        >
-          <View style={styles.resultsOverlay}>
-            <View style={styles.resultsContent}>
-              <Text style={styles.resultsTitle}>Summon Results!</Text>
-              <ScrollView style={styles.resultsList}>
-                {pullResults.map((result, index) => (
-                  <View key={index} style={styles.resultItem}>
-                    <Image
-                      source={{ uri: result.hero?.image_url }}
-                      style={styles.resultImage}
-                    />
-                    <View style={styles.resultInfo}>
-                      <Text style={[styles.resultName, { color: getRarityColor(result.hero?.rarity) }]}>
-                        {result.hero?.name}
-                      </Text>
-                      <View style={styles.resultBadges}>
-                        <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(result.hero?.rarity) }]}>
-                          <Text style={styles.rarityText}>{result.hero?.rarity}</Text>
-                        </View>
-                        {result.is_featured && (
-                          <View style={styles.featuredBadge}>
-                            <Ionicons name="star" size={12} color={COLORS.gold.primary} />
-                            <Text style={styles.featuredBadgeText}>Featured</Text>
-                          </View>
-                        )}
-                        {result.is_new ? (
-                          <View style={styles.newBadge}>
-                            <Text style={styles.newBadgeText}>NEW!</Text>
-                          </View>
-                        ) : (
-                          <Text style={styles.duplicateText}>+1 Shard</Text>
-                        )}
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-              <TouchableOpacity
-                style={styles.closeResultsButton}
-                onPress={() => setShowResults(false)}
-              >
-                <Text style={styles.closeResultsText}>Continue</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -341,63 +300,48 @@ export default function EventsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 16, paddingTop: 60, paddingBottom: 100 },
-  title: { fontSize: 28, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
-  subtitle: { fontSize: 14, color: COLORS.cream.dark, textAlign: 'center', marginBottom: 20 },
-  loader: { marginTop: 40 },
-  emptyContainer: { alignItems: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 16 },
-  emptySubtext: { fontSize: 14, color: COLORS.cream.dark, marginTop: 4 },
-  bannerCard: { marginBottom: 16, borderRadius: 16, overflow: 'hidden' },
-  bannerGradient: { padding: 20 },
-  bannerHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  bannerInfo: { flex: 1, marginRight: 12 },
-  bannerName: { fontSize: 22, fontWeight: 'bold', color: COLORS.cream.pure },
-  bannerDesc: { fontSize: 13, color: COLORS.cream.soft, marginTop: 4 },
-  timerBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.darkest + '60', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, gap: 4 },
-  timerText: { fontSize: 12, fontWeight: 'bold', color: COLORS.cream.pure },
-  featuredHeroes: { marginBottom: 12 },
-  featuredTitle: { fontSize: 12, color: COLORS.cream.soft },
-  featuredList: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure },
-  bannerFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rateBadge: { backgroundColor: COLORS.navy.darkest + '60', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
-  rateText: { fontSize: 12, fontWeight: 'bold', color: COLORS.gold.light },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: COLORS.navy.primary, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%' },
-  closeButton: { position: 'absolute', top: 16, right: 16, zIndex: 1 },
-  modalHeader: { padding: 24, paddingTop: 40, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
-  modalTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.cream.pure },
-  modalDesc: { fontSize: 14, color: COLORS.cream.soft, marginTop: 4 },
-  pitySection: { padding: 16 },
-  pityLabel: { fontSize: 12, color: COLORS.cream.dark },
-  pityValue: { fontSize: 18, fontWeight: 'bold', color: COLORS.gold.primary, marginBottom: 8 },
-  pityBar: { height: 8, backgroundColor: COLORS.navy.medium, borderRadius: 4, overflow: 'hidden' },
-  pityFill: { height: '100%', backgroundColor: COLORS.gold.primary, borderRadius: 4 },
-  currencySection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 8 },
-  currencyText: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure },
-  pullButtons: { flexDirection: 'row', padding: 16, gap: 12, paddingBottom: 32 },
-  pullButton: { flex: 1, borderRadius: 12, overflow: 'hidden' },
-  pullButtonGradient: { padding: 16, alignItems: 'center' },
-  pullButtonTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
-  pullButtonCost: { fontSize: 14, color: COLORS.cream.soft },
-  resultsOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', alignItems: 'center', justifyContent: 'center' },
-  resultsContent: { backgroundColor: COLORS.navy.primary, borderRadius: 20, padding: 20, width: '90%', maxHeight: '80%' },
-  resultsTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary, textAlign: 'center', marginBottom: 16 },
-  resultsList: { maxHeight: 400 },
-  resultItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 12, marginBottom: 8 },
-  resultImage: { width: 60, height: 60, borderRadius: 8 },
-  resultInfo: { flex: 1, marginLeft: 12 },
-  resultName: { fontSize: 14, fontWeight: 'bold' },
-  resultBadges: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 6, flexWrap: 'wrap' },
-  rarityBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  rarityText: { fontSize: 10, fontWeight: 'bold', color: COLORS.cream.pure },
-  featuredBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.gold.dark, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, gap: 2 },
-  featuredBadgeText: { fontSize: 10, fontWeight: 'bold', color: COLORS.cream.pure },
-  newBadge: { backgroundColor: COLORS.success, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  newBadgeText: { fontSize: 10, fontWeight: 'bold', color: COLORS.cream.pure },
-  duplicateText: { fontSize: 10, color: COLORS.cream.dark },
-  closeResultsButton: { backgroundColor: COLORS.gold.primary, padding: 16, borderRadius: 12, marginTop: 16, alignItems: 'center' },
-  closeResultsText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
-  errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16 },
+  errorText: { color: COLORS.cream.dark, fontSize: 16 },
+  loginBtn: { marginTop: 16, backgroundColor: COLORS.gold.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  loginBtnText: { color: COLORS.navy.darkest, fontWeight: 'bold' },
+
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.gold.primary + '30' },
+  backButton: { padding: 8 },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
+
+  tabs: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: COLORS.navy.medium, alignItems: 'center' },
+  tabActive: { backgroundColor: COLORS.gold.primary },
+  tabText: { color: COLORS.cream.dark, fontWeight: '600' },
+  tabTextActive: { color: COLORS.navy.darkest },
+
+  eventsList: { flex: 1, padding: 16 },
+  emptyContainer: { alignItems: 'center', paddingTop: 60 },
+  emptyText: { color: COLORS.cream.dark, marginTop: 12 },
+
+  eventCard: { marginBottom: 16, borderRadius: 16, overflow: 'hidden' },
+  eventGradient: { padding: 16 },
+  eventHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  eventName: { fontSize: 18, fontWeight: 'bold', color: '#fff', flex: 1 },
+  eventTimer: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.3)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
+  eventTimerText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  eventDesc: { fontSize: 13, color: '#ffffffcc', marginBottom: 12 },
+
+  progressContainer: { marginBottom: 12 },
+  progressBar: { height: 8, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#fff', borderRadius: 4 },
+  progressText: { fontSize: 11, color: '#ffffffaa', marginTop: 4, textAlign: 'right' },
+
+  rewardsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  rewardsLabel: { fontSize: 12, color: '#ffffffaa', marginRight: 8 },
+  rewardsList: { flexDirection: 'row', gap: 12 },
+  rewardItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  rewardIcon: { fontSize: 16 },
+  rewardAmount: { fontSize: 13, color: '#fff', fontWeight: '600' },
+
+  claimButton: { backgroundColor: '#fff', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  claimButtonClaimed: { backgroundColor: 'rgba(255,255,255,0.3)' },
+  claimButtonLocked: { backgroundColor: 'rgba(255,255,255,0.5)' },
+  claimButtonText: { color: '#000', fontWeight: 'bold', fontSize: 14 },
 });

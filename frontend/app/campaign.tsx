@@ -20,7 +20,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const API_BASE = '/api';
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
+  : '/api';
 
 // Dark Fantasy Color Palette
 const COLORS = {

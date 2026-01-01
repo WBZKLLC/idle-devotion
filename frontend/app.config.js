@@ -40,7 +40,6 @@ module.exports = ({ config }) => {
           backgroundColor: '#0a1628',
         },
       ],
-      'react-native-worklets/plugin',
     ],
     experiments: {
       typedRoutes: true,

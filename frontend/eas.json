@@ -4,34 +4,11 @@
     "appVersionSource": "local"
   },
   "build": {
-    "base": {
-      "node": "22.12.0"
-    },
-    "development": {
-      "extends": "base",
-      "developmentClient": true,
-      "distribution": "internal",
-      "ios": {
-        "simulator": true
-      },
-      "android": {
-        "buildType": "apk",
-        "withoutCredentials": true
-      },
-      "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://mobile-rpg-4.preview.emergentagent.com",
-        "EXPO_PUBLIC_REVENUECAT_API_KEY": "test_GHJByEeqdUHXOWbuvIWFFrQFXjB"
-      }
-    },
     "preview": {
-      "extends": "base",
       "distribution": "internal",
-      "ios": {
-        "simulator": false
-      },
       "android": {
         "buildType": "apk",
-        "withoutCredentials": true
+        "gradleCommand": ":app:assembleRelease"
       },
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://mobile-rpg-4.preview.emergentagent.com",
@@ -39,22 +16,10 @@
       }
     },
     "production": {
-      "extends": "base",
       "distribution": "store",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://your-production-backend.com",
         "EXPO_PUBLIC_REVENUECAT_API_KEY": "your_production_api_key"
-      }
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "your-apple-id@email.com",
-        "ascAppId": "your-app-store-connect-app-id"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-services.json"
       }
     }
   }

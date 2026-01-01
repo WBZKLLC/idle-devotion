@@ -1417,6 +1417,127 @@ async def update_profile_picture(username: str, hero_id: str):
     
     return {"message": "Profile picture updated successfully", "hero_id": hero_id}
 
+# Frame definitions with VIP requirements
+FRAME_DEFINITIONS = {
+    "default": {"name": "Basic Frame", "required_vip": 0},
+    "bronze": {"name": "Bronze Frame", "required_vip": 1},
+    "silver": {"name": "Silver Frame", "required_vip": 3},
+    "gold": {"name": "Golden Frame", "required_vip": 5},
+    "platinum": {"name": "Platinum Frame", "required_vip": 7},
+    "diamond": {"name": "Diamond Frame", "required_vip": 9},
+    "rainbow": {"name": "Rainbow Frame", "required_vip": 11},
+    "legendary": {"name": "Legendary Frame", "required_vip": 13},
+    "divine": {"name": "Divine Frame", "required_vip": 15},
+    # Special frames unlocked by achievements
+    "champion": {"name": "Arena Champion", "special": True},
+    "abyss_conqueror": {"name": "Abyss Conqueror", "special": True},
+    "guild_master": {"name": "Guild Master", "special": True},
+    "campaign_hero": {"name": "Campaign Hero", "special": True},
+}
+
+@api_router.get("/user/{username}/frames")
+async def get_user_frames(username: str):
+    """Get all frames available to a user based on VIP level and achievements"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    vip_level = user_data.get("vip_level", 0)
+    unlocked_special = user_data.get("unlocked_frames", [])
+    equipped_frame = user_data.get("equipped_frame") or user_data.get("avatar_frame", "default")
+    
+    available_frames = []
+    locked_frames = []
+    
+    for frame_id, frame_data in FRAME_DEFINITIONS.items():
+        frame_info = {
+            "id": frame_id,
+            "name": frame_data["name"],
+            "is_equipped": frame_id == equipped_frame,
+        }
+        
+        if frame_data.get("special"):
+            frame_info["is_special"] = True
+            if frame_id in unlocked_special:
+                frame_info["unlocked"] = True
+                available_frames.append(frame_info)
+            else:
+                frame_info["unlocked"] = False
+                frame_info["unlock_hint"] = f"Unlock through {frame_data['name'].replace(' ', ' ').lower()} achievement"
+                locked_frames.append(frame_info)
+        else:
+            frame_info["required_vip"] = frame_data["required_vip"]
+            if vip_level >= frame_data["required_vip"]:
+                frame_info["unlocked"] = True
+                available_frames.append(frame_info)
+            else:
+                frame_info["unlocked"] = False
+                locked_frames.append(frame_info)
+    
+    return {
+        "equipped_frame": equipped_frame,
+        "vip_level": vip_level,
+        "available_frames": available_frames,
+        "locked_frames": locked_frames,
+    }
+
+@api_router.post("/user/{username}/equip-frame")
+async def equip_frame(username: str, frame_id: str):
+    """Equip a profile frame"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    vip_level = user_data.get("vip_level", 0)
+    unlocked_special = user_data.get("unlocked_frames", [])
+    
+    # Validate frame exists
+    if frame_id not in FRAME_DEFINITIONS:
+        raise HTTPException(status_code=400, detail="Invalid frame ID")
+    
+    frame_data = FRAME_DEFINITIONS[frame_id]
+    
+    # Check if user can equip this frame
+    if frame_data.get("special"):
+        if frame_id not in unlocked_special:
+            raise HTTPException(status_code=403, detail="You haven't unlocked this special frame")
+    else:
+        if vip_level < frame_data["required_vip"]:
+            raise HTTPException(
+                status_code=403, 
+                detail=f"VIP {frame_data['required_vip']} required for this frame"
+            )
+    
+    # Equip the frame
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"equipped_frame": frame_id, "avatar_frame": frame_id}}
+    )
+    
+    return {
+        "success": True,
+        "message": f"Equipped {frame_data['name']}",
+        "equipped_frame": frame_id,
+    }
+
+@api_router.post("/user/{username}/unequip-frame")
+async def unequip_frame(username: str):
+    """Unequip current frame and revert to default"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"equipped_frame": "default", "avatar_frame": "default"}}
+    )
+    
+    return {
+        "success": True,
+        "message": "Frame unequipped, reverted to default",
+        "equipped_frame": "default",
+    }
+
 @api_router.post("/gacha/pull")
 async def pull_gacha(username: str, request: PullRequest):
     """Perform gacha pull - Premium (crystals) or Common (coins)"""

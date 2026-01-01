@@ -371,10 +371,10 @@ export default function HomeScreen() {
                 <Text style={styles.quickLinkText}>Guild</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/resource-bag')}>
-              <LinearGradient colors={['#27ae60', '#1e8449']} style={styles.quickLinkGradient}>
-                <Ionicons name="cube" size={22} color={COLORS.cream.pure} />
-                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Bag</Text>
+            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/equipment')}>
+              <LinearGradient colors={['#8b5cf6', '#6d28d9']} style={styles.quickLinkGradient}>
+                <Ionicons name="hammer" size={22} color={COLORS.cream.pure} />
+                <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Gear</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/store')}>

@@ -1695,6 +1695,133 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
     updated_team = await db.teams.find_one({"id": team_id})
     return convert_objectid(updated_team)
 
+@api_router.get("/team/{username}/by-mode")
+async def get_teams_by_mode(username: str):
+    """Get all mode-specific teams for a user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get mode teams from user document
+    mode_teams = user.get("mode_teams", {})
+    return mode_teams
+
+@api_router.post("/team/save-mode-team")
+async def save_mode_team(username: str, mode: str, slot_1: str = None, slot_2: str = None, 
+                         slot_3: str = None, slot_4: str = None, slot_5: str = None, slot_6: str = None):
+    """Save a team for a specific game mode with full audit logging"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    valid_modes = ["campaign", "arena", "abyss", "guild_war", "dungeons"]
+    if mode not in valid_modes:
+        raise HTTPException(status_code=400, detail=f"Invalid mode. Must be one of: {valid_modes}")
+    
+    # Collect hero IDs
+    hero_ids = [slot_1, slot_2, slot_3, slot_4, slot_5, slot_6]
+    hero_ids = [h for h in hero_ids if h]  # Remove None values
+    
+    # Validate hero ownership
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+    user_hero_ids = [h["id"] for h in user_heroes]
+    
+    for hero_id in hero_ids:
+        if hero_id and hero_id not in user_hero_ids:
+            raise HTTPException(status_code=400, detail=f"Hero {hero_id} not owned by user")
+    
+    # Check if team exists for this mode
+    mode_teams = user.get("mode_teams", {})
+    existing_team_id = mode_teams.get(mode)
+    
+    team_data = {
+        "slot_1": slot_1,
+        "slot_2": slot_2,
+        "slot_3": slot_3,
+        "slot_4": slot_4,
+        "slot_5": slot_5,
+        "slot_6": slot_6,
+        "hero_ids": hero_ids,
+        "mode": mode,
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    
+    if existing_team_id:
+        # Update existing team
+        await db.teams.update_one(
+            {"id": existing_team_id},
+            {"$set": team_data}
+        )
+        team_id = existing_team_id
+    else:
+        # Create new team
+        team_id = str(uuid.uuid4())
+        team_data.update({
+            "id": team_id,
+            "user_id": user["id"],
+            "name": f"{mode.replace('_', ' ').title()} Team",
+            "is_active": mode == "campaign",
+            "created_at": datetime.utcnow().isoformat(),
+        })
+        await db.teams.insert_one(team_data)
+        
+        # Update user's mode teams mapping
+        mode_teams[mode] = team_id
+        await db.users.update_one(
+            {"username": username},
+            {"$set": {"mode_teams": mode_teams}}
+        )
+    
+    # Log the change to audit collection
+    audit_log = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "username": username,
+        "action": "team_update",
+        "mode": mode,
+        "team_id": team_id,
+        "hero_ids": hero_ids,
+        "timestamp": datetime.utcnow().isoformat(),
+        "details": {
+            "slot_1": slot_1,
+            "slot_2": slot_2,
+            "slot_3": slot_3,
+            "slot_4": slot_4,
+            "slot_5": slot_5,
+            "slot_6": slot_6,
+        }
+    }
+    await db.team_change_logs.insert_one(audit_log)
+    
+    return {"id": team_id, "mode": mode, "status": "saved", "hero_count": len(hero_ids)}
+
+@api_router.get("/team/{username}/change-logs")
+async def get_team_change_logs(username: str, limit: int = 50):
+    """Get team change audit logs for a user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    logs = await db.team_change_logs.find(
+        {"user_id": user["id"]}
+    ).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    return [convert_objectid(log) for log in logs]
+
+@api_router.get("/hero/{username}/change-logs")
+async def get_hero_change_logs(username: str, hero_id: str = None, limit: int = 50):
+    """Get hero modification audit logs"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    query = {"user_id": user["id"]}
+    if hero_id:
+        query["hero_id"] = hero_id
+    
+    logs = await db.hero_change_logs.find(query).sort("timestamp", -1).limit(limit).to_list(limit)
+    return [convert_objectid(log) for log in logs]
+
 @api_router.post("/idle/claim")
 async def claim_idle_rewards(username: str):
     """Claim idle rewards - manual collection with VIP-based caps"""

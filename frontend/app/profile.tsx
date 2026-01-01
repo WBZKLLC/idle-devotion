@@ -660,6 +660,19 @@ const styles = StyleSheet.create({
   achievementName: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 2 },
   achievementDesc: { fontSize: 12, color: COLORS.cream.dark },
   
+  // Guild Card Styles
+  guildCard: { borderRadius: 12, overflow: 'hidden' },
+  guildCardGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+  guildCardLeft: { width: 50, height: 50, backgroundColor: COLORS.navy.dark + '80', borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
+  guildCardInfo: { flex: 1 },
+  guildCardName: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure },
+  guildCardLevel: { fontSize: 14, color: COLORS.gold.primary, fontWeight: '600' },
+  guildCardMembers: { fontSize: 12, color: COLORS.cream.dark },
+  joinGuildCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, gap: 12, borderWidth: 1, borderColor: COLORS.navy.light + '40', borderStyle: 'dashed' },
+  joinGuildInfo: { flex: 1 },
+  joinGuildTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.soft },
+  joinGuildSubtitle: { fontSize: 12, color: COLORS.cream.dark },
+  
   // Redeem Code Section
   redeemButton: { borderRadius: 12, overflow: 'hidden' },
   redeemButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, gap: 10 },

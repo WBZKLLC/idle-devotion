@@ -333,7 +333,8 @@ async def craft_rune(username: str, rune_type: Optional[str] = None, rarity: str
         rune_type = random.choice(list(RUNE_TYPES.keys()))
     
     rune = generate_rune(rune_type, rarity, user["id"])
-    await db.runes.insert_one(rune)
+    rune_to_insert = dict(rune)
+    await db.runes.insert_one(rune_to_insert)
     return {"success": True, "rune": rune}
 
 @router.get("/{username}/hero/{hero_instance_id}/equipped")

@@ -382,6 +382,31 @@ frontend:
         agent: "main"
         comment: "✅ IMPLEMENTED: Full Guild War UI with war status/registration, match display, attack interface, leaderboard rankings, and attack history. Red/flame themed design. Navigation link added to home screen."
 
+  - task: "Campaign System APIs (12-chapter story mode)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ IMPLEMENTED: Complete 12-chapter campaign system with 21 stages per chapter (20 regular + boss). Features: chapter unlock progression, stage completion tracking, first-clear rewards, 3-star system, story dialogues, sweep functionality for cleared stages, and milestone rewards. Backend APIs: GET /api/campaign/chapters, GET /api/campaign/chapter/{id}, POST /api/campaign/stage/{chapter}/{stage}/complete, POST /api/campaign/stage/{chapter}/{stage}/sweep. Tested with user Adam - Stage 1-1 completion working correctly."
+
+frontend:
+  - task: "Campaign Mode UI (Story mode screen)"
+    implemented: true
+    working: true
+    file: "/app/frontend/app/campaign.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ IMPLEMENTED: Full Campaign Mode UI with dark fantasy theme. Features: 12 chapters displayed with unlock/lock status, progress bars, act badges (4 acts), chapter summaries, power requirements, stage selection grid with clear/locked states, boss stage indicators, battle modals, first-clear rewards display, story dialogue system, and 3-star rating. Navigation via home screen 'STORY CAMPAIGN' button."
+
 frontend:
   - task: "Navigation structure with tabs"
     implemented: true

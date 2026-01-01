@@ -12,7 +12,7 @@ import sys
 import random
 
 # Configuration
-BASE_URL = "https://idlegacha.preview.emergentagent.com/api"
+BASE_URL = "https://divinegacha.preview.emergentagent.com/api"
 TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
 
 class ComprehensiveGachaTest:

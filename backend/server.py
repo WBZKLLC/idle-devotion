@@ -31,6 +31,17 @@ from core.security import (
     VALID_CURRENCIES, VALID_GAME_MODES, VALID_HERO_RARITIES
 )
 
+# Import game formulas module
+from core.game_formulas import (
+    calculate_gacha_rate_with_soft_pity, should_trigger_high_tier_pull,
+    calculate_final_stat, calculate_hero_power, calculate_final_damage,
+    calculate_rage_gained_from_damage, calculate_rage_gained_from_dealing,
+    can_use_ultimate, MAX_RAGE, attempt_enhancement, get_enhancement_cost,
+    get_shards_from_duplicate, can_promote_star, get_shards_required_for_promotion,
+    ELEMENT_RESTRAINT, CLASS_RESTRAINT, STAR_MULTIPLIERS, AWAKENING_MULTIPLIERS,
+    get_subscription_status, MONTHLY_CARD_CONFIG
+)
+
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

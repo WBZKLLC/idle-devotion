@@ -116,7 +116,7 @@ export default function SeleneBannerScreen() {
     setIsPulling(true);
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/selene-banner/pull/${user.username}?multi=${multi}`,
+        `${API_BASE}/selene-banner/pull/${user.username}?multi=${multi}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' } }
       );
       

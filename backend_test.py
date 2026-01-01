@@ -137,7 +137,7 @@ class DivineGachaTest:
             }
             
             response = self.session.post(
-                f"{BACKEND_URL}/gacha/{USERNAME}/pull",
+                f"{BACKEND_URL}/gacha/pull?username={USERNAME}",
                 json=pull_data
             )
             

@@ -73,11 +73,16 @@ export default function HomeScreen() {
     try {
       const rewards = await claimIdleRewards();
       if (rewards.gold_earned > 0) {
-        Alert.alert('Rewards Collected', `+${rewards.gold_earned} Gold`, [{ text: 'Continue' }]);
+        Alert.alert('Rewards Collected', `+${rewards.gold_earned.toLocaleString()} Gold`, [{ text: 'Continue' }]);
       }
-      await fetchUser();
-      loadCR();
-      setIdleStatus({ ...idleStatus, time_elapsed: 0, gold_pending: 0, is_capped: false });
+      // Reload idle status to reset timer
+      loadIdleStatus();
+    } catch (error) {
+      console.error('Failed to claim idle rewards:', error);
+    } finally {
+      setIsClaiming(false);
+    }
+  };
     } catch (error) { Alert.alert('Error', 'Failed to claim rewards'); }
     finally { setIsClaiming(false); }
   };

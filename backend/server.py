@@ -1538,6 +1538,243 @@ async def unequip_frame(username: str):
         "equipped_frame": "default",
     }
 
+# ============================================
+# CHAT BUBBLE SYSTEM
+# ============================================
+
+# Chat bubble definitions - some are hidden/exclusive
+CHAT_BUBBLE_DEFINITIONS = {
+    "default": {
+        "name": "Basic Bubble",
+        "colors": ["#FAF9F6", "#F5F5DC"],  # Eggshell white
+        "text_color": "#1a1a1a",
+        "border_color": "#d4d4d4",
+        "unlock_method": "default",
+        "description": "Standard chat bubble"
+    },
+    "vip_emerald": {
+        "name": "Emerald Elite",
+        "colors": ["#50C878", "#228B22"],  # Emerald green
+        "text_color": "#ffffff",
+        "border_color": "#006400",
+        "icon": "💎",
+        "unlock_method": "vip",
+        "required_vip": 9,
+        "description": "Exclusive to VIP 9+ members"
+    },
+    "vip_skyblue": {
+        "name": "Sky Sovereign",
+        "colors": ["#87CEEB", "#00BFFF"],  # Sky blue
+        "text_color": "#ffffff",
+        "border_color": "#4169E1",
+        "icon": "☁️",
+        "unlock_method": "vip",
+        "required_vip": 15,
+        "description": "Ultimate VIP 15 exclusive"
+    },
+    "selene_fuchsia": {
+        "name": "Chrono Whisper",
+        "colors": ["#FF00FF", "#DA70D6", "#BA55D3"],  # Fuchsia/Magenta
+        "text_color": "#ffffff",
+        "border_color": "#8B008B",
+        "icon": "⏳",
+        "unlock_method": "selene_spending",
+        "required_spending": 200.00,  # Hidden requirement
+        "description": "Rare collector's bubble",
+        "hidden_unlock": True  # Don't show the real requirement
+    },
+    "admin_rainbow": {
+        "name": "Cosmic Creator",
+        "colors": ["#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3"],
+        "text_color": "#ffffff",
+        "border_color": "#FFD700",
+        "icon": "🌈",
+        "unlock_method": "admin_exclusive",
+        "description": "One of a kind - The Creator's Mark",
+        "unique": True,
+        "glow_effect": True,
+        "animated": True
+    }
+}
+
+@api_router.get("/user/{username}/chat-bubbles")
+async def get_user_chat_bubbles(username: str):
+    """Get all chat bubbles available to a user"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    vip_level = user_data.get("vip_level", 0)
+    equipped_bubble = user_data.get("equipped_chat_bubble", "default")
+    unlocked_bubbles = user_data.get("unlocked_chat_bubbles", ["default"])
+    is_admin = user_data.get("is_admin", False)
+    
+    # Get Selene banner spending
+    selene_progress = await db.selene_banner_progress.find_one({"user_id": user_data["id"]})
+    selene_spending = selene_progress.get("total_spent_usd", 0) if selene_progress else 0
+    
+    available_bubbles = []
+    locked_bubbles = []
+    
+    for bubble_id, bubble_data in CHAT_BUBBLE_DEFINITIONS.items():
+        bubble_info = {
+            "id": bubble_id,
+            "name": bubble_data["name"],
+            "colors": bubble_data["colors"],
+            "text_color": bubble_data["text_color"],
+            "border_color": bubble_data["border_color"],
+            "icon": bubble_data.get("icon"),
+            "description": bubble_data["description"],
+            "is_equipped": bubble_id == equipped_bubble,
+            "glow_effect": bubble_data.get("glow_effect", False),
+            "animated": bubble_data.get("animated", False),
+        }
+        
+        unlock_method = bubble_data["unlock_method"]
+        is_unlocked = False
+        
+        if unlock_method == "default":
+            is_unlocked = True
+        elif unlock_method == "vip":
+            is_unlocked = vip_level >= bubble_data.get("required_vip", 0)
+            if not is_unlocked:
+                bubble_info["unlock_hint"] = f"Reach VIP {bubble_data['required_vip']}"
+        elif unlock_method == "selene_spending":
+            is_unlocked = selene_spending >= bubble_data.get("required_spending", 0)
+            if not is_unlocked:
+                # Hidden requirement - show vague hint
+                bubble_info["unlock_hint"] = "Support the Fated Chronology event"
+        elif unlock_method == "admin_exclusive":
+            is_unlocked = is_admin and username == "Adam"  # Only Adam gets this
+            if not is_unlocked:
+                bubble_info["unlock_hint"] = "???"
+                bubble_info["unique"] = True
+        
+        # Check if manually unlocked
+        if bubble_id in unlocked_bubbles:
+            is_unlocked = True
+        
+        bubble_info["unlocked"] = is_unlocked
+        
+        if is_unlocked:
+            available_bubbles.append(bubble_info)
+        else:
+            locked_bubbles.append(bubble_info)
+    
+    return {
+        "equipped_bubble": equipped_bubble,
+        "available_bubbles": available_bubbles,
+        "locked_bubbles": locked_bubbles,
+        "vip_level": vip_level,
+    }
+
+@api_router.post("/user/{username}/equip-chat-bubble")
+async def equip_chat_bubble(username: str, bubble_id: str):
+    """Equip a chat bubble"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Validate bubble exists
+    if bubble_id not in CHAT_BUBBLE_DEFINITIONS:
+        raise HTTPException(status_code=400, detail="Invalid bubble ID")
+    
+    bubble_data = CHAT_BUBBLE_DEFINITIONS[bubble_id]
+    vip_level = user_data.get("vip_level", 0)
+    unlocked_bubbles = user_data.get("unlocked_chat_bubbles", ["default"])
+    is_admin = user_data.get("is_admin", False)
+    
+    # Check unlock requirements
+    unlock_method = bubble_data["unlock_method"]
+    can_equip = False
+    
+    if unlock_method == "default":
+        can_equip = True
+    elif unlock_method == "vip":
+        can_equip = vip_level >= bubble_data.get("required_vip", 0)
+    elif unlock_method == "selene_spending":
+        selene_progress = await db.selene_banner_progress.find_one({"user_id": user_data["id"]})
+        selene_spending = selene_progress.get("total_spent_usd", 0) if selene_progress else 0
+        can_equip = selene_spending >= bubble_data.get("required_spending", 0)
+    elif unlock_method == "admin_exclusive":
+        can_equip = is_admin and username == "Adam"
+    
+    if bubble_id in unlocked_bubbles:
+        can_equip = True
+    
+    if not can_equip:
+        raise HTTPException(status_code=403, detail="You haven't unlocked this chat bubble")
+    
+    # Equip the bubble
+    await db.users.update_one(
+        {"username": username},
+        {"$set": {"equipped_chat_bubble": bubble_id}}
+    )
+    
+    return {
+        "success": True,
+        "message": f"Equipped {bubble_data['name']}",
+        "equipped_bubble": bubble_id,
+    }
+
+@api_router.get("/chat/user-bubble/{username}")
+async def get_user_equipped_bubble(username: str):
+    """Get a user's equipped chat bubble for display"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        return CHAT_BUBBLE_DEFINITIONS["default"]
+    
+    bubble_id = user_data.get("equipped_chat_bubble", "default")
+    bubble = CHAT_BUBBLE_DEFINITIONS.get(bubble_id, CHAT_BUBBLE_DEFINITIONS["default"])
+    
+    return {
+        "bubble_id": bubble_id,
+        **bubble
+    }
+
+# Update Selene banner to track spending
+@api_router.post("/selene-banner/record-purchase")
+async def record_selene_purchase(username: str, amount_usd: float, bundle_id: str):
+    """Record a purchase on the Selene banner (for chat bubble unlock tracking)"""
+    user_data = await db.users.find_one({"username": username})
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update spending tracking
+    await db.selene_banner_progress.update_one(
+        {"user_id": user_data["id"]},
+        {
+            "$inc": {"total_spent_usd": amount_usd},
+            "$push": {
+                "purchase_history": {
+                    "bundle_id": bundle_id,
+                    "amount_usd": amount_usd,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        },
+        upsert=True
+    )
+    
+    # Check if they unlocked the fuchsia bubble
+    progress = await db.selene_banner_progress.find_one({"user_id": user_data["id"]})
+    total_spent = progress.get("total_spent_usd", 0)
+    
+    unlocked_bubble = None
+    if total_spent >= 200.00:
+        # Silently unlock the fuchsia bubble
+        await db.users.update_one(
+            {"username": username},
+            {"$addToSet": {"unlocked_chat_bubbles": "selene_fuchsia"}}
+        )
+        unlocked_bubble = "selene_fuchsia"
+    
+    return {
+        "success": True,
+        "total_spent": total_spent,
+        "unlocked_bubble": unlocked_bubble  # Will be None unless they hit $200
+    }
+
 @api_router.post("/gacha/pull")
 async def pull_gacha(username: str, request: PullRequest):
     """Perform gacha pull - Premium (crystals) or Common (coins)"""

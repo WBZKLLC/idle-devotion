@@ -7511,9 +7511,22 @@ async def get_campaign_chapter(chapter_id: int, username: str):
         stage_id = f"{chapter_id}-{stage_num}"
         
         stage_info = stage_progress.get(stage_id, {})
+        is_cleared = stage_info.get("cleared", False)
+        
+        # Determine if stage is unlocked
+        # Stage 1 of chapter 1 is always unlocked, others require previous stage cleared
+        if stage_num == 1:
+            # First stage - unlocked if chapter is unlocked (handled by frontend)
+            is_unlocked = True
+        else:
+            prev_stage_id = f"{chapter_id}-{stage_num - 1}"
+            prev_stage_info = stage_progress.get(prev_stage_id, {})
+            is_unlocked = prev_stage_info.get("cleared", False)
+        
         stages.append({
             **stage_data,
-            "is_cleared": stage_info.get("cleared", False),
+            "is_cleared": is_cleared,
+            "is_unlocked": is_unlocked,
             "stars": stage_info.get("stars", 0),
             "best_time": stage_info.get("best_time"),
             "clear_count": stage_info.get("clear_count", 0),

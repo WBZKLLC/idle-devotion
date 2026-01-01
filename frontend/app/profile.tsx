@@ -438,6 +438,107 @@ export default function ProfileScreen() {
             </View>
           </Modal>
 
+          {/* Frame Selection Modal */}
+          <Modal
+            visible={showFrameModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowFrameModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>🖼️ Profile Frames</Text>
+                  <TouchableOpacity onPress={() => setShowFrameModal(false)}>
+                    <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.frameSubtitle}>
+                  VIP Level: {user.vip_level || 0} • Tap a frame to equip
+                </Text>
+
+                <ScrollView style={styles.frameScrollView} showsVerticalScrollIndicator={false}>
+                  {/* Available Frames */}
+                  <Text style={styles.frameSectionTitle}>Available Frames</Text>
+                  <View style={styles.framesGrid}>
+                    {availableFrames.map((frame) => (
+                      <TouchableOpacity
+                        key={frame.id}
+                        style={[
+                          styles.frameCard,
+                          frame.is_equipped && styles.frameCardEquipped,
+                        ]}
+                        onPress={() => frame.is_equipped ? unequipFrame() : equipFrame(frame.id)}
+                        disabled={loadingFrames}
+                      >
+                        <ProfileFrame
+                          username={user.username}
+                          frameId={frame.id}
+                          size="medium"
+                        />
+                        <Text style={styles.frameCardName} numberOfLines={1}>
+                          {frame.name}
+                        </Text>
+                        {frame.is_equipped && (
+                          <View style={styles.equippedBadge}>
+                            <Text style={styles.equippedBadgeText}>EQUIPPED</Text>
+                          </View>
+                        )}
+                        {frame.is_special && (
+                          <View style={styles.specialBadge}>
+                            <Text style={styles.specialBadgeText}>SPECIAL</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {/* Locked Frames */}
+                  {lockedFrames.length > 0 && (
+                    <>
+                      <Text style={[styles.frameSectionTitle, { marginTop: 20 }]}>
+                        Locked Frames
+                      </Text>
+                      <View style={styles.framesGrid}>
+                        {lockedFrames.map((frame) => (
+                          <View
+                            key={frame.id}
+                            style={[styles.frameCard, styles.frameCardLocked]}
+                          >
+                            <View style={styles.lockedOverlay}>
+                              <Ionicons name="lock-closed" size={20} color={COLORS.cream.dark} />
+                            </View>
+                            <ProfileFrame
+                              username={user.username}
+                              frameId={frame.id}
+                              size="medium"
+                            />
+                            <Text style={[styles.frameCardName, { color: COLORS.cream.dark }]} numberOfLines={1}>
+                              {frame.name}
+                            </Text>
+                            <Text style={styles.frameRequirement}>
+                              {frame.is_special 
+                                ? 'Special Achievement'
+                                : `VIP ${frame.required_vip} Required`
+                              }
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    </>
+                  )}
+                </ScrollView>
+
+                {loadingFrames && (
+                  <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color={COLORS.gold.primary} />
+                  </View>
+                )}
+              </View>
+            </View>
+          </Modal>
+
           {/* Version Info */}
           <Text style={styles.versionText}>Divine Heroes v1.0</Text>
         </ScrollView>

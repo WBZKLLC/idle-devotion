@@ -21,6 +21,7 @@ import secrets
 # Import new modular routers
 from routers import equipment as equipment_router
 from routers import economy as economy_router
+from routers import stages as stages_router
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

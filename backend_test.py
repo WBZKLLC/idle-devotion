@@ -1,346 +1,527 @@
 #!/usr/bin/env python3
 """
-Backend Testing Script for Divine Heroes Gacha Game
-Focus: Divine Summon System Testing with New Rate Changes
+Backend API Testing Suite for Economy and Equipment Systems
+Tests the new Economy and Equipment system APIs as requested.
 """
 
 import requests
 import json
-import time
-from typing import Dict, Any, List
+import sys
+from typing import Dict, Any, Optional
 
 # Configuration
 BASE_URL = "https://male-heroes-game.preview.emergentagent.com/api"
-TEST_USERNAME = "Adam"
-TEST_PASSWORD = "Adam123!"
+USERNAME = "Adam"
+PASSWORD = "Adam123!"
 
-class DivineGachaTestSuite:
-    def __init__(self):
+class APITester:
+    def __init__(self, base_url: str, username: str, password: str):
+        self.base_url = base_url
+        self.username = username
+        self.password = password
         self.session = requests.Session()
         self.auth_token = None
         self.user_data = None
+        self.test_results = []
         
-    def log(self, message: str, level: str = "INFO"):
-        """Log test messages with timestamp"""
-        timestamp = time.strftime("%H:%M:%S")
-        print(f"[{timestamp}] {level}: {message}")
+    def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}")
+        if details:
+            print(f"    {details}")
+        if response_data and not success:
+            print(f"    Response: {response_data}")
+        print()
+        
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "response": response_data
+        })
     
     def authenticate(self) -> bool:
         """Authenticate user and get token"""
         try:
-            self.log("🔐 Authenticating user...")
-            
             # Try login first
-            login_data = {
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD
-            }
-            
-            response = self.session.post(f"{BASE_URL}/auth/login", json=login_data)
+            login_data = {"username": self.username, "password": self.password}
+            response = self.session.post(f"{self.base_url}/auth/login", json=login_data)
             
             if response.status_code == 200:
                 data = response.json()
                 self.auth_token = data.get("token")
                 self.user_data = data.get("user")
                 self.session.headers.update({"Authorization": f"Bearer {self.auth_token}"})
-                self.log(f"✅ Login successful for user: {self.user_data.get('username')}")
+                self.log_test("User Authentication", True, f"Logged in as {self.username}")
                 return True
             else:
-                self.log(f"❌ Login failed: {response.status_code} - {response.text}", "ERROR")
+                self.log_test("User Authentication", False, f"Login failed: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log(f"❌ Authentication error: {str(e)}", "ERROR")
+            self.log_test("User Authentication", False, f"Authentication error: {str(e)}")
             return False
     
-    def check_user_resources(self) -> Dict[str, Any]:
-        """Check user's current resources, especially divine_essence"""
+    def test_economy_currencies(self) -> bool:
+        """Test Suite 1: Economy System - Currency balances"""
         try:
-            self.log("💰 Checking user resources...")
-            
-            response = self.session.get(f"{BASE_URL}/user/{TEST_USERNAME}")
+            response = self.session.get(f"{self.base_url}/economy/{self.username}/currencies")
             
             if response.status_code == 200:
-                user_data = response.json()
-                resources = {
-                    "crystals": user_data.get("crystals", 0),
-                    "coins": user_data.get("coins", 0),
-                    "gold": user_data.get("gold", 0),
-                    "divine_essence": user_data.get("divine_essence", 0),
-                    "hero_shards": user_data.get("hero_shards", 0)
-                }
+                currencies = response.json()
+                expected_currencies = [
+                    "gold", "coins", "crystals", "divine_essence", "soul_dust", 
+                    "skill_essence", "star_crystals", "divine_gems", "guild_coins", 
+                    "pvp_medals", "enhancement_stones", "hero_shards", "stamina"
+                ]
                 
-                self.log(f"💎 Crystals: {resources['crystals']}")
-                self.log(f"🪙 Coins: {resources['coins']}")
-                self.log(f"🏆 Gold: {resources['gold']}")
-                self.log(f"✨ Divine Essence: {resources['divine_essence']}")
-                self.log(f"⭐ Hero Shards: {resources['hero_shards']}")
+                missing_currencies = [c for c in expected_currencies if c not in currencies]
+                if missing_currencies:
+                    self.log_test("GET /api/economy/currencies", False, 
+                                f"Missing currencies: {missing_currencies}", currencies)
+                    return False
                 
-                if resources['divine_essence'] < 10:
-                    self.log("⚠️ WARNING: User has insufficient divine essence for multi-pull test", "WARN")
-                
-                return resources
+                self.log_test("GET /api/economy/currencies", True, 
+                            f"All {len(currencies)} currencies retrieved successfully", currencies)
+                return True
             else:
-                self.log(f"❌ Failed to get user resources: {response.status_code}", "ERROR")
-                return {}
+                self.log_test("GET /api/economy/currencies", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
                 
         except Exception as e:
-            self.log(f"❌ Error checking resources: {str(e)}", "ERROR")
-            return {}
+            self.log_test("GET /api/economy/currencies", False, f"Exception: {str(e)}")
+            return False
     
-    def test_divine_summon_single(self) -> Dict[str, Any]:
-        """Test single divine summon pull"""
+    def test_economy_stamina(self) -> bool:
+        """Test Suite 1: Economy System - Stamina status"""
         try:
-            self.log("🎲 Testing Divine Summon - Single Pull...")
+            response = self.session.get(f"{self.base_url}/economy/{self.username}/stamina")
             
-            pull_data = {
-                "pull_type": "single",
-                "currency_type": "divine_essence"
-            }
-            
-            response = self.session.post(f"{BASE_URL}/gacha/pull?username={TEST_USERNAME}", json=pull_data)
+            if response.status_code == 200:
+                stamina_data = response.json()
+                required_fields = ["stamina", "max", "time_to_next"]
+                
+                missing_fields = [f for f in required_fields if f not in stamina_data]
+                if missing_fields:
+                    self.log_test("GET /api/economy/stamina", False, 
+                                f"Missing fields: {missing_fields}", stamina_data)
+                    return False
+                
+                stamina = stamina_data.get("stamina", 0)
+                max_stamina = stamina_data.get("max", 0)
+                
+                if max_stamina != 100:
+                    self.log_test("GET /api/economy/stamina", False, 
+                                f"Expected max stamina 100, got {max_stamina}", stamina_data)
+                    return False
+                
+                self.log_test("GET /api/economy/stamina", True, 
+                            f"Stamina: {stamina}/{max_stamina}", stamina_data)
+                return True
+            else:
+                self.log_test("GET /api/economy/stamina", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/economy/stamina", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_add_soul_dust(self) -> bool:
+        """Test Suite 1: Economy System - Add Soul Dust"""
+        try:
+            params = {"currency": "soul_dust", "amount": 5000}
+            response = self.session.post(f"{self.base_url}/economy/{self.username}/currencies/add", params=params)
             
             if response.status_code == 200:
                 result = response.json()
-                self.log("✅ Single divine summon successful")
-                self.analyze_summon_result(result, "single")
-                return result
+                
+                if not result.get("success"):
+                    self.log_test("POST /api/economy/currencies/add (Soul Dust)", False, 
+                                "Success flag not true", result)
+                    return False
+                
+                if result.get("currency") != "soul_dust" or result.get("added") != 5000:
+                    self.log_test("POST /api/economy/currencies/add (Soul Dust)", False, 
+                                "Incorrect currency or amount", result)
+                    return False
+                
+                self.log_test("POST /api/economy/currencies/add (Soul Dust)", True, 
+                            f"Added 5000 Soul Dust, new balance: {result.get('new_balance')}", result)
+                return True
             else:
-                self.log(f"❌ Single divine summon failed: {response.status_code} - {response.text}", "ERROR")
-                return {}
+                self.log_test("POST /api/economy/currencies/add (Soul Dust)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
                 
         except Exception as e:
-            self.log(f"❌ Error in single divine summon: {str(e)}", "ERROR")
-            return {}
+            self.log_test("POST /api/economy/currencies/add (Soul Dust)", False, f"Exception: {str(e)}")
+            return False
     
-    def test_divine_summon_multi(self) -> Dict[str, Any]:
-        """Test multi divine summon pull (10 pulls)"""
+    def test_add_enhancement_stones(self) -> bool:
+        """Test Suite 1: Economy System - Add Enhancement Stones"""
         try:
-            self.log("🎲 Testing Divine Summon - Multi Pull (10x)...")
-            
-            pull_data = {
-                "pull_type": "multi",
-                "currency_type": "divine_essence"
-            }
-            
-            response = self.session.post(f"{BASE_URL}/gacha/pull?username={TEST_USERNAME}", json=pull_data)
+            params = {"currency": "enhancement_stones", "amount": 100}
+            response = self.session.post(f"{self.base_url}/economy/{self.username}/currencies/add", params=params)
             
             if response.status_code == 200:
                 result = response.json()
-                self.log("✅ Multi divine summon successful")
-                self.analyze_summon_result(result, "multi")
-                return result
+                
+                if not result.get("success"):
+                    self.log_test("POST /api/economy/currencies/add (Enhancement Stones)", False, 
+                                "Success flag not true", result)
+                    return False
+                
+                if result.get("currency") != "enhancement_stones" or result.get("added") != 100:
+                    self.log_test("POST /api/economy/currencies/add (Enhancement Stones)", False, 
+                                "Incorrect currency or amount", result)
+                    return False
+                
+                self.log_test("POST /api/economy/currencies/add (Enhancement Stones)", True, 
+                            f"Added 100 Enhancement Stones, new balance: {result.get('new_balance')}", result)
+                return True
             else:
-                self.log(f"❌ Multi divine summon failed: {response.status_code} - {response.text}", "ERROR")
-                return {}
+                self.log_test("POST /api/economy/currencies/add (Enhancement Stones)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
                 
         except Exception as e:
-            self.log(f"❌ Error in multi divine summon: {str(e)}", "ERROR")
-            return {}
+            self.log_test("POST /api/economy/currencies/add (Enhancement Stones)", False, f"Exception: {str(e)}")
+            return False
     
-    def analyze_summon_result(self, result: Dict[str, Any], pull_type: str):
-        """Analyze and validate summon results"""
+    def test_get_equipment(self) -> bool:
+        """Test Suite 2: Equipment System - Get all equipment"""
         try:
-            self.log(f"📊 Analyzing {pull_type} summon results...")
+            response = self.session.get(f"{self.base_url}/equipment/{self.username}")
             
-            # Check basic structure
-            heroes = result.get("heroes", [])
-            pulled_heroes_count = result.get("pulled_heroes_count", 0)
-            filler_rewards_count = result.get("filler_rewards_count", 0)
-            filler_rewards_collected = result.get("filler_rewards_collected", {})
-            divine_spent = result.get("divine_spent", 0)
-            
-            self.log(f"📦 Total items received: {len(heroes)}")
-            self.log(f"🦸 Heroes pulled: {pulled_heroes_count}")
-            self.log(f"🎁 Filler rewards: {filler_rewards_count}")
-            self.log(f"✨ Divine essence spent: {divine_spent}")
-            
-            # Validate divine essence cost
-            expected_cost = 10 if pull_type == "multi" else 1
-            if divine_spent != expected_cost:
-                self.log(f"❌ ISSUE: Expected divine essence cost {expected_cost}, got {divine_spent}", "ERROR")
+            if response.status_code == 200:
+                equipment_list = response.json()
+                
+                if not isinstance(equipment_list, list):
+                    self.log_test("GET /api/equipment", False, 
+                                "Response is not a list", equipment_list)
+                    return False
+                
+                self.log_test("GET /api/equipment", True, 
+                            f"Retrieved {len(equipment_list)} equipment items", 
+                            f"Count: {len(equipment_list)}")
+                return True
             else:
-                self.log(f"✅ Divine essence cost correct: {divine_spent}")
-            
-            # Analyze individual items
-            hero_count = 0
-            filler_count = 0
-            
-            for item in heroes:
-                if item.get("is_filler", False):
-                    filler_count += 1
-                    self.log(f"🎁 Filler: {item.get('display', 'Unknown')} (Rarity: {item.get('rarity', 'N/A')})")
-                    
-                    # Validate filler structure
-                    if not item.get("display"):
-                        self.log("❌ ISSUE: Filler reward missing 'display' field", "ERROR")
-                    if not item.get("type"):
-                        self.log("❌ ISSUE: Filler reward missing 'type' field", "ERROR")
-                else:
-                    hero_count += 1
-                    hero_name = item.get("hero_name", "Unknown")
-                    rarity = item.get("rarity", "N/A")
-                    element = item.get("element", "N/A")
-                    hero_class = item.get("hero_class", "N/A")
-                    self.log(f"🦸 Hero: {hero_name} ({rarity}) - {element} {hero_class}")
-            
-            # Validate counts match
-            if hero_count != pulled_heroes_count:
-                self.log(f"❌ ISSUE: Hero count mismatch. Expected {pulled_heroes_count}, found {hero_count}", "ERROR")
-            if filler_count != filler_rewards_count:
-                self.log(f"❌ ISSUE: Filler count mismatch. Expected {filler_rewards_count}, found {filler_count}", "ERROR")
-            
-            # Validate filler rewards collected
-            self.log("💰 Filler rewards collected:")
-            for currency, amount in filler_rewards_collected.items():
-                if amount > 0:
-                    self.log(f"  {currency}: +{amount}")
-            
-            # Check for both heroes and filler rewards (as requested)
-            if hero_count > 0 and filler_count > 0:
-                self.log("✅ SUCCESS: Response includes BOTH heroes AND filler rewards")
-            elif hero_count > 0:
-                self.log("⚠️ WARNING: Only heroes received, no filler rewards")
-            elif filler_count > 0:
-                self.log("⚠️ WARNING: Only filler rewards received, no heroes")
-            else:
-                self.log("❌ ISSUE: No heroes or filler rewards received", "ERROR")
-            
-            # Validate rate expectations (for multi-pull)
-            if pull_type == "multi":
-                expected_items = 10
-                actual_items = len(heroes)
-                if actual_items != expected_items:
-                    self.log(f"❌ ISSUE: Expected {expected_items} items for multi-pull, got {actual_items}", "ERROR")
-                else:
-                    self.log(f"✅ Correct number of items for multi-pull: {actual_items}")
-            
+                self.log_test("GET /api/equipment", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
         except Exception as e:
-            self.log(f"❌ Error analyzing summon result: {str(e)}", "ERROR")
+            self.log_test("GET /api/equipment", False, f"Exception: {str(e)}")
+            return False
     
-    def test_rate_validation(self, num_tests: int = 5):
-        """Test multiple pulls to validate rate distribution"""
+    def test_craft_epic_helmet(self) -> bool:
+        """Test Suite 2: Equipment System - Craft epic warrior helmet"""
         try:
-            self.log(f"📈 Testing rate validation with {num_tests} multi-pulls...")
+            params = {"slot": "helmet", "rarity": "epic", "set_id": "warrior"}
+            response = self.session.post(f"{self.base_url}/equipment/{self.username}/craft", params=params)
             
-            total_heroes = 0
-            total_filler = 0
-            ur_plus_count = 0
-            ur_count = 0
-            crystal_jackpots = 0
-            
-            for i in range(num_tests):
-                self.log(f"🎲 Test pull {i+1}/{num_tests}")
-                result = self.test_divine_summon_multi()
+            if response.status_code == 200:
+                result = response.json()
                 
-                if result:
-                    heroes = result.get("heroes", [])
-                    for item in heroes:
-                        if item.get("is_filler", False):
-                            total_filler += 1
-                            if "crystals" in item.get("type", ""):
-                                crystal_jackpots += 1
-                        else:
-                            total_heroes += 1
-                            rarity = item.get("rarity", "")
-                            if rarity == "UR+":
-                                ur_plus_count += 1
-                            elif rarity == "UR":
-                                ur_count += 1
+                if not result.get("success"):
+                    self.log_test("POST /api/equipment/craft (Epic Helmet)", False, 
+                                "Success flag not true", result)
+                    return False
                 
-                time.sleep(1)  # Brief pause between tests
-            
-            total_items = total_heroes + total_filler
-            if total_items > 0:
-                hero_rate = (total_heroes / total_items) * 100
-                filler_rate = (total_filler / total_items) * 100
+                equipment = result.get("equipment", {})
+                if (equipment.get("slot") != "helmet" or 
+                    equipment.get("rarity") != "epic" or 
+                    equipment.get("set_id") != "warrior"):
+                    self.log_test("POST /api/equipment/craft (Epic Helmet)", False, 
+                                "Equipment properties don't match request", result)
+                    return False
                 
-                self.log(f"📊 Rate Analysis Results:")
-                self.log(f"  Total items: {total_items}")
-                self.log(f"  Heroes: {total_heroes} ({hero_rate:.1f}%)")
-                self.log(f"  Filler: {total_filler} ({filler_rate:.1f}%)")
-                self.log(f"  UR+ heroes: {ur_plus_count}")
-                self.log(f"  UR heroes: {ur_count}")
-                self.log(f"  Crystal jackpots: {crystal_jackpots}")
+                self.log_test("POST /api/equipment/craft (Epic Helmet)", True, 
+                            f"Crafted {equipment.get('name')}", equipment)
+                return True
+            else:
+                self.log_test("POST /api/equipment/craft (Epic Helmet)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
                 
-                # Expected rates: Heroes ~3.5%, Filler ~90.6%, Crystals ~5.9%
-                if filler_rate >= 80:  # Allow some variance
-                    self.log("✅ Filler rate appears correct (should be ~90.6%)")
-                else:
-                    self.log(f"⚠️ WARNING: Filler rate seems low. Expected ~90.6%, got {filler_rate:.1f%}")
-            
         except Exception as e:
-            self.log(f"❌ Error in rate validation: {str(e)}", "ERROR")
+            self.log_test("POST /api/equipment/craft (Epic Helmet)", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_craft_rare_chestplate(self) -> bool:
+        """Test Suite 2: Equipment System - Craft rare warrior chestplate"""
+        try:
+            params = {"slot": "chestplate", "rarity": "rare", "set_id": "warrior"}
+            response = self.session.post(f"{self.base_url}/equipment/{self.username}/craft", params=params)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if not result.get("success"):
+                    self.log_test("POST /api/equipment/craft (Rare Chestplate)", False, 
+                                "Success flag not true", result)
+                    return False
+                
+                equipment = result.get("equipment", {})
+                if (equipment.get("slot") != "chestplate" or 
+                    equipment.get("rarity") != "rare" or 
+                    equipment.get("set_id") != "warrior"):
+                    self.log_test("POST /api/equipment/craft (Rare Chestplate)", False, 
+                                "Equipment properties don't match request", result)
+                    return False
+                
+                self.log_test("POST /api/equipment/craft (Rare Chestplate)", True, 
+                            f"Crafted {equipment.get('name')}", equipment)
+                return True
+            else:
+                self.log_test("POST /api/equipment/craft (Rare Chestplate)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/equipment/craft (Rare Chestplate)", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_craft_power_rune(self) -> bool:
+        """Test Suite 2: Equipment System - Craft a Power Rune"""
+        try:
+            params = {"rune_type": "power", "rarity": "rare"}
+            response = self.session.post(f"{self.base_url}/equipment/{self.username}/craft-rune", params=params)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if not result.get("success"):
+                    self.log_test("POST /api/equipment/craft-rune (Power Rune)", False, 
+                                "Success flag not true", result)
+                    return False
+                
+                rune = result.get("rune", {})
+                if (rune.get("rune_type") != "power" or 
+                    rune.get("rarity") != "rare"):
+                    self.log_test("POST /api/equipment/craft-rune (Power Rune)", False, 
+                                "Rune properties don't match request", result)
+                    return False
+                
+                self.log_test("POST /api/equipment/craft-rune (Power Rune)", True, 
+                            f"Crafted {rune.get('name')}", rune)
+                return True
+            else:
+                self.log_test("POST /api/equipment/craft-rune (Power Rune)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/equipment/craft-rune (Power Rune)", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_get_runes(self) -> bool:
+        """Test Suite 2: Equipment System - Get all runes"""
+        try:
+            response = self.session.get(f"{self.base_url}/equipment/{self.username}/runes")
+            
+            if response.status_code == 200:
+                runes_list = response.json()
+                
+                if not isinstance(runes_list, list):
+                    self.log_test("GET /api/equipment/runes", False, 
+                                "Response is not a list", runes_list)
+                    return False
+                
+                self.log_test("GET /api/equipment/runes", True, 
+                            f"Retrieved {len(runes_list)} runes", 
+                            f"Count: {len(runes_list)}")
+                return True
+            else:
+                self.log_test("GET /api/equipment/runes", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("GET /api/equipment/runes", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_enhance_equipment(self) -> bool:
+        """Test Suite 3: Equipment Enhancement - Enhance equipment by 1 level"""
+        try:
+            # First get equipment list to find an equipment ID
+            equipment_response = self.session.get(f"{self.base_url}/equipment/{self.username}")
+            if equipment_response.status_code != 200:
+                self.log_test("POST /api/equipment/enhance", False, 
+                            "Could not retrieve equipment list for testing")
+                return False
+            
+            equipment_list = equipment_response.json()
+            if not equipment_list:
+                self.log_test("POST /api/equipment/enhance", False, 
+                            "No equipment available for enhancement testing")
+                return False
+            
+            # Use the first equipment item
+            equipment_id = equipment_list[0].get("id")
+            if not equipment_id:
+                self.log_test("POST /api/equipment/enhance", False, 
+                            "Equipment ID not found")
+                return False
+            
+            # Test enhancement
+            enhance_data = {"equipment_id": equipment_id, "levels": 1}
+            response = self.session.post(f"{self.base_url}/equipment/{self.username}/enhance", json=enhance_data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if not result.get("success"):
+                    self.log_test("POST /api/equipment/enhance", False, 
+                                "Success flag not true", result)
+                    return False
+                
+                new_level = result.get("new_level")
+                if not new_level or new_level <= 1:
+                    self.log_test("POST /api/equipment/enhance", False, 
+                                f"Invalid new level: {new_level}", result)
+                    return False
+                
+                self.log_test("POST /api/equipment/enhance", True, 
+                            f"Enhanced equipment to level {new_level}", result)
+                return True
+            else:
+                self.log_test("POST /api/equipment/enhance", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/equipment/enhance", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_hero_level_up(self) -> bool:
+        """Test Suite 4: Hero Leveling - Level up hero 5 times"""
+        try:
+            # First get user heroes to find a hero ID
+            heroes_response = self.session.get(f"{self.base_url}/user/{self.username}/heroes")
+            if heroes_response.status_code != 200:
+                self.log_test("POST /api/economy/hero/level-up", False, 
+                            "Could not retrieve heroes list for testing")
+                return False
+            
+            heroes_list = heroes_response.json()
+            if not heroes_list:
+                self.log_test("POST /api/economy/hero/level-up", False, 
+                            "No heroes available for level up testing")
+                return False
+            
+            # Use the first hero
+            hero_id = heroes_list[0].get("id")
+            if not hero_id:
+                self.log_test("POST /api/economy/hero/level-up", False, 
+                            "Hero ID not found")
+                return False
+            
+            # Test hero level up
+            params = {"levels": 5}
+            response = self.session.post(f"{self.base_url}/economy/{self.username}/hero/{hero_id}/level-up", params=params)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if not result.get("success"):
+                    self.log_test("POST /api/economy/hero/level-up", False, 
+                                "Success flag not true", result)
+                    return False
+                
+                new_level = result.get("new_level")
+                if not new_level:
+                    self.log_test("POST /api/economy/hero/level-up", False, 
+                                f"Invalid new level: {new_level}", result)
+                    return False
+                
+                self.log_test("POST /api/economy/hero/level-up", True, 
+                            f"Leveled up hero to level {new_level}", result)
+                return True
+            else:
+                self.log_test("POST /api/economy/hero/level-up", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("POST /api/economy/hero/level-up", False, f"Exception: {str(e)}")
+            return False
     
     def run_all_tests(self):
-        """Run complete test suite for Divine Summon system"""
-        self.log("🚀 Starting Divine Summon Test Suite...")
-        self.log("=" * 60)
+        """Run all test suites"""
+        print("=" * 80)
+        print("BACKEND API TESTING - ECONOMY AND EQUIPMENT SYSTEMS")
+        print("=" * 80)
+        print()
         
-        # Step 1: Authentication
+        # Authentication
         if not self.authenticate():
-            self.log("❌ CRITICAL: Authentication failed. Cannot proceed with tests.", "ERROR")
+            print("❌ Authentication failed. Cannot proceed with tests.")
             return False
         
-        # Step 2: Check resources
-        resources = self.check_user_resources()
-        if not resources:
-            self.log("❌ CRITICAL: Cannot check user resources.", "ERROR")
-            return False
+        # Test Suite 1: Economy System
+        print("🔹 TEST SUITE 1: ECONOMY SYSTEM")
+        print("-" * 40)
+        economy_tests = [
+            self.test_economy_currencies(),
+            self.test_economy_stamina(),
+            self.test_add_soul_dust(),
+            self.test_add_enhancement_stones()
+        ]
         
-        # Step 3: Ensure sufficient divine essence
-        if resources.get("divine_essence", 0) < 20:
-            self.log("⚠️ WARNING: Low divine essence. Some tests may fail.", "WARN")
+        # Test Suite 2: Equipment System
+        print("🔹 TEST SUITE 2: EQUIPMENT SYSTEM")
+        print("-" * 40)
+        equipment_tests = [
+            self.test_get_equipment(),
+            self.test_craft_epic_helmet(),
+            self.test_craft_rare_chestplate(),
+            self.test_craft_power_rune(),
+            self.test_get_runes()
+        ]
         
-        # Step 4: Test single divine summon
-        self.log("\n" + "=" * 40)
-        single_result = self.test_divine_summon_single()
+        # Test Suite 3: Equipment Enhancement
+        print("🔹 TEST SUITE 3: EQUIPMENT ENHANCEMENT")
+        print("-" * 40)
+        enhancement_tests = [
+            self.test_enhance_equipment()
+        ]
         
-        # Step 5: Test multi divine summon
-        self.log("\n" + "=" * 40)
-        multi_result = self.test_divine_summon_multi()
+        # Test Suite 4: Hero Leveling
+        print("🔹 TEST SUITE 4: HERO LEVELING (ECONOMY)")
+        print("-" * 40)
+        hero_tests = [
+            self.test_hero_level_up()
+        ]
         
-        # Step 6: Rate validation (if we have enough essence)
-        if resources.get("divine_essence", 0) >= 50:
-            self.log("\n" + "=" * 40)
-            self.test_rate_validation(3)  # Reduced for resource conservation
+        # Summary
+        all_tests = economy_tests + equipment_tests + enhancement_tests + hero_tests
+        passed = sum(all_tests)
+        total = len(all_tests)
+        
+        print("=" * 80)
+        print("TEST SUMMARY")
+        print("=" * 80)
+        print(f"Total Tests: {total}")
+        print(f"Passed: {passed}")
+        print(f"Failed: {total - passed}")
+        print(f"Success Rate: {(passed/total)*100:.1f}%")
+        
+        if passed == total:
+            print("\n🎉 ALL TESTS PASSED! Economy and Equipment systems are working correctly.")
         else:
-            self.log("\n⚠️ Skipping rate validation due to insufficient divine essence")
+            print(f"\n⚠️  {total - passed} test(s) failed. Please review the failed tests above.")
         
-        # Final summary
-        self.log("\n" + "=" * 60)
-        self.log("🏁 Divine Summon Test Suite Complete")
-        
-        success_count = 0
-        if single_result:
-            success_count += 1
-        if multi_result:
-            success_count += 1
-        
-        self.log(f"📊 Test Results: {success_count}/2 core tests passed")
-        
-        if success_count == 2:
-            self.log("✅ OVERALL: Divine Summon system appears to be working correctly")
-            return True
-        else:
-            self.log("❌ OVERALL: Some Divine Summon tests failed")
-            return False
+        return passed == total
 
 def main():
     """Main test execution"""
-    print("Divine Heroes Gacha Game - Divine Summon Testing")
-    print("=" * 60)
-    
-    test_suite = DivineGachaTestSuite()
-    success = test_suite.run_all_tests()
-    
-    print("\n" + "=" * 60)
-    if success:
-        print("🎉 ALL TESTS COMPLETED SUCCESSFULLY")
-    else:
-        print("⚠️ SOME TESTS FAILED - CHECK LOGS ABOVE")
-    
-    return success
+    tester = APITester(BASE_URL, USERNAME, PASSWORD)
+    success = tester.run_all_tests()
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
     main()

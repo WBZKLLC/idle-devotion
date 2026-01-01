@@ -24,6 +24,8 @@ from routers import economy as economy_router
 from routers import stages as stages_router
 from routers import admin as admin_router
 from routers import campaign as campaign_router
+from routers import battle as battle_router
+from routers import gacha as gacha_router
 
 # Import security module
 from core.security import (

@@ -263,7 +263,7 @@ export default function LaunchBannerScreen() {
               </View>
             </View>
             <Text style={styles.pityInfo}>
-              Current Rate: {((bannerData?.current_rate || 0.5) * 100).toFixed(1)}% • {(bannerData?.hard_pity || 100) - (bannerData?.pity_count || 0)} to guarantee
+              Current Rate: {(bannerData?.current_rate?.featured_rate || bannerData?.banner?.rates?.featured_UR || 0.5).toFixed(1)}% • {(bannerData?.banner?.pity?.hard_pity || 100) - (bannerData?.user_progress?.pity_counter || 0)} to guarantee
             </Text>
           </View>
 

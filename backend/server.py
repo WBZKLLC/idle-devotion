@@ -1822,7 +1822,7 @@ async def pull_gacha(request: Request, username: str, body: PullRequest):
         divine_spent = cost
         pity_counter = user.pity_counter_divine
     elif summon_type == "premium":
-        cost = CRYSTAL_COST_MULTI if request.pull_type == "multi" else CRYSTAL_COST_SINGLE
+        cost = CRYSTAL_COST_MULTI if body.pull_type == "multi" else CRYSTAL_COST_SINGLE
         if user.crystals < cost:
             raise HTTPException(status_code=400, detail="Not enough crystals")
         user.crystals -= cost
@@ -1831,7 +1831,7 @@ async def pull_gacha(request: Request, username: str, body: PullRequest):
         divine_spent = 0
         pity_counter = user.pity_counter_premium
     else:  # common
-        cost = COIN_COST_MULTI if request.pull_type == "multi" else COIN_COST_SINGLE
+        cost = COIN_COST_MULTI if body.pull_type == "multi" else COIN_COST_SINGLE
         if user.coins < cost:
             raise HTTPException(status_code=400, detail="Not enough coins")
         user.coins -= cost

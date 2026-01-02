@@ -3,7 +3,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Platform, View, ActivityIndicator, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import { useRevenueCatStore } from '../stores/revenueCatStore';
+// REVENUECAT DISABLED - Re-enable when finalizing project
+// import { useRevenueCatStore } from '../stores/revenueCatStore';
 
 // Regal Color Palette
 const COLORS = {
@@ -15,7 +16,8 @@ const COLORS = {
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const { isHydrated, restoreSession, user } = useGameStore();
-  const { initialize: initRevenueCat, setUserId } = useRevenueCatStore();
+  // REVENUECAT DISABLED - Uncomment when finalizing:
+  // const { initialize: initRevenueCat, setUserId } = useRevenueCatStore();
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
@@ -23,27 +25,27 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       if (!isHydrated) {
         await restoreSession();
       }
-      // Initialize RevenueCat (wrapped in try-catch for Expo Go compatibility)
-      try {
-        await initRevenueCat();
-      } catch (error) {
-        console.log('[App] RevenueCat init skipped (may not be available in Expo Go):', error);
-      }
+      // REVENUECAT DISABLED - Uncomment when finalizing:
+      // try {
+      //   await initRevenueCat();
+      // } catch (error) {
+      //   console.log('[App] RevenueCat init skipped:', error);
+      // }
       setIsRestoring(false);
     };
     restore();
   }, []);
 
-  // Link RevenueCat user when app user logs in
-  useEffect(() => {
-    if (user?.username) {
-      try {
-        setUserId(user.username);
-      } catch (error) {
-        console.log('[App] RevenueCat setUserId skipped:', error);
-      }
-    }
-  }, [user?.username]);
+  // REVENUECAT DISABLED - Uncomment when finalizing:
+  // useEffect(() => {
+  //   if (user?.username) {
+  //     try {
+  //       setUserId(user.username);
+  //     } catch (error) {
+  //       console.log('[App] RevenueCat setUserId skipped:', error);
+  //     }
+  //   }
+  // }, [user?.username]);
 
   // Show loading while restoring session
   if (isRestoring && !isHydrated) {

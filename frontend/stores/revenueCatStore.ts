@@ -63,18 +63,30 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Set log level for debugging
-      Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-
-      // Configure based on platform
-      if (Platform.OS === 'ios' || Platform.OS === 'android') {
-        await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
-        console.log('[RevenueCat] Configured successfully');
-      } else {
+      // Check if we're on a supported platform
+      if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
         console.log('[RevenueCat] Platform not supported:', Platform.OS);
         set({ isInitialized: true, isLoading: false });
         return;
       }
+
+      // Check if Purchases is available (native module loaded)
+      if (!Purchases || typeof Purchases.configure !== 'function') {
+        console.log('[RevenueCat] Native module not available - running in development/web mode');
+        set({ isInitialized: true, isLoading: false });
+        return;
+      }
+
+      // Set log level for debugging
+      try {
+        Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+      } catch (e) {
+        console.log('[RevenueCat] Could not set log level:', e);
+      }
+
+      // Configure RevenueCat
+      await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+      console.log('[RevenueCat] Configured successfully');
 
       // Listen for customer info updates
       Purchases.addCustomerInfoUpdateListener((customerInfo) => {

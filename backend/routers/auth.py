@@ -18,8 +18,12 @@ load_dotenv()
 # Create router
 router = APIRouter(prefix="/api", tags=["auth"])
 
-# JWT Configuration
-JWT_SECRET = os.getenv("JWT_SECRET", "divine-heroes-secret-key-change-in-production")
+# JWT Configuration - MUST set JWT_SECRET in production environment
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    import secrets
+    JWT_SECRET = secrets.token_hex(32)
+    print("⚠️  WARNING: JWT_SECRET not set in environment. Using random secret (sessions will not persist across restarts)")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_DAYS = 30
 

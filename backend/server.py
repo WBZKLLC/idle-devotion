@@ -22,6 +22,9 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 import secrets
 
+# Load environment variables FIRST
+load_dotenv()
+
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 

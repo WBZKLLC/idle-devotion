@@ -34,49 +34,19 @@ interface Event {
   claimed?: boolean;
 }
 
-const MOCK_EVENTS: Event[] = [
-  {
-    id: 'daily_login',
-    name: '7-Day Login Bonus',
-    description: 'Log in daily to receive escalating rewards!',
-    type: 'login',
-    rewards: [{ type: 'gems', amount: 100 }, { type: 'hero_ticket', amount: 1 }],
-    start_date: '2025-01-01',
-    end_date: '2025-12-31',
-    progress: 4,
-    target: 7,
-  },
-  {
-    id: 'selene_event',
-    name: 'Fated Chronology',
-    description: 'Limited time banner featuring Chrono-Archangel Selene!',
-    type: 'limited',
-    rewards: [{ type: 'selene_shards', amount: 10 }, { type: 'crystals', amount: 500 }],
-    start_date: '2025-01-01',
-    end_date: '2025-01-07',
-  },
-  {
-    id: 'power_milestone',
-    name: 'Power Milestone',
-    description: 'Reach total power milestones for massive rewards!',
-    type: 'milestone',
-    rewards: [{ type: 'gold', amount: 50000 }, { type: 'enhancement_stones', amount: 100 }],
-    start_date: '2025-01-01',
-    end_date: '2025-12-31',
-    progress: 150000,
-    target: 200000,
-  },
-  {
-    id: 'new_year',
-    name: '🎉 New Year Celebration',
-    description: 'Special rewards to celebrate the new year!',
-    type: 'special',
-    rewards: [{ type: 'gems', amount: 500 }, { type: 'gold', amount: 100000 }],
-    start_date: '2025-01-01',
-    end_date: '2025-01-15',
-    claimed: false,
-  },
-];
+const MOCK_EVENTS: Event[] = [];
+
+// Real event banners loaded from backend
+interface EventBanner {
+  id: string;
+  name: string;
+  description: string;
+  banner_type: string;
+  featured_heroes: string[];
+  is_active: boolean;
+  start_date?: string;
+  end_date?: string;
+}
 
 export default function EventsScreen() {
   const router = useRouter();

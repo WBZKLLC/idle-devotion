@@ -131,7 +131,39 @@ export default function EventsScreen() {
 
   const claimReward = async (eventId: string) => {
     const event = events.find(e => e.id === eventId);
-    if (!event || event.claimed) return;
+    if (!event) return;
+    
+    // Handle daily login - navigate to login rewards page
+    if (event.type === 'login') {
+      router.push('/login-rewards');
+      return;
+    }
+    
+    // Handle limited event banners - show summon options
+    if (event.type === 'limited') {
+      const banner = eventBanners.find(b => b.id === eventId);
+      if (banner) {
+        Alert.alert(
+          `🎰 ${banner.name}`,
+          `Featured: ${banner.featured_heroes.slice(0, 3).join(', ')}\n\nPerform a summon?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: '1x Pull (100 💎)', 
+              onPress: () => performEventPull(eventId, false)
+            },
+            { 
+              text: '10x Pull (1000 💎)', 
+              onPress: () => performEventPull(eventId, true)
+            },
+          ]
+        );
+      }
+      return;
+    }
+    
+    // Handle regular claimable events
+    if (event.claimed) return;
     
     if (event.progress !== undefined && event.target !== undefined) {
       if (event.progress < event.target) {

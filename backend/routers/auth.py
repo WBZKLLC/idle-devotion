@@ -2,10 +2,12 @@
 Auth Router - User registration, authentication, and password management
 Extracted from server.py for better modularity
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 import re
 import hashlib
 import bcrypt
@@ -17,6 +19,9 @@ load_dotenv()
 
 # Create router
 router = APIRouter(prefix="/api", tags=["auth"])
+
+# Rate limiter for auth endpoints
+limiter = Limiter(key_func=get_remote_address)
 
 # JWT Configuration - MUST set JWT_SECRET in production environment
 JWT_SECRET = os.getenv("JWT_SECRET")

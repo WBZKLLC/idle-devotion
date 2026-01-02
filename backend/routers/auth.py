@@ -182,10 +182,11 @@ async def register_user(request: Request, body: RegisterRequest):
 
 
 @router.post("/auth/login")
-async def auth_login(request: LoginRequest):
-    """Authenticate user with password and return JWT token"""
-    username = request.username.strip()
-    password = request.password
+@limiter.limit("10/minute")  # Max 10 login attempts per minute per IP
+async def auth_login(request: Request, body: LoginRequest):
+    """Authenticate user with password and return JWT token (rate limited)"""
+    username = body.username.strip()
+    password = body.password
     
     # Validate username format to prevent NoSQL injection
     if not re.match(r'^[a-zA-Z0-9_]+$', username):

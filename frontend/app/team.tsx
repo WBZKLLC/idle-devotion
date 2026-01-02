@@ -121,30 +121,44 @@ export default function TeamScreen() {
               const hero = heroId ? userHeroes.find((h) => h.id === heroId) : null;
 
               return (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.teamSlot,
-                    hero && { borderColor: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
-                  ]}
-                  onPress={() => hero && toggleHeroSelection(hero.id)}
-                >
-                  {hero ? (
-                    <>
-                      <Image source={{ uri: hero.hero_data?.image_url }} style={styles.teamHeroImage} />
-                      <View style={styles.teamHeroInfo}>
-                        <Text style={styles.teamHeroName} numberOfLines={1}>
-                          {hero.hero_data?.name}
-                        </Text>
-                        <Text style={styles.teamHeroRank}>Rank {hero.rank}</Text>
+                <View key={index} style={styles.teamSlotContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.teamSlot,
+                      hero && { borderColor: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
+                    ]}
+                    onPress={() => !hero && Alert.alert('Add Hero', 'Tap a hero below to add them to this slot')}
+                  >
+                    {hero ? (
+                      <>
+                        <Image source={{ uri: hero.hero_data?.image_url }} style={styles.teamHeroImage} />
+                        <View style={styles.teamHeroInfo}>
+                          <Text style={styles.teamHeroName} numberOfLines={1}>
+                            {hero.hero_data?.name?.split(' ')[0]}
+                          </Text>
+                          <Text style={styles.teamHeroRank}>Lv.{hero.level || 1}</Text>
+                        </View>
+                      </>
+                    ) : (
+                      <View style={styles.emptySlot}>
+                        <Ionicons name="add-circle-outline" size={36} color="#666" />
+                        <Text style={styles.emptySlotText}>Empty</Text>
                       </View>
-                    </>
-                  ) : (
-                    <View style={styles.emptySlot}>
-                      <Ionicons name="person-add" size={32} color="#666" />
-                    </View>
+                    )}
+                  </TouchableOpacity>
+                  {/* LARGE REMOVE BUTTON */}
+                  {hero && (
+                    <TouchableOpacity
+                      style={styles.removeHeroButton}
+                      onPress={() => toggleHeroSelection(hero.id)}
+                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                    >
+                      <View style={styles.removeHeroButtonInner}>
+                        <Ionicons name="close" size={18} color="#fff" />
+                      </View>
+                    </TouchableOpacity>
                   )}
-                </TouchableOpacity>
+                </View>
               );
             })}
           </View>

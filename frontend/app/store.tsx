@@ -11,11 +11,12 @@ import {
   Modal,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
-import { useRevenueCatStore } from '../stores/revenueCatStore';
+// REVENUECAT DISABLED - Re-enable when finalizing project
+// import { useRevenueCatStore } from '../stores/revenueCatStore';
+// import { CustomPaywall, presentNativePaywall } from '../components/Paywall';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
-import { CustomPaywall, presentNativePaywall } from '../components/Paywall';
 
 interface CrystalPackage {
   id: string;

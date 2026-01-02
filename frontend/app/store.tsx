@@ -329,6 +329,38 @@ export default function StoreScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>Store</Text>
           
+          {/* Pro Subscription Banner */}
+          <TouchableOpacity 
+            style={styles.proBanner}
+            onPress={handleShowPaywall}
+          >
+            <LinearGradient
+              colors={isPro ? ['#4CAF50', '#2E7D32'] : ['#9C27B0', '#6A1B9A']}
+              style={styles.proBannerGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.proBannerContent}>
+                <Ionicons name={isPro ? 'checkmark-circle' : 'diamond'} size={32} color="#fff" />
+                <View style={styles.proBannerText}>
+                  <Text style={styles.proBannerTitle}>
+                    {isPro ? '👑 DivineHeros Pro Active' : '✨ Upgrade to Pro'}
+                  </Text>
+                  <Text style={styles.proBannerSubtitle}>
+                    {isPro 
+                      ? 'Enjoying all premium benefits' 
+                      : '2x Rewards • Exclusive Heroes • No Ads'}
+                  </Text>
+                </View>
+                {!isPro && (
+                  <View style={styles.proBadge}>
+                    <Text style={styles.proBadgeText}>UPGRADE</Text>
+                  </View>
+                )}
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
           {/* Currency Display */}
           <View style={styles.currencyBar}>
             <View style={styles.currencyItem}>

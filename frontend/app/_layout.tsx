@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Platform, View, ActivityIndicator, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
+import { useRevenueCatStore } from '../stores/revenueCatStore';
 
 // Regal Color Palette
 const COLORS = {
@@ -14,6 +15,7 @@ const COLORS = {
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const { isHydrated, restoreSession, user } = useGameStore();
+  const { initialize: initRevenueCat, setUserId } = useRevenueCatStore();
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
@@ -21,10 +23,19 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       if (!isHydrated) {
         await restoreSession();
       }
+      // Initialize RevenueCat
+      await initRevenueCat();
       setIsRestoring(false);
     };
     restore();
   }, []);
+
+  // Link RevenueCat user when app user logs in
+  useEffect(() => {
+    if (user?.username) {
+      setUserId(user.username);
+    }
+  }, [user?.username]);
 
   // Show loading while restoring session
   if (isRestoring && !isHydrated) {

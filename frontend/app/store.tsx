@@ -632,7 +632,7 @@ export default function StoreScreen() {
         
         {renderVIPComparison()}
         
-        {/* Paywall Modal */}
+        {/* REVENUECAT DISABLED - Re-enable Paywall Modal when finalizing:
         <Modal
           visible={showPaywall}
           animationType="slide"
@@ -644,6 +644,7 @@ export default function StoreScreen() {
             onPurchaseComplete={() => setShowPaywall(false)}
           />
         </Modal>
+        */}
       </SafeAreaView>
     </LinearGradient>
   );

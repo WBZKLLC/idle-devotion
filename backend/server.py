@@ -7709,17 +7709,63 @@ async def simulate_monetization():
     }
 
 # ============================================================================
-# ADMIN SYSTEM
+# ADMIN SYSTEM - Secured with JWT Authentication
 # ============================================================================
 
-@api_router.post("/admin/grant-resources/{username}")
-async def admin_grant_resources(username: str, admin_key: str, resources: Dict[str, int] = None):
-    """Admin endpoint to grant resources to a user"""
-    # Verify admin key (in production, use proper auth)
-    admin_user = await db.users.find_one({"username": admin_key})
-    if not admin_user or not admin_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
+# Admin authentication dependency
+async def verify_admin_token(authorization: str = Header(None)):
+    """Verify admin JWT token and return admin user"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
     
+    token = authorization.replace("Bearer ", "")
+    
+    try:
+        import jwt
+        # Use the same secret from auth router
+        JWT_SECRET = os.getenv("JWT_SECRET")
+        if not JWT_SECRET:
+            import secrets
+            JWT_SECRET = secrets.token_hex(32)
+        
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        username = payload.get("sub")
+        
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        admin_user = await db.users.find_one({"username": username})
+        
+        if not admin_user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        if not admin_user.get("is_admin"):
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        return admin_user
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def require_permission(permission: str):
+    """Decorator factory to require specific admin permission"""
+    async def check_permission(admin_user: dict = Depends(verify_admin_token)):
+        if permission not in admin_user.get("admin_permissions", []) and permission != "basic":
+            raise HTTPException(status_code=403, detail=f"Missing permission: {permission}")
+        return admin_user
+    return check_permission
+
+
+@api_router.post("/admin/grant-resources/{username}")
+async def admin_grant_resources(
+    username: str, 
+    resources: Dict[str, int] = None,
+    admin_user: dict = Depends(verify_admin_token)
+):
+    """Admin endpoint to grant resources to a user (requires JWT auth)"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -7727,64 +7773,99 @@ async def admin_grant_resources(username: str, admin_key: str, resources: Dict[s
     if resources:
         await db.users.update_one({"username": username}, {"$inc": resources})
     
+    # Log admin action
+    await db.admin_logs.insert_one({
+        "admin": admin_user["username"],
+        "action": "grant_resources",
+        "target": username,
+        "details": resources,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
     return {"success": True, "granted": resources}
 
 @api_router.post("/admin/set-vip/{username}")
-async def admin_set_vip(username: str, admin_key: str, vip_level: int):
-    """Admin endpoint to set VIP level"""
-    admin_user = await db.users.find_one({"username": admin_key})
-    if not admin_user or not admin_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+async def admin_set_vip(
+    username: str, 
+    vip_level: int,
+    admin_user: dict = Depends(verify_admin_token)
+):
+    """Admin endpoint to set VIP level (requires JWT auth)"""
     await db.users.update_one(
         {"username": username},
         {"$set": {"vip_level": vip_level, "is_admin_set_vip": True}}
     )
+    
+    await db.admin_logs.insert_one({
+        "admin": admin_user["username"],
+        "action": "set_vip",
+        "target": username,
+        "details": {"vip_level": vip_level},
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
     return {"success": True, "vip_level": vip_level}
 
 @api_router.post("/admin/ban-user/{username}")
-async def admin_ban_user(username: str, admin_key: str, reason: str = "Violation of terms"):
-    """Admin endpoint to ban a user"""
-    admin_user = await db.users.find_one({"username": admin_key})
-    if not admin_user or not admin_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    if "ban" not in admin_user.get("admin_permissions", []):
-        raise HTTPException(status_code=403, detail="No ban permission")
-    
+async def admin_ban_user(
+    username: str, 
+    reason: str = "Violation of terms",
+    admin_user: dict = Depends(require_permission("ban"))
+):
+    """Admin endpoint to ban a user (requires JWT auth + ban permission)"""
     await db.users.update_one(
         {"username": username},
-        {"$set": {"is_banned": True, "ban_reason": reason, "banned_at": datetime.utcnow().isoformat(), "banned_by": admin_key}}
+        {"$set": {
+            "is_banned": True, 
+            "ban_reason": reason, 
+            "banned_at": datetime.utcnow().isoformat(), 
+            "banned_by": admin_user["username"]
+        }}
     )
+    
+    await db.admin_logs.insert_one({
+        "admin": admin_user["username"],
+        "action": "ban_user",
+        "target": username,
+        "details": {"reason": reason},
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
     return {"success": True, "banned": username, "reason": reason}
 
 @api_router.post("/admin/mute-user/{username}")
-async def admin_mute_user(username: str, admin_key: str, duration_hours: int = 24):
-    """Admin endpoint to mute a user in chat"""
-    admin_user = await db.users.find_one({"username": admin_key})
-    if not admin_user or not admin_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    if "mute" not in admin_user.get("admin_permissions", []):
-        raise HTTPException(status_code=403, detail="No mute permission")
-    
+async def admin_mute_user(
+    username: str, 
+    duration_hours: int = 24,
+    admin_user: dict = Depends(require_permission("mute"))
+):
+    """Admin endpoint to mute a user in chat (requires JWT auth + mute permission)"""
     mute_until = datetime.utcnow() + timedelta(hours=duration_hours)
     await db.users.update_one(
         {"username": username},
-        {"$set": {"is_muted": True, "muted_until": mute_until.isoformat(), "muted_by": admin_key}}
+        {"$set": {
+            "is_muted": True, 
+            "muted_until": mute_until.isoformat(), 
+            "muted_by": admin_user["username"]
+        }}
     )
+    
+    await db.admin_logs.insert_one({
+        "admin": admin_user["username"],
+        "action": "mute_user",
+        "target": username,
+        "details": {"duration_hours": duration_hours},
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
     return {"success": True, "muted": username, "until": mute_until.isoformat()}
 
 @api_router.delete("/admin/delete-account/{username}")
-async def admin_delete_account(username: str, admin_key: str):
-    """Admin endpoint to permanently delete an account"""
-    admin_user = await db.users.find_one({"username": admin_key})
-    if not admin_user or not admin_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    if "delete_account" not in admin_user.get("admin_permissions", []):
-        raise HTTPException(status_code=403, detail="No delete permission")
-    
+async def admin_delete_account(
+    username: str,
+    admin_user: dict = Depends(require_permission("delete_account"))
+):
+    """Admin endpoint to permanently delete an account (requires JWT auth + delete permission)"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -7797,6 +7878,14 @@ async def admin_delete_account(username: str, admin_key: str):
     await db.abyss_progress.delete_many({"user_id": user_id})
     await db.stage_progress.delete_many({"user_id": user_id})
     await db.campaign_progress.delete_many({"user_id": user_id})
+    
+    await db.admin_logs.insert_one({
+        "admin": admin_user["username"],
+        "action": "delete_account",
+        "target": username,
+        "details": {"user_id": user_id},
+        "timestamp": datetime.utcnow().isoformat()
+    })
     
     return {"success": True, "deleted": username}
 

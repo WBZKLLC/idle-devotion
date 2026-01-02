@@ -4704,14 +4704,14 @@ async def attack_guild_boss(username: str):
     if not boss_state:
         raise HTTPException(status_code=400, detail="No active boss")
     
-    # Get user's team power - use embedded hero_data from user_heroes
+    # Get user's team power - look up hero data from heroes collection
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
     total_power = 0
     heroes_used = []
     
     for uh in user_heroes[:6]:
-        # Use embedded hero_data from user_heroes document (not separate heroes collection)
-        hero_data = uh.get("hero_data")
+        # Look up hero data from heroes collection
+        hero_data = await db.heroes.find_one({"id": uh.get("hero_id")})
         if hero_data:
             level_mult = 1 + (uh.get("level", 1) - 1) * 0.05
             power = (hero_data.get("base_hp", 1000) + hero_data.get("base_atk", 200) * 3 + hero_data.get("base_def", 100) * 2) * level_mult
@@ -4719,7 +4719,7 @@ async def attack_guild_boss(username: str):
             heroes_used.append(hero_data.get("name", "Unknown Hero"))
     
     if total_power == 0:
-        raise HTTPException(status_code=400, detail=f"No heroes available. You have {len(user_heroes)} heroes but need to summon heroes with valid data.")
+        raise HTTPException(status_code=400, detail="No valid heroes to attack with. Please summon more heroes!")
     
     # Calculate damage (power-based with variance)
     base_damage = int(total_power * random.uniform(0.8, 1.2))

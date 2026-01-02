@@ -56,7 +56,9 @@ export default function EventsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [eventBanners, setEventBanners] = useState<EventBanner[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'limited' | 'daily'>('all');
+  const [isPulling, setIsPulling] = useState(false);
 
   useEffect(() => {
     if (hydrated && user) {
@@ -67,14 +69,63 @@ export default function EventsScreen() {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      // In production, fetch from API
-      await new Promise(r => setTimeout(r, 500));
-      setEvents(MOCK_EVENTS);
+      // Fetch real event banners from backend
+      const response = await axios.get(`${API_BASE}/event-banners`);
+      const banners = response.data.banners || [];
+      setEventBanners(banners);
+      
+      // Convert banners to event format
+      const bannerEvents: Event[] = banners.map((banner: EventBanner) => ({
+        id: banner.id,
+        name: banner.name,
+        description: banner.description,
+        type: 'limited' as const,
+        rewards: [{ type: 'featured_hero', amount: 1 }],
+        start_date: banner.start_date || '2025-01-01',
+        end_date: banner.end_date || '2025-12-31',
+        claimed: false,
+      }));
+      
+      // Add daily login event
+      const dailyEvent: Event = {
+        id: 'daily_login',
+        name: '📅 Daily Check-In',
+        description: 'Visit the Login Rewards page to claim your daily rewards!',
+        type: 'login',
+        rewards: [{ type: 'gems', amount: 100 }],
+        start_date: '2025-01-01',
+        end_date: '2025-12-31',
+      };
+      
+      setEvents([dailyEvent, ...bannerEvents]);
     } catch (error) {
       console.error('Error loading events:', error);
+      // Fallback to empty if API fails
+      setEvents([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const performEventPull = async (bannerId: string, isMulti: boolean) => {
+    if (!user || isPulling) return;
+    
+    setIsPulling(true);
+    try {
+      const response = await axios.post(`${API_BASE}/event-banners/${bannerId}/pull`, null, {
+        params: { username: user.username, multi: isMulti }
+      });
+      
+      if (response.data.heroes && response.data.heroes.length > 0) {
+        const heroNames = response.data.heroes.map((h: any) => `⭐ ${h.name} (${h.rarity})`).join('\n');
+        Alert.alert('🎉 Summon Results!', heroNames);
+        await fetchUser();
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error?.response?.data?.detail || 'Failed to perform summon');
+    } finally {
+      setIsPulling(false);
     }
   };
 

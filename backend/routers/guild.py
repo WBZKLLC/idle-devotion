@@ -292,7 +292,15 @@ async def attack_guild_boss(username: str):
         raise HTTPException(status_code=400, detail="No active boss")
     
     # Get user's team power - use embedded hero_data directly
+    # Debug: Check if db is set
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
+    
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+    
+    # Debug: Log hero count
+    print(f"[GUILD BOSS] User {username} has {len(user_heroes)} heroes")
+    
     total_power = 0
     heroes_used = []
     
@@ -305,8 +313,10 @@ async def attack_guild_boss(username: str):
             total_power += power
             heroes_used.append(hero_data.get("name", "Unknown Hero"))
     
+    print(f"[GUILD BOSS] Total power calculated: {total_power}, Heroes used: {len(heroes_used)}")
+    
     if total_power == 0:
-        raise HTTPException(status_code=400, detail="No heroes to attack with. Please summon some heroes first!")
+        raise HTTPException(status_code=400, detail=f"No heroes to attack with. Found {len(user_heroes)} heroes but none have hero_data.")
     
     # Calculate damage (power-based with variance)
     base_damage = int(total_power * random.uniform(0.8, 1.2))

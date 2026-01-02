@@ -452,7 +452,7 @@ async def donate_to_guild(username: str, tier: str = "small"):
     new_guild_exp = guild.get("exp", 0) + guild_exp_reward
     
     # Calculate new level
-    from core.guild_system import get_guild_level, get_guild_member_cap
+    from core.guild_system import get_guild_level, get_guild_member_cap, GUILD_LEVELS
     new_level = get_guild_level(new_guild_exp)
     old_level = guild.get("level", 1)
     leveled_up = new_level > old_level
@@ -472,6 +472,38 @@ async def donate_to_guild(username: str, tier: str = "small"):
             }
         }
     )
+    
+    # If guild leveled up, distribute rewards to ALL members
+    level_up_rewards = None
+    if leveled_up:
+        level_config = GUILD_LEVELS.get(new_level, {})
+        level_up_rewards = level_config.get("level_up_reward", {"gold": 5000, "guild_coins": 50})
+        
+        # Get all member IDs
+        member_ids = guild.get("member_ids", [])
+        
+        # Distribute rewards to each member
+        for member_id in member_ids:
+            await db.users.update_one(
+                {"id": member_id},
+                {"$inc": {
+                    "gold": level_up_rewards.get("gold", 5000),
+                    "guild_coins": level_up_rewards.get("guild_coins", 50)
+                }}
+            )
+        
+        # Record the level-up event
+        await db.guild_level_ups.insert_one({
+            "id": str(uuid.uuid4()),
+            "guild_id": guild["id"],
+            "guild_name": guild.get("name"),
+            "old_level": old_level,
+            "new_level": new_level,
+            "rewards_distributed": level_up_rewards,
+            "members_rewarded": len(member_ids),
+            "triggered_by": username,
+            "timestamp": datetime.utcnow().isoformat()
+        })
     
     # Track individual contribution
     await db.guild_donations.insert_one({

@@ -610,10 +610,17 @@ export default function GuildScreen() {
                         <Text style={styles.levelValue}>{guildLevelInfo.level || 1}</Text>
                       </View>
                       <View style={styles.expBar}>
-                        <View style={[styles.expFill, { width: `${Math.min(100, ((guildLevelInfo.exp || 0) / (guildLevelInfo.exp_to_next_level || 1000)) * 100)}%` }]} />
+                        <View style={[styles.expFill, { 
+                          width: guildLevelInfo.next_level_exp_required > 0 
+                            ? `${Math.min(100, ((guildLevelInfo.exp || 0) / guildLevelInfo.next_level_exp_required) * 100)}%`
+                            : '100%'
+                        }]} />
                       </View>
                       <Text style={styles.expText}>
-                        {(guildLevelInfo.exp || 0).toLocaleString()} / {(guildLevelInfo.exp_to_next_level || 1000).toLocaleString()} EXP
+                        {(guildLevelInfo.exp || 0).toLocaleString()} / {(guildLevelInfo.next_level_exp_required || 0).toLocaleString()} EXP
+                        {guildLevelInfo.exp_to_next_level > 0 && (
+                          ` (${guildLevelInfo.exp_to_next_level.toLocaleString()} to next)`
+                        )}
                       </Text>
                     </View>
                   )}

@@ -1,236 +1,250 @@
 <analysis>
 **original_problem_statement**:
-The user's primary goal is to resolve a critical EAS Android build failure that is preventing the generation of an  file. The build fails during the Gradle compilation stage.
-
-Concurrently, the user wants to continue refactoring the monolithic backend () by extracting modules for , , and .
-
-The user has provided an EAS personal access token to allow the agent to run cloud builds. The user also provided the detailed Gradle error log from the latest failed build.
+The user's initial high-priority task was to fix a critical EAS Android build failure. After resolving the build, the user provided a series of feature requests and bug reports to be addressed.
 
 PRODUCT REQUIREMENTS:
-1.  **Fix EAS Android Build (P0)**: The application must successfully build for Android on EAS.
-2.  **Continue Backend Refactoring (P1)**: Extract , , and  logic from  into their own FastAPI router files.
-3.  **Test Native Integrations (P2)**: Once the build is fixed, test features like RevenueCat.
+1.  **Fix EAS Android Build (P0 - COMPLETED)**: The EAS build was failing due to dependency issues with .
+2.  **Backend Refactoring (P1 - IN PROGRESS)**: Extract monolithic code from  into modular FastAPI routers.
+3.  **UI/UX Fixes (P0 - PARTIALLY COMPLETED)**:
+    *   Remove monetary values from the Path to Selene banner.
+    *   Fix the glitchy chat input bar.
+    *   Ensure resources are visually deducted after a summon.
+    *   Make the overflowing resource bars on the homepage and summon page scrollable.
+    *   Make the remove hero button on the team page larger and functional.
+4.  **Fix Core Gameplay Bugs (P0 - PARTIALLY COMPLETED)**:
+    *   Guild boss attack did nothing.
+    *   Guild War page incorrectly stated the user was not in a guild.
+5.  **New Guild System (P1 - IN PROGRESS)**: Implement a comprehensive, tiered guild system with levels, structured donations, a tech tree, and a guild shop, based on a detailed user prompt.
+6.  **New Hero Progression System (P1 - IN PROGRESS)**: Implement a hero progression system based on rarity, star fusion using shards from duplicates, and rarity ascension, based on a detailed user prompt.
+7.  **Security Audit & Hardening (P0 - COMPLETED)**: Run a security diagnostic and fix identified vulnerabilities.
+8.  **New Issues to Address (P0 - NOT STARTED)**:
+    *   The Atheon event summon button does nothing.
+    *   The Instant Collect button gives no visual feedback on rewards or cooldown.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The project is an Expo (React Native) and FastAPI application.
--   **Frontend**: The project dependencies have been through multiple rounds of cleaning and configuration. A  file was created,  was corrected to include the EAS , and EAS authentication has been set up with a user-provided token. However, the Android build is fundamentally broken due to an unresolved dependency conflict with .
--   **Backend**: The refactoring process has been started. New, empty router files have been created at  and , and they have been registered in . The actual endpoint logic has **not** been moved from  yet.
+The project is a live Expo (React Native) and FastAPI application connected to a populated production/staging database named  with active users.
+-   **Frontend**: The EAS Android build is now **fixed and successful**. Several UI/UX bugs have been resolved, including scrollable resource bars, a visible chat input, and an improved team management UI. Scaffolding for a new Hero Progression screen () and a reusable team selection component () has been created but is not yet implemented. The Events page () is using mock data.
+-   **Backend**: The monolithic  has been partially refactored by including routers for  and , but duplicate legacy endpoints still exist within . Core gameplay bugs like the Guild Boss attack have been fixed. A comprehensive backend for the new Guild and Hero Progression systems has been built (, ) and exposed via new API endpoints. Critical security vulnerabilities related to password hashing (MD5→bcrypt), JWT secrets, admin authentication, CORS, and rate-limiting have been fixed.
 
 **Last working item**:
-    - Last item agent was working: The agent was debugging the EAS Android Build Failure. After multiple failed attempts with different versions of  and various configuration changes, the last build failed with a Java compilation error within the  package.
-    - Status: BLOCKED
-    - Agent Testing Done: N/A
-    - Which testing method agent to use? The test is a successful build. The next step is to re-run the An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username command after fixing the dependency issue.
+    - Last item agent was working: The agent was about to implement visual feedback for the Instant Collect button on the homepage. The user reported that it doesn't show what was collected or display its cooldown, although backend logs confirm the feature works and correctly applies a cooldown.
+    - Status: NOT STARTED
+    - Agent Testing Done: N
+    - Which testing method agent to use? Frontend testing agent or screenshot tool to verify the new UI elements (e.g., a toast/modal for collected rewards and a visible cooldown timer).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: EAS Android Build Failure (P0)
-
+  - Issue 1: Implement Visual Feedback for Instant Collect (P0)
+  - Issue 2: Fix 'Atheon' Event Summon (P1)
+  - Issue 3: Backend Code Cleanup (P2)
+  - Issue 4: Leaderboard UI Bugs (P2)
+  
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: 
-       1.  **Attempt with **: The agent initially tried using the latest version () as suggested by . This failed with a C++ compilation error (as noted in the previous handover).
-       2.  **Configuration Fixes**: Created , added the  plugin, fixed the  in , and set up the EAS .
-       3.  ** rabbit hole**: The agent incorrectly identified a conflict with , changed babel/app configs to use its plugin, and then correctly reverted these changes when it didn't work.
-       4.  ** suggestion**: The  recommended downgrading  to .
-       5.  **Attempt with **: The agent downgraded to . This resolved the  mismatch (by adding an override) but resulted in a *new* build failure.
-       6.  **Final Error Analysis**: The user provided the Gradle logs for the  build, which show a Java compilation error: . This proves that  is also incompatible with the project's React Native version.
-     - Next debug checklist: 
-       1.  **Problem Confirmation**: The project is in a dependency hell.  is too new, and  is too old for the version of React Native used by Expo SDK 54.
-       2.  **Remove Override**: Delete the   override for  from . This is masking the true required version.
-       3.  **Use Expo's Tool**: Do not use yarn add v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/add for documentation about this command. for this. Run env: load .env
-env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT EXPO_PUBLIC_REVENUECAT_API_KEY EXPO_TOKEN
-› Installing 1 other package using yarn
-› Using latest instead of  ~4.1.1 for react-native-reanimated because it is listed in expo.install.exclude in package.json. Learn more: https://docs.expo.dev/more/expo-cli/#configuring-dependency-validation
-> yarn add react-native-reanimated
-yarn add v1.22.22
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-success Saved 1 new dependency.
-info Direct dependencies
-└─ react-native-reanimated@4.2.1
-info All dependencies
-└─ react-native-reanimated@4.2.1
-Done in 5.25s. inside the  directory. This command is specifically designed to install the version of a library that is known to be compatible with the project's Expo SDK version.
-       4.  **Full Clean Install**: After installing the correct version, perform a clean slate installation: yarn install v1.22.22
-info No lockfile found.
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command..
-       5.  **Verify**: Run  to ensure all checks pass with the newly installed version.
-       6.  **Retry Build**: Attempt a new EAS build with An Expo user account is required to proceed.
+     - Attempted fixes: None. The agent identified the backend was working correctly (applying cooldowns) but hadn't started the frontend UI work.
+     - Next debug checklist:
+        1.  In , modify the  function.
+        2.  On successful API response, use a state management update or a toast/modal component to display the rewards received.
+        3.  On a 400 error (cooldown), parse the error message to display the remaining cooldown time to the user.
+        4.  Add a UI element near the button to show the cooldown timer if it's active.
+     - Why fix this issue and what will be achieved with the fix? To provide essential user feedback, confirming the action was successful and clearly communicating the feature's state (ready or on cooldown).
+     - Status:  NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: None
 
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username.
-     - Why fix this issue and what will be achieved with the fix? This is a critical P0 blocker. A successful build is required to generate an  file, which is essential for any native testing (like RevenueCat payments) and distribution.
-     - Status:  IN PROGRESS
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? N/A (A successful build is the test).
-     - Blocked on other issue: None. This is the primary blocker.
+  - Issue 2: 
+     - Attempted fixes: The agent discovered the Atheon event summon button on the  page is connected to mock data and there is no corresponding backend endpoint.
+     - Next debug checklist:
+        1.  Confirm with the user if the Atheon event is a feature to be built or if the mock page should be removed.
+        2.  If building, create a new backend endpoint for the Atheon summon logic.
+        3.  In , replace the mock data and handler with a real API call to the new endpoint.
+     - Why fix this issue and what will be achieved with the fix? To remove non-functional, confusing UI or to implement the intended event feature.
+     - Status:  NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: None
+
+  - Issue 3:
+     - Attempted fixes: None. The agent fixed bugs caused by duplicate endpoints (e.g., Guild Boss attack) by patching the legacy code in  but did not remove the legacy code itself.
+     - Next debug checklist:
+        1.  Systematically go through .
+        2.  For each endpoint that now exists in a separate router (, , etc.), delete the corresponding  definition from .
+        3.  After removal, perform regression testing on auth, guild, and other affected features.
+     - Why fix this issue and what will be achieved with the fix? To complete the backend refactoring, eliminate code duplication, prevent future conflicts, and improve maintainability.
+     - Status: NOT STARTED
+     - Is recurring issue? Y (This was the root cause of the guild boss bug).
+     - Should Test frontend/backend/both after fix? Backend
+     - Blocked on other issue: None
+
+  - Issue 4:
+     - Attempted fixes: None. The user reported bugs and errors on the leaderboards. The agent verified the backend APIs are returning valid data.
+     - Next debug checklist:
+        1.  Review the code for the leaderboard screens (, ).
+        2.  Check for potential UI rendering bugs, incorrect data mapping, or state management issues that could cause display errors despite valid API responses.
+     - Why fix this issue and what will be achieved with the fix? To ensure a core competitive feature of the app is stable and displays ranks correctly.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: None
 
 **In progress Task List**:
-  - Task 1: Complete Backend Refactoring (P1)
+  - Task 1: Integrate New Guild System into Frontend (P1)
+  - Task 2: Implement Hero Progression Frontend (P1)
+  - Task 3: Integrate  Component (P2)
 
  Task Detail:
   - Task 1: 
-     - Where to resume: The files  and  have been created. The next step is to cut the relevant endpoint functions (e.g., , , , etc.) from  and paste them into their respective new router files. After moving the code, import and include these new routers in the main FastAPI app instance in .
-     - What will be achieved with this? This will reduce the size and complexity of , making the backend code more modular, maintainable, and easier to scale.
+     - Where to resume: The backend for the new tiered guild system is complete and tested. The next step is to update the frontend  file.
+     - What will be achieved with this? Users will be able to see their guild's level and EXP, use the new tiered donation system, and access the guild shop.
      - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? Backend. After refactoring, run API tests to ensure no endpoints were broken.
-     - Blocked on something: Not technically blocked, but the user's primary focus is on the build issue. This task should be worked on while waiting for builds.
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on something: None
+
+  - Task 2: 
+     - Where to resume: The backend is complete. The frontend file  has been created but is empty.
+     - What will be achieved with this? Users will have a dedicated UI to view their hero shards, spend them to promote hero star levels, and perform rarity ascension.
+     - Status:  IN PROGRESS
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on something: Needs a navigation link from a relevant page (like  or ).
+
+  - Task 3: 
+     - Where to resume: The reusable component  has been created but is empty.
+     - What will be achieved with this? A consistent and smooth UI for selecting hero teams across all game modes (Guild Boss, PvP, PvE).
+     - Status:  NOT STARTED
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on something: None
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P1: Refactor User and Events modules**: Once the  and  modules are refactored, continue the process for  profile and  endpoints.
-    *   **P2: Test Native Integrations**: Once the EAS build is fixed, test native features like RevenueCat payments on a device/emulator.
-    *   **P3: Test Chat Functionality**: The UI and backend API for chat are verified, but end-to-end message sending and receiving between two users has not been tested.
+    *   **P1: Fully Integrate RevenueCat:** User needs to provide a real API key. The app must be updated to use it to enable IAPs.
+    *   **P2: Refine Selene Monetization Simulation**: This is a long-standing, unaddressed task from a previous session. The file  needs review.
 *   **Future Tasks:**
-    *   **P1: Complete Backend Refactoring**: Continue extracting all remaining domains from .
-    *   **P2: Refine Selene Monetization Simulation**: The backend simulation in  shows 0% conversion and needs to be reviewed.
-    *   **P3: Implement Production Deployment**: Use the Docker and Kubernetes files in  to set up a staging or production environment.
+    *   **Implement Guild Quests and Raid Bosses**: The backend  includes definitions for these, but the actual implementation (quest generation, boss mechanics) is not built.
 
 **Completed work in this session**
-- **Dependency Investigation**: Performed extensive debugging on the , ruling out multiple potential causes.
-- **Configuration Fixes**:
-  - Created a necessary  for .
-  - Corrected  to include the .
-  - Configured the environment with the user-provided  for EAS authentication.
-- **Backend Refactoring Scaffolding**:
-  - Created new router files:  and .
-  - Updated  to register the new (but still empty) routers.
+- **EAS Android Build Fixed**: Successfully resolved dependency hell by enabling the New Architecture for .
+- **Security Hardening**:
+    - Replaced MD5 password hashing with .
+    - Secured JWT secret generation and loading.
+    - Implemented role-based admin authentication using a static header key.
+    - Restricted CORS to an environment variable instead of .
+    - Added rate limiting to sensitive auth and gacha endpoints.
+- **Core Gameplay Bugs Fixed**:
+    - **Guild Boss Attack**: Resolved a complex bug caused by a duplicate endpoint and data inconsistencies between collections.
+    - **Guild War UI**: Fixed a race condition that incorrectly showed the user was not in a guild.
+- **UI/UX Improvements**:
+    - Removed hardcoded monetary value from Selene banner.
+    - Made resource bars on homepage and summon page scrollable.
+    - Fixed the chat input bar visibility.
+    - Added a larger, functional remove hero button to the team page.
+    - Added guild information to the user's profile page.
+- **New Feature Backend Implementation**:
+    - **Guild System**: Created  and API endpoints for a tiered leveling and donation system.
+    - **Hero Progression**: Created  and API endpoints for star promotion and rarity ascension.
 
 **Earlier issues found/mentioned but not fixed**
-   - **Refine Selene Monetization Simulation**: This task from a previous session remains unaddressed. The file  still needs to be reviewed.
+   - **Refine Selene Monetization Simulation**: Located in , this task remains from a previous session and has not been addressed.
 
 **Known issue recurrence from previous fork**
   - **Issue recurrence in previous fork**: EAS Android Build Failure.
   - **Recurrence count**: 3+
-  - **Status**: IN PROGRESS
-  Note: This is a persistent and difficult issue. The agent has made progress by eliminating variables but is now stuck in a version-compatibility conflict that requires a more robust solution than simple version swapping.
+  - **Status**: RESOLVED
 
 **Code Architecture**
-
+newArchEnabled: true
 
 **Key Technical Concepts**
-- **EAS Build Debugging**: The agent used a cycle of An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username, log analysis, configuration changes, and  to diagnose the build failure.
-- **Dependency Versioning Hell**: The core of the problem is a three-way conflict between the Expo SDK version, the React Native version it bundles, and compatible versions of .
-- **Expo Configuration**: The agent interacted with , , and  to manage native plugins and build properties.
-- **Backend Modularization**: The agent began creating separate  files (, ) to break down the monolithic .
+- **Expo New Architecture**: Enabled  to support modern libraries like .
+- **FastAPI Backend Security**:
+    - Hashing:  with .
+    - Authentication:  for JWTs, role-based auth via  and .
+    - Rate Limiting:  library to decorate sensitive endpoints.
+- **Live Database Environment**: The application is connected to a live  on MongoDB, containing data from real users. Debugging requires querying this live data, not a local empty instance.
+- **Backend Modularization**: Continued effort to move logic from  into feature-specific  files, though cleanup is still required.
 
 **key DB schema**
-  - No changes were made to the database schema in this session.
+  - No new tables were created, but the logic relies on new fields and interactions between existing tables:
+      - :  is now displayed on the profile.
+      - : , ,  are now managed by .
+      - , : A data inconsistency was discovered and patched where  (UUID) needs to be matched against  (hash) to get hero stats.
 
 **All files of reference**
 *   **Created Files**:
-    *   : To add the .
-    *   : Placeholder for authentication-related endpoints.
-    *   : Placeholder for guild-related endpoints.
+    *   : Contains all logic for the new tiered guild system.
+    *   : Contains all logic for the new hero star/rarity progression.
+    *   : API endpoints for the hero progression system.
+    *   : New screen for the hero progression UI.
+    *   : New component for a reusable team selection UI.
 *   **Majorly Updated Files**:
-    *   : Downgraded  to  and added a resolution override for .
-    *   : Added the  to enable EAS builds.
-    *   : Added  and  to the list of exported routers.
+    *   : Security fixes (CORS, rate-limiting), bug fixes (guild boss), and inclusion of new routers. **Still contains legacy code that needs removal.**
+    *   : Major security overhaul (bcrypt, input validation, rate-limiting).
+    *   : Integrated new donation system logic.
+    *   : Enabled the New Architecture, which was the key fix for the build.
+    *   , : Made resource bars scrollable.
+    *   , : UI/UX improvements.
 
 **Areas that need refactoring**:
-- ****: This is the main refactoring target. The code for , , and  endpoints needs to be moved from this file into the newly created router files.
+-   **/app/backend/server.py**: This is the highest priority for refactoring. It contains legacy, duplicate endpoints for features that have been moved to routers (, ). This has already caused bugs (guild boss attack) and will continue to cause confusion and conflicts until the old code is removed.
 
 **key api endpoints**
--   No new endpoints were created. The agent began scaffolding the files to move existing endpoints.
+*   : **GET** - Retrieves current guild level, EXP, and shop data.
+*   : **GET** - Retrieves items available in the guild shop.
+*   : **POST** - Handles tiered donations to a guild.
+*   : **POST** - Endpoint for the new hero star promotion system.
+*   : **POST** - Endpoint for the new hero rarity ascension system.
+*   Admin endpoints under  now require a valid JWT and an  in the header.
 
 **Critical Info for New Agent**
-- **PRIMARY GOAL**: Your absolute top priority is to fix the **EAS Android Build Failure**. Do not get distracted by other tasks until a build is submitted and starts successfully.
-- **THE PROBLEM**: You are in dependency hell. The user-provided Gradle log proves that  is incompatible with this project's React Native version (it uses a  variable that no longer exists). Previous attempts showed  is also incompatible.
-- **THE FIX**: Stop manually editing  versions. The correct, most reliable approach is to let Expo handle it.
-  1.  Remove the  override from .
-  2.  Run [22:17:42] Installing 1 SDK 54.0.0 compatible native module using npm.
-[22:17:42] > npm install
-
-added 2 packages, removed 46 packages, changed 2 packages, and audited 996 packages in 4s
-
-185 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities. This will install the version specifically validated for Expo SDK 54.
-  3.  Clean everything (, then yarn install v1.22.22
-info No lockfile found.
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-Done in 29.70s.).
-  4.  Verify with 
-  $ expo doctor is not supported in the local CLI, please use npx expo-doctor instead.
-  5.  Attempt a new build with a cleared cache: An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username.
-- **Backend Refactoring**: This is the secondary task. It is in progress but only file stubs have been created. The actual code transfer from  to  and  has not happened yet. You can work on this while waiting for the EAS build to complete.
+-   **LIVE ENVIRONMENT**: You are working on a live application connected to a populated database () with active users. Do not assume the DB is empty. Direct debugging () must connect to the correct DB to be effective. The presence of other users on leaderboards confirms this.
+-   **DUPLICATE ENDPOINTS**: The file  still contains legacy versions of endpoints that also exist in the new routers (, ). This has already caused bugs. When debugging a backend issue, always check if a duplicate route exists in  and prioritize fixing/removing it.
+-   **NEW SYSTEMS READY FOR FRONTEND**: The backend for the new Guild System and Hero Progression System is complete and tested. The main pending work is building the corresponding UI for these features in the frontend.
 
 **documents created in this job**
  - None.
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1.  **User Provided Log (PENDING)**: User sent the full Gradle error log, which contains the key  error. The agent has analyzed this but has not yet acted on the new information.
-2.  **Agent Asks for Summary (DONE)**: Agent provided a summary and asked for confirmation.
-3.  **Agent Reports Build Failure (DONE)**: Agent correctly reported that the build failed again.
-4.  **Agent Starts Backend Refactor (IN PROGRESS)**: Agent started creating files for  and  routers.
-5.  **Build Queued (DONE)**: Agent confirmed the build was submitted and queued.
-6.  **User Provides Token (DONE)**: User gave a new EAS token.
-7.  **Agent Asks for Token (DONE)**: Agent identified the need for EAS authentication and asked for a token.
-8.  **User Confirms Priorities (DONE)**: User confirmed to prioritize the build fix and then continue with backend refactoring.
-9.  **Agent Asks for Priorities (DONE)**: Agent asked for confirmation of the plan.
-10. **Initial User Confirmation (DONE)**: User said Yes to starting the investigation.
+- **User asks about pending tasks (DONE)**: Agent provided a list of outstanding items.
+- **User confirms plan and adds tasks (IN PROGRESS)**: User asked to fix guild boss, create hero selection UI, integrate guild system, create hero progression UI, and fix the remove hero button.
+- **User reports new issues (IN PROGRESS)**: User asked about Instant Collect, broken leaderboards, and the Guild War not in guild bug. Also asked if the app is live.
+- **User provides detailed Hero Progression spec (IN PROGRESS)**: User gave a full prompt for implementing a hero rarity, fusion, and star progression system.
+- **User requests security diagnostic (DONE)**: Agent performed a security audit.
+- **User asks to fix security warnings (DONE)**: Agent fixed CORS, admin auth, and rate-limiting issues.
+- **User provides detailed Guild System spec (IN PROGRESS)**: User gave a full prompt for implementing a tiered guild system with levels, donations, tech tree, etc.
+- **User reports more UI/gameplay bugs (DONE/IN PROGRESS)**: User reported issues with guild boss attack, guild donations, and guild info on profile.
+- **User reports initial UI/UX bugs (DONE)**: User reported issues with monetary values, chat input, non-updating summon resources, and overflowing resource bar.
+- **User confirms build fix priority (DONE)**: User approved starting with the build fix.
 
 **Project Health Check:**
 *   **Broken**:
-    *   **EAS Android Build**: Fails during Gradle compilation due to  version incompatibility. This is the P0 issue.
+    *   The Atheon event summon is non-functional.
+    *   The link between the new backend systems (Guild, Hero Progression) and the frontend UI is missing.
 *   **Mocked**:
-    *   **RevenueCat Payments**: Code is present but testing is blocked by the build failure.
-*   **In Development / Untested**:
-    *   **Backend Refactoring**: Files for  and  routers have been created, but the code has not been moved.
+    *    is using mock data.
+    *   RevenueCat functionality is present but uses a placeholder test key and is not fully configured by the user.
 
 **3rd Party Integrations**
--   **OpenAI GPT-4 (via Emergent LLM Key)**: Used for backend AI narration.
--   **RevenueCat (Payments)**: Requires User API Key. Integrated but testing is blocked.
--   **Redis**: In , but not yet implemented.
--   **EAS (Builds)**: Requires User API Key (provided as EXPO_TOKEN).
+*   **OpenAI GPT-4 (via Emergent LLM Key)**: Used for backend AI narration.
+*   **RevenueCat (Payments)**: Integrated but not configured with a user-provided API key. Testing is blocked.
+*   **EAS (Builds)**: Configured with a user-provided token (). Android builds are now succeeding.
+*   **slowapi**: Newly installed Python package for backend rate limiting.
 
 **Testing status**
   - Testing agent used after significant changes: NO
-  - Troubleshoot agent used after agent stuck in loop: YES. The agent correctly used the , but the suggested fix (downgrading to 3.17.5) was also incompatible, just in a different way.
+  - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: None.
+  - Known regressions: None identified, but the potential is high due to duplicate code in .
 
 **Credentials to test flow:**
 - **Username:** Adam
 - **Password:** Adam123!
 - **EAS Token (EXPO_TOKEN)**: 
+- **Admin Key (for admin endpoints)**:  (as set in )
 
 **What agent forgot to execute**
-- The agent did not fully complete the backend refactoring task; it created the files but did not move the code into them.
-- The longstanding task to **Refine Selene Monetization Simulation** in  remains unaddressed.
-- The agent used yarn add v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/add for documentation about this command. to manage a critical Expo dependency () instead of the recommended env: load .env
-env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT EXPO_PUBLIC_REVENUECAT_API_KEY EXPO_TOKEN
-› Installing using yarn
-> yarn install
-yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.30s., which likely contributed to the versioning problems.
-
+-   The agent did not fully complete the backend refactoring by removing the old, duplicate endpoint code from  after moving functionality to routers.
+-   The longstanding task to **Refine Selene Monetization Simulation** in  remains unaddressed.
+-   The agent created placeholder files for the Hero Progression UI () and the reusable  component but did not implement their content or integrate them.
 </analysis>

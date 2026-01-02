@@ -2445,6 +2445,87 @@ async def get_idle_status(username: str):
         "vip_upgrade_info": vip_upgrade,
     }
 
+@api_router.post("/idle/instant-collect/{username}")
+async def instant_collect_idle(username: str):
+    """
+    VIP 1+ Instant Collect: Claim 2 hours of idle rewards instantly.
+    Has a 4-hour cooldown between uses.
+    """
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    vip_level = calculate_vip_level(user.get("total_spent", 0))
+    
+    # Check VIP requirement
+    if vip_level < 1:
+        raise HTTPException(status_code=403, detail="VIP 1+ required for Instant Collect")
+    
+    now = datetime.utcnow()
+    
+    # Check cooldown (4 hours)
+    last_instant_collect = user.get("last_instant_collect")
+    if last_instant_collect:
+        time_since_last = now - last_instant_collect
+        cooldown_hours = 4
+        if time_since_last.total_seconds() < cooldown_hours * 3600:
+            remaining_seconds = (cooldown_hours * 3600) - time_since_last.total_seconds()
+            remaining_minutes = int(remaining_seconds / 60)
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Instant Collect on cooldown. {remaining_minutes} minutes remaining."
+            )
+    
+    # Get user progression for caps
+    abyss_floor = user.get("abyss_floor", 0)
+    dungeon_tier = user.get("dungeon_tier", 0)
+    campaign_chapter = user.get("campaign_chapter", 0)
+    
+    # Calculate 2 hours of idle rewards
+    instant_hours = 2
+    idle_result = calculate_idle_resources(
+        hours_elapsed=instant_hours,
+        vip_level=vip_level,
+        abyss_floor=abyss_floor,
+        dungeon_tier=dungeon_tier,
+        campaign_chapter=campaign_chapter,
+        max_hours=instant_hours
+    )
+    
+    resources = idle_result["resources"]
+    gold_earned = resources.get("gold", 0)
+    
+    # Calculate EXP (10% of gold earned)
+    exp_earned = int(gold_earned * 0.1)
+    
+    # Update user resources
+    update_data = {
+        "last_instant_collect": now,
+        "gold": user.get("gold", 0) + gold_earned,
+        "exp": user.get("exp", 0) + exp_earned,
+    }
+    
+    # Add other resources
+    for resource, amount in resources.items():
+        if resource != "gold" and amount > 0:
+            current_amount = user.get(resource, 0)
+            update_data[resource] = current_amount + amount
+    
+    await db.users.update_one(
+        {"username": username},
+        {"$set": update_data}
+    )
+    
+    return {
+        "success": True,
+        "gold_earned": gold_earned,
+        "exp_earned": exp_earned,
+        "resources_earned": resources,
+        "hours_collected": instant_hours,
+        "next_available": now + timedelta(hours=4),
+        "vip_level": vip_level
+    }
+
 @api_router.get("/vip/info/{username}")
 async def get_vip_info(username: str):
     """Get VIP information and benefits"""

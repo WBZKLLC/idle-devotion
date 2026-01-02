@@ -31,17 +31,50 @@ export default function HomeScreen() {
   const [isClaiming, setIsClaiming] = useState(false);
   const [cr, setCR] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [instantCooldown, setInstantCooldown] = useState<number>(0); // seconds remaining
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const cooldownRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (user) {
       handleLogin();
       loadCR();
       loadIdleStatus();
+      loadInstantCooldown();
       timerRef.current = setInterval(() => updateIdleTimer(), 1000);
-      return () => { if (timerRef.current) clearInterval(timerRef.current); };
+      cooldownRef.current = setInterval(() => {
+        setInstantCooldown(prev => Math.max(0, prev - 1));
+      }, 1000);
+      return () => { 
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (cooldownRef.current) clearInterval(cooldownRef.current);
+      };
     }
   }, [user?.username]);
+
+  const loadInstantCooldown = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user.username}`);
+      const userData = await response.json();
+      if (userData.last_instant_collect) {
+        const lastCollect = new Date(userData.last_instant_collect);
+        const now = new Date();
+        const cooldownEnd = new Date(lastCollect.getTime() + 4 * 60 * 60 * 1000); // 4 hours
+        const remaining = Math.max(0, Math.floor((cooldownEnd.getTime() - now.getTime()) / 1000));
+        setInstantCooldown(remaining);
+      }
+    } catch (error) { console.error('Failed to load cooldown:', error); }
+  };
+
+  const formatCooldown = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    if (mins > 0) return `${mins}m ${secs}s`;
+    return `${secs}s`;
+  };
 
   const loadIdleStatus = async () => {
     try {

@@ -54,6 +54,7 @@ export default function GuildScreen() {
   useEffect(() => {
     if (hydrated && user) {
       loadGuildData();
+      loadGuildLevelInfo();
     } else if (hydrated && !user) {
       setIsLoading(false);
     }
@@ -65,6 +66,7 @@ export default function GuildScreen() {
     }
     if (guildData && activeTab === 'donate') {
       loadDonationHistory();
+      loadGuildLevelInfo();
     }
   }, [guildData, activeTab]);
 

@@ -365,7 +365,10 @@ export default function HeroDetailScreen() {
 
           {/* Actions */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.upgradeButton}>
+            <TouchableOpacity 
+              style={styles.upgradeButton}
+              onPress={() => router.push(`/hero-upgrade?id=${id}`)}
+            >
               <LinearGradient
                 colors={[COLORS.gold.primary, COLORS.gold.dark]}
                 style={styles.upgradeGradient}
@@ -374,9 +377,12 @@ export default function HeroDetailScreen() {
                 <Text style={styles.upgradeText}>Level Up</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.promoteButton}>
+            <TouchableOpacity 
+              style={styles.promoteButton}
+              onPress={() => router.push(`/hero-progression?heroId=${id}`)}
+            >
               <Ionicons name="star" size={20} color={COLORS.gold.primary} />
-              <Text style={styles.promoteText}>Promote</Text>
+              <Text style={styles.promoteText}>⭐ Stars</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

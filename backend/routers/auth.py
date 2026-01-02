@@ -226,8 +226,9 @@ async def auth_login(request: Request, body: LoginRequest):
 
 
 @router.post("/auth/set-password")
-async def set_password(username: str, new_password: str):
-    """Set password for a legacy account (users without passwords)"""
+@limiter.limit("3/minute")  # Max 3 password set attempts per minute per IP
+async def set_password(request: Request, username: str, new_password: str):
+    """Set password for a legacy account (users without passwords) (rate limited)"""
     # Validate username format to prevent NoSQL injection
     if not re.match(r'^[a-zA-Z0-9_]+$', username):
         raise HTTPException(status_code=404, detail="User not found")

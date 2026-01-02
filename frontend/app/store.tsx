@@ -35,22 +35,22 @@ interface VIPTier {
 
 // VIP tiers - benefits only, no spending amounts shown to users
 const VIP_TIERS: VIPTier[] = [
-  { level: 0, idle_hours: 8, idle_gold_rate: 1.0, active_uses: 1, active_cost: 0, avatar_frame: 'default' },
-  { level: 1, idle_hours: 10, idle_gold_rate: 1.05, active_uses: 2, active_cost: 50, avatar_frame: 'bronze' },
-  { level: 2, idle_hours: 10, idle_gold_rate: 1.1, active_uses: 2, active_cost: 45, avatar_frame: 'bronze' },
-  { level: 3, idle_hours: 12, idle_gold_rate: 1.15, active_uses: 3, active_cost: 40, avatar_frame: 'silver' },
-  { level: 4, idle_hours: 12, idle_gold_rate: 1.2, active_uses: 3, active_cost: 35, avatar_frame: 'silver' },
-  { level: 5, idle_hours: 14, idle_gold_rate: 1.25, active_uses: 4, active_cost: 30, avatar_frame: 'gold' },
-  { level: 6, idle_hours: 14, idle_gold_rate: 1.3, active_uses: 4, active_cost: 25, avatar_frame: 'gold' },
-  { level: 7, idle_hours: 16, idle_gold_rate: 1.4, active_uses: 5, active_cost: 20, avatar_frame: 'gold' },
-  { level: 8, idle_hours: 18, idle_gold_rate: 1.5, active_uses: 5, active_cost: 15, avatar_frame: 'platinum' },
-  { level: 9, idle_hours: 20, idle_gold_rate: 1.6, active_uses: 6, active_cost: 10, avatar_frame: 'platinum' },
-  { level: 10, idle_hours: 22, idle_gold_rate: 1.7, active_uses: 6, active_cost: 5, avatar_frame: 'diamond' },
-  { level: 11, idle_hours: 24, idle_gold_rate: 1.8, active_uses: 7, active_cost: 0, avatar_frame: 'diamond' },
-  { level: 12, idle_hours: 24, idle_gold_rate: 1.9, active_uses: 8, active_cost: 0, avatar_frame: 'rainbow' },
-  { level: 13, idle_hours: 24, idle_gold_rate: 2.0, active_uses: 9, active_cost: 0, avatar_frame: 'legendary' },
-  { level: 14, idle_hours: 24, idle_gold_rate: 2.25, active_uses: 10, active_cost: 0, avatar_frame: 'divine' },
-  { level: 15, idle_hours: 24, idle_gold_rate: 2.5, active_uses: 12, active_cost: 0, avatar_frame: 'celestial' },
+  { level: 0, idle_hours: 8, idle_gold_rate: 1.0, active_uses: 1, active_cost: 0, avatar_frame: 'default', required_spend: 0 },
+  { level: 1, idle_hours: 10, idle_gold_rate: 1.05, active_uses: 2, active_cost: 50, avatar_frame: 'bronze', required_spend: 10 },
+  { level: 2, idle_hours: 10, idle_gold_rate: 1.1, active_uses: 2, active_cost: 45, avatar_frame: 'bronze', required_spend: 30 },
+  { level: 3, idle_hours: 12, idle_gold_rate: 1.15, active_uses: 3, active_cost: 40, avatar_frame: 'silver', required_spend: 60 },
+  { level: 4, idle_hours: 12, idle_gold_rate: 1.2, active_uses: 3, active_cost: 35, avatar_frame: 'silver', required_spend: 100 },
+  { level: 5, idle_hours: 14, idle_gold_rate: 1.25, active_uses: 4, active_cost: 30, avatar_frame: 'gold', required_spend: 150 },
+  { level: 6, idle_hours: 14, idle_gold_rate: 1.3, active_uses: 4, active_cost: 25, avatar_frame: 'gold', required_spend: 220 },
+  { level: 7, idle_hours: 16, idle_gold_rate: 1.4, active_uses: 5, active_cost: 20, avatar_frame: 'gold', required_spend: 300 },
+  { level: 8, idle_hours: 18, idle_gold_rate: 1.5, active_uses: 5, active_cost: 15, avatar_frame: 'platinum', required_spend: 400 },
+  { level: 9, idle_hours: 20, idle_gold_rate: 1.6, active_uses: 6, active_cost: 10, avatar_frame: 'platinum', required_spend: 520 },
+  { level: 10, idle_hours: 22, idle_gold_rate: 1.7, active_uses: 6, active_cost: 5, avatar_frame: 'diamond', required_spend: 660 },
+  { level: 11, idle_hours: 24, idle_gold_rate: 1.8, active_uses: 7, active_cost: 0, avatar_frame: 'diamond', required_spend: 820 },
+  { level: 12, idle_hours: 24, idle_gold_rate: 1.9, active_uses: 8, active_cost: 0, avatar_frame: 'rainbow', required_spend: 1000 },
+  { level: 13, idle_hours: 24, idle_gold_rate: 2.0, active_uses: 9, active_cost: 0, avatar_frame: 'legendary', required_spend: 1200 },
+  { level: 14, idle_hours: 24, idle_gold_rate: 2.25, active_uses: 10, active_cost: 0, avatar_frame: 'divine', required_spend: 1450 },
+  { level: 15, idle_hours: 24, idle_gold_rate: 2.5, active_uses: 12, active_cost: 0, avatar_frame: 'celestial', required_spend: 1750 },
 ];
 
 export default function StoreScreen() {

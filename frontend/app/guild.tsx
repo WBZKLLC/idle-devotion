@@ -286,16 +286,10 @@ export default function GuildScreen() {
   };
 
   const makeDonation = async () => {
-    const amount = parseInt(donationAmount);
-    if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
-      return;
-    }
-    
     setIsDonating(true);
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/donate?currency_type=${donationType}&amount=${amount}`,
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/donate?tier=${selectedDonationTier}`,
         { method: 'POST' }
       );
       
@@ -303,12 +297,13 @@ export default function GuildScreen() {
         const result = await response.json();
         Alert.alert(
           '💎 Donation Successful!',
-          `Donated ${amount.toLocaleString()} ${donationType}\nGuild Points earned: ${result.guild_points_earned}`
+          `Earned ${result.guild_coins_earned} Guild Coins\nGuild gained ${result.guild_exp_earned} EXP!`
         );
         setShowDonateModal(false);
         fetchUser();
         loadDonationHistory();
         loadGuildData();
+        loadGuildLevelInfo();
       } else {
         const error = await response.json();
         Alert.alert('Error', error.detail || 'Donation failed');
@@ -317,6 +312,18 @@ export default function GuildScreen() {
       Alert.alert('Error', 'Failed to donate');
     } finally {
       setIsDonating(false);
+    }
+  };
+
+  const loadGuildLevelInfo = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user.username}/level-info`);
+      if (response.ok) {
+        setGuildLevelInfo(await response.json());
+      }
+    } catch (error) {
+      console.error('Failed to load guild level info:', error);
     }
   };
 

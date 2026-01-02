@@ -171,7 +171,6 @@ function TabsWithSafeArea() {
       <Tabs.Screen name="selene-banner" options={{ href: null }} />
       <Tabs.Screen name="resource-bag" options={{ href: null }} />
       <Tabs.Screen name="campaign" options={{ href: null }} />
-      <Tabs.Screen name="summon-hub" options={{ href: null }} />
       <Tabs.Screen name="admin" options={{ href: null }} />
       </Tabs>
   );

@@ -4709,7 +4709,10 @@ async def attack_guild_boss(username: str):
     total_power = 0
     heroes_used = []
     
-    for uh in user_heroes[:6]:
+    # Find valid heroes (those with matching hero data)
+    for uh in user_heroes:
+        if len(heroes_used) >= 6:  # Max 6 heroes in attack
+            break
         # Look up hero data from heroes collection
         hero_data = await db.heroes.find_one({"id": uh.get("hero_id")})
         if hero_data:

@@ -112,10 +112,8 @@ export default function HomeScreen() {
 
   const handleLogin = async () => {
     try {
-      const loginReward = await login();
-      if (loginReward.free_summons > 0 || loginReward.gems > 0) {
-        Alert.alert('Welcome Back', `Day ${loginReward.day_count}\n+${loginReward.coins} Coins\n+${loginReward.gold} Gold${loginReward.gems > 0 ? `\n+${loginReward.gems} Crystals` : ''}${loginReward.free_summons > 0 ? `\n+${loginReward.free_summons} Free Summons` : ''}`);
-      }
+      // Just track login - no rewards popup
+      await login();
     } catch (error) { console.error('Login error:', error); }
   };
 

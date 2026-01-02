@@ -2626,13 +2626,15 @@ async def get_vip_comparison(username: str):
 
 @api_router.post("/vip/purchase")
 async def vip_purchase(username: str, amount_usd: float):
-    """Simulate VIP purchase (in production, integrate with payment processor)"""
+    """Process VIP purchase (in production, integrate with payment processor)"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     if amount_usd <= 0:
         raise HTTPException(status_code=400, detail="Invalid purchase amount")
+    
+    old_vip_level = calculate_vip_level(user.get("total_spent", 0))
     
     # Update total spent and VIP level
     new_total_spent = user.get("total_spent", 0) + amount_usd
@@ -2654,15 +2656,21 @@ async def vip_purchase(username: str, amount_usd: float):
         }
     )
     
-    return {
-        "purchase_amount": amount_usd,
+    # Response hides monetary details, shows benefits only
+    response = {
         "crystals_received": crystals_purchased,
-        "new_total_spent": new_total_spent,
         "new_vip_level": new_vip_level,
         "new_idle_cap_hours": get_idle_cap_hours(new_vip_level),
         "new_idle_rate": get_idle_gold_rate(new_vip_level),
         "new_avatar_frame": new_avatar_frame
     }
+    
+    # Add level up celebration if VIP increased
+    if new_vip_level > old_vip_level:
+        response["vip_level_up"] = True
+        response["message"] = f"Congratulations! You've reached VIP {new_vip_level}!"
+    
+    return response
 
 @api_router.get("/vip/packages/{username}")
 async def get_vip_packages(username: str):

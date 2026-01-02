@@ -13,9 +13,12 @@ import hashlib
 import bcrypt
 import jwt
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
-load_dotenv()
+# Load .env from the backend directory
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(env_path)
 
 # Create router
 router = APIRouter(prefix="/api", tags=["auth"])

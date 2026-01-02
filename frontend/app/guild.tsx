@@ -40,11 +40,11 @@ export default function GuildScreen() {
   const [attacksRemaining, setAttacksRemaining] = useState<number>(3);
   const [maxAttacks, setMaxAttacks] = useState<number>(3);
   
-  // Donation state
-  const [donationType, setDonationType] = useState<'coins' | 'gold'>('coins');
-  const [donationAmount, setDonationAmount] = useState('1000');
+  // Donation state - now using tiers
+  const [selectedDonationTier, setSelectedDonationTier] = useState<'small' | 'medium' | 'large'>('small');
   const [donationHistory, setDonationHistory] = useState<any[]>([]);
   const [isDonating, setIsDonating] = useState(false);
+  const [guildLevelInfo, setGuildLevelInfo] = useState<any>(null);
   
   // Boss animation
   const bossShakeAnim = useRef(new Animated.Value(0)).current;

@@ -626,6 +626,19 @@ export default function StoreScreen() {
         </ScrollView>
         
         {renderVIPComparison()}
+        
+        {/* Paywall Modal */}
+        <Modal
+          visible={showPaywall}
+          animationType="slide"
+          presentationStyle="fullScreen"
+          onRequestClose={() => setShowPaywall(false)}
+        >
+          <CustomPaywall 
+            onClose={() => setShowPaywall(false)} 
+            onPurchaseComplete={() => setShowPaywall(false)}
+          />
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );

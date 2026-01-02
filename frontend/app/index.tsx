@@ -122,6 +122,10 @@ export default function HomeScreen() {
       Alert.alert('VIP Required', 'VIP 1+ can use Instant Collect to claim 2 hours of rewards instantly!');
       return;
     }
+    if (instantCooldown > 0) {
+      Alert.alert('On Cooldown', `Instant Collect available in ${formatCooldown(instantCooldown)}`);
+      return;
+    }
     if (isClaiming) return;
     setIsClaiming(true);
     try {
@@ -130,11 +134,27 @@ export default function HomeScreen() {
       });
       const data = await response.json();
       if (data.success) {
-        Alert.alert('⚡ Instant Collect!', `+${data.gold_earned?.toLocaleString() || 0} Gold\n+${data.exp_earned?.toLocaleString() || 0} EXP`, [{ text: 'Nice!' }]);
+        // Build detailed rewards message
+        const resources = data.resources_earned || {};
+        let rewardsText = `⚡ Collected 2 hours of rewards!\n\n`;
+        if (data.gold_earned > 0) rewardsText += `💰 +${data.gold_earned.toLocaleString()} Gold\n`;
+        if (data.exp_earned > 0) rewardsText += `✨ +${data.exp_earned.toLocaleString()} EXP\n`;
+        if (resources.coins > 0) rewardsText += `🪙 +${resources.coins.toLocaleString()} Coins\n`;
+        if (resources.crystals > 0) rewardsText += `💎 +${resources.crystals.toLocaleString()} Crystals\n`;
+        if (resources.stamina > 0) rewardsText += `⚡ +${resources.stamina} Stamina\n`;
+        
+        Alert.alert('⚡ Instant Collect!', rewardsText, [{ text: 'Nice!' }]);
+        
+        // Set 4 hour cooldown
+        setInstantCooldown(4 * 60 * 60);
         loadIdleStatus();
         fetchUser();
       } else {
-        Alert.alert('Cannot Collect', data.detail || 'Instant collect on cooldown');
+        // Extract cooldown from error message if present
+        const errorMsg = data.detail || 'Instant collect on cooldown';
+        Alert.alert('Cannot Collect', errorMsg);
+        // Refresh cooldown state
+        loadInstantCooldown();
       }
     } catch (error: any) {
       Alert.alert('Error', error?.response?.data?.detail || 'Failed to instant collect');

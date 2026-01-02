@@ -1,0 +1,20 @@
+diff --git a/frontend/app/guild.tsx b/frontend/app/guild.tsx
+index 9141fd3..86c79a0 100644
+--- a/frontend/app/guild.tsx
++++ b/frontend/app/guild.tsx
+@@ -54,6 +54,7 @@ export default function GuildScreen() {
+   useEffect(() => {
+     if (hydrated && user) {
+       loadGuildData();
++      loadGuildLevelInfo();
+     } else if (hydrated && !user) {
+       setIsLoading(false);
+     }
+@@ -65,6 +66,7 @@ export default function GuildScreen() {
+     }
+     if (guildData && activeTab === 'donate') {
+       loadDonationHistory();
++      loadGuildLevelInfo();
+     }
+   }, [guildData, activeTab]);
+ 

@@ -390,8 +390,16 @@ async def attack_guild_boss(username: str):
 
 
 @router.post("/guild/{username}/donate")
-async def donate_to_guild(username: str, currency_type: str = "coins", amount: int = 1000):
-    """Donate currency to guild"""
+async def donate_to_guild(username: str, tier: str = "small"):
+    """
+    Donate to guild using tiered system
+    Tiers:
+    - small: 10,000 Gold → 10 Guild Coins, 50 Guild EXP
+    - medium: 50 Gems → 60 Guild Coins, 300 Guild EXP
+    - large: 1 Summon Scroll → 200 Guild Coins, 1000 Guild EXP
+    """
+    from core.guild_system import DONATION_TIERS, DAILY_DONATION_LIMIT
+    
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -400,26 +408,67 @@ async def donate_to_guild(username: str, currency_type: str = "coins", amount: i
     if not guild:
         raise HTTPException(status_code=400, detail="Not in a guild")
     
-    if currency_type not in ["coins", "gold"]:
-        raise HTTPException(status_code=400, detail="Can only donate coins or gold")
+    if tier not in DONATION_TIERS:
+        raise HTTPException(status_code=400, detail=f"Invalid tier. Choose: small, medium, large")
     
-    if user.get(currency_type, 0) < amount:
-        raise HTTPException(status_code=400, detail=f"Not enough {currency_type}")
+    donation_config = DONATION_TIERS[tier]
+    cost_type = donation_config["cost_type"]
+    cost_amount = donation_config["cost_amount"]
+    guild_coins_reward = donation_config["guild_coins_reward"]
+    guild_exp_reward = donation_config["guild_exp_reward"]
+    
+    # Check daily donation limit
+    today = datetime.utcnow().date().isoformat()
+    donation_count = await db.guild_donations.count_documents({
+        "user_id": user["id"],
+        "guild_id": guild["id"],
+        "date": today
+    })
+    
+    if donation_count >= DAILY_DONATION_LIMIT:
+        raise HTTPException(status_code=400, detail=f"Daily donation limit reached ({DAILY_DONATION_LIMIT}/day)")
+    
+    # Map cost_type to user field
+    user_field_map = {
+        "gold": "gold",
+        "gems": "gems", 
+        "summon_scrolls": "summon_scrolls"
+    }
+    user_field = user_field_map.get(cost_type, cost_type)
+    
+    if user.get(user_field, 0) < cost_amount:
+        raise HTTPException(status_code=400, detail=f"Not enough {cost_type}. Need {cost_amount}")
     
     # Deduct from user
     await db.users.update_one(
         {"username": username},
-        {"$inc": {currency_type: -amount}}
+        {"$inc": {
+            user_field: -cost_amount,
+            "guild_coins": guild_coins_reward
+        }}
     )
     
-    # Add to guild treasury
+    # Add EXP to guild and update level
+    new_guild_exp = guild.get("exp", 0) + guild_exp_reward
+    
+    # Calculate new level
+    from core.guild_system import get_guild_level, get_guild_member_cap
+    new_level = get_guild_level(new_guild_exp)
+    old_level = guild.get("level", 1)
+    leveled_up = new_level > old_level
+    
+    # Update guild
     await db.guilds.update_one(
         {"id": guild["id"]},
         {
             "$inc": {
-                f"treasury_{currency_type}": amount,
-                "total_donations": amount,
-                "exp": amount // 100  # Guild gains XP from donations
+                "exp": guild_exp_reward,
+                "total_donations": guild_exp_reward,
+                "funds": guild_coins_reward  # Guild funds for tech tree
+            },
+            "$set": {
+                "level": new_level,
+                "member_cap": get_guild_member_cap(new_level)
             }
         }
     )
@@ -430,27 +479,37 @@ async def donate_to_guild(username: str, currency_type: str = "coins", amount: i
         "guild_id": guild["id"],
         "user_id": user["id"],
         "username": username,
-        "currency_type": currency_type,
-        "amount": amount,
+        "tier": tier,
+        "cost_type": cost_type,
+        "cost_amount": cost_amount,
+        "guild_coins_earned": guild_coins_reward,
+        "guild_exp_earned": guild_exp_reward,
+        "date": today,
         "timestamp": datetime.utcnow().isoformat()
     })
     
-    # Reward donor with guild points
-    guild_points = amount // 50
-    await db.users.update_one(
-        {"username": username},
-        {"$inc": {"guild_points": guild_points}}
+    # Track weekly contribution for leaderboard
+    week_start = (datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())).date().isoformat()
+    await db.guild_weekly_contributions.update_one(
+        {"user_id": user["id"], "guild_id": guild["id"], "week_start": week_start},
+        {
+            "$inc": {"total_exp": guild_exp_reward, "donation_count": 1},
+            "$set": {"username": username}
+        },
+        upsert=True
     )
     
     return {
         "success": True,
-        "donated": amount,
-        "currency_type": currency_type,
-        "guild_points_earned": guild_points,
-        "guild_treasury": {
-            "coins": guild.get("treasury_coins", 0) + (amount if currency_type == "coins" else 0),
-            "gold": guild.get("treasury_gold", 0) + (amount if currency_type == "gold" else 0)
-        }
+        "tier": tier,
+        "donated": f"{cost_amount} {cost_type}",
+        "guild_coins_earned": guild_coins_reward,
+        "guild_exp_earned": guild_exp_reward,
+        "donations_today": donation_count + 1,
+        "donations_remaining": DAILY_DONATION_LIMIT - donation_count - 1,
+        "guild_level": new_level,
+        "leveled_up": leveled_up,
+        "level_up_message": f"Guild leveled up to {new_level}!" if leveled_up else None
     }
 
 

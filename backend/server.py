@@ -28,6 +28,7 @@ from routers import battle as battle_router
 from routers import gacha as gacha_router
 from routers import auth as auth_router
 from routers import guild as guild_router
+from routers import hero_progression as hero_progression_router
 
 # Import security module
 from core.security import (

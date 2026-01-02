@@ -8,6 +8,7 @@ from typing import Optional
 from pydantic import BaseModel
 import re
 import hashlib
+import bcrypt
 import jwt
 import os
 

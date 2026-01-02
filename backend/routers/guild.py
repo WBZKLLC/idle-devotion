@@ -541,7 +541,8 @@ async def donate_to_guild(username: str, tier: str = "small"):
         "donations_remaining": DAILY_DONATION_LIMIT - donation_count - 1,
         "guild_level": new_level,
         "leveled_up": leveled_up,
-        "level_up_message": f"Guild leveled up to {new_level}!" if leveled_up else None
+        "level_up_message": f"Guild leveled up to {new_level}!" if leveled_up else None,
+        "level_up_rewards": level_up_rewards if leveled_up else None
     }
 
 

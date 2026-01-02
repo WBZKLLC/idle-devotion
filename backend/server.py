@@ -8131,11 +8131,25 @@ auth_router.set_database(db)
 guild_router.set_database(db)
 hero_progression_router.set_database(db)
 
+# CORS Configuration - Restrict origins in production
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else []
+# Add default development origins
+DEV_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8081",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8081",
+    "https://app.emergent.sh",
+    "exp://",  # Expo Go
+]
+CORS_ORIGINS = ALLOWED_ORIGINS if ALLOWED_ORIGINS else DEV_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=r"https://.*\.emergent\.sh$|exp://.*",  # Allow Expo and Emergent subdomains
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

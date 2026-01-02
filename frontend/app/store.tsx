@@ -30,6 +30,7 @@ interface VIPTier {
   active_uses: number;
   active_cost: number;
   avatar_frame: string;
+  required_spend: number;
 }
 
 // VIP tiers - benefits only, no spending amounts shown to users

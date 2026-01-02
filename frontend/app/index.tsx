@@ -370,11 +370,20 @@ export default function HomeScreen() {
                 <Ionicons name="star" size={18} color={COLORS.gold.primary} />
                 <Text style={styles.idlePendingText}>+{idleStatus?.gold_pending || 0} Gold Pending</Text>
               </View>
-              <TouchableOpacity style={styles.claimButton} onPress={handleClaimIdle} disabled={isClaiming}>
-                <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.claimButtonGradient}>
-                  {isClaiming ? <ActivityIndicator color={COLORS.navy.dark} size="small" /> : <><Ionicons name="download" size={18} color={COLORS.navy.dark} /><Text style={styles.claimButtonText}>Collect</Text></>}
-                </LinearGradient>
-              </TouchableOpacity>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={[styles.claimButton, { flex: 1 }]} onPress={handleClaimIdle} disabled={isClaiming}>
+                  <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.claimButtonGradient}>
+                    {isClaiming ? <ActivityIndicator color={COLORS.navy.dark} size="small" /> : <><Ionicons name="download" size={18} color={COLORS.navy.dark} /><Text style={styles.claimButtonText}>Collect</Text></>}
+                  </LinearGradient>
+                </TouchableOpacity>
+                {(user.vip_level || 0) >= 1 && (
+                  <TouchableOpacity style={[styles.claimButton, { flex: 1, marginLeft: 8 }]} onPress={handleInstantCollect} disabled={isClaiming}>
+                    <LinearGradient colors={['#8b5cf6', '#6d28d9']} style={styles.claimButtonGradient}>
+                      {isClaiming ? <ActivityIndicator color={COLORS.cream.pure} size="small" /> : <><Ionicons name="flash" size={18} color={COLORS.cream.pure} /><Text style={[styles.claimButtonText, { color: COLORS.cream.pure }]}>⚡ Instant</Text></>}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
+              </View>
             </LinearGradient>
           </View>
 

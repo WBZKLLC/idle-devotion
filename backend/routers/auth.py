@@ -37,13 +37,22 @@ class LoginRequest(BaseModel):
 
 # Helper functions
 def hash_password(password: str) -> str:
-    """Hash password using SHA256"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash password using bcrypt (secure for passwords)"""
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode(), salt).decode()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash"""
-    return hash_password(plain_password) == hashed_password
+    """Verify password against bcrypt hash"""
+    try:
+        # Handle both old SHA256 hashes (for migration) and new bcrypt hashes
+        if len(hashed_password) == 64:  # SHA256 hex digest length
+            # Legacy SHA256 hash - verify and encourage re-hash on next login
+            return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
+        # Bcrypt hash
+        return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
+    except Exception:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):

@@ -172,7 +172,6 @@ function TabsWithSafeArea() {
       <Tabs.Screen name="campaign" options={{ href: null }} />
       <Tabs.Screen name="admin" options={{ href: null }} />
       </Tabs>
-    </SessionProvider>
   );
 }
 

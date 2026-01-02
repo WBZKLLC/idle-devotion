@@ -63,17 +63,33 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
 
 export default function Layout() {
   return (
-    <SessionProvider>
-      <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: COLORS.gold.primary,
-          tabBarInactiveTintColor: COLORS.cream.soft + '60',
-          tabBarStyle: styles.tabBar,
-          headerShown: false,
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarIconStyle: styles.tabIcon,
-        }}
-      >
+    <SafeAreaProvider>
+      <SessionProvider>
+        <TabsWithSafeArea />
+      </SessionProvider>
+    </SafeAreaProvider>
+  );
+}
+
+// Separate component to use the safe area insets hook
+function TabsWithSafeArea() {
+  const insets = useSafeAreaInsets();
+  
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: COLORS.gold.primary,
+        tabBarInactiveTintColor: COLORS.cream.soft + '60',
+        tabBarStyle: {
+          ...styles.tabBar,
+          paddingBottom: Math.max(insets.bottom, 8), // Respect bottom safe area
+          height: 60 + Math.max(insets.bottom, 0), // Add height for safe area
+        },
+        headerShown: false,
+        tabBarLabelStyle: styles.tabLabel,
+        tabBarIconStyle: styles.tabIcon,
+      }}
+    >
       {/* ===== 6 MAIN VISIBLE TABS ===== */}
       <Tabs.Screen
         name="index"

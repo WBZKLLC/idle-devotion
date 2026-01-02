@@ -255,7 +255,7 @@ export default function HomeScreen() {
   if (!hydrated || isLoading) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.loadingContainer}>
+        <SafeAreaView style={styles.loadingContainer} edges={['top', 'left', 'right']}>
           <ActivityIndicator size="large" color={COLORS.gold.primary} />
           <Text style={styles.loadingText}>Loading...</Text>
         </SafeAreaView>
@@ -266,7 +266,7 @@ export default function HomeScreen() {
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark, COLORS.navy.primary]} style={styles.container}>
-        <SafeAreaView style={styles.loginContainer}>
+        <SafeAreaView style={styles.loginContainer} edges={['top', 'left', 'right']}>
           <View style={styles.logoContainer}>
             <View style={styles.logoCircle}>
               <Text style={styles.logoText}>DH</Text>

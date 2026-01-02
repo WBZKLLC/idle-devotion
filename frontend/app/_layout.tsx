@@ -159,6 +159,7 @@ function TabsWithSafeArea() {
       <Tabs.Screen name="events" options={{ href: null }} />
       <Tabs.Screen name="team-builder" options={{ href: null }} />
       <Tabs.Screen name="hero-upgrade" options={{ href: null }} />
+      <Tabs.Screen name="hero-progression" options={{ href: null }} />
       <Tabs.Screen name="combat" options={{ href: null }} />
       <Tabs.Screen name="hero-detail" options={{ href: null }} />
       <Tabs.Screen name="dungeons" options={{ href: null }} />
@@ -170,6 +171,7 @@ function TabsWithSafeArea() {
       <Tabs.Screen name="selene-banner" options={{ href: null }} />
       <Tabs.Screen name="resource-bag" options={{ href: null }} />
       <Tabs.Screen name="campaign" options={{ href: null }} />
+      <Tabs.Screen name="summon-hub" options={{ href: null }} />
       <Tabs.Screen name="admin" options={{ href: null }} />
       </Tabs>
   );

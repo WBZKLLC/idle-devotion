@@ -135,13 +135,14 @@ async def get_current_user(authorization: str = None):
 
 
 @router.post("/user/register")
-async def register_user(request: RegisterRequest):
-    """Register a new user with password"""
+@limiter.limit("5/minute")  # Max 5 registration attempts per minute per IP
+async def register_user(request: Request, body: RegisterRequest):
+    """Register a new user with password (rate limited)"""
     # Import User model here to avoid circular imports
     from server import User
     
-    username = request.username.strip()
-    password = request.password
+    username = body.username.strip()
+    password = body.password
     
     # Validate username
     if len(username) < 3:

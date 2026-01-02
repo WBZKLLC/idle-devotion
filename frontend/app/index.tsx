@@ -72,14 +72,39 @@ export default function HomeScreen() {
     setIsClaiming(true);
     try {
       const rewards = await claimIdleRewards();
-      if (rewards.gold_earned > 0) {
+      if (rewards?.gold_earned) {
         Alert.alert('Rewards Collected', `+${rewards.gold_earned.toLocaleString()} Gold`, [{ text: 'Continue' }]);
       }
       // Reload idle status to reset timer
       loadIdleStatus();
     } catch (error) {
       console.error('Failed to claim idle rewards:', error);
-      Alert.alert('Error', 'Failed to claim rewards');
+    } finally {
+      setIsClaiming(false);
+    }
+  };
+
+  const handleInstantCollect = async () => {
+    if (!user || (user.vip_level || 0) < 1) {
+      Alert.alert('VIP Required', 'VIP 1+ can use Instant Collect to claim 2 hours of rewards instantly!');
+      return;
+    }
+    if (isClaiming) return;
+    setIsClaiming(true);
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/idle/instant-collect/${user.username}`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('⚡ Instant Collect!', `+${data.gold_earned?.toLocaleString() || 0} Gold\n+${data.exp_earned?.toLocaleString() || 0} EXP`, [{ text: 'Nice!' }]);
+        loadIdleStatus();
+        fetchUser();
+      } else {
+        Alert.alert('Cannot Collect', data.detail || 'Instant collect on cooldown');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error?.response?.data?.detail || 'Failed to instant collect');
     } finally {
       setIsClaiming(false);
     }

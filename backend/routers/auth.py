@@ -181,6 +181,10 @@ async def auth_login(request: LoginRequest):
     username = request.username.strip()
     password = request.password
     
+    # Validate username format to prevent NoSQL injection
+    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
     # Find user (case-insensitive)
     user = await db.users.find_one({"username": {"$regex": f"^{username}$", "$options": "i"}})
     

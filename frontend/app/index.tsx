@@ -428,9 +428,30 @@ export default function HomeScreen() {
                   </LinearGradient>
                 </TouchableOpacity>
                 {(user.vip_level || 0) >= 1 && (
-                  <TouchableOpacity style={[styles.claimButton, { flex: 1, marginLeft: 8 }]} onPress={handleInstantCollect} disabled={isClaiming}>
-                    <LinearGradient colors={['#8b5cf6', '#6d28d9']} style={styles.claimButtonGradient}>
-                      {isClaiming ? <ActivityIndicator color={COLORS.cream.pure} size="small" /> : <><Ionicons name="flash" size={18} color={COLORS.cream.pure} /><Text style={[styles.claimButtonText, { color: COLORS.cream.pure }]}>⚡ Instant</Text></>}
+                  <TouchableOpacity 
+                    style={[styles.claimButton, { flex: 1, marginLeft: 8, opacity: instantCooldown > 0 ? 0.6 : 1 }]} 
+                    onPress={handleInstantCollect} 
+                    disabled={isClaiming || instantCooldown > 0}
+                  >
+                    <LinearGradient 
+                      colors={instantCooldown > 0 ? ['#4a4a6a', '#3a3a5a'] : ['#8b5cf6', '#6d28d9']} 
+                      style={styles.claimButtonGradient}
+                    >
+                      {isClaiming ? (
+                        <ActivityIndicator color={COLORS.cream.pure} size="small" />
+                      ) : instantCooldown > 0 ? (
+                        <>
+                          <Ionicons name="time" size={16} color={COLORS.cream.soft} />
+                          <Text style={[styles.claimButtonText, { color: COLORS.cream.soft, fontSize: 11 }]}>
+                            {formatCooldown(instantCooldown)}
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <Ionicons name="flash" size={18} color={COLORS.cream.pure} />
+                          <Text style={[styles.claimButtonText, { color: COLORS.cream.pure }]}>⚡ Instant</Text>
+                        </>
+                      )}
                     </LinearGradient>
                   </TouchableOpacity>
                 )}

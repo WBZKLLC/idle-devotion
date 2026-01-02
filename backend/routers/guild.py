@@ -513,6 +513,185 @@ async def donate_to_guild(username: str, tier: str = "small"):
     }
 
 
+
+@router.get("/guild/{username}/level-info")
+async def get_guild_level_info(username: str):
+    """Get guild level, unlocks, and progression info"""
+    from core.guild_system import GUILD_LEVELS, get_guild_level, get_exp_to_next_level, get_guild_buffs, get_unlocked_features
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    current_exp = guild.get("exp", 0)
+    current_level = get_guild_level(current_exp)
+    exp_to_next = get_exp_to_next_level(current_exp, current_level)
+    
+    level_config = GUILD_LEVELS.get(current_level, {})
+    next_level_config = GUILD_LEVELS.get(current_level + 1, {})
+    
+    return {
+        "guild_name": guild.get("name"),
+        "level": current_level,
+        "exp": current_exp,
+        "exp_to_next_level": exp_to_next,
+        "next_level_exp_required": next_level_config.get("exp_required", 0),
+        "member_cap": level_config.get("member_cap", 15),
+        "member_count": len(guild.get("member_ids", [])),
+        "current_buff": level_config.get("buff"),
+        "all_buffs": get_guild_buffs(current_level),
+        "unlocked_features": get_unlocked_features(current_level),
+        "level_description": level_config.get("description", ""),
+        "funds": guild.get("funds", 0),
+        "total_donations": guild.get("total_donations", 0),
+        "max_level": 10,
+        "is_max_level": current_level >= 10
+    }
+
+
+@router.get("/guild/{username}/shop")
+async def get_guild_shop(username: str):
+    """Get available guild shop items based on guild level"""
+    from core.guild_system import GUILD_SHOP_ITEMS, get_guild_level
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    guild_level = get_guild_level(guild.get("exp", 0))
+    user_guild_coins = user.get("guild_coins", 0)
+    
+    # Get week start for stock tracking
+    week_start = (datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())).date().isoformat()
+    
+    # Get user's purchases this week
+    purchases = await db.guild_shop_purchases.find({
+        "user_id": user["id"],
+        "week_start": week_start
+    }).to_list(100)
+    
+    purchase_counts = {}
+    for p in purchases:
+        item_id = p["item_id"]
+        purchase_counts[item_id] = purchase_counts.get(item_id, 0) + p.get("quantity", 1)
+    
+    available_items = []
+    for item in GUILD_SHOP_ITEMS:
+        if item["required_level"] <= guild_level:
+            purchased_this_week = purchase_counts.get(item["id"], 0)
+            available_items.append({
+                **item,
+                "can_afford": user_guild_coins >= item["price"],
+                "stock_remaining": max(0, item["stock_weekly"] - purchased_this_week),
+                "purchased_this_week": purchased_this_week
+            })
+    
+    return {
+        "guild_level": guild_level,
+        "user_guild_coins": user_guild_coins,
+        "items": available_items,
+        "week_reset": week_start
+    }
+
+
+@router.post("/guild/{username}/shop/buy")
+async def buy_guild_shop_item(username: str, item_id: str, quantity: int = 1):
+    """Purchase item from guild shop"""
+    from core.guild_system import GUILD_SHOP_ITEMS, get_guild_level
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    guild = await db.guilds.find_one({"member_ids": user["id"]})
+    if not guild:
+        raise HTTPException(status_code=400, detail="Not in a guild")
+    
+    # Find the item
+    item = next((i for i in GUILD_SHOP_ITEMS if i["id"] == item_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    guild_level = get_guild_level(guild.get("exp", 0))
+    if item["required_level"] > guild_level:
+        raise HTTPException(status_code=400, detail=f"Guild level {item['required_level']} required")
+    
+    total_cost = item["price"] * quantity
+    if user.get("guild_coins", 0) < total_cost:
+        raise HTTPException(status_code=400, detail=f"Not enough guild coins. Need {total_cost}")
+    
+    # Check weekly stock
+    week_start = (datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())).date().isoformat()
+    purchases = await db.guild_shop_purchases.find({
+        "user_id": user["id"],
+        "item_id": item_id,
+        "week_start": week_start
+    }).to_list(100)
+    
+    purchased_count = sum(p.get("quantity", 1) for p in purchases)
+    if purchased_count + quantity > item["stock_weekly"]:
+        raise HTTPException(status_code=400, detail=f"Weekly stock limit reached. {item['stock_weekly'] - purchased_count} remaining")
+    
+    # Deduct guild coins
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": {"guild_coins": -total_cost}}
+    )
+    
+    # Grant reward
+    reward_type = item["reward_type"]
+    reward_value = item["reward_value"] * quantity
+    
+    if reward_type in ["gold", "gems", "coins", "stamina", "divine_essence", "skill_essence", "enhancement_stones"]:
+        await db.users.update_one(
+            {"username": username},
+            {"$inc": {reward_type: reward_value}}
+        )
+    elif reward_type == "summon_scrolls":
+        await db.users.update_one(
+            {"username": username},
+            {"$inc": {"summon_scrolls": reward_value}}
+        )
+    elif reward_type == "hero_shard":
+        # Random SSR/UR shard
+        pass  # Would need hero shard system
+    elif reward_type == "frame":
+        await db.user_frames.update_one(
+            {"user_id": user["id"], "frame_id": reward_value},
+            {"$set": {"unlocked": True, "unlocked_at": datetime.utcnow().isoformat()}},
+            upsert=True
+        )
+    
+    # Record purchase
+    await db.guild_shop_purchases.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "item_id": item_id,
+        "quantity": quantity,
+        "cost": total_cost,
+        "week_start": week_start,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    
+    return {
+        "success": True,
+        "item": item["name"],
+        "quantity": quantity,
+        "cost": total_cost,
+        "reward": f"{reward_value} {reward_type}",
+        "guild_coins_remaining": user.get("guild_coins", 0) - total_cost
+    }
+
+
+
 @router.get("/guild/{username}/donations")
 async def get_guild_donations(username: str, limit: int = 20):
     """Get recent guild donations"""

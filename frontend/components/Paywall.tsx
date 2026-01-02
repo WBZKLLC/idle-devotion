@@ -11,10 +11,29 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PurchasesPackage } from 'react-native-purchases';
-import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import COLORS from '../theme/colors';
 import { useRevenueCatStore, formatPrice, PRODUCT_IDS } from '../stores/revenueCatStore';
+
+// Safely import RevenueCat UI - may not be available in Expo Go
+let RevenueCatUI: any = null;
+let PAYWALL_RESULT: any = {
+  NOT_PRESENTED: 'NOT_PRESENTED',
+  ERROR: 'ERROR',
+  CANCELLED: 'CANCELLED',
+  PURCHASED: 'PURCHASED',
+  RESTORED: 'RESTORED',
+};
+
+try {
+  const RNPurchasesUI = require('react-native-purchases-ui');
+  RevenueCatUI = RNPurchasesUI.default || RNPurchasesUI;
+  PAYWALL_RESULT = RNPurchasesUI.PAYWALL_RESULT || PAYWALL_RESULT;
+} catch (e) {
+  console.log('[RevenueCat UI] Native module not available:', e);
+}
+
+// Type for packages
+type PurchasesPackage = any;
 
 interface PaywallProps {
   onClose: () => void;
@@ -23,8 +42,13 @@ interface PaywallProps {
 
 // RevenueCat Native Paywall (uses dashboard-configured paywall)
 export async function presentNativePaywall(): Promise<boolean> {
+  if (!RevenueCatUI || !RevenueCatUI.presentPaywall) {
+    console.log('[Paywall] RevenueCatUI not available');
+    return false;
+  }
+  
   try {
-    const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+    const paywallResult = await RevenueCatUI.presentPaywall();
 
     switch (paywallResult) {
       case PAYWALL_RESULT.PURCHASED:

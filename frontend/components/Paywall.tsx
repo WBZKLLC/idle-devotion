@@ -68,8 +68,13 @@ export async function presentNativePaywall(): Promise<boolean> {
 
 // Present paywall for a specific offering
 export async function presentPaywallForOffering(offeringIdentifier: string): Promise<boolean> {
+  if (!RevenueCatUI || !RevenueCatUI.presentPaywallIfNeeded) {
+    console.log('[Paywall] RevenueCatUI not available for offering');
+    return false;
+  }
+  
   try {
-    const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywallIfNeeded({
+    const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
       requiredEntitlementIdentifier: 'DivineHeros Pro',
     });
 

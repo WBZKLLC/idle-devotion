@@ -1,12 +1,24 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
-import Purchases, {
-  LOG_LEVEL,
-  CustomerInfo,
-  PurchasesOffering,
-  PurchasesPackage,
-  PURCHASES_ERROR_CODE,
-} from 'react-native-purchases';
+
+// Safely import RevenueCat - may not be available in Expo Go
+let Purchases: any = null;
+let LOG_LEVEL: any = { VERBOSE: 'VERBOSE' };
+let PURCHASES_ERROR_CODE: any = { PURCHASE_CANCELLED_ERROR: 'PURCHASE_CANCELLED' };
+
+try {
+  const RNPurchases = require('react-native-purchases');
+  Purchases = RNPurchases.default || RNPurchases;
+  LOG_LEVEL = RNPurchases.LOG_LEVEL || LOG_LEVEL;
+  PURCHASES_ERROR_CODE = RNPurchases.PURCHASES_ERROR_CODE || PURCHASES_ERROR_CODE;
+} catch (e) {
+  console.log('[RevenueCat] Native module not available:', e);
+}
+
+// Types
+type CustomerInfo = any;
+type PurchasesOffering = any;
+type PurchasesPackage = any;
 
 // RevenueCat API Key - same for both platforms in this case
 const REVENUECAT_API_KEY = 'test_IZyOoxmCinuIynJgzhXakqWWiyY';

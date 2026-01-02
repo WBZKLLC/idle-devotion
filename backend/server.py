@@ -1371,52 +1371,44 @@ async def get_user(username: str):
 
 @api_router.post("/user/{username}/login")
 async def user_login(username: str):
-    """Handle daily login and rewards"""
+    """Handle daily login tracking - NO rewards given here"""
     user_data = await db.users.find_one({"username": username})
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
     
-    user = User(**user_data)
     now = datetime.utcnow()
+    last_login = user_data.get("last_login")
+    login_days = user_data.get("login_days", 0)
     
-    # Check if it's a new day
-    if user.last_login:
-        last_login_date = user.last_login.date()
+    # Check if it's a new day - only increment login_days
+    if last_login:
+        if isinstance(last_login, str):
+            last_login = datetime.fromisoformat(last_login.replace('Z', '+00:00'))
+        last_login_date = last_login.date()
         today = now.date()
         if last_login_date < today:
-            user.login_days += 1
+            login_days += 1
     else:
-        user.login_days = 1
+        login_days = 1
     
-    # Calculate login rewards
-    reward = LoginReward(day_count=user.login_days)
-    
-    # Base daily rewards
-    reward.coins = 1000
-    reward.gold = 500
-    
-    # Milestone rewards
-    if user.login_days % 7 == 0:
-        reward.crystals = 50
-    
-    # Free summons schedule (10-15 per day over 250 days)
-    # This gives roughly 3000 free summons over 250 days
-    summons_per_day = random.randint(10, 15)
-    if user.daily_summons_claimed < user.login_days * 12:  # Average 12 per day
-        reward.free_summons = summons_per_day
-    
-    # Apply rewards
-    user.coins += reward.coins
-    user.gold += reward.gold
-    user.crystals += reward.crystals
-    user.last_login = now
-    
+    # Update last login time only - NO rewards
     await db.users.update_one(
         {"username": username},
-        {"$set": user.dict()}
+        {"$set": {
+            "last_login": now,
+            "login_days": login_days
+        }}
     )
     
-    return reward
+    # Return minimal response - no free rewards
+    return {
+        "day_count": login_days,
+        "coins": 0,
+        "gold": 0,
+        "crystals": 0,
+        "gems": 0,
+        "free_summons": 0
+    }
 
 @api_router.post("/user/{username}/profile-picture")
 async def update_profile_picture(username: str, hero_id: str):

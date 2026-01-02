@@ -110,8 +110,9 @@ export default function GuildWarScreen() {
 
   const loadAllData = async () => {
     setLoading(true);
+    // Load war status first since userGuild check depends on it
+    await loadWarStatus();
     await Promise.all([
-      loadWarStatus(),
       loadLeaderboard(),
       loadUserGuild(),
       loadAttackHistory(),

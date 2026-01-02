@@ -58,7 +58,9 @@ const VIP_TIERS: VIPTier[] = [
 
 export default function StoreScreen() {
   const { user, fetchUser } = useGameStore();
-  const { isPro, isLoading: isRevenueCatLoading } = useRevenueCatStore();
+  // REVENUECAT DISABLED - Re-enable when finalizing:
+  // const { isPro, isLoading: isRevenueCatLoading } = useRevenueCatStore();
+  const isPro = false; // Temporary placeholder
   const [packages, setPackages] = useState<CrystalPackage[]>([]);
   const [divinePackages, setDivinePackages] = useState<any>(null);
   const [vipInfo, setVipInfo] = useState<any>(null);
@@ -73,13 +75,15 @@ export default function StoreScreen() {
     }
   }, [user]);
 
-  const handleShowPaywall = async () => {
-    // Try native paywall first (if configured in RevenueCat dashboard)
-    const result = await presentNativePaywall();
-    if (!result) {
-      // Fallback to custom paywall if native didn't work
-      setShowPaywall(true);
-    }
+  // REVENUECAT DISABLED - Re-enable when finalizing:
+  // const handleShowPaywall = async () => {
+  //   const result = await presentNativePaywall();
+  //   if (!result) {
+  //     setShowPaywall(true);
+  //   }
+  // };
+  const handleShowPaywall = () => {
+    Alert.alert('Coming Soon', 'Pro subscriptions will be available in the full release!');
   };
 
   const loadStoreData = async () => {

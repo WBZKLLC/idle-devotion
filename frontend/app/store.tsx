@@ -254,7 +254,9 @@ export default function StoreScreen() {
                   <Text style={styles.tierLabel}>Next Level</Text>
                   <Text style={styles.tierLevel}>VIP {nextTier.level}</Text>
                   <Text style={styles.unlockText}>
-                    Earn {Math.floor((nextTier.required_spend - (vipInfo?.total_spent || 0)) * 100).toLocaleString()} more XP to unlock
+                    {vipInfo?.progress_to_next_percent !== undefined 
+                      ? `${vipInfo.progress_to_next_percent}% progress to next level`
+                      : 'Continue supporting Selene to unlock!'}
                   </Text>
                   <View style={styles.tierStats}>
                     <Text style={styles.tierStat}>⏰ {nextTier.idle_hours}h idle cap</Text>

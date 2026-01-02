@@ -161,11 +161,30 @@ export default function SummonHubScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Summon</Text>
-          <View style={styles.currencyBar} key={`curr-${user.divine_essence}-${user.gems}-${user.coins}`}>
-            <View style={styles.currencyItem}><Ionicons name="star" size={16} color={COLORS.gold.primary} /><Text style={styles.currencyText}>{(user.divine_essence || 0).toLocaleString()}</Text></View>
-            <View style={styles.currencyItem}><Ionicons name="diamond" size={16} color="#9b4dca" /><Text style={styles.currencyText}>{(user.gems || 0).toLocaleString()}</Text></View>
-            <View style={styles.currencyItem}><Ionicons name="cash" size={16} color={COLORS.gold.light} /><Text style={styles.currencyText}>{(user.coins || 0).toLocaleString()}</Text></View>
-          </View>
+          {/* Scrollable Currency Bar */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.currencyBarScroll}
+            contentContainerStyle={styles.currencyBarContent}
+          >
+            <View style={styles.currencyItem}>
+              <Ionicons name="star" size={14} color={COLORS.gold.primary} />
+              <Text style={styles.currencyText}>{(user.divine_essence || 0).toLocaleString()}</Text>
+            </View>
+            <View style={styles.currencyItem}>
+              <Ionicons name="diamond" size={14} color="#9b4dca" />
+              <Text style={styles.currencyText}>{(user.gems || 0).toLocaleString()}</Text>
+            </View>
+            <View style={styles.currencyItem}>
+              <Ionicons name="cash" size={14} color={COLORS.gold.light} />
+              <Text style={styles.currencyText}>{(user.coins || 0).toLocaleString()}</Text>
+            </View>
+            <View style={styles.currencyItem}>
+              <Ionicons name="logo-bitcoin" size={14} color={COLORS.gold.primary} />
+              <Text style={styles.currencyText}>{(user.gold || 0).toLocaleString()}</Text>
+            </View>
+          </ScrollView>
           <View style={styles.bannerSelector}>
             {(['common', 'premium', 'divine'] as const).map(banner => (
               <TouchableOpacity key={banner} style={[styles.bannerTab, selectedBanner === banner && styles.bannerTabActive]} onPress={() => setSelectedBanner(banner)}>

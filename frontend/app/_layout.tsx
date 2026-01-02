@@ -23,8 +23,12 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       if (!isHydrated) {
         await restoreSession();
       }
-      // Initialize RevenueCat
-      await initRevenueCat();
+      // Initialize RevenueCat (wrapped in try-catch for Expo Go compatibility)
+      try {
+        await initRevenueCat();
+      } catch (error) {
+        console.log('[App] RevenueCat init skipped (may not be available in Expo Go):', error);
+      }
       setIsRestoring(false);
     };
     restore();
@@ -33,7 +37,11 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
   // Link RevenueCat user when app user logs in
   useEffect(() => {
     if (user?.username) {
-      setUserId(user.username);
+      try {
+        setUserId(user.username);
+      } catch (error) {
+        console.log('[App] RevenueCat setUserId skipped:', error);
+      }
     }
   }, [user?.username]);
 

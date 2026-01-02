@@ -657,6 +657,17 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.dark },
   tabTextActive: { color: COLORS.navy.darkest },
   loader: { marginTop: 40 },
+  
+  // Pro Banner Styles
+  proBanner: { marginBottom: 16, borderRadius: 16, overflow: 'hidden' },
+  proBannerGradient: { padding: 16 },
+  proBannerContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  proBannerText: { flex: 1 },
+  proBannerTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+  proBannerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  proBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  proBadgeText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  
   firstPurchaseBanner: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, marginBottom: 20, gap: 12 },
   bannerTextContainer: { flex: 1 },
   bannerTitle: { color: COLORS.navy.darkest, fontSize: 18, fontWeight: 'bold' },

@@ -221,6 +221,10 @@ async def auth_login(request: LoginRequest):
 @router.post("/auth/set-password")
 async def set_password(username: str, new_password: str):
     """Set password for a legacy account (users without passwords)"""
+    # Validate username format to prevent NoSQL injection
+    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        raise HTTPException(status_code=404, detail="User not found")
+    
     if len(new_password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     

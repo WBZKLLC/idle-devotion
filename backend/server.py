@@ -5908,29 +5908,8 @@ async def verify_purchase(purchase: PurchaseVerification):
         "rewards": result["rewards"]
     })
     
-    # Add VIP XP for purchases
-    vip_xp = {
-        "crystal_pack_100": 100,
-        "crystal_pack_500": 500,
-        "crystal_pack_1000": 1000,
-        "battle_pass_standard": 1000,
-        "battle_pass_premium": 2000,
-        "divine_pack_starter": 500,
-        "divine_pack_deluxe": 2500,
-    }.get(purchase.product_id, 0)
-    
-    if vip_xp > 0:
-        current_vip_xp = user.get("vip_xp", 0) + vip_xp
-        new_vip_level = min(10, current_vip_xp // 1000)
-        
-        await db.users.update_one(
-            {"username": purchase.username},
-            {
-                "$set": {"vip_level": new_vip_level},
-                "$inc": {"vip_xp": vip_xp}
-            }
-        )
-        result["rewards"]["vip_xp"] = vip_xp
+    # VIP level is calculated purely from total_spent USD
+    # No separate VIP XP system - VIP is a purchase-only reward
     
     return result
 

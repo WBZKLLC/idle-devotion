@@ -332,14 +332,25 @@ export default function EventsScreen() {
                     style={[
                       styles.claimButton,
                       event.claimed && styles.claimButtonClaimed,
-                      event.progress !== undefined && event.target !== undefined && event.progress < event.target && styles.claimButtonLocked
+                      event.progress !== undefined && event.target !== undefined && event.progress < event.target && styles.claimButtonLocked,
+                      isPulling && styles.claimButtonLocked
                     ]}
                     onPress={() => claimReward(event.id)}
-                    disabled={event.claimed}
+                    disabled={event.claimed || isPulling}
                   >
-                    <Text style={styles.claimButtonText}>
-                      {event.claimed ? '✓ Claimed' : event.type === 'limited' ? 'Go to Event' : 'Claim'}
-                    </Text>
+                    {isPulling && event.type === 'limited' ? (
+                      <ActivityIndicator size="small" color="#000" />
+                    ) : (
+                      <Text style={styles.claimButtonText}>
+                        {event.claimed 
+                          ? '✓ Claimed' 
+                          : event.type === 'limited' 
+                            ? '🎰 Summon' 
+                            : event.type === 'login'
+                              ? '📅 Check In'
+                              : 'Claim'}
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 </LinearGradient>
               </View>

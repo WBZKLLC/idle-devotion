@@ -16,70 +16,80 @@ GUILD_LEVELS = {
         "member_cap": 15,
         "unlocks": ["guild_shop", "daily_donation"],
         "buff": None,
-        "description": "Guild Shop and Daily Donations unlocked"
+        "description": "Guild Shop and Daily Donations unlocked",
+        "level_up_reward": {"gold": 1000, "guild_coins": 10}
     },
     2: {
         "exp_required": 1000,
         "member_cap": 18,
         "unlocks": ["raid_boss_tier1"],
         "buff": None,
-        "description": "Guild Raid Boss (Tier I) unlocked"
+        "description": "Guild Raid Boss (Tier I) unlocked",
+        "level_up_reward": {"gold": 2500, "guild_coins": 25}
     },
     3: {
         "exp_required": 2500,
         "member_cap": 21,
         "unlocks": [],
         "buff": {"type": "idle_gold", "value": 5},
-        "description": "Guild Buff: Gold Idle Gain +5%"
+        "description": "Guild Buff: Gold Idle Gain +5%",
+        "level_up_reward": {"gold": 5000, "guild_coins": 50}
     },
     4: {
         "exp_required": 5000,
         "member_cap": 24,
         "unlocks": ["raid_boss_tier2", "guild_shop_upgrade"],
         "buff": None,
-        "description": "Guild Raid Boss (Tier II), Shop Inventory Expanded"
+        "description": "Guild Raid Boss (Tier II), Shop Inventory Expanded",
+        "level_up_reward": {"gold": 10000, "guild_coins": 100}
     },
     5: {
         "exp_required": 10000,
         "member_cap": 27,
         "unlocks": [],
         "buff": {"type": "hero_exp", "value": 5},
-        "description": "Guild Buff: Hero EXP Gain +5%"
+        "description": "Guild Buff: Hero EXP Gain +5%",
+        "level_up_reward": {"gold": 20000, "guild_coins": 200}
     },
     6: {
         "exp_required": 20000,
         "member_cap": 28,
         "unlocks": ["guild_tech_tree"],
         "buff": None,
-        "description": "Guild Tech Tree unlocked"
+        "description": "Guild Tech Tree unlocked",
+        "level_up_reward": {"gold": 35000, "guild_coins": 350}
     },
     7: {
         "exp_required": 35000,
         "member_cap": 29,
         "unlocks": ["raid_boss_tier3"],
         "buff": None,
-        "description": "Guild Raid Boss (Tier III) unlocked"
+        "description": "Guild Raid Boss (Tier III) unlocked",
+        "level_up_reward": {"gold": 50000, "guild_coins": 500}
     },
     8: {
         "exp_required": 60000,
         "member_cap": 30,
         "unlocks": [],
         "buff": {"type": "guild_attack", "value": 10},
-        "description": "Guild Buff: Attack in Guild Content +10%"
+        "description": "Guild Buff: Attack in Guild Content +10%",
+        "level_up_reward": {"gold": 75000, "guild_coins": 750}
     },
     9: {
         "exp_required": 100000,
         "member_cap": 30,
         "unlocks": ["exclusive_cosmetics"],
         "buff": None,
-        "description": "Exclusive Guild Frame and Avatar Border in Shop"
+        "description": "Exclusive Guild Frame and Avatar Border in Shop",
+        "level_up_reward": {"gold": 100000, "guild_coins": 1000}
     },
     10: {
         "exp_required": 150000,
         "member_cap": 30,
         "unlocks": ["max_level_bonus"],
         "buff": {"type": "all_stats", "value": 3},
-        "description": "Permanent Guild Buff: All Stats +3% for all members"
+        "description": "Permanent Guild Buff: All Stats +3% for all members",
+        "level_up_reward": {"gold": 200000, "guild_coins": 2000, "gems": 500}
     }
 }
 

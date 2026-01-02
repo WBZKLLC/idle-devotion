@@ -930,6 +930,25 @@ const styles = StyleSheet.create({
   donateTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
   donateSubtitle: { fontSize: 12, color: COLORS.cream.dark, textAlign: 'center', marginBottom: 16 },
   
+  // Level info card
+  levelInfoCard: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, marginBottom: 16 },
+  levelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  levelLabel: { fontSize: 14, color: COLORS.cream.dark },
+  levelValue: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary },
+  expBar: { height: 8, backgroundColor: COLORS.navy.dark, borderRadius: 4, overflow: 'hidden', marginBottom: 4 },
+  expFill: { height: '100%', backgroundColor: COLORS.gold.primary, borderRadius: 4 },
+  expText: { fontSize: 12, color: COLORS.cream.dark, textAlign: 'center' },
+  
+  // Tier selection
+  tierContainer: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  tierCard: { flex: 1, backgroundColor: COLORS.navy.dark, borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
+  tierCardSelected: { borderColor: COLORS.gold.primary, backgroundColor: COLORS.navy.primary },
+  tierName: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 4 },
+  tierCost: { fontSize: 11, color: COLORS.cream.dark, marginBottom: 8 },
+  tierRewards: { alignItems: 'center', marginBottom: 8 },
+  tierReward: { fontSize: 10, color: COLORS.gold.light },
+  tierAvailable: { fontSize: 10, color: COLORS.cream.soft },
+  
   currencySelect: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   currencyOption: { flex: 1, backgroundColor: COLORS.navy.primary, borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
   currencyOptionActive: { backgroundColor: COLORS.gold.primary, borderColor: COLORS.gold.light },

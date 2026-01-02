@@ -289,7 +289,7 @@ export default function StoreScreen() {
                   ]}>
                     VIP {tier.level}
                   </Text>
-                  <Text style={styles.tierRowSpend}>{(tier.required_spend * 100).toLocaleString()} XP</Text>
+                  <Text style={styles.tierRowSpend}>{tier.idle_hours}h idle</Text>
                   <Text style={styles.tierRowBonus}>{(tier.idle_gold_rate * 100).toFixed(0)}%</Text>
                 </View>
               ))}

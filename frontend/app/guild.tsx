@@ -602,59 +602,70 @@ export default function GuildScreen() {
 
               {activeTab === 'donate' && (
                 <View style={styles.tabContent}>
+                  {/* Guild Level Info */}
+                  {guildLevelInfo && (
+                    <View style={styles.levelInfoCard}>
+                      <View style={styles.levelRow}>
+                        <Text style={styles.levelLabel}>Guild Level</Text>
+                        <Text style={styles.levelValue}>{guildLevelInfo.level || 1}</Text>
+                      </View>
+                      <View style={styles.expBar}>
+                        <View style={[styles.expFill, { width: `${((guildLevelInfo.exp || 0) / (guildLevelInfo.exp_to_next || 1000)) * 100}%` }]} />
+                      </View>
+                      <Text style={styles.expText}>
+                        {guildLevelInfo.exp?.toLocaleString()} / {guildLevelInfo.exp_to_next?.toLocaleString()} EXP
+                      </Text>
+                    </View>
+                  )}
+
                   {/* Donation Card */}
                   <View style={styles.donateCard}>
                     <Text style={styles.donateTitle}>Support Your Guild</Text>
-                    <Text style={styles.donateSubtitle}>Donate to earn Guild Points!</Text>
+                    <Text style={styles.donateSubtitle}>Choose a donation tier (5 per day limit)</Text>
                     
-                    {/* Currency Selection */}
-                    <View style={styles.currencySelect}>
+                    {/* Tier Selection */}
+                    <View style={styles.tierContainer}>
+                      {/* Small Tier */}
                       <TouchableOpacity
-                        style={[styles.currencyOption, donationType === 'coins' && styles.currencyOptionActive]}
-                        onPress={() => setDonationType('coins')}
+                        style={[styles.tierCard, selectedDonationTier === 'small' && styles.tierCardSelected]}
+                        onPress={() => setSelectedDonationTier('small')}
                       >
-                        <Ionicons name="cash" size={24} color={donationType === 'coins' ? COLORS.navy.darkest : COLORS.cream.soft} />
-                        <Text style={[styles.currencyText, donationType === 'coins' && styles.currencyTextActive]}>Coins</Text>
-                        <Text style={[styles.currencyBalance, donationType === 'coins' && styles.currencyBalanceActive]}>
-                          {(user?.coins || 0).toLocaleString()}
-                        </Text>
+                        <Text style={styles.tierName}>🪙 Small</Text>
+                        <Text style={styles.tierCost}>10,000 Gold</Text>
+                        <View style={styles.tierRewards}>
+                          <Text style={styles.tierReward}>+10 Guild Coins</Text>
+                          <Text style={styles.tierReward}>+50 Guild EXP</Text>
+                        </View>
+                        <Text style={styles.tierAvailable}>Available: {(user?.gold || 0) >= 10000 ? '✓' : '✗'}</Text>
                       </TouchableOpacity>
+                      
+                      {/* Medium Tier */}
                       <TouchableOpacity
-                        style={[styles.currencyOption, donationType === 'gold' && styles.currencyOptionActive]}
-                        onPress={() => setDonationType('gold')}
+                        style={[styles.tierCard, selectedDonationTier === 'medium' && styles.tierCardSelected]}
+                        onPress={() => setSelectedDonationTier('medium')}
                       >
-                        <Ionicons name="star" size={24} color={donationType === 'gold' ? COLORS.navy.darkest : COLORS.cream.soft} />
-                        <Text style={[styles.currencyText, donationType === 'gold' && styles.currencyTextActive]}>Gold</Text>
-                        <Text style={[styles.currencyBalance, donationType === 'gold' && styles.currencyBalanceActive]}>
-                          {(user?.gold || 0).toLocaleString()}
-                        </Text>
+                        <Text style={styles.tierName}>💎 Medium</Text>
+                        <Text style={styles.tierCost}>50 Gems</Text>
+                        <View style={styles.tierRewards}>
+                          <Text style={styles.tierReward}>+60 Guild Coins</Text>
+                          <Text style={styles.tierReward}>+300 Guild EXP</Text>
+                        </View>
+                        <Text style={styles.tierAvailable}>Available: {(user?.gems || 0) >= 50 ? '✓' : '✗'}</Text>
                       </TouchableOpacity>
-                    </View>
-                    
-                    {/* Amount Input */}
-                    <View style={styles.amountInputContainer}>
-                      <Text style={styles.amountLabel}>Amount to Donate</Text>
-                      <TextInput
-                        style={styles.amountInput}
-                        value={donationAmount}
-                        onChangeText={setDonationAmount}
-                        keyboardType="numeric"
-                        placeholder="Enter amount"
-                        placeholderTextColor={COLORS.navy.light}
-                      />
-                    </View>
-                    
-                    {/* Quick Amounts */}
-                    <View style={styles.quickAmounts}>
-                      {['1000', '5000', '10000', '50000'].map((amount) => (
-                        <TouchableOpacity
-                          key={amount}
-                          style={styles.quickAmountBtn}
-                          onPress={() => setDonationAmount(amount)}
-                        >
-                          <Text style={styles.quickAmountText}>{parseInt(amount).toLocaleString()}</Text>
-                        </TouchableOpacity>
-                      ))}
+                      
+                      {/* Large Tier */}
+                      <TouchableOpacity
+                        style={[styles.tierCard, selectedDonationTier === 'large' && styles.tierCardSelected]}
+                        onPress={() => setSelectedDonationTier('large')}
+                      >
+                        <Text style={styles.tierName}>📜 Large</Text>
+                        <Text style={styles.tierCost}>1 Summon Scroll</Text>
+                        <View style={styles.tierRewards}>
+                          <Text style={styles.tierReward}>+200 Guild Coins</Text>
+                          <Text style={styles.tierReward}>+1000 Guild EXP</Text>
+                        </View>
+                        <Text style={styles.tierAvailable}>Available: {(user?.summon_scrolls || 0) >= 1 ? '✓' : '✗'}</Text>
+                      </TouchableOpacity>
                     </View>
                     
                     {/* Donate Button */}
@@ -672,7 +683,7 @@ export default function GuildScreen() {
                         ) : (
                           <>
                             <Ionicons name="gift" size={20} color={COLORS.navy.darkest} />
-                            <Text style={styles.donateButtonText}>Donate</Text>
+                            <Text style={styles.donateButtonText}>Donate ({selectedDonationTier})</Text>
                           </>
                         )}
                       </LinearGradient>

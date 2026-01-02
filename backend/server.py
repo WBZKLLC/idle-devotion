@@ -2528,7 +2528,7 @@ async def instant_collect_idle(username: str):
 
 @api_router.get("/vip/info/{username}")
 async def get_vip_info(username: str):
-    """Get VIP information and benefits"""
+    """Get VIP information and benefits - monetary thresholds hidden from users"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -2542,11 +2542,16 @@ async def get_vip_info(username: str):
     # Get next tier info
     next_vip = min(current_vip + 1, 15)
     next_tier = VIP_TIERS[next_vip]
-    spend_needed = next_tier["spend"] - total_spent if next_vip > current_vip else 0
+    
+    # Calculate progress percentage without revealing actual amounts
+    current_threshold = VIP_TIERS[current_vip]["spend"]
+    next_threshold = next_tier["spend"] if next_vip > current_vip else current_threshold
+    progress_in_tier = total_spent - current_threshold
+    tier_range = next_threshold - current_threshold if next_threshold > current_threshold else 1
+    progress_percent = min(100, int((progress_in_tier / tier_range) * 100)) if next_vip > current_vip else 100
     
     return {
         "current_vip_level": current_vip,
-        "total_spent": total_spent,
         "current_idle_hours": current_tier["idle_hours"],
         "current_idle_rate": get_idle_gold_rate(current_vip),
         "current_avatar_frame": get_avatar_frame(current_vip),
@@ -2554,8 +2559,8 @@ async def get_vip_info(username: str):
         "next_idle_hours": next_tier["idle_hours"] if next_vip > current_vip else None,
         "next_idle_rate": get_idle_gold_rate(next_vip) if next_vip > current_vip else None,
         "next_avatar_frame": get_avatar_frame(next_vip) if next_vip > current_vip else None,
-        "spend_needed_for_next": spend_needed,
-        "all_tiers": VIP_TIERS
+        "progress_to_next_percent": progress_percent,
+        "message": "Continue supporting Selene to unlock VIP rewards!" if next_vip > current_vip else "Maximum VIP achieved!"
     }
 
 @api_router.get("/vip/comparison/{username}")

@@ -57,11 +57,13 @@ const VIP_TIERS: VIPTier[] = [
 
 export default function StoreScreen() {
   const { user, fetchUser } = useGameStore();
+  const { isPro, isLoading: isRevenueCatLoading } = useRevenueCatStore();
   const [packages, setPackages] = useState<CrystalPackage[]>([]);
   const [divinePackages, setDivinePackages] = useState<any>(null);
   const [vipInfo, setVipInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showVIPModal, setShowVIPModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'crystals' | 'divine' | 'vip'>('crystals');
 
   useEffect(() => {
@@ -69,6 +71,15 @@ export default function StoreScreen() {
       loadStoreData();
     }
   }, [user]);
+
+  const handleShowPaywall = async () => {
+    // Try native paywall first (if configured in RevenueCat dashboard)
+    const result = await presentNativePaywall();
+    if (!result) {
+      // Fallback to custom paywall if native didn't work
+      setShowPaywall(true);
+    }
+  };
 
   const loadStoreData = async () => {
     setIsLoading(true);

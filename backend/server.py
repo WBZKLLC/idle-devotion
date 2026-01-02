@@ -1794,25 +1794,26 @@ async def record_selene_purchase(username: str, amount_usd: float, bundle_id: st
     }
 
 @api_router.post("/gacha/pull")
-async def pull_gacha(username: str, request: PullRequest):
-    """Perform gacha pull - Premium (crystals) or Common (coins)"""
+@limiter.limit("30/minute")  # Max 30 gacha pulls per minute per IP (prevents abuse)
+async def pull_gacha(request: Request, username: str, body: PullRequest):
+    """Perform gacha pull - Premium (crystals) or Common (coins) (rate limited)"""
     user_data = await db.users.find_one({"username": username})
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
     
     user = User(**user_data)
-    num_pulls = 10 if request.pull_type == "multi" else 1
+    num_pulls = 10 if body.pull_type == "multi" else 1
     
     # Determine summon type: common (coins), premium (crystals), or divine (divine_essence)
     summon_type = "common"
-    if request.currency_type == "crystals":
+    if body.currency_type == "crystals":
         summon_type = "premium"
-    elif request.currency_type == "divine_essence":
+    elif body.currency_type == "divine_essence":
         summon_type = "divine"
     
     # Calculate cost and deduct
     if summon_type == "divine":
-        cost = DIVINE_ESSENCE_COST_MULTI if request.pull_type == "multi" else DIVINE_ESSENCE_COST_SINGLE
+        cost = DIVINE_ESSENCE_COST_MULTI if body.pull_type == "multi" else DIVINE_ESSENCE_COST_SINGLE
         if user.divine_essence < cost:
             raise HTTPException(status_code=400, detail="Not enough Divine Essence")
         user.divine_essence -= cost

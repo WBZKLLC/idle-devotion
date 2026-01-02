@@ -147,7 +147,9 @@ export default function GuildWarScreen() {
     if (!user) return;
     try {
       const response = await axios.get(`${API_BASE}/guild/${user.username}`);
-      setUserGuild(response.data.guild);
+      // API returns guild data directly, not under a 'guild' key
+      setUserGuild(response.data);
+      setIsRegistered(!!response.data?.id);
       // Check if guild is registered for war
       if (warStatus && response.data.guild) {
         setIsRegistered(warStatus.participating_guilds?.includes(response.data.guild.id) || false);

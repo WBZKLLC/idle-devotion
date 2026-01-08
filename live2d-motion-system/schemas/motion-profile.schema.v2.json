@@ -1,0 +1,311 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://divineheros.com/schemas/motion-profile.v2.schema.json",
+  "title": "Live2D Motion Profile Schema v2.0",
+  "description": "Engine-agnostic motion profile schema for Live2D parameter-driven animation. Designed for consumption by Unity, Unreal, or any Live2D-compatible runtime.",
+  "type": "object",
+  "required": ["id", "schemaVersion", "state", "duration", "parameters"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this motion profile (snake_case)",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "minLength": 3,
+      "maxLength": 64,
+      "examples": ["idle_default", "combat_ready", "banner_reveal_ssr"]
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "const": "2.0.0"
+    },
+    "state": {
+      "type": "string",
+      "description": "Motion state category this profile belongs to",
+      "enum": ["idle", "combat", "banner", "summon", "victory", "defeat", "dialogue", "special"]
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Priority for profile selection when multiple profiles match a state (higher = preferred)",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "duration": {
+      "type": "number",
+      "description": "Total duration of one motion cycle in seconds",
+      "minimum": 0.1,
+      "maximum": 60.0
+    },
+    "loop": {
+      "type": "boolean",
+      "description": "Whether the motion should loop continuously",
+      "default": true
+    },
+    "loopCount": {
+      "type": "integer",
+      "description": "Number of loops before stopping (0 = infinite, only applies if loop=true)",
+      "minimum": 0,
+      "default": 0
+    },
+    "globalModifiers": {
+      "type": "object",
+      "description": "Global multipliers applied to all parameters",
+      "additionalProperties": false,
+      "properties": {
+        "intensity": {
+          "type": "number",
+          "description": "Global amplitude multiplier (0.0 = no motion, 2.0 = double motion)",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "default": 1.0
+        },
+        "speed": {
+          "type": "number",
+          "description": "Global speed multiplier (0.1 = 10% speed, 3.0 = 3x speed)",
+          "minimum": 0.1,
+          "maximum": 3.0,
+          "default": 1.0
+        }
+      },
+      "default": { "intensity": 1.0, "speed": 1.0 }
+    },
+    "blending": {
+      "type": "object",
+      "description": "Transition blending configuration",
+      "additionalProperties": false,
+      "properties": {
+        "blendInDuration": {
+          "type": "number",
+          "description": "Time to blend from previous profile (seconds)",
+          "minimum": 0.0,
+          "maximum": 5.0,
+          "default": 0.5
+        },
+        "blendOutDuration": {
+          "type": "number",
+          "description": "Time to blend to next profile (seconds)",
+          "minimum": 0.0,
+          "maximum": 5.0,
+          "default": 0.5
+        },
+        "blendCurve": {
+          "type": "string",
+          "description": "Easing curve for blend transitions",
+          "enum": ["linear", "ease_in", "ease_out", "ease_in_out", "smooth_step"],
+          "default": "ease_in_out"
+        }
+      },
+      "default": { "blendInDuration": 0.5, "blendOutDuration": 0.5, "blendCurve": "ease_in_out" }
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Live2D parameter motion definitions (only standard Live2D parameters allowed)",
+      "additionalProperties": false,
+      "properties": {
+        "ParamAngleX": { "$ref": "#/$defs/parameterMotion", "description": "Head rotation left/right" },
+        "ParamAngleY": { "$ref": "#/$defs/parameterMotion", "description": "Head tilt up/down" },
+        "ParamAngleZ": { "$ref": "#/$defs/parameterMotion", "description": "Head tilt side" },
+        "ParamBodyAngleX": { "$ref": "#/$defs/parameterMotion", "description": "Body rotation left/right" },
+        "ParamBodyAngleY": { "$ref": "#/$defs/parameterMotion", "description": "Body lean forward/back" },
+        "ParamBodyAngleZ": { "$ref": "#/$defs/parameterMotion", "description": "Body tilt side" },
+        "ParamBreath": { "$ref": "#/$defs/parameterMotion", "description": "Breathing chest expansion" },
+        "ParamEyeLOpen": { "$ref": "#/$defs/parameterMotion", "description": "Left eye open amount" },
+        "ParamEyeROpen": { "$ref": "#/$defs/parameterMotion", "description": "Right eye open amount" },
+        "ParamEyeBallX": { "$ref": "#/$defs/parameterMotion", "description": "Eye gaze horizontal" },
+        "ParamEyeBallY": { "$ref": "#/$defs/parameterMotion", "description": "Eye gaze vertical" },
+        "ParamBrowLY": { "$ref": "#/$defs/parameterMotion", "description": "Left eyebrow height" },
+        "ParamBrowRY": { "$ref": "#/$defs/parameterMotion", "description": "Right eyebrow height" },
+        "ParamBrowLX": { "$ref": "#/$defs/parameterMotion", "description": "Left eyebrow angle" },
+        "ParamBrowRX": { "$ref": "#/$defs/parameterMotion", "description": "Right eyebrow angle" },
+        "ParamBrowLAngle": { "$ref": "#/$defs/parameterMotion", "description": "Left eyebrow rotation" },
+        "ParamBrowRAngle": { "$ref": "#/$defs/parameterMotion", "description": "Right eyebrow rotation" },
+        "ParamBrowLForm": { "$ref": "#/$defs/parameterMotion", "description": "Left eyebrow shape" },
+        "ParamBrowRForm": { "$ref": "#/$defs/parameterMotion", "description": "Right eyebrow shape" },
+        "ParamMouthOpenY": { "$ref": "#/$defs/parameterMotion", "description": "Mouth open amount" },
+        "ParamMouthForm": { "$ref": "#/$defs/parameterMotion", "description": "Mouth shape (smile/frown)" },
+        "ParamCheek": { "$ref": "#/$defs/parameterMotion", "description": "Cheek blush" },
+        "ParamHairFront": { "$ref": "#/$defs/parameterMotion", "description": "Front hair physics" },
+        "ParamHairSide": { "$ref": "#/$defs/parameterMotion", "description": "Side hair physics" },
+        "ParamHairBack": { "$ref": "#/$defs/parameterMotion", "description": "Back hair physics" },
+        "ParamHairFluffy": { "$ref": "#/$defs/parameterMotion", "description": "Fluffy hair motion" },
+        "ParamShoulderY": { "$ref": "#/$defs/parameterMotion", "description": "Shoulder raise" },
+        "ParamArmLA": { "$ref": "#/$defs/parameterMotion", "description": "Left arm angle" },
+        "ParamArmRA": { "$ref": "#/$defs/parameterMotion", "description": "Right arm angle" },
+        "ParamArmLB": { "$ref": "#/$defs/parameterMotion", "description": "Left arm secondary" },
+        "ParamArmRB": { "$ref": "#/$defs/parameterMotion", "description": "Right arm secondary" },
+        "ParamHandL": { "$ref": "#/$defs/parameterMotion", "description": "Left hand pose" },
+        "ParamHandR": { "$ref": "#/$defs/parameterMotion", "description": "Right hand pose" },
+        "ParamBustX": { "$ref": "#/$defs/parameterMotion", "description": "Bust horizontal (RATING-CLAMPED)" },
+        "ParamBustY": { "$ref": "#/$defs/parameterMotion", "description": "Bust vertical (RATING-CLAMPED)" },
+        "ParamBaseX": { "$ref": "#/$defs/parameterMotion", "description": "Base body horizontal" },
+        "ParamBaseY": { "$ref": "#/$defs/parameterMotion", "description": "Base body vertical" }
+      }
+    },
+    "ratingClamps": {
+      "$ref": "#/$defs/ratingClamps",
+      "description": "Rating-safe hard clamps enforced at runtime (MANDATORY)"
+    },
+    "conditions": {
+      "type": "object",
+      "description": "Optional conditions for profile activation",
+      "additionalProperties": false,
+      "properties": {
+        "rarity": {
+          "type": "array",
+          "description": "Hero rarity filter (empty = all)",
+          "items": { "type": "string", "enum": ["N", "R", "SR", "SSR", "UR", "UR+"] },
+          "default": []
+        },
+        "heroClass": {
+          "type": "array",
+          "description": "Hero class filter (empty = all)",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "heroIds": {
+          "type": "array",
+          "description": "Specific hero IDs this profile applies to (empty = all)",
+          "items": { "type": "string" },
+          "default": []
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata for tooling and documentation",
+      "properties": {
+        "author": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "modified": { "type": "string", "format": "date-time" },
+        "description": { "type": "string", "maxLength": 500 },
+        "tags": { "type": "array", "items": { "type": "string" }, "maxItems": 10 },
+        "notes": { "type": "string", "maxLength": 2000 }
+      }
+    }
+  },
+  "$defs": {
+    "parameterMotion": {
+      "type": "object",
+      "description": "Motion definition for a single Live2D parameter",
+      "required": ["amplitude", "frequency"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this parameter motion is active",
+          "default": true
+        },
+        "amplitude": {
+          "type": "number",
+          "description": "Peak deviation from base value (normalized -1.0 to 1.0)",
+          "minimum": -1.0,
+          "maximum": 1.0
+        },
+        "frequency": {
+          "type": "number",
+          "description": "Oscillation frequency in Hz (cycles per second)",
+          "minimum": 0.01,
+          "maximum": 10.0,
+          "default": 0.5
+        },
+        "phase": {
+          "type": "number",
+          "description": "Phase offset in radians (0 to 2π) for staggered motion",
+          "minimum": 0,
+          "maximum": 6.283185307,
+          "default": 0
+        },
+        "waveform": {
+          "type": "string",
+          "description": "Oscillation waveform shape",
+          "enum": ["sine", "cosine", "triangle", "sawtooth", "square", "perlin"],
+          "default": "sine"
+        },
+        "easing": {
+          "type": "string",
+          "description": "Easing function applied to waveform",
+          "enum": ["linear", "ease_in", "ease_out", "ease_in_out", "ease_in_quad", "ease_out_quad", "ease_in_cubic", "ease_out_cubic", "elastic", "bounce"],
+          "default": "linear"
+        },
+        "baseValue": {
+          "type": "number",
+          "description": "Center/rest value for oscillation",
+          "minimum": -2.0,
+          "maximum": 2.0,
+          "default": 0.0
+        },
+        "minClamp": {
+          "type": "number",
+          "description": "Hard minimum output value",
+          "minimum": -2.0,
+          "maximum": 2.0,
+          "default": -1.0
+        },
+        "maxClamp": {
+          "type": "number",
+          "description": "Hard maximum output value",
+          "minimum": -2.0,
+          "maximum": 2.0,
+          "default": 1.0
+        },
+        "randomize": {
+          "type": "object",
+          "description": "Optional randomization for natural variation",
+          "additionalProperties": false,
+          "properties": {
+            "amplitudeVariance": {
+              "type": "number",
+              "description": "Random variance applied to amplitude (±)",
+              "minimum": 0.0,
+              "maximum": 0.5,
+              "default": 0.0
+            },
+            "frequencyVariance": {
+              "type": "number",
+              "description": "Random variance applied to frequency (±)",
+              "minimum": 0.0,
+              "maximum": 0.5,
+              "default": 0.0
+            },
+            "seed": {
+              "type": "integer",
+              "description": "Random seed (0 = use system random)",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        }
+      }
+    },
+    "ratingClamps": {
+      "type": "object",
+      "description": "Rating-safe hard clamps applied AFTER all calculations. These are NON-NEGOTIABLE safety limits.",
+      "additionalProperties": false,
+      "required": ["ParamBustX", "ParamBustY"],
+      "properties": {
+        "ParamBustX": { "$ref": "#/$defs/clampRange", "default": { "min": -0.25, "max": 0.25 } },
+        "ParamBustY": { "$ref": "#/$defs/clampRange", "default": { "min": -0.25, "max": 0.25 } },
+        "ParamBaseX": { "$ref": "#/$defs/clampRange", "default": { "min": -0.3, "max": 0.3 } },
+        "ParamBaseY": { "$ref": "#/$defs/clampRange", "default": { "min": -0.2, "max": 0.2 } }
+      },
+      "default": {
+        "ParamBustX": { "min": -0.25, "max": 0.25 },
+        "ParamBustY": { "min": -0.25, "max": 0.25 },
+        "ParamBaseX": { "min": -0.3, "max": 0.3 },
+        "ParamBaseY": { "min": -0.2, "max": 0.2 }
+      }
+    },
+    "clampRange": {
+      "type": "object",
+      "description": "Min/max clamp range",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "number", "minimum": -2.0, "maximum": 2.0 },
+        "max": { "type": "number", "minimum": -2.0, "maximum": 2.0 }
+      }
+    }
+  }
+}

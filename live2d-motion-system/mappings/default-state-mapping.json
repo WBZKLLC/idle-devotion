@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "1.0.0",
+  "defaultProfile": "idle_default",
+  "transitionDefaults": {
+    "blendDuration": 0.5,
+    "blendCurve": "ease_in_out"
+  },
+  "stateMappings": {
+    "idle": {
+      "defaultProfile": "idle_default",
+      "variants": [
+        {
+          "profileId": "idle_calm",
+          "condition": { "heroClass": ["Mage", "Healer"] },
+          "priority": 60
+        },
+        {
+          "profileId": "idle_alert",
+          "condition": { "heroClass": ["Warrior", "Assassin"] },
+          "priority": 60
+        }
+      ],
+      "transition": {
+        "blendDuration": 0.8,
+        "blendCurve": "ease_out"
+      }
+    },
+    "combat": {
+      "defaultProfile": "combat_ready",
+      "variants": [
+        {
+          "profileId": "combat_aggressive",
+          "condition": { "heroClass": ["Warrior", "Berserker"] },
+          "priority": 70
+        },
+        {
+          "profileId": "combat_defensive",
+          "condition": { "heroClass": ["Tank", "Guardian"] },
+          "priority": 70
+        },
+        {
+          "profileId": "combat_focused",
+          "condition": { "heroClass": ["Mage", "Archer"] },
+          "priority": 70
+        }
+      ],
+      "transition": {
+        "blendDuration": 0.3,
+        "blendCurve": "ease_in"
+      }
+    },
+    "banner": {
+      "defaultProfile": "banner_reveal",
+      "variants": [
+        {
+          "profileId": "banner_reveal_ssr",
+          "condition": { "rarity": ["SSR"] },
+          "priority": 80
+        },
+        {
+          "profileId": "banner_reveal_ur",
+          "condition": { "rarity": ["UR", "UR+"] },
+          "priority": 90
+        }
+      ],
+      "transition": {
+        "blendDuration": 1.0,
+        "blendCurve": "ease_in_out"
+      }
+    },
+    "summon": {
+      "defaultProfile": "summon_anticipation",
+      "variants": [],
+      "transition": {
+        "blendDuration": 0.5,
+        "blendCurve": "ease_in"
+      }
+    },
+    "victory": {
+      "defaultProfile": "victory_celebration",
+      "variants": [
+        {
+          "profileId": "victory_humble",
+          "condition": { "heroClass": ["Healer", "Support"] },
+          "priority": 60
+        }
+      ],
+      "transition": {
+        "blendDuration": 0.4,
+        "blendCurve": "ease_out"
+      }
+    },
+    "defeat": {
+      "defaultProfile": "defeat_reaction",
+      "variants": [],
+      "transition": {
+        "blendDuration": 0.6,
+        "blendCurve": "ease_in_out"
+      }
+    },
+    "dialogue": {
+      "defaultProfile": "dialogue_neutral",
+      "variants": [],
+      "transition": {
+        "blendDuration": 0.4,
+        "blendCurve": "ease_in_out"
+      }
+    },
+    "special": {
+      "defaultProfile": "idle_default",
+      "variants": [],
+      "transition": {
+        "blendDuration": 0.5,
+        "blendCurve": "ease_in_out"
+      }
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://divineheros.com/schemas/state-mapping.schema.json",
+  "title": "Live2D State-to-Profile Mapping Schema",
+  "description": "Defines which motion profiles are activated for each application state",
+  "type": "object",
+  "required": ["schemaVersion", "defaultProfile", "stateMappings"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "defaultProfile": {
+      "type": "string",
+      "description": "Fallback profile ID when no mapping matches",
+      "default": "idle_default"
+    },
+    "transitionDefaults": {
+      "type": "object",
+      "description": "Default transition settings between states",
+      "properties": {
+        "blendDuration": {
+          "type": "number",
+          "description": "Default blend duration in seconds",
+          "minimum": 0.0,
+          "maximum": 3.0,
+          "default": 0.5
+        },
+        "blendCurve": {
+          "type": "string",
+          "enum": ["linear", "ease_in", "ease_out", "ease_in_out"],
+          "default": "ease_in_out"
+        }
+      }
+    },
+    "stateMappings": {
+      "type": "object",
+      "description": "State-to-profile mappings",
+      "additionalProperties": false,
+      "properties": {
+        "idle": { "$ref": "#/$defs/stateMapping" },
+        "combat": { "$ref": "#/$defs/stateMapping" },
+        "banner": { "$ref": "#/$defs/stateMapping" },
+        "summon": { "$ref": "#/$defs/stateMapping" },
+        "victory": { "$ref": "#/$defs/stateMapping" },
+        "defeat": { "$ref": "#/$defs/stateMapping" },
+        "dialogue": { "$ref": "#/$defs/stateMapping" },
+        "special": { "$ref": "#/$defs/stateMapping" }
+      }
+    }
+  },
+  "$defs": {
+    "stateMapping": {
+      "type": "object",
+      "description": "Mapping configuration for a single state",
+      "required": ["defaultProfile"],
+      "properties": {
+        "defaultProfile": {
+          "type": "string",
+          "description": "Default profile ID for this state"
+        },
+        "variants": {
+          "type": "array",
+          "description": "Conditional profile variants",
+          "items": {
+            "type": "object",
+            "required": ["profileId"],
+            "properties": {
+              "profileId": { "type": "string" },
+              "condition": {
+                "type": "object",
+                "properties": {
+                  "rarity": { "type": "array", "items": { "type": "string" } },
+                  "heroClass": { "type": "array", "items": { "type": "string" } },
+                  "heroIds": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "default": 50
+              }
+            }
+          }
+        },
+        "transition": {
+          "type": "object",
+          "properties": {
+            "blendDuration": { "type": "number", "minimum": 0.0, "maximum": 3.0 },
+            "blendCurve": { "type": "string", "enum": ["linear", "ease_in", "ease_out", "ease_in_out"] }
+          }
+        }
+      }
+    }
+  }
+}

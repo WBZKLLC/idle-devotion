@@ -208,9 +208,6 @@ export default function GuildScreen() {
     
     setIsAttacking(true);
     
-    // Play attack animation
-    playBossHitAnimation();
-    
     try {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/boss/attack`,
@@ -252,32 +249,6 @@ export default function GuildScreen() {
     } finally {
       setIsAttacking(false);
     }
-  };
-
-  const playBossHitAnimation = () => {
-    // Shake animation
-    Animated.sequence([
-      Animated.timing(bossShakeAnim, { toValue: 15, duration: 50, useNativeDriver: true }),
-      Animated.timing(bossShakeAnim, { toValue: -15, duration: 50, useNativeDriver: true }),
-      Animated.timing(bossShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(bossShakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-      Animated.timing(bossShakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-    ]).start();
-
-    // Scale pop
-    Animated.sequence([
-      Animated.timing(bossScaleAnim, { toValue: 0.9, duration: 100, useNativeDriver: true }),
-      Animated.spring(bossScaleAnim, { toValue: 1, friction: 3, useNativeDriver: true }),
-    ]).start();
-
-    // Damage pop
-    damagePopAnim.setValue(0);
-    Animated.timing(damagePopAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-    }).start();
   };
 
   const makeDonation = async () => {

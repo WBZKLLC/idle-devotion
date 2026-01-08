@@ -38,41 +38,12 @@ export default function HeroDetailScreen() {
   const [heroData, setHeroData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stats' | 'skills' | 'equip'>('stats');
-  
-  // Animation values
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (hydrated && user && id) {
       loadHeroData();
     }
   }, [hydrated, user, id]);
-
-  useEffect(() => {
-    // Pulse animation for rarity glow
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.05, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-      ])
-    );
-    
-    const glow = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
-      ])
-    );
-    
-    pulse.start();
-    glow.start();
-    
-    return () => {
-      pulse.stop();
-      glow.stop();
-    };
-  }, []);
 
   const loadHeroData = async () => {
     try {

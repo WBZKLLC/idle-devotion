@@ -173,10 +173,21 @@ All parameters use **official Live2D Cubism naming conventions** for compatibili
 #### Body Soft Tissue (RATING-CLAMPED)
 | Parameter | Description | Range | **Clamp** |
 |-----------|-------------|-------|-----------|
-| `ParamBustX` | Bust horizontal | -1 to 1 | **±0.25** |
-| `ParamBustY` | Bust vertical | -1 to 1 | **±0.25** |
-| `ParamBaseX` | Base body horizontal | -1 to 1 | **±0.30** |
-| `ParamBaseY` | Base body vertical | -1 to 1 | **±0.20** |
+| `ParamChestSoftX` | Upper torso horizontal sway | -1 to 1 | **±0.30** |
+| `ParamChestSoftY` | Upper torso vertical motion | -1 to 1 | **±0.30** |
+| `ParamAbdomenSoft` | Midsection soft motion | -1 to 1 | **±0.20** |
+| `ParamPelvisShift` | Lower body sway | -1 to 1 | **±0.15** |
+
+> **⚠️ DEPRECATED PARAMETER NAMES (DO NOT USE)**
+> 
+> The following parameter names are deprecated and must NOT be used:
+> - ❌ `ParamBustX` → Use `ParamChestSoftX`
+> - ❌ `ParamBustY` → Use `ParamChestSoftY`
+> - ❌ `ParamBaseX` → Use `ParamBodyAngleX` (for rotation) or remove
+> - ❌ `ParamBaseY` → Use `ParamBodyAngleY` (for rotation) or remove
+>
+> These names violate Live2D-neutral naming conventions and platform safety goals.
+> Backward compatibility aliases may be documented but are NOT defaults.
 
 ---
 

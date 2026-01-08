@@ -3,6 +3,7 @@
 // Phase 6: Initializes the Expo-Unity bridge at startup
 // 
 // CONSTRAINT: This file is NEW - does NOT modify Phase 3 Core/*.cs files
+// SECURITY: Implements S-1 token delivery via SESSION_READY message
 // =============================================================================
 
 using UnityEngine;
@@ -13,6 +14,10 @@ namespace Live2DMotion.Bridge
     /// <summary>
     /// Initializes the bridge components and wires them to the Core motion system.
     /// This is the main entry point for the Unity side of the integration.
+    /// 
+    /// SECURITY:
+    /// - S-1: Sends SESSION_READY with token to Expo at initialization
+    /// - F16: Expo cannot send commands until token is received
     /// 
     /// SETUP:
     /// 1. Attach this script to a GameObject in your main scene
@@ -40,7 +45,7 @@ namespace Live2DMotion.Bridge
 
         [Header("Settings")]
         [SerializeField] private bool autoStartInIdle = true;
-        [SerializeField] private bool verboseLogging = true;
+        [SerializeField] private float sessionReadyDelay = 0.5f; // Delay to ensure Expo is ready
 
         private void Start()
         {
@@ -49,7 +54,7 @@ namespace Live2DMotion.Bridge
 
         private void InitializeBridge()
         {
-            Log("Initializing Expo-Unity Bridge...");
+            LogDebug("Initializing Expo-Unity Bridge...");
 
             // Validate Core components exist
             if (profileLoader == null)
@@ -75,50 +80,80 @@ namespace Live2DMotion.Bridge
             {
                 messageReceiver.stateController = stateController;
                 messageReceiver.parameterDriver = parameterDriver;
-                Log("ExpoMessageReceiver wired to Core components");
+                LogDebug("ExpoMessageReceiver wired to Core components");
             }
             else
             {
                 LogError("ExpoMessageReceiver not assigned!");
+                return;
+            }
+
+            if (messageSender == null)
+            {
+                LogError("ExpoMessageSender not assigned!");
+                return;
             }
 
             // Subscribe to state changes from the controller
             // This sends confirmations back to Expo
-            if (stateController != null && messageSender != null)
+            stateController.OnStateChanged += (state, profileId) =>
             {
-                stateController.OnStateChanged += (state, profileId) =>
-                {
-                    messageSender.SendStateChanged(state.ToString().ToLower(), profileId);
-                };
-                Log("State change notifications wired to ExpoMessageSender");
-            }
+                messageSender.SendStateChanged(state.ToString().ToLower(), profileId);
+            };
+            LogDebug("State change notifications wired to ExpoMessageSender");
 
             // Subscribe to blend complete from parameter driver
-            if (parameterDriver != null && messageSender != null)
+            parameterDriver.OnBlendComplete += () =>
             {
-                parameterDriver.OnBlendComplete += () =>
-                {
-                    messageSender.SendBlendComplete();
-                };
-                Log("Blend complete notifications wired to ExpoMessageSender");
-            }
+                messageSender.SendBlendComplete();
+            };
+            LogDebug("Blend complete notifications wired to ExpoMessageSender");
 
             // Auto-start in idle if configured
-            if (autoStartInIdle && stateController != null)
+            if (autoStartInIdle)
             {
                 stateController.SetState(MotionState.Idle);
-                Log("Auto-started in Idle state");
+                LogDebug("Auto-started in Idle state");
             }
 
-            Log("Expo-Unity Bridge initialized successfully!");
+            LogDebug("Expo-Unity Bridge initialized successfully!");
+
+            // S-1/F16: Send SESSION_READY with token to Expo
+            // Delay slightly to ensure Expo bridge is ready to receive
+            Invoke(nameof(SendSessionReady), sessionReadyDelay);
         }
 
-        private void Log(string message)
+        /// <summary>
+        /// S-1/F16: Send SESSION_READY message with token to Expo
+        /// This MUST be received by Expo before any commands can be sent
+        /// </summary>
+        private void SendSessionReady()
         {
-            if (verboseLogging)
+            if (messageReceiver == null || messageSender == null)
             {
-                Debug.Log($"[BridgeInitializer] {message}");
+                LogError("Cannot send SESSION_READY: components not available");
+                return;
             }
+
+            string token = messageReceiver.GetSessionToken();
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                LogError("Cannot send SESSION_READY: no session token available");
+                return;
+            }
+
+            messageSender.SendSessionReady(token);
+            LogDebug($"SESSION_READY sent with token: {token.Substring(0, 8)}...");
+        }
+
+        /// <summary>
+        /// S-5: Debug-only logging
+        /// </summary>
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void LogDebug(string message)
+        {
+            Debug.Log($"[BridgeInitializer] {message}");
         }
 
         private void LogError(string message)

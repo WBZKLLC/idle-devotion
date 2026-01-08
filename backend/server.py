@@ -3423,6 +3423,25 @@ async def get_abyss_leaderboard(limit: int = 100):
     
     return leaderboard
 
+@api_router.get("/leaderboard/campaign")
+async def get_campaign_leaderboard(limit: int = 100):
+    """Get Campaign leaderboard - top players by campaign progress"""
+    # Get campaign progress from users
+    users = await db.users.find().sort("campaign_stage", -1).limit(limit).to_list(limit)
+    
+    leaderboard = []
+    for i, user in enumerate(users):
+        campaign_stage = user.get("campaign_stage", 1)
+        leaderboard.append({
+            "rank": i + 1,
+            "username": user.get("username"),
+            "stage": campaign_stage,
+            "power": user.get("total_power", 0),
+            "vip_level": user.get("vip_level", 0)
+        })
+    
+    return leaderboard
+
 # ==================== ABYSS MODE ====================
 @api_router.get("/abyss/progress/{username}")
 async def get_abyss_progress(username: str):

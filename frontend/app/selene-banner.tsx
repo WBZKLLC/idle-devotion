@@ -45,29 +45,6 @@ export default function SeleneBannerScreen() {
   const [showBundles, setShowBundles] = useState(false);
   const [showUnlockCinematic, setShowUnlockCinematic] = useState(false);
   const [showCharacterDetails, setShowCharacterDetails] = useState(false);
-  
-  // Animations
-  const glowAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    // Chrono glow animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 3000, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 3000, useNativeDriver: false }),
-      ])
-    ).start();
-
-    // Pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.03, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
 
   useEffect(() => {
     if (hydrated && user) {

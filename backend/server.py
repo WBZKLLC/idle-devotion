@@ -3370,6 +3370,24 @@ async def get_cr_leaderboard(limit: int = 100):
     
     return leaderboard[:limit]
 
+@api_router.get("/leaderboard/power")
+async def get_power_leaderboard(limit: int = 100):
+    """Get Power leaderboard - top players by total power"""
+    users = await db.users.find().sort("total_power", -1).limit(limit).to_list(limit)
+    
+    leaderboard = []
+    for i, user in enumerate(users):
+        leaderboard.append({
+            "rank": i + 1,
+            "username": user.get("username"),
+            "power": user.get("total_power", 0),
+            "level": user.get("level", 1),
+            "vip_level": user.get("vip_level", 0),
+            "avatar_frame": user.get("avatar_frame", "default")
+        })
+    
+    return leaderboard
+
 @api_router.get("/leaderboard/arena")
 async def get_arena_leaderboard(limit: int = 100):
     """Get Arena leaderboard - top players by rating"""

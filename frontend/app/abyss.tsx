@@ -312,13 +312,8 @@ export default function AbyssScreen() {
                       )}
                     </View>
 
-                    {/* Boss Card - Cave themed */}
-                    <Animated.View 
-                      style={[
-                        styles.bossCard,
-                        { transform: [{ translateX: bossShakeAnim }] }
-                      ]}
-                    >
+                    {/* Boss Card - Cave themed - Static */}
+                    <View style={styles.bossCard}>
                       <LinearGradient 
                         colors={[getDepthColor(abyssData.current_level), COLORS.cave.darkest]} 
                         style={styles.bossCardGradient}
@@ -365,28 +360,15 @@ export default function AbyssScreen() {
                           <Text style={styles.statText}>ATK: {formatNumber(abyssData.current_boss.atk)}</Text>
                         </View>
                       </LinearGradient>
-                    </Animated.View>
+                    </View>
 
-                    {/* Damage Popup */}
+                    {/* Static Damage Display */}
                     {attackResult && (
-                      <Animated.View 
-                        style={[
-                          styles.damagePopup,
-                          {
-                            opacity: damagePopAnim,
-                            transform: [{
-                              translateY: damagePopAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, -50]
-                              })
-                            }]
-                          }
-                        ]}
-                      >
+                      <View style={styles.damagePopup}>
                         <Text style={[styles.damageText, attackResult.is_critical && styles.criticalText]}>
                           {attackResult.is_critical ? '💥 CRIT! ' : ''}-{formatNumber(attackResult.damage_dealt)}
                         </Text>
-                      </Animated.View>
+                      </View>
                     )}
 
                     {/* Attack Result */}

@@ -95,6 +95,7 @@ namespace DivineHeros.Live2D.Motion
 
     /// <summary>
     /// Motion definition for a single Live2D parameter
+    /// IMMUTABLE after load - runtime offsets stored separately in driver
     /// </summary>
     [Serializable]
     public class ParameterMotion
@@ -110,9 +111,21 @@ namespace DivineHeros.Live2D.Motion
         public float maxClamp = 1f;
         public RandomizeSettings randomize;
 
-        // Runtime state
-        [NonSerialized] public float runtimeAmplitudeOffset = 0f;
-        [NonSerialized] public float runtimeFrequencyOffset = 0f;
+        // NOTE: Runtime offsets are NOT stored here
+        // They are transient and managed by MotionParameterDriver
+        // Cleared on every state change
+    }
+
+    /// <summary>
+    /// Transient runtime offsets - NOT part of profile data
+    /// Cleared on state change, never persisted
+    /// </summary>
+    public struct RuntimeParameterOffsets
+    {
+        public float amplitudeOffset;
+        public float frequencyOffset;
+
+        public static RuntimeParameterOffsets Zero => new RuntimeParameterOffsets { amplitudeOffset = 0f, frequencyOffset = 0f };
     }
 
     /// <summary>

@@ -16,6 +16,7 @@
 6. [Failure Condition Registry](#6-failure-condition-registry)
 7. [File Reference](#7-file-reference)
 8. [Change Log](#8-change-log)
+9. [Integration Status](#9-integration-status)
 
 ---
 

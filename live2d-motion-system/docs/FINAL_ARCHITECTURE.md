@@ -436,6 +436,44 @@ All phases must evaluate these conditions. **ANY failure = phase invalid.**
 
 ---
 
+## 9. INTEGRATION STATUS
+
+> **⚠️ CRITICAL: Current state of Expo↔Unity connectivity**
+
+### Implementation Completion
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| Expo State Dispatcher | ✅ COMPLETE | `/frontend/services/motionStateDispatcher.ts` |
+| Unity Live2D Driver | ✅ COMPLETE | `/unity-driver/Core/*.cs` |
+| JSON Motion Profiles | ✅ COMPLETE | `/profiles/v2/*.json` |
+| Build-time Validation | ✅ COMPLETE | `/tools/validate-profiles.js` |
+| **Expo↔Unity Bridge Transport** | ⏳ **NOT CONNECTED** | Requires native module integration |
+
+### Bridge Status
+
+The Expo dispatcher exposes an `initialize(bridge)` method that accepts any object with a `postMessage(string)` function. **This bridge is currently a placeholder.**
+
+**To complete end-to-end integration:**
+1. Integrate Unity as a library in the Expo/React Native project
+2. Create a native module that exposes `postMessage` to JavaScript
+3. Call `motionStateDispatcher.initialize(nativeBridge)` with the real bridge
+4. Verify bidirectional communication on a physical device
+
+### Go/No-Go for Production
+
+| Checkpoint | Status |
+|------------|--------|
+| Profiles validated | ✅ DONE |
+| Unity driver implemented | ✅ DONE |
+| Expo dispatcher implemented | ✅ DONE |
+| Real bridge connected | ⏳ NOT DONE |
+| Verified on device | ⏳ NOT DONE |
+
+**🔴 End-to-end integration is NOT complete until all checkpoints pass.**
+
+---
+
 ## Document Status
 
 **This document represents the FINAL architecture.**
@@ -443,7 +481,7 @@ All phases must evaluate these conditions. **ANY failure = phase invalid.**
 - ✅ All phases complete and validated
 - ✅ All failure conditions passed
 - ✅ Implementation locked
-- ✅ Ready for integration
+- ⏳ Awaiting real Expo↔Unity bridge integration
 
 **For questions or issues, refer to:**
 - Integration guide: `INTEGRATION_CHECKLIST.md`

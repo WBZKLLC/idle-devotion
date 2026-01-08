@@ -164,16 +164,18 @@ namespace DivineHeros.Live2D.Motion
 
         /// <summary>
         /// Set profile directly
+        /// HARD RULE: Clears all transient runtime offsets on state change
         /// </summary>
         public void SetProfile(MotionProfile profile)
         {
             if (profile == null) return;
 
-            // Initialize randomization for all parameters
-            foreach (var kvp in profile.parameters)
-            {
-                WaveformSolver.InitializeRandomization(kvp.Value);
-            }
+            // HARD RULE: Clear ALL transient runtime offsets on state change
+            // Offsets must NEVER persist across profiles or mutate profile data
+            ClearRuntimeOffsets();
+
+            // Initialize new transient offsets for randomization (NOT stored on profile)
+            InitializeRuntimeOffsets(profile);
 
             // Start blend transition
             if (currentProfile != null && currentProfile != profile)
@@ -191,8 +193,70 @@ namespace DivineHeros.Live2D.Motion
 
             if (debugMode)
             {
-                Debug.Log($"[MotionParameterDriver] Set profile: {profile.id} (state: {profile.state})");
+                Debug.Log($"[MotionParameterDriver] Set profile: {profile.id} (state: {profile.state}). Runtime offsets cleared and reinitialized.");
             }
+        }
+
+        /// <summary>
+        /// HARD RULE: Clear all transient runtime offsets
+        /// Called on EVERY state change
+        /// </summary>
+        private void ClearRuntimeOffsets()
+        {
+            runtimeOffsets.Clear();
+
+            if (debugMode)
+            {
+                Debug.Log("[MotionParameterDriver] Runtime offsets CLEARED (state change)");
+            }
+        }
+
+        /// <summary>
+        /// Initialize transient runtime offsets for randomization
+        /// These are stored SEPARATELY from profile data
+        /// </summary>
+        private void InitializeRuntimeOffsets(MotionProfile profile)
+        {
+            foreach (var kvp in profile.parameters)
+            {
+                string paramName = kvp.Key;
+                ParameterMotion motion = kvp.Value;
+
+                RuntimeParameterOffsets offsets = RuntimeParameterOffsets.Zero;
+
+                if (motion.randomize != null)
+                {
+                    System.Random rng = motion.randomize.seed > 0
+                        ? new System.Random(motion.randomize.seed)
+                        : new System.Random();
+
+                    if (motion.randomize.amplitudeVariance > 0)
+                    {
+                        float variance = motion.randomize.amplitudeVariance;
+                        offsets.amplitudeOffset = ((float)rng.NextDouble() * 2f - 1f) * variance;
+                    }
+
+                    if (motion.randomize.frequencyVariance > 0)
+                    {
+                        float variance = motion.randomize.frequencyVariance;
+                        offsets.frequencyOffset = ((float)rng.NextDouble() * 2f - 1f) * variance;
+                    }
+                }
+
+                runtimeOffsets[paramName] = offsets;
+            }
+        }
+
+        /// <summary>
+        /// Get runtime offsets for a parameter (transient, not profile data)
+        /// </summary>
+        private RuntimeParameterOffsets GetRuntimeOffsets(string paramName)
+        {
+            if (runtimeOffsets.TryGetValue(paramName, out RuntimeParameterOffsets offsets))
+            {
+                return offsets;
+            }
+            return RuntimeParameterOffsets.Zero;
         }
 
         /// <summary>

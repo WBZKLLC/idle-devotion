@@ -262,8 +262,75 @@ namespace DivineHeros.Live2D.Motion
                 return false;
             }
 
+            // HARD RULE: Validate waveforms for state safety
+            if (!ValidateWaveformsForState(out error))
+            {
+                return false;
+            }
+
             error = null;
             return true;
+        }
+
+        /// <summary>
+        /// HARD RULE: NON-RECOMMENDED waveforms MUST be rejected for Idle/Banner states
+        /// Square and Sawtooth are DISALLOWED for Idle and Banner
+        /// </summary>
+        private bool ValidateWaveformsForState(out string error)
+        {
+            // States where Square/Sawtooth are DISALLOWED
+            bool isRestrictedState = (state == MotionState.Idle || state == MotionState.Banner);
+
+            if (!isRestrictedState)
+            {
+                error = null;
+                return true;
+            }
+
+            foreach (var kvp in parameters)
+            {
+                string paramName = kvp.Key;
+                ParameterMotion motion = kvp.Value;
+
+                if (motion.waveform == WaveformType.Square || motion.waveform == WaveformType.Sawtooth)
+                {
+                    error = $"WAVEFORM VIOLATION: Parameter '{paramName}' uses '{motion.waveform}' which is DISALLOWED for state '{state}'. Only sine, cosine, perlin (low freq), or triangle are permitted.";
+                    return false;
+                }
+            }
+
+            error = null;
+            return true;
+        }
+
+        /// <summary>
+        /// Auto-correct disallowed waveforms (alternative to hard rejection)
+        /// Returns true if corrections were made
+        /// </summary>
+        public bool AutoCorrectWaveforms(out List<string> corrections)
+        {
+            corrections = new List<string>();
+            bool isRestrictedState = (state == MotionState.Idle || state == MotionState.Banner);
+
+            if (!isRestrictedState)
+            {
+                return false;
+            }
+
+            foreach (var kvp in parameters)
+            {
+                string paramName = kvp.Key;
+                ParameterMotion motion = kvp.Value;
+
+                if (motion.waveform == WaveformType.Square || motion.waveform == WaveformType.Sawtooth)
+                {
+                    WaveformType original = motion.waveform;
+                    motion.waveform = WaveformType.Sine;  // Auto-correct to safe default
+                    corrections.Add($"AUTO-CORRECTED: {paramName} waveform {original} -> Sine (state: {state})");
+                }
+            }
+
+            return corrections.Count > 0;
         }
     }
 }

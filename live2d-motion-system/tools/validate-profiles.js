@@ -272,28 +272,32 @@ function main() {
   // Get profiles directory
   const defaultPath = path.join(__dirname, '..', 'profiles', 'v2');
   const profilesPath = process.argv[2] || defaultPath;
+  const isCustomPath = !!process.argv[2];
 
-  // Validate profiles
+  // Validate profiles in specified path
   validateDirectory(profilesPath);
 
-  // Also validate v1 profiles if they exist
-  const v1Path = path.join(__dirname, '..', 'profiles');
-  const v1Files = fs.readdirSync(v1Path).filter(f => f.endsWith('.json'));
-  if (v1Files.length > 0) {
-    console.log('\n--- Also checking root profiles directory ---');
-    for (const file of v1Files) {
-      const filePath = path.join(v1Path, file);
-      totalProfiles++;
-      const result = validateProfile(filePath);
-      if (result.valid) {
-        console.log(`✅ PASS: ${file}`);
-        passedProfiles++;
-      } else {
-        console.log(`❌ FAIL: ${file}`);
-        for (const error of result.errors) {
-          console.log(`   - ${error}`);
+  // Also validate root profiles directory ONLY if using default path
+  // (Skip when a custom path is provided for targeted validation)
+  if (!isCustomPath) {
+    const v1Path = path.join(__dirname, '..', 'profiles');
+    const v1Files = fs.readdirSync(v1Path).filter(f => f.endsWith('.json'));
+    if (v1Files.length > 0) {
+      console.log('\n--- Also checking root profiles directory ---');
+      for (const file of v1Files) {
+        const filePath = path.join(v1Path, file);
+        totalProfiles++;
+        const result = validateProfile(filePath);
+        if (result.valid) {
+          console.log(`✅ PASS: ${file}`);
+          passedProfiles++;
+        } else {
+          console.log(`❌ FAIL: ${file}`);
+          for (const error of result.errors) {
+            console.log(`   - ${error}`);
+          }
+          failedProfiles++;
         }
-        failedProfiles++;
       }
     }
   }

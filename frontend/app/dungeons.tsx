@@ -134,29 +134,6 @@ export default function DungeonsScreen() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [sweepCount, setSweepCount] = useState(3);
 
-  // Animations
-  const portalAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    // Portal rotation animation
-    Animated.loop(
-      Animated.timing(portalAnim, {
-        toValue: 1,
-        duration: 10000,
-        useNativeDriver: true,
-      })
-    ).start();
-
-    // Glow pulse
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1.2, duration: 1500, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
   useEffect(() => {
     if (hydrated && user) {
       loadAllData();

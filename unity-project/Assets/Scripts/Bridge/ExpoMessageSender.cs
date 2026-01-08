@@ -299,6 +299,13 @@ namespace Live2DMotion.Bridge
 
     // Message structures for Unity → Expo communication
     [Serializable]
+    public class SessionReadyMessage
+    {
+        public string type;
+        public string sessionToken;
+    }
+
+    [Serializable]
     public class HandshakeConfirmedMessage
     {
         public string type;

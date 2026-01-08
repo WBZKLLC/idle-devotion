@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  companyName: Live2DMotion
+  productName: Live2DMotionApp
+  defaultScreenWidth: 1920
+  defaultScreenHeight: 1080
+  targetDevice: 0
+  useOnDemandResources: 0
+  androidTargetSdkVersion: 34
+  androidMinSdkVersion: 24
+  scriptingBackend:
+    Android: 1
+  il2cppCompilerConfiguration:
+    Android: 1
+  targetArchitectures: 3
+  stripEngineCode: 1

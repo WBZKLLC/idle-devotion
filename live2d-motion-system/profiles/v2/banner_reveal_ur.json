@@ -1,0 +1,180 @@
+{
+  "id": "banner_reveal_ur",
+  "schemaVersion": "2.0.0",
+  "state": "banner",
+  "priority": 90,
+  "duration": 8.0,
+  "loop": false,
+  "loopCount": 1,
+  "globalModifiers": {
+    "intensity": 1.6,
+    "speed": 0.6
+  },
+  "blending": {
+    "blendInDuration": 1.5,
+    "blendOutDuration": 2.0,
+    "blendCurve": "ease_in_out"
+  },
+  "conditions": {
+    "rarity": ["UR", "UR+"],
+    "heroClass": [],
+    "heroIds": []
+  },
+  "parameters": {
+    "ParamBreath": {
+      "enabled": true,
+      "amplitude": 0.5,
+      "frequency": 0.15,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.0,
+      "minClamp": -0.7,
+      "maxClamp": 0.7
+    },
+    "ParamBodyAngleX": {
+      "enabled": true,
+      "amplitude": 0.15,
+      "frequency": 0.12,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.0,
+      "minClamp": -0.4,
+      "maxClamp": 0.4
+    },
+    "ParamBodyAngleY": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "frequency": 0.1,
+      "phase": 1.57,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.12,
+      "minClamp": -0.3,
+      "maxClamp": 0.4
+    },
+    "ParamBodyAngleZ": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "frequency": 0.08,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": -0.04,
+      "minClamp": -0.18,
+      "maxClamp": 0.18
+    },
+    "ParamAngleX": {
+      "enabled": true,
+      "amplitude": 0.07,
+      "frequency": 0.06,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.0,
+      "minClamp": -0.25,
+      "maxClamp": 0.25
+    },
+    "ParamAngleY": {
+      "enabled": true,
+      "amplitude": 0.05,
+      "frequency": 0.05,
+      "phase": 1.0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.06,
+      "minClamp": -0.18,
+      "maxClamp": 0.22
+    },
+    "ParamEyeLOpen": {
+      "enabled": true,
+      "amplitude": 0.0,
+      "frequency": 0.03,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 1.0,
+      "minClamp": 0.95,
+      "maxClamp": 1.0
+    },
+    "ParamEyeROpen": {
+      "enabled": true,
+      "amplitude": 0.0,
+      "frequency": 0.03,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 1.0,
+      "minClamp": 0.95,
+      "maxClamp": 1.0
+    },
+    "ParamEyeBallX": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "frequency": 0.06,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.0,
+      "minClamp": -0.45,
+      "maxClamp": 0.45
+    },
+    "ParamMouthForm": {
+      "enabled": true,
+      "amplitude": 0.18,
+      "frequency": 0.04,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.3,
+      "minClamp": 0.0,
+      "maxClamp": 0.55
+    },
+    "ParamHairFront": {
+      "enabled": true,
+      "amplitude": 0.22,
+      "frequency": 0.2,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamHairSide": {
+      "enabled": true,
+      "amplitude": 0.18,
+      "frequency": 0.18,
+      "phase": 0.5,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamHairBack": {
+      "enabled": true,
+      "amplitude": 0.2,
+      "frequency": 0.15,
+      "phase": 1.0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    }
+  },
+  "ratingClamps": {
+    "ParamBustX": { "min": -0.25, "max": 0.25 },
+    "ParamBustY": { "min": -0.25, "max": 0.25 },
+    "ParamBaseX": { "min": -0.3, "max": 0.3 },
+    "ParamBaseY": { "min": -0.2, "max": 0.2 }
+  },
+  "metadata": {
+    "author": "DivineHeros Team",
+    "created": "2025-01-08T00:00:00Z",
+    "description": "Premium UR-tier banner reveal with extra dramatic timing and enhanced presence.",
+    "tags": ["banner", "reveal", "summon", "dramatic", "UR", "premium"]
+  }
+}

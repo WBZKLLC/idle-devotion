@@ -1,0 +1,158 @@
+{
+  "id": "idle_default",
+  "schemaVersion": "2.0.0",
+  "state": "idle",
+  "priority": 50,
+  "duration": 4.0,
+  "loop": true,
+  "loopCount": 0,
+  "globalModifiers": {
+    "intensity": 1.0,
+    "speed": 1.0
+  },
+  "blending": {
+    "blendInDuration": 0.5,
+    "blendOutDuration": 0.5,
+    "blendCurve": "ease_in_out"
+  },
+  "parameters": {
+    "ParamBreath": {
+      "enabled": true,
+      "amplitude": 0.3,
+      "frequency": 0.25,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamBodyAngleX": {
+      "enabled": true,
+      "amplitude": 0.04,
+      "frequency": 0.15,
+      "phase": 1.57,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.15,
+      "maxClamp": 0.15,
+      "randomize": {
+        "amplitudeVariance": 0.01,
+        "frequencyVariance": 0.02,
+        "seed": 0
+      }
+    },
+    "ParamBodyAngleY": {
+      "enabled": true,
+      "amplitude": 0.02,
+      "frequency": 0.12,
+      "phase": 0.785,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.1,
+      "maxClamp": 0.1
+    },
+    "ParamBodyAngleZ": {
+      "enabled": true,
+      "amplitude": 0.015,
+      "frequency": 0.1,
+      "phase": 3.14,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.08,
+      "maxClamp": 0.08
+    },
+    "ParamAngleX": {
+      "enabled": true,
+      "amplitude": 0.02,
+      "frequency": 0.08,
+      "phase": 0,
+      "waveform": "perlin",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.1,
+      "maxClamp": 0.1
+    },
+    "ParamAngleY": {
+      "enabled": true,
+      "amplitude": 0.015,
+      "frequency": 0.06,
+      "phase": 1.0,
+      "waveform": "perlin",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.08,
+      "maxClamp": 0.08
+    },
+    "ParamEyeLOpen": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "frequency": 0.05,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 1.0,
+      "minClamp": 0.85,
+      "maxClamp": 1.0
+    },
+    "ParamEyeROpen": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "frequency": 0.05,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 1.0,
+      "minClamp": 0.85,
+      "maxClamp": 1.0
+    },
+    "ParamHairFront": {
+      "enabled": true,
+      "amplitude": 0.06,
+      "frequency": 0.3,
+      "phase": 0.5,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.25,
+      "maxClamp": 0.25
+    },
+    "ParamHairSide": {
+      "enabled": true,
+      "amplitude": 0.05,
+      "frequency": 0.25,
+      "phase": 1.0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.25,
+      "maxClamp": 0.25
+    },
+    "ParamHairBack": {
+      "enabled": true,
+      "amplitude": 0.04,
+      "frequency": 0.2,
+      "phase": 1.5,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.25,
+      "maxClamp": 0.25
+    }
+  },
+  "ratingClamps": {
+    "ParamBustX": { "min": -0.25, "max": 0.25 },
+    "ParamBustY": { "min": -0.25, "max": 0.25 },
+    "ParamBaseX": { "min": -0.3, "max": 0.3 },
+    "ParamBaseY": { "min": -0.2, "max": 0.2 }
+  },
+  "metadata": {
+    "author": "DivineHeros Team",
+    "created": "2025-01-08T00:00:00Z",
+    "description": "Default idle state with subtle breathing and natural micro-movements. Suitable for all character types.",
+    "tags": ["idle", "default", "breathing", "subtle"]
+  }
+}

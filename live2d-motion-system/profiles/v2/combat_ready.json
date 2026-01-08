@@ -1,0 +1,186 @@
+{
+  "id": "combat_ready",
+  "schemaVersion": "2.0.0",
+  "state": "combat",
+  "priority": 50,
+  "duration": 2.5,
+  "loop": true,
+  "loopCount": 0,
+  "globalModifiers": {
+    "intensity": 1.2,
+    "speed": 1.4
+  },
+  "blending": {
+    "blendInDuration": 0.3,
+    "blendOutDuration": 0.4,
+    "blendCurve": "ease_in"
+  },
+  "parameters": {
+    "ParamBreath": {
+      "enabled": true,
+      "amplitude": 0.4,
+      "frequency": 0.5,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.6,
+      "maxClamp": 0.6
+    },
+    "ParamBodyAngleX": {
+      "enabled": true,
+      "amplitude": 0.06,
+      "frequency": 0.4,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.03,
+      "minClamp": -0.2,
+      "maxClamp": 0.2
+    },
+    "ParamBodyAngleY": {
+      "enabled": true,
+      "amplitude": 0.04,
+      "frequency": 0.35,
+      "phase": 1.57,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.08,
+      "minClamp": -0.15,
+      "maxClamp": 0.25
+    },
+    "ParamBodyAngleZ": {
+      "enabled": true,
+      "amplitude": 0.025,
+      "frequency": 0.3,
+      "phase": 3.14,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.1,
+      "maxClamp": 0.1
+    },
+    "ParamAngleX": {
+      "enabled": true,
+      "amplitude": 0.03,
+      "frequency": 0.2,
+      "phase": 0,
+      "waveform": "perlin",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.15,
+      "maxClamp": 0.15
+    },
+    "ParamAngleY": {
+      "enabled": true,
+      "amplitude": 0.02,
+      "frequency": 0.15,
+      "phase": 0.5,
+      "waveform": "perlin",
+      "easing": "linear",
+      "baseValue": 0.05,
+      "minClamp": -0.1,
+      "maxClamp": 0.15
+    },
+    "ParamEyeLOpen": {
+      "enabled": true,
+      "amplitude": 0.03,
+      "frequency": 0.2,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 1.0,
+      "minClamp": 0.9,
+      "maxClamp": 1.0
+    },
+    "ParamEyeROpen": {
+      "enabled": true,
+      "amplitude": 0.03,
+      "frequency": 0.2,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 1.0,
+      "minClamp": 0.9,
+      "maxClamp": 1.0
+    },
+    "ParamBrowLY": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "frequency": 0.1,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.15,
+      "minClamp": 0.0,
+      "maxClamp": 0.4
+    },
+    "ParamBrowRY": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "frequency": 0.1,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.15,
+      "minClamp": 0.0,
+      "maxClamp": 0.4
+    },
+    "ParamArmLA": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "frequency": 0.5,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.25,
+      "minClamp": 0.0,
+      "maxClamp": 0.5
+    },
+    "ParamArmRA": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "frequency": 0.5,
+      "phase": 3.14,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.25,
+      "minClamp": 0.0,
+      "maxClamp": 0.5
+    },
+    "ParamHairFront": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "frequency": 0.5,
+      "phase": 0.3,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.35,
+      "maxClamp": 0.35
+    },
+    "ParamHairSide": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "frequency": 0.45,
+      "phase": 0.8,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.35,
+      "maxClamp": 0.35
+    }
+  },
+  "ratingClamps": {
+    "ParamBustX": { "min": -0.25, "max": 0.25 },
+    "ParamBustY": { "min": -0.25, "max": 0.25 },
+    "ParamBaseX": { "min": -0.3, "max": 0.3 },
+    "ParamBaseY": { "min": -0.2, "max": 0.2 }
+  },
+  "metadata": {
+    "author": "DivineHeros Team",
+    "created": "2025-01-08T00:00:00Z",
+    "description": "Combat-ready stance with heightened alertness, faster breathing, and subtle tension.",
+    "tags": ["combat", "ready", "alert", "battle"]
+  }
+}

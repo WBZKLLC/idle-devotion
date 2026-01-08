@@ -1,0 +1,120 @@
+{
+  "id": "summon_anticipation",
+  "schemaVersion": "2.0.0",
+  "state": "summon",
+  "priority": 50,
+  "duration": 3.0,
+  "loop": true,
+  "loopCount": 0,
+  "globalModifiers": {
+    "intensity": 1.1,
+    "speed": 1.2
+  },
+  "blending": {
+    "blendInDuration": 0.4,
+    "blendOutDuration": 0.3,
+    "blendCurve": "ease_in"
+  },
+  "parameters": {
+    "ParamBreath": {
+      "enabled": true,
+      "amplitude": 0.35,
+      "frequency": 0.4,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.55,
+      "maxClamp": 0.55
+    },
+    "ParamBodyAngleX": {
+      "enabled": true,
+      "amplitude": 0.05,
+      "frequency": 0.25,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.0,
+      "minClamp": -0.18,
+      "maxClamp": 0.18
+    },
+    "ParamBodyAngleY": {
+      "enabled": true,
+      "amplitude": 0.03,
+      "frequency": 0.2,
+      "phase": 1.57,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.05,
+      "minClamp": -0.12,
+      "maxClamp": 0.18
+    },
+    "ParamAngleY": {
+      "enabled": true,
+      "amplitude": 0.03,
+      "frequency": 0.15,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_out",
+      "baseValue": 0.03,
+      "minClamp": -0.1,
+      "maxClamp": 0.12
+    },
+    "ParamEyeLOpen": {
+      "enabled": true,
+      "amplitude": 0.05,
+      "frequency": 0.15,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.95,
+      "minClamp": 0.85,
+      "maxClamp": 1.0
+    },
+    "ParamEyeROpen": {
+      "enabled": true,
+      "amplitude": 0.05,
+      "frequency": 0.15,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "ease_in_out",
+      "baseValue": 0.95,
+      "minClamp": 0.85,
+      "maxClamp": 1.0
+    },
+    "ParamHairFront": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "frequency": 0.35,
+      "phase": 0,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.3,
+      "maxClamp": 0.3
+    },
+    "ParamHairSide": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "frequency": 0.3,
+      "phase": 0.6,
+      "waveform": "sine",
+      "easing": "linear",
+      "baseValue": 0.0,
+      "minClamp": -0.3,
+      "maxClamp": 0.3
+    }
+  },
+  "ratingClamps": {
+    "ParamBustX": { "min": -0.25, "max": 0.25 },
+    "ParamBustY": { "min": -0.25, "max": 0.25 },
+    "ParamBaseX": { "min": -0.3, "max": 0.3 },
+    "ParamBaseY": { "min": -0.2, "max": 0.2 }
+  },
+  "metadata": {
+    "author": "DivineHeros Team",
+    "created": "2025-01-08T00:00:00Z",
+    "description": "Pre-reveal anticipation state with subtle tension and expectation.",
+    "tags": ["summon", "anticipation", "waiting", "tension"]
+  }
+}

@@ -216,14 +216,30 @@ All parameters use **official Live2D Cubism naming conventions** for compatibili
 
 ### 3.2 Waveform Types
 
-| Waveform | Description | Use Case |
-|----------|-------------|----------|
-| `sine` | Smooth oscillation | Natural breathing, sway |
-| `cosine` | Phase-shifted sine | Paired motion |
-| `triangle` | Linear ramp up/down | Mechanical motion |
-| `sawtooth` | Linear ramp + reset | Asymmetric motion |
-| `square` | Binary on/off | Blinking |
-| `perlin` | Smooth noise | Natural randomness |
+| Waveform | Description | Use Case | **Recommended** |
+|----------|-------------|----------|-----------------|
+| `sine` | Smooth oscillation | Natural breathing, sway | ✅ **YES** |
+| `cosine` | Phase-shifted sine | Paired motion | ✅ **YES** |
+| `perlin` | Smooth noise | Natural randomness (low freq only) | ✅ **YES** |
+| `triangle` | Linear ramp up/down | Mechanical motion | ⚠️ Use sparingly |
+| `sawtooth` | Linear ramp + reset | Asymmetric motion | ⛔ **NON-RECOMMENDED** |
+| `square` | Binary on/off | Blinking only | ⛔ **NON-RECOMMENDED** |
+
+> **⚠️ WAVEFORM SAFETY CONSTRAINTS**
+>
+> **`square` and `sawtooth` waveforms are NON-RECOMMENDED:**
+> - Debug / stylized use only
+> - NOT suitable for `idle` or `banner` states
+> - May produce unnatural or rating-risk motion
+>
+> **Default waveforms for production profiles:**
+> - `idle` state: `sine`, `cosine`, `perlin` (low frequency ≤0.3 Hz)
+> - `banner` state: `sine`, `cosine`, `perlin` (low frequency ≤0.2 Hz)
+> - `combat` state: `sine`, `cosine`, `triangle` (acceptable)
+>
+> **Perlin noise frequency limits:**
+> - Idle/Banner: ≤0.3 Hz (slow, subtle variation)
+> - Combat: ≤0.5 Hz (moderate variation)
 
 ### 3.3 Easing Functions
 

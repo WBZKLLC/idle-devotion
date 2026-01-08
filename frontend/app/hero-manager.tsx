@@ -373,12 +373,6 @@ export default function HeroManagerScreen() {
     
     setSaving(true);
     
-    // Animate save button
-    Animated.sequence([
-      Animated.timing(saveAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
-      Animated.timing(saveAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
-    
     try {
       const slotsData = {
         slot_1: slots[0]?.heroId || null,

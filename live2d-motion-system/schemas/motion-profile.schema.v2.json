@@ -219,7 +219,7 @@
         },
         "waveform": {
           "type": "string",
-          "description": "Oscillation waveform shape",
+          "description": "Oscillation waveform shape. NOTE: 'square' and 'sawtooth' are NON-RECOMMENDED (debug/stylized use only, not for Idle/Banner states)",
           "enum": ["sine", "cosine", "triangle", "sawtooth", "square", "perlin"],
           "default": "sine"
         },

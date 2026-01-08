@@ -13,6 +13,7 @@ namespace DivineHeros.Live2D.Motion
     /// <summary>
     /// Drives Live2D parameters from JSON motion profiles
     /// All motion is JSON-driven - no editor-authored animation data
+    /// HARD RULE: Runtime offsets are TRANSIENT and cleared on state change
     /// </summary>
     [RequireComponent(typeof(CubismModel))]
     public class MotionParameterDriver : MonoBehaviour
@@ -46,6 +47,10 @@ namespace DivineHeros.Live2D.Motion
         private bool isBlending = false;
         private float blendDuration = 0.5f;
         private BlendCurve blendCurve = BlendCurve.EaseInOut;
+
+        // TRANSIENT runtime offsets - cleared on every state change
+        // HARD RULE: These NEVER mutate profile data
+        private Dictionary<string, RuntimeParameterOffsets> runtimeOffsets = new Dictionary<string, RuntimeParameterOffsets>();
 
         // Rating clamp logging
         private HashSet<string> loggedClampViolations = new HashSet<string>();

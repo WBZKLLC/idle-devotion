@@ -99,25 +99,9 @@ export default function AbyssScreen() {
     setIsAttacking(true);
     setAttackResult(null);
     
-    // Shake animation
-    Animated.sequence([
-      Animated.timing(bossShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(bossShakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-      Animated.timing(bossShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(bossShakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-    ]).start();
-    
     try {
       const response = await axios.post(`${API_BASE}/abyss/${user.username}/attack`);
       setAttackResult(response.data);
-      
-      // Damage pop animation
-      damagePopAnim.setValue(0);
-      Animated.timing(damagePopAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }).start();
       
       if (response.data.boss_defeated) {
         // Show victory

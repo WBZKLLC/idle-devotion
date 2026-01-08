@@ -280,6 +280,44 @@ export const UnityBridge = {
     hasSessionToken: sessionToken !== null,
     messageQueueLength: messageTimestamps.length,
   }),
-};
 
-export default UnityBridge;
+  /**
+   * F17: Debug-only raw message sender for testing invalid messages
+   * THIS FUNCTION IS ONLY AVAILABLE IN __DEV__ BUILDS
+   * 
+   * @param rawJson - Raw JSON string to send (bypasses normal validation)
+   */
+  debugSendRaw: __DEV__
+    ? (rawJson: string): void => {
+        if (!unityModule) {
+          console.error('[UnityBridge] debugSendRaw: Unity module not available');
+          return;
+        }
+
+        if (!isSessionEstablished || !sessionToken) {
+          console.error('[UnityBridge] debugSendRaw: Session not established');
+          return;
+        }
+
+        // Inject session token if not present
+        let messageToSend = rawJson;
+        try {
+          const parsed = JSON.parse(rawJson);
+          if (!parsed.sessionToken) {
+            parsed.sessionToken = sessionToken;
+            messageToSend = JSON.stringify(parsed);
+          }
+        } catch (e) {
+          // Invalid JSON - send as-is for testing
+        }
+
+        console.warn('[UnityBridge] DEBUG: Sending raw message (DEV ONLY):', messageToSend);
+
+        try {
+          unityModule.postMessage('ReactNativeUnity', 'ReceiveMessage', messageToSend);
+        } catch (error) {
+          console.error('[UnityBridge] debugSendRaw failed:', error);
+        }
+      }
+    : undefined, // F17: Not available in production builds
+};

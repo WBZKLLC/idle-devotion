@@ -66,16 +66,6 @@ export default function HeroDetailScreen() {
     }
   };
 
-  const getJigglePreset = () => {
-    // Determine jiggle preset based on hero class/type
-    if (!heroData) return JIGGLE_PRESETS.athletic;
-    
-    const heroClass = heroData.hero_class?.toLowerCase();
-    if (heroClass === 'warrior') return JIGGLE_PRESETS.muscular;
-    if (heroClass === 'mage') return JIGGLE_PRESETS.athletic;
-    return JIGGLE_PRESETS.minimal;
-  };
-
   const getRarityGradient = (rarity: string): [string, string] => {
     const color = RARITY_COLORS[rarity] || RARITY_COLORS['N'];
     return [color, `${color}88`];

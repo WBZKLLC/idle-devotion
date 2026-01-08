@@ -289,28 +289,8 @@ namespace DivineHeros.Live2D.Motion
             return value;
         }
 
-        /// <summary>
-        /// Initialize randomization for a motion parameter
-        /// </summary>
-        public static void InitializeRandomization(ParameterMotion motion)
-        {
-            if (motion.randomize == null) return;
-
-            System.Random rng = motion.randomize.seed > 0
-                ? new System.Random(motion.randomize.seed)
-                : new System.Random();
-
-            if (motion.randomize.amplitudeVariance > 0)
-            {
-                float variance = motion.randomize.amplitudeVariance;
-                motion.runtimeAmplitudeOffset = ((float)rng.NextDouble() * 2f - 1f) * variance;
-            }
-
-            if (motion.randomize.frequencyVariance > 0)
-            {
-                float variance = motion.randomize.frequencyVariance;
-                motion.runtimeFrequencyOffset = ((float)rng.NextDouble() * 2f - 1f) * variance;
-            }
-        }
+        // NOTE: InitializeRandomization has been REMOVED from WaveformSolver
+        // Runtime offsets are now managed by MotionParameterDriver as TRANSIENT state
+        // This ensures offsets NEVER mutate profile data (HARD RULE compliance)
     }
 }

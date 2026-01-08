@@ -283,18 +283,18 @@
       "type": "object",
       "description": "Rating-safe hard clamps applied AFTER all calculations. These are NON-NEGOTIABLE safety limits.",
       "additionalProperties": false,
-      "required": ["ParamBustX", "ParamBustY"],
+      "required": ["ParamChestSoftX", "ParamChestSoftY"],
       "properties": {
-        "ParamBustX": { "$ref": "#/$defs/clampRange", "default": { "min": -0.25, "max": 0.25 } },
-        "ParamBustY": { "$ref": "#/$defs/clampRange", "default": { "min": -0.25, "max": 0.25 } },
-        "ParamBaseX": { "$ref": "#/$defs/clampRange", "default": { "min": -0.3, "max": 0.3 } },
-        "ParamBaseY": { "$ref": "#/$defs/clampRange", "default": { "min": -0.2, "max": 0.2 } }
+        "ParamChestSoftX": { "$ref": "#/$defs/clampRange", "default": { "min": -0.3, "max": 0.3 } },
+        "ParamChestSoftY": { "$ref": "#/$defs/clampRange", "default": { "min": -0.3, "max": 0.3 } },
+        "ParamAbdomenSoft": { "$ref": "#/$defs/clampRange", "default": { "min": -0.2, "max": 0.2 } },
+        "ParamPelvisShift": { "$ref": "#/$defs/clampRange", "default": { "min": -0.15, "max": 0.15 } }
       },
       "default": {
-        "ParamBustX": { "min": -0.25, "max": 0.25 },
-        "ParamBustY": { "min": -0.25, "max": 0.25 },
-        "ParamBaseX": { "min": -0.3, "max": 0.3 },
-        "ParamBaseY": { "min": -0.2, "max": 0.2 }
+        "ParamChestSoftX": { "min": -0.3, "max": 0.3 },
+        "ParamChestSoftY": { "min": -0.3, "max": 0.3 },
+        "ParamAbdomenSoft": { "min": -0.2, "max": 0.2 },
+        "ParamPelvisShift": { "min": -0.15, "max": 0.15 }
       }
     },
     "clampRange": {

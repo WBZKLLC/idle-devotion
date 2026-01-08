@@ -60,21 +60,39 @@ export default function LeaderboardScreen() {
       const response = await axios.get(`${API_BASE}/leaderboard/${activeType}?limit=50`).catch(() => ({ data: [] }));
       const data = response.data || [];
       
-      // Add rank numbers
+      // Map API response to expected format and add rank numbers
       const rankedData = data.map((entry: any, index: number) => ({
-        ...entry,
-        rank: index + 1,
+        rank: entry.rank || index + 1,
+        username: entry.username,
+        score: entry.rating || entry.power || entry.total_power || entry.floor || entry.score || 0,
+        avatar_frame: entry.avatar_frame,
+        vip_level: entry.vip_level || 0,
       }));
       
-      setEntries(rankedData.length > 0 ? rankedData : generateMockData());
+      // Only use mock data if NO real data exists
+      if (rankedData.length > 0) {
+        setEntries(rankedData);
+      } else {
+        // No data at all - show empty state instead of mock
+        setEntries([]);
+      }
       
       // Find user's rank
       if (user) {
         const userEntry = rankedData.find((e: any) => e.username === user.username);
-        setUserRank(userEntry || { rank: 999, username: user.username, score: user.total_power || 0 });
+        if (userEntry) {
+          setUserRank(userEntry);
+        } else if (rankedData.length > 0) {
+          // User not in leaderboard, calculate their position
+          setUserRank({ rank: rankedData.length + 1, username: user.username, score: user.total_power || 0 });
+        } else {
+          // Empty leaderboard, user is #1
+          setUserRank({ rank: 1, username: user.username, score: user.total_power || 0 });
+        }
       }
     } catch (error) {
-      setEntries(generateMockData());
+      console.error('Leaderboard error:', error);
+      setEntries([]);
     } finally {
       setLoading(false);
       setRefreshing(false);

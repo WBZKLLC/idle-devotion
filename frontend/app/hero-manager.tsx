@@ -124,10 +124,6 @@ export default function HeroManagerScreen() {
     dungeons: null,
   });
 
-  // Animation for changes
-  const flashAnim = useRef(new Animated.Value(0)).current;
-  const saveAnim = useRef(new Animated.Value(1)).current;
-
   // Initialize slots based on selected mode
   const initializeSlots = useCallback(() => {
     const modeConfig = GAME_MODES[selectedMode];

@@ -1,250 +1,190 @@
 <analysis>
+
 **original_problem_statement**:
-The user's initial high-priority task was to fix a critical EAS Android build failure. After resolving the build, the user provided a series of feature requests and bug reports to be addressed.
+The user's primary goal is a major architectural migration to a Live2D-native animation system, deprecating all CSS-based animations. This is a non-negotiable, multi-phase task.
+
+Before this, the user reported and the agent fixed several critical issues:
+1.  **Critical Monetization Bug (VIP System)**: A broken  system was allowing users to gain VIP levels too easily, bypassing the intended real-money  progression.
+2.  **Infinite Reward Exploit**: A Welcome Back message on every app open was granting free resources and summons infinitely.
+3.  **UI/UX & Connection Issues**:
+    *   Fatal errors in Expo Go (Failed to download remote update, Screen names must be unique).
+    *   App UI not respecting phone safe areas (status bar, home bar).
+    *   A broken, non-functional tab button appearing in the navigation bar.
+    *   Confusing UI on the Guild donation screen.
+    *   Leaderboards showing mock data and incorrect user rankings.
+4.  **Feature Requests**:
+    *   Implement visual feedback for the Instant Collect button.
+    *   Fix the non-functional Atheon event summon button.
+    *   Integrate the new Guild and Hero Progression systems into the frontend.
+    *   Integrate RevenueCat for in-app purchases.
 
 PRODUCT REQUIREMENTS:
-1.  **Fix EAS Android Build (P0 - COMPLETED)**: The EAS build was failing due to dependency issues with .
-2.  **Backend Refactoring (P1 - IN PROGRESS)**: Extract monolithic code from  into modular FastAPI routers.
-3.  **UI/UX Fixes (P0 - PARTIALLY COMPLETED)**:
-    *   Remove monetary values from the Path to Selene banner.
-    *   Fix the glitchy chat input bar.
-    *   Ensure resources are visually deducted after a summon.
-    *   Make the overflowing resource bars on the homepage and summon page scrollable.
-    *   Make the remove hero button on the team page larger and functional.
-4.  **Fix Core Gameplay Bugs (P0 - PARTIALLY COMPLETED)**:
-    *   Guild boss attack did nothing.
-    *   Guild War page incorrectly stated the user was not in a guild.
-5.  **New Guild System (P1 - IN PROGRESS)**: Implement a comprehensive, tiered guild system with levels, structured donations, a tech tree, and a guild shop, based on a detailed user prompt.
-6.  **New Hero Progression System (P1 - IN PROGRESS)**: Implement a hero progression system based on rarity, star fusion using shards from duplicates, and rarity ascension, based on a detailed user prompt.
-7.  **Security Audit & Hardening (P0 - COMPLETED)**: Run a security diagnostic and fix identified vulnerabilities.
-8.  **New Issues to Address (P0 - NOT STARTED)**:
-    *   The Atheon event summon button does nothing.
-    *   The Instant Collect button gives no visual feedback on rewards or cooldown.
+*   **P0: Live2D Animation Migration**: Deprecate all CSS animations and implement a new system driven by engine-agnostic JSON profiles, with Unity as a reference runtime. This is the current highest-priority task.
+*   **P0: Fix VIP System (COMPLETED)**: Remove the  system entirely. VIP level must only be derived from  (USD). Monetary thresholds must be hidden from the user.
+*   **P0: Fix Infinite Login Reward (COMPLETED)**: Remove the exploitable reward system given on every app login.
+*   **P0: Fix Core UI/UX & Bugs (COMPLETED)**: Resolve all fatal errors, safe area issues, broken navigation, and confusing UI elements.
+*   **P1: Integrate RevenueCat (PAUSED)**: Integrate the React Native RevenueCat SDK to handle IAPs for a DivineHeros Pro entitlement. This work was started but paused due to native dependency issues with Expo Go.
+*   **P1: Complete Feature Integration (COMPLETED)**: Connect the frontend to the backend for Instant Collect, Events, Guild Donations, and Hero Progression.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The project is a live Expo (React Native) and FastAPI application connected to a populated production/staging database named  with active users.
--   **Frontend**: The EAS Android build is now **fixed and successful**. Several UI/UX bugs have been resolved, including scrollable resource bars, a visible chat input, and an improved team management UI. Scaffolding for a new Hero Progression screen () and a reusable team selection component () has been created but is not yet implemented. The Events page () is using mock data.
--   **Backend**: The monolithic  has been partially refactored by including routers for  and , but duplicate legacy endpoints still exist within . Core gameplay bugs like the Guild Boss attack have been fixed. A comprehensive backend for the new Guild and Hero Progression systems has been built (, ) and exposed via new API endpoints. Critical security vulnerabilities related to password hashing (MD5→bcrypt), JWT secrets, admin authentication, CORS, and rate-limiting have been fixed.
+The application is an Expo (React Native) and FastAPI project. Several critical bugs and UI issues have been resolved in this session.
+-   **Backend**: The critical VIP monetization bug and the infinite login reward exploit have been fixed in . New leaderboard endpoints (, ) have been added. Logic to distribute guild level-up rewards to all members has been implemented. However, the backend  still contains legacy, duplicate code that needs to be refactored.
+-   **Frontend**: Major UI/UX issues have been fixed, including safe area rendering, broken navigation, and confusing UI on the guild page. The Instant Collect button now provides full visual feedback with a cooldown timer. The  page is now connected to the live backend API. The  page uses the new tiered donation system. The  page is complete and linked from the hero detail screen. The leaderboards now show live data.
+-   **RevenueCat**: The  and  packages are installed, but all integration code has been **commented out** to allow the app to run on Expo Go. A guide to re-enable it exists at .
+-   **Live2D Animation System**: A new directory  has been created. It contains the complete architectural design for the new animation system, including JSON schemas, example motion profiles, a reference Unity C# driver, and detailed documentation. This system has been designed but **not yet implemented or integrated** into the Expo app.
 
 **Last working item**:
-    - Last item agent was working: The agent was about to implement visual feedback for the Instant Collect button on the homepage. The user reported that it doesn't show what was collected or display its cooldown, although backend logs confirm the feature works and correctly applies a cooldown.
-    - Status: NOT STARTED
-    - Agent Testing Done: N
-    - Which testing method agent to use? Frontend testing agent or screenshot tool to verify the new UI elements (e.g., a toast/modal for collected rewards and a visible cooldown timer).
+    - Last item agent was working: The agent was executing the user's high-priority Master Architecture Migration prompt. It successfully completed the design phase by creating the JSON schemas, example profiles, Unity reference driver, and documentation for the new Live2D-native animation system. The agent was about to begin Phase 1 of the migration: auditing and removing all existing CSS-based animations from the frontend codebase.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N/A (Design phase)
+    - Which testing method agent to use? Manual inspection of frontend files to identify and remove CSS animations. After removal, use the screenshot tool to verify that characters are static.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Implement Visual Feedback for Instant Collect (P0)
-  - Issue 2: Fix 'Atheon' Event Summon (P1)
-  - Issue 3: Backend Code Cleanup (P2)
-  - Issue 4: Leaderboard UI Bugs (P2)
+  - Issue 1: Backend Code Cleanup (P2)
   
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: None. The agent identified the backend was working correctly (applying cooldowns) but hadn't started the frontend UI work.
+     - Attempted fixes: None in this session. The agent has worked around bugs caused by this (like the guild boss bug in a previous session) but has not removed the root cause.
      - Next debug checklist:
-        1.  In , modify the  function.
-        2.  On successful API response, use a state management update or a toast/modal component to display the rewards received.
-        3.  On a 400 error (cooldown), parse the error message to display the remaining cooldown time to the user.
-        4.  Add a UI element near the button to show the cooldown timer if it's active.
-     - Why fix this issue and what will be achieved with the fix? To provide essential user feedback, confirming the action was successful and clearly communicating the feature's state (ready or on cooldown).
+        1.  Systematically review .
+        2.  For each endpoint that has been moved to a separate router file (e.g., in , ), delete the old, duplicate endpoint definition from .
+        3.  After removing the legacy code, perform regression testing on the affected features (auth, guilds, etc.) to ensure no functionality was broken.
+     - Why fix this issue and what will be achieved with the fix? To eliminate technical debt, prevent future bugs caused by conflicting endpoints, and improve the maintainability and clarity of the backend codebase.
      - Status:  NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: None
-
-  - Issue 2: 
-     - Attempted fixes: The agent discovered the Atheon event summon button on the  page is connected to mock data and there is no corresponding backend endpoint.
-     - Next debug checklist:
-        1.  Confirm with the user if the Atheon event is a feature to be built or if the mock page should be removed.
-        2.  If building, create a new backend endpoint for the Atheon summon logic.
-        3.  In , replace the mock data and handler with a real API call to the new endpoint.
-     - Why fix this issue and what will be achieved with the fix? To remove non-functional, confusing UI or to implement the intended event feature.
-     - Status:  NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Both
-     - Blocked on other issue: None
-
-  - Issue 3:
-     - Attempted fixes: None. The agent fixed bugs caused by duplicate endpoints (e.g., Guild Boss attack) by patching the legacy code in  but did not remove the legacy code itself.
-     - Next debug checklist:
-        1.  Systematically go through .
-        2.  For each endpoint that now exists in a separate router (, , etc.), delete the corresponding  definition from .
-        3.  After removal, perform regression testing on auth, guild, and other affected features.
-     - Why fix this issue and what will be achieved with the fix? To complete the backend refactoring, eliminate code duplication, prevent future conflicts, and improve maintainability.
-     - Status: NOT STARTED
-     - Is recurring issue? Y (This was the root cause of the guild boss bug).
+     - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? Backend
      - Blocked on other issue: None
 
-  - Issue 4:
-     - Attempted fixes: None. The user reported bugs and errors on the leaderboards. The agent verified the backend APIs are returning valid data.
-     - Next debug checklist:
-        1.  Review the code for the leaderboard screens (, ).
-        2.  Check for potential UI rendering bugs, incorrect data mapping, or state management issues that could cause display errors despite valid API responses.
-     - Why fix this issue and what will be achieved with the fix? To ensure a core competitive feature of the app is stable and displays ranks correctly.
-     - Status: NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: None
-
 **In progress Task List**:
-  - Task 1: Integrate New Guild System into Frontend (P1)
-  - Task 2: Implement Hero Progression Frontend (P1)
-  - Task 3: Integrate  Component (P2)
+  - Task 1: Live2D Animation Migration (P0)
 
  Task Detail:
   - Task 1: 
-     - Where to resume: The backend for the new tiered guild system is complete and tested. The next step is to update the frontend  file.
-     - What will be achieved with this? Users will be able to see their guild's level and EXP, use the new tiered donation system, and access the guild shop.
+     - Where to resume: The design and documentation are complete in . The next step is to execute **Phase 1: Decommission Legacy Animation**. This involves a full scan of the  directory to find and remove all CSS-based animation logic (,  animations, animation-related JS/TS code) related to character motion.
+     - What will be achieved with this? This will complete the first step of the mandatory architecture migration, resulting in static characters with no idle or secondary motion, preparing the ground for the new Live2D system.
      - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on something: None
-
-  - Task 2: 
-     - Where to resume: The backend is complete. The frontend file  has been created but is empty.
-     - What will be achieved with this? Users will have a dedicated UI to view their hero shards, spend them to promote hero star levels, and perform rarity ascension.
-     - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on something: Needs a navigation link from a relevant page (like  or ).
-
-  - Task 3: 
-     - Where to resume: The reusable component  has been created but is empty.
-     - What will be achieved with this? A consistent and smooth UI for selecting hero teams across all game modes (Guild Boss, PvP, PvE).
-     - Status:  NOT STARTED
-     - Should Test frontend/backend/both after fix? Frontend
+     - Should Test frontend/backend/both after fix? Frontend (visually verify no animations are present)
      - Blocked on something: None
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P1: Fully Integrate RevenueCat:** User needs to provide a real API key. The app must be updated to use it to enable IAPs.
-    *   **P2: Refine Selene Monetization Simulation**: This is a long-standing, unaddressed task from a previous session. The file  needs review.
+    *   **P0: Live2D Animation Migration (Continue)**: After removing CSS animations, proceed with the subsequent phases outlined by the user, which involve integrating the JSON-driven system (though the rendering part in Unity is a reference for a separate module).
+    *   **P1: Re-enable RevenueCat Integration**: Follow the instructions in  to uncomment the IAP code. This will require setting up a native development build, as it will not work in the standard Expo Go client.
 *   **Future Tasks:**
-    *   **Implement Guild Quests and Raid Bosses**: The backend  includes definitions for these, but the actual implementation (quest generation, boss mechanics) is not built.
+    *   **P2: Refine Selene Monetization Simulation**: The file  contains logic for a monetization simulation that has not been addressed.
 
 **Completed work in this session**
-- **EAS Android Build Fixed**: Successfully resolved dependency hell by enabling the New Architecture for .
-- **Security Hardening**:
-    - Replaced MD5 password hashing with .
-    - Secured JWT secret generation and loading.
-    - Implemented role-based admin authentication using a static header key.
-    - Restricted CORS to an environment variable instead of .
-    - Added rate limiting to sensitive auth and gacha endpoints.
-- **Core Gameplay Bugs Fixed**:
-    - **Guild Boss Attack**: Resolved a complex bug caused by a duplicate endpoint and data inconsistencies between collections.
-    - **Guild War UI**: Fixed a race condition that incorrectly showed the user was not in a guild.
-- **UI/UX Improvements**:
-    - Removed hardcoded monetary value from Selene banner.
-    - Made resource bars on homepage and summon page scrollable.
-    - Fixed the chat input bar visibility.
-    - Added a larger, functional remove hero button to the team page.
-    - Added guild information to the user's profile page.
-- **New Feature Backend Implementation**:
-    - **Guild System**: Created  and API endpoints for a tiered leveling and donation system.
-    - **Hero Progression**: Created  and API endpoints for star promotion and rarity ascension.
+- **Critical Bugs Fixed**:
+  - **VIP System Overhaul**: Removed the broken  parallel progression system. VIP is now solely based on  (USD). All monetary values have been hidden from user-facing APIs and UI.
+  - **Infinite Login Reward Exploit Removed**: Patched the backend  endpoint to prevent it from granting rewards on every app open.
+
+- **Feature Implementation & UI/UX Fixes**:
+  - **Instant Collect UI**: Implemented a detailed feedback alert showing all collected resources and a visible cooldown timer on the button.
+  - **Events Page**: Replaced mock data with a live connection to the  backend endpoint.
+  - **Guild System Frontend**: Updated the  page to use the new tiered donation system and fixed the confusing EXP progress bar display.
+  - **Guild System Backend**: Implemented logic to distribute level-up rewards to all guild members.
+  - **Hero Progression**: Connected the existing  screen by adding a navigation link from the  page.
+  - **Leaderboards**: Fixed the frontend to display live data from the backend and added missing  and  leaderboard API endpoints.
+  - **Safe Area Fix**: Corrected the app layout to respect the phone's status bar and navigation bar, making the entire UI accessible.
+  - **Navigation Fix**: Removed a broken, non-functional tab from the main navigation bar and fixed a duplicate screen name crash.
+  - **User Cleanup**: Deleted all user accounts except for Adam as requested.
+
+- **New Architecture Design**:
+  - **Live2D Animation System**: Designed and documented a complete, Live2D-native animation architecture. Created JSON schemas, example motion profiles, a reference Unity driver, and full documentation in .
+
+- **RevenueCat Integration (Paused)**:
+  - Integrated  and , adding a store, component, and UI elements.
+  - Temporarily disabled and commented out all IAP code to resolve a native dependency crash in Expo Go. Created a re-enabling guide.
 
 **Earlier issues found/mentioned but not fixed**
-   - **Refine Selene Monetization Simulation**: Located in , this task remains from a previous session and has not been addressed.
-
-**Known issue recurrence from previous fork**
-  - **Issue recurrence in previous fork**: EAS Android Build Failure.
-  - **Recurrence count**: 3+
-  - **Status**: RESOLVED
+   - **Refactor **: The task to remove legacy, duplicate endpoints from  remains outstanding. This is a source of technical debt and potential future bugs.
 
 **Code Architecture**
-newArchEnabled: true
+
 
 **Key Technical Concepts**
-- **Expo New Architecture**: Enabled  to support modern libraries like .
-- **FastAPI Backend Security**:
-    - Hashing:  with .
-    - Authentication:  for JWTs, role-based auth via  and .
-    - Rate Limiting:  library to decorate sensitive endpoints.
-- **Live Database Environment**: The application is connected to a live  on MongoDB, containing data from real users. Debugging requires querying this live data, not a local empty instance.
-- **Backend Modularization**: Continued effort to move logic from  into feature-specific  files, though cleanup is still required.
+- **Live2D-Native Animation Architecture**: A new, decoupled system design where engine-agnostic JSON files define all character motion (idle, combat, etc.), and a runtime driver (e.g., in Unity) interprets these files to manipulate Live2D parameters. This separates animation *data* from the application *code*.
+- **React Native Safe Areas**: Correctly implementing  at the root of the app () and using  from  to prevent UI from being obscured by device notches and navigation bars.
+- **Expo Development Builds**: The need for a native development build (as opposed to using the standard Expo Go client) was identified as a requirement for libraries with native dependencies, such as .
 
 **key DB schema**
-  - No new tables were created, but the logic relies on new fields and interactions between existing tables:
-      - :  is now displayed on the profile.
-      - : , ,  are now managed by .
-      - , : A data inconsistency was discovered and patched where  (UUID) needs to be matched against  (hash) to get hero stats.
+- No schema changes were made. Work involved fixing logic that reads/writes to existing collections (, , ). A cleanup operation was performed to delete all users except 'Adam'.
 
 **All files of reference**
 *   **Created Files**:
-    *   : Contains all logic for the new tiered guild system.
-    *   : Contains all logic for the new hero star/rarity progression.
-    *   : API endpoints for the hero progression system.
-    *   : New screen for the hero progression UI.
-    *   : New component for a reusable team selection UI.
+    *   : All files related to the new animation architecture design.
+    *   : A markdown guide for re-enabling the paused IAP feature.
+    *   : (Content is commented out)
+    *   : (Content is commented out)
 *   **Majorly Updated Files**:
-    *   : Security fixes (CORS, rate-limiting), bug fixes (guild boss), and inclusion of new routers. **Still contains legacy code that needs removal.**
-    *   : Major security overhaul (bcrypt, input validation, rate-limiting).
-    *   : Integrated new donation system logic.
-    *   : Enabled the New Architecture, which was the key fix for the build.
-    *   , : Made resource bars scrollable.
-    *   , : UI/UX improvements.
+    *   : Critical fixes for VIP and login exploits; added new leaderboard endpoints.
+    *   : Major layout and navigation fixes (Safe Area, hiding tabs, resolving crashes).
+    *   : Reworked Instant Collect feature and applied Safe Area fixes.
+    *   : Overhauled the donation system and UI.
+    *   : Converted from a mock page to a live, data-driven page.
+    *   : Removed hardcoded monetization values.
 
 **Areas that need refactoring**:
--   **/app/backend/server.py**: This is the highest priority for refactoring. It contains legacy, duplicate endpoints for features that have been moved to routers (, ). This has already caused bugs (guild boss attack) and will continue to cause confusion and conflicts until the old code is removed.
+-   **/app/backend/server.py**: This remains the highest priority for refactoring. It contains duplicate, legacy endpoints that conflict with the modular routers and represent significant technical debt.
+-   **RevenueCat Integration**: The code in  and  is currently commented out. It will need to be uncommented and potentially refined when the project moves to a development build.
 
 **key api endpoints**
-*   : **GET** - Retrieves current guild level, EXP, and shop data.
-*   : **GET** - Retrieves items available in the guild shop.
-*   : **POST** - Handles tiered donations to a guild.
-*   : **POST** - Endpoint for the new hero star promotion system.
-*   : **POST** - Endpoint for the new hero rarity ascension system.
-*   Admin endpoints under  now require a valid JWT and an  in the header.
+*   : **GET** (NEW) - Retrieves the power-based leaderboard.
+*   : **GET** (NEW) - Retrieves the campaign progression leaderboard.
+*   : **POST** (Updated) - Now handles tiered donations and triggers guild level-up reward distribution.
+*   : **GET** (Updated) - No longer exposes  or other monetary thresholds.
 
 **Critical Info for New Agent**
--   **LIVE ENVIRONMENT**: You are working on a live application connected to a populated database () with active users. Do not assume the DB is empty. Direct debugging () must connect to the correct DB to be effective. The presence of other users on leaderboards confirms this.
--   **DUPLICATE ENDPOINTS**: The file  still contains legacy versions of endpoints that also exist in the new routers (, ). This has already caused bugs. When debugging a backend issue, always check if a duplicate route exists in  and prioritize fixing/removing it.
--   **NEW SYSTEMS READY FOR FRONTEND**: The backend for the new Guild System and Hero Progression System is complete and tested. The main pending work is building the corresponding UI for these features in the frontend.
+-   **LIVE2D MIGRATION IS THE TOP PRIORITY**: The user has provided a strict, non-negotiable architectural plan for migrating all character animations to a Live2D-native, JSON-driven system. The design phase is complete (files are in ). Your immediate next task is **Phase 1: Decommission Legacy Animation**, which means finding and removing all CSS animations from the Expo frontend.
+-   **REVENUECAT IS PAUSED**: The in-app purchase integration using RevenueCat was started but has been completely commented out to allow the app to run in Expo Go. Do not attempt to work on it unless you are prepared to set up a native development build. A guide to re-enable the code is at .
+-   **EXPO GO CONNECTION**: The correct URL for testing in Expo Go is . The  suffix is for the web preview only. If the user reports Failed to download remote update, advise them to force-close Expo Go, clear its cache, and try the correct URL again.
+-   **BACKEND REFACTORING PENDING**: Be aware that  contains legacy, duplicate endpoints. This has caused bugs in the past and may cause more if not addressed.
 
 **documents created in this job**
- - None.
+  - : Documentation for the new Live2D animation system.
+  - : JSON schema and example files for motion profiles.
+  - : C# reference code for the Unity driver.
+  - : Guide explaining how to re-enable the paused RevenueCat integration.
 
 **Last 10 User Messages and any pending HUMAN messages** 
-- **User asks about pending tasks (DONE)**: Agent provided a list of outstanding items.
-- **User confirms plan and adds tasks (IN PROGRESS)**: User asked to fix guild boss, create hero selection UI, integrate guild system, create hero progression UI, and fix the remove hero button.
-- **User reports new issues (IN PROGRESS)**: User asked about Instant Collect, broken leaderboards, and the Guild War not in guild bug. Also asked if the app is live.
-- **User provides detailed Hero Progression spec (IN PROGRESS)**: User gave a full prompt for implementing a hero rarity, fusion, and star progression system.
-- **User requests security diagnostic (DONE)**: Agent performed a security audit.
-- **User asks to fix security warnings (DONE)**: Agent fixed CORS, admin auth, and rate-limiting issues.
-- **User provides detailed Guild System spec (IN PROGRESS)**: User gave a full prompt for implementing a tiered guild system with levels, donations, tech tree, etc.
-- **User reports more UI/gameplay bugs (DONE/IN PROGRESS)**: User reported issues with guild boss attack, guild donations, and guild info on profile.
-- **User reports initial UI/UX bugs (DONE)**: User reported issues with monetary values, chat input, non-updating summon resources, and overflowing resource bar.
-- **User confirms build fix priority (DONE)**: User approved starting with the build fix.
+- **User provides major architecture prompt for Live2D animation (IN PROGRESS)**: User submitted a detailed, multi-phase plan to deprecate all CSS animations and move to a Live2D-native, JSON-driven system. Agent has completed the design phase.
+- **User reports leaderboard issues (DONE)**: User noted mock data and incorrect ranking. Agent fixed frontend data mapping and added missing backend endpoints.
+- **User reports fatal crash duplicate screen name (DONE)**: Agent found and removed a duplicate screen definition in .
+- **User reports another fatal crash (DONE)**: Agent debugged Expo Go connection issues and identified the correct ngrok URL.
+- **User reports broken tab icon and guild UI issues (DONE)**: Agent hid the broken tab, fixed the guild EXP bar, and implemented backend logic for guild-wide level-up rewards.
+- **User asks to delete non-admin accounts (DONE)**: Agent ran a script to delete all users except Adam.
+- **User reports UI is not respecting phone's safe areas (DONE)**: Agent implemented  and fixed the layout.
+- **User reports fatal error after RevenueCat integration (PAUSED)**: Agent identified the issue was due to native dependencies in Expo Go.
+- **User asks to temporarily remove RevenueCat (DONE)**: Agent commented out all RevenueCat code and created a re-enabling guide.
+- **User provides React Native instructions for RevenueCat (IN PROGRESS)**: User corrected the platform from Unity to React Native and provided the correct packages and API key.
 
 **Project Health Check:**
 *   **Broken**:
-    *   The Atheon event summon is non-functional.
-    *   The link between the new backend systems (Guild, Hero Progression) and the frontend UI is missing.
+    *   The application's character animation system is in a transition state. The new architecture is designed, but the old CSS-based system has not yet been removed, and the new system is not integrated.
 *   **Mocked**:
-    *    is using mock data.
-    *   RevenueCat functionality is present but uses a placeholder test key and is not fully configured by the user.
+    *   No major mocked systems. The  page, which was previously mocked, is now live.
+*   **Paused**:
+    *   RevenueCat integration is fully paused. All related code is present but commented out.
 
 **3rd Party Integrations**
 *   **OpenAI GPT-4 (via Emergent LLM Key)**: Used for backend AI narration.
-*   **RevenueCat (Payments)**: Integrated but not configured with a user-provided API key. Testing is blocked.
-*   **EAS (Builds)**: Configured with a user-provided token (). Android builds are now succeeding.
-*   **slowapi**: Newly installed Python package for backend rate limiting.
+*   **RevenueCat (Payments)**: The  and  packages are installed, but the integration is **disabled** in the code to ensure compatibility with Expo Go. Re-enabling requires a development build.
+*   **EAS (Builds)**: Configured and working.
 
 **Testing status**
   - Testing agent used after significant changes: NO
-  - Troubleshoot agent used after agent stuck in loop: NO
+  - Troubleshoot agent used after agent stuck in loop: YES (Used to diagnose the Expo Go connection URL issue).
   - Test files created: []
-  - Known regressions: None identified, but the potential is high due to duplicate code in .
+  - Known regressions: None.
 
 **Credentials to test flow:**
 - **Username:** Adam
 - **Password:** Adam123!
-- **EAS Token (EXPO_TOKEN)**: 
-- **Admin Key (for admin endpoints)**:  (as set in )
 
 **What agent forgot to execute**
--   The agent did not fully complete the backend refactoring by removing the old, duplicate endpoint code from  after moving functionality to routers.
--   The longstanding task to **Refine Selene Monetization Simulation** in  remains unaddressed.
--   The agent created placeholder files for the Hero Progression UI () and the reusable  component but did not implement their content or integrate them.
+- The agent has consistently postponed the full refactoring of  to remove duplicate, legacy endpoints. This remains a significant piece of technical debt.
+
 </analysis>

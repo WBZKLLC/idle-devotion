@@ -53,22 +53,6 @@ export default function AbyssScreen() {
   const [levelRecords, setLevelRecords] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'battle' | 'records' | 'leaderboard'>('battle');
   const [leaderboard, setLeaderboard] = useState<any>(null);
-  
-  // Animation refs
-  const bossShakeAnim = useRef(new Animated.Value(0)).current;
-  const damagePopAnim = useRef(new Animated.Value(0)).current;
-  const depthPulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    // Ambient glow animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
 
   useEffect(() => {
     if (hydrated && user) {

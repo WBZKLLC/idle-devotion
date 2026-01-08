@@ -321,3 +321,5 @@ export const UnityBridge = {
       }
     : undefined, // F17: Not available in production builds
 };
+
+export default UnityBridge;

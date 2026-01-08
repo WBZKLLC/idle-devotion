@@ -220,7 +220,7 @@ export default function AbyssScreen() {
         {/* Depth Meter Visual */}
         <View style={styles.depthMeterContainer}>
           <View style={styles.depthMeterTrack}>
-            <Animated.View 
+            <View 
               style={[
                 styles.depthMeterFill,
                 { 

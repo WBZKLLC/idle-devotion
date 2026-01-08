@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
-  Animated,
-  Easing,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { router, useLocalSearchParams } from 'expo-router';
-import { BreathingCharacter, JiggleCharacter, JIGGLE_PRESETS } from '../components/JigglePhysics';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'N': '#9e9e9e',

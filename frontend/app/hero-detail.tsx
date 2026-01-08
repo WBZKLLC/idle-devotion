@@ -110,43 +110,37 @@ export default function HeroDetailScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Hero Portrait with Jiggle Physics */}
-          <Animated.View style={[styles.portraitContainer, { transform: [{ scale: pulseAnim }] }]}>
+          {/* Hero Portrait - Static (No animations) */}
+          <View style={styles.portraitContainer}>
             <LinearGradient
               colors={getRarityGradient(heroData.rarity)}
               style={styles.portraitGradient}
             >
-              {/* Animated glow effect */}
-              <Animated.View 
+              {/* Static glow overlay */}
+              <View 
                 style={[
                   styles.glowOverlay,
                   { 
-                    opacity: glowAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.2, 0.5]
-                    }),
+                    opacity: 0.3,
                     backgroundColor: rarityColor 
                   }
                 ]} 
               />
               
-              {/* Hero image with breathing/jiggle animation */}
+              {/* Hero image - Static */}
               <View style={styles.heroImageContainer}>
                 {heroData.image_url ? (
-                  <JiggleCharacter
+                  <Image
                     source={{ uri: heroData.image_url }}
-                    width={200}
-                    height={280}
-                    config={getJigglePreset()}
-                    animationSpeed="idle"
+                    style={{ width: 200, height: 280 }}
+                    resizeMode="contain"
                   />
                 ) : (
                   <View style={styles.placeholderImage}>
-                    <BreathingCharacter
+                    <Image
                       source={require('../assets/images/icon.png')}
-                      width={120}
-                      height={120}
-                      intensity="normal"
+                      style={{ width: 120, height: 120 }}
+                      resizeMode="contain"
                     />
                   </View>
                 )}
@@ -164,7 +158,7 @@ export default function HeroDetailScreen() {
                 ))}
               </View>
             </LinearGradient>
-          </Animated.View>
+          </View>
 
           {/* Hero Name & Class */}
           <View style={styles.nameContainer}>

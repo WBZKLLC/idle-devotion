@@ -166,10 +166,10 @@
     }
   },
   "ratingClamps": {
-    "ParamBustX": { "min": -0.25, "max": 0.25 },
-    "ParamBustY": { "min": -0.25, "max": 0.25 },
-    "ParamBaseX": { "min": -0.3, "max": 0.3 },
-    "ParamBaseY": { "min": -0.2, "max": 0.2 }
+    "ParamChestSoftX": { "min": -0.3, "max": 0.3 },
+    "ParamChestSoftY": { "min": -0.3, "max": 0.3 },
+    "ParamAbdomenSoft": { "min": -0.2, "max": 0.2 },
+    "ParamPelvisShift": { "min": -0.15, "max": 0.15 }
   },
   "metadata": {
     "author": "DivineHeros Team",

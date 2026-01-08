@@ -355,15 +355,6 @@ export default function HeroManagerScreen() {
     setChangeLogs(prev => [newLog, ...prev.slice(0, 49)]);
   };
 
-  const flashSlotAnimation = () => {
-    flashAnim.setValue(1);
-    Animated.timing(flashAnim, {
-      toValue: 0,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const calculateTeamPower = (currentSlots: TeamSlot[]) => {
     let power = 0;
     currentSlots.forEach(slot => {

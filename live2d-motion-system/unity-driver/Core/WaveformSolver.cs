@@ -244,26 +244,31 @@ namespace DivineHeros.Live2D.Motion
 
         /// <summary>
         /// Calculate complete parameter value from motion definition
+        /// HARD RULE: Offsets are passed in as TRANSIENT inputs, NOT read from motion
         /// </summary>
-        /// <param name="motion">Parameter motion definition</param>
+        /// <param name="motion">Parameter motion definition (IMMUTABLE)</param>
         /// <param name="time">Current time in seconds</param>
         /// <param name="globalIntensity">Global intensity multiplier</param>
         /// <param name="globalSpeed">Global speed multiplier</param>
+        /// <param name="amplitudeOffset">TRANSIENT amplitude offset (from driver, not profile)</param>
+        /// <param name="frequencyOffset">TRANSIENT frequency offset (from driver, not profile)</param>
         /// <returns>Final parameter value</returns>
         public static float CalculateParameterValue(
             ParameterMotion motion,
             float time,
             float globalIntensity = 1f,
-            float globalSpeed = 1f)
+            float globalSpeed = 1f,
+            float amplitudeOffset = 0f,
+            float frequencyOffset = 0f)
         {
             if (!motion.enabled)
             {
                 return motion.baseValue;
             }
 
-            // Apply randomization offsets
-            float amplitude = motion.amplitude + motion.runtimeAmplitudeOffset;
-            float frequency = motion.frequency + motion.runtimeFrequencyOffset;
+            // Apply TRANSIENT offsets (passed in, NOT stored on motion)
+            float amplitude = motion.amplitude + amplitudeOffset;
+            float frequency = motion.frequency + frequencyOffset;
 
             // Calculate phase
             float phase = (time * frequency * globalSpeed * TWO_PI) + motion.phase;

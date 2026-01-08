@@ -163,6 +163,57 @@ console.log(status.currentState); // Should update after Unity confirms
 
 ---
 
+## INTEGRATION STATUS
+
+> **⚠️ CRITICAL: This section documents the current state of Expo↔Unity connectivity.**
+
+### Component Implementation Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **Expo State Dispatcher** | ✅ COMPLETE | `/frontend/services/motionStateDispatcher.ts` - All state commands implemented |
+| **Unity Live2D Driver** | ✅ COMPLETE | `/unity-driver/Core/*.cs` - All C# scripts implemented |
+| **JSON Motion Profiles** | ✅ COMPLETE | `/profiles/v2/*.json` - 5 profiles validated |
+| **Expo↔Unity Bridge** | ⏳ NOT CONNECTED | Placeholder in dispatcher; requires native wiring |
+
+### Bridge Status: MOCKED / PLACEHOLDER
+
+The `motionStateDispatcher.ts` contains a bridge interface:
+```typescript
+private unityBridge: {
+  postMessage: (message: string) => void;
+} | null = null;
+```
+
+**Current State:** This bridge is **NOT connected** to a real Unity instance. The `initialize()` method must be called with an actual bridge implementation.
+
+### Expected Integration Options
+
+Depending on the target platform and architecture, the bridge can be implemented via:
+
+| Option | Platform | Implementation |
+|--------|----------|----------------|
+| **Unity as Library** | iOS/Android | Use `react-native-unity` or custom native module |
+| **Native Module** | iOS/Android | Swift/Kotlin module bridging to Unity |
+| **WebGL Bridge** | Web | `postMessage` to Unity WebGL iframe |
+| **Shared Process** | Desktop | IPC or socket communication |
+
+### Go/No-Go Checklist
+
+Before claiming "end-to-end integration complete":
+
+| Checkpoint | Required | Status |
+|------------|----------|--------|
+| Real Unity instance running | YES | ⏳ NOT DONE |
+| Bridge `initialize()` called with real transport | YES | ⏳ NOT DONE |
+| State command dispatched and received by Unity | YES | ⏳ NOT DONE |
+| Unity sends `STATE_CHANGED` back to Expo | YES | ⏳ NOT DONE |
+| **Verified on physical device** | YES | ⏳ NOT DONE |
+
+**🔴 DO NOT claim end-to-end integration without completing ALL checkpoints above.**
+
+---
+
 ## Support
 
 - Architecture: See `FINAL_ARCHITECTURE.md`

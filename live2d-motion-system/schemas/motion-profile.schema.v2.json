@@ -137,10 +137,10 @@
         "ParamArmRB": { "$ref": "#/$defs/parameterMotion", "description": "Right arm secondary" },
         "ParamHandL": { "$ref": "#/$defs/parameterMotion", "description": "Left hand pose" },
         "ParamHandR": { "$ref": "#/$defs/parameterMotion", "description": "Right hand pose" },
-        "ParamBustX": { "$ref": "#/$defs/parameterMotion", "description": "Bust horizontal (RATING-CLAMPED)" },
-        "ParamBustY": { "$ref": "#/$defs/parameterMotion", "description": "Bust vertical (RATING-CLAMPED)" },
-        "ParamBaseX": { "$ref": "#/$defs/parameterMotion", "description": "Base body horizontal" },
-        "ParamBaseY": { "$ref": "#/$defs/parameterMotion", "description": "Base body vertical" }
+        "ParamChestSoftX": { "$ref": "#/$defs/parameterMotion", "description": "Upper torso horizontal sway (RATING-CLAMPED)" },
+        "ParamChestSoftY": { "$ref": "#/$defs/parameterMotion", "description": "Upper torso vertical motion (RATING-CLAMPED)" },
+        "ParamAbdomenSoft": { "$ref": "#/$defs/parameterMotion", "description": "Midsection soft motion (RATING-CLAMPED)" },
+        "ParamPelvisShift": { "$ref": "#/$defs/parameterMotion", "description": "Lower body sway (RATING-CLAMPED)" }
       }
     },
     "ratingClamps": {

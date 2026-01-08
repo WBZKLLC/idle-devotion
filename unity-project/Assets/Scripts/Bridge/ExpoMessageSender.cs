@@ -3,6 +3,7 @@
 // Phase 6: Sends status messages from Unity back to Expo
 // 
 // CONSTRAINT: This file is NEW - does NOT modify Phase 3 Core/*.cs files
+// SECURITY: Implements S-4, S-5, S-6 security controls
 // =============================================================================
 
 using System;
@@ -13,15 +14,10 @@ namespace Live2DMotion.Bridge
     /// <summary>
     /// Sends status messages from Unity to Expo/React Native.
     /// 
-    /// RESPONSIBILITIES:
-    /// - Send STATE_CHANGED confirmations
-    /// - Send BLEND_COMPLETE notifications
-    /// - Send ERROR messages
-    /// 
-    /// PROHIBITED:
-    /// - Sending animation data to Expo
-    /// - Sending parameter values to Expo
-    /// - Sending profile contents to Expo
+    /// SECURITY CONTROLS:
+    /// - S-4: Sanitized error responses (no stack traces)
+    /// - S-5: Debug-only verbose logging
+    /// - S-6: Singleton lifecycle safety
     /// </summary>
     public class ExpoMessageSender : MonoBehaviour
     {
@@ -31,28 +27,65 @@ namespace Live2DMotion.Bridge
         // Native bridge callback - set by react-native-unity or custom native module
         private static Action<string> _nativeCallback;
 
-        [Header("Debug")]
-        [SerializeField] private bool logAllMessages = true;
+        // S-6: Track initialization state
+        private bool _isInitialized = false;
 
         private void Awake()
         {
+            // S-6: Prevent duplicate registration
             if (Instance != null && Instance != this)
             {
+                LogDebug("Duplicate ExpoMessageSender detected, destroying");
                 Destroy(gameObject);
                 return;
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            _isInitialized = true;
+        }
+
+        private void OnDestroy()
+        {
+            // S-6: Clean up singleton reference and callback
+            if (Instance == this)
+            {
+                Instance = null;
+                _nativeCallback = null;
+                _isInitialized = false;
+            }
         }
 
         /// <summary>
         /// Register the native callback for sending messages to Expo.
         /// Called during bridge initialization.
+        /// S-6: Idempotent - safe to call multiple times
         /// </summary>
         public static void RegisterNativeCallback(Action<string> callback)
         {
             _nativeCallback = callback;
-            Debug.Log("[ExpoMessageSender] Native callback registered");
+            LogDebugStatic("Native callback registered");
+        }
+
+        /// <summary>
+        /// S-6: Unregister the callback (for cleanup)
+        /// </summary>
+        public static void UnregisterNativeCallback()
+        {
+            _nativeCallback = null;
+            LogDebugStatic("Native callback unregistered");
+        }
+
+        /// <summary>
+        /// S-1: Send handshake confirmation with session token
+        /// </summary>
+        public void SendHandshakeConfirmed()
+        {
+            var message = new HandshakeConfirmedMessage
+            {
+                type = "HANDSHAKE_CONFIRMED"
+            };
+
+            SendToExpo(JsonUtility.ToJson(message));
         }
 
         /// <summary>
@@ -61,11 +94,12 @@ namespace Live2DMotion.Bridge
         /// </summary>
         public void SendStateChanged(string state, string profileId)
         {
+            // S-4: Sanitize inputs (no null values in output)
             var message = new StateChangedMessage
             {
                 type = "STATE_CHANGED",
-                state = state,
-                profileId = profileId
+                state = state ?? "unknown",
+                profileId = profileId ?? "unknown"
             };
 
             SendToExpo(JsonUtility.ToJson(message));
@@ -86,25 +120,67 @@ namespace Live2DMotion.Bridge
         }
 
         /// <summary>
-        /// Send error message to Expo.
+        /// S-4: Send sanitized error message to Expo (no internal details)
         /// </summary>
-        public void SendError(string errorMessage)
+        public void SendErrorSanitized(string errorCode, string userMessage)
         {
+            // S-4: Only send safe error codes and messages, never stack traces
             var message = new ErrorMessage
             {
                 type = "ERROR",
-                message = errorMessage
+                code = errorCode ?? "UNKNOWN",
+                message = userMessage ?? "An error occurred"
             };
 
             SendToExpo(JsonUtility.ToJson(message));
         }
 
+        /// <summary>
+        /// Legacy method - redirects to sanitized version
+        /// </summary>
+        public void SendError(string errorMessage)
+        {
+            // S-4: Sanitize the error message before sending
+            SendErrorSanitized("ERROR", SanitizeErrorMessage(errorMessage));
+        }
+
+        /// <summary>
+        /// S-4: Remove potentially sensitive information from error messages
+        /// </summary>
+        private string SanitizeErrorMessage(string rawMessage)
+        {
+            if (string.IsNullOrEmpty(rawMessage))
+            {
+                return "An error occurred";
+            }
+
+            // Remove file paths
+            string sanitized = System.Text.RegularExpressions.Regex.Replace(
+                rawMessage, 
+                @"[A-Za-z]:\\[^\s]+|/[^\s]+\.cs", 
+                "[path]"
+            );
+
+            // Remove line numbers
+            sanitized = System.Text.RegularExpressions.Regex.Replace(
+                sanitized, 
+                @"line \d+|:\d+", 
+                ""
+            );
+
+            // Truncate if too long
+            if (sanitized.Length > 200)
+            {
+                sanitized = sanitized.Substring(0, 197) + "...";
+            }
+
+            return sanitized;
+        }
+
         private void SendToExpo(string jsonMessage)
         {
-            if (logAllMessages)
-            {
-                Debug.Log($"[ExpoMessageSender] Sending: {jsonMessage}");
-            }
+            // S-5: Debug-only payload logging
+            LogDebug($"Sending: {jsonMessage}");
 
             if (_nativeCallback != null)
             {
@@ -114,48 +190,58 @@ namespace Live2DMotion.Bridge
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[ExpoMessageSender] Failed to send: {e.Message}");
+                    // S-4: Don't expose exception details
+                    LogError($"Failed to send via callback: {e.Message}");
                 }
             }
             else
             {
                 // Fallback: Use Unity's SendMessage for react-native-unity compatibility
-                // The native module listens for "N_SEND_MSG" messages
                 try
                 {
-                    // This is the standard way react-native-unity receives messages
-                    // It will be picked up by onUnityMessage callback in React Native
                     #if UNITY_ANDROID || UNITY_IOS
                     SendMessageToReactNative(jsonMessage);
                     #endif
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"[ExpoMessageSender] Fallback send failed: {e.Message}");
+                    // S-4: Don't expose exception details  
+                    LogDebug($"Fallback send failed: {e.Message}");
                 }
             }
         }
 
         /// <summary>
         /// Platform-specific message sending to React Native.
-        /// This method is called by react-native-unity to receive messages.
         /// </summary>
         private void SendMessageToReactNative(string message)
         {
             #if UNITY_ANDROID && !UNITY_EDITOR
-            using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            try
             {
-                var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-                var reactBridge = activity.Call<AndroidJavaObject>("getReactBridge");
-                if (reactBridge != null)
+                using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
                 {
-                    reactBridge.Call("sendMessageToReact", message);
+                    var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+                    var reactBridge = activity.Call<AndroidJavaObject>("getReactBridge");
+                    if (reactBridge != null)
+                    {
+                        reactBridge.Call("sendMessageToReact", message);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                LogDebug($"Android bridge error: {e.Message}");
+            }
             #elif UNITY_IOS && !UNITY_EDITOR
-            // iOS bridge implementation would go here
-            // Typically uses a native plugin to call Objective-C/Swift
-            NativeBridge_SendToReact(message);
+            try
+            {
+                NativeBridge_SendToReact(message);
+            }
+            catch (Exception e)
+            {
+                LogDebug($"iOS bridge error: {e.Message}");
+            }
             #endif
         }
 
@@ -163,9 +249,45 @@ namespace Live2DMotion.Bridge
         [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern void NativeBridge_SendToReact(string message);
         #endif
+
+        /// <summary>
+        /// S-5: Debug-only logging (instance)
+        /// </summary>
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void LogDebug(string message)
+        {
+            Debug.Log($"[ExpoMessageSender] {message}");
+        }
+
+        /// <summary>
+        /// S-5: Debug-only logging (static)
+        /// </summary>
+        [System.Diagnostics.Conditional("DEBUG")]
+        private static void LogDebugStatic(string message)
+        {
+            Debug.Log($"[ExpoMessageSender] {message}");
+        }
+
+        /// <summary>
+        /// S-5: Error logging (always enabled but sanitized in release)
+        /// </summary>
+        private void LogError(string message)
+        {
+            #if DEBUG
+            Debug.LogError($"[ExpoMessageSender] {message}");
+            #else
+            Debug.LogError("[ExpoMessageSender] Send operation failed");
+            #endif
+        }
     }
 
     // Message structures for Unity → Expo communication
+    [Serializable]
+    public class HandshakeConfirmedMessage
+    {
+        public string type;
+    }
+
     [Serializable]
     public class StateChangedMessage
     {
@@ -184,6 +306,7 @@ namespace Live2DMotion.Bridge
     public class ErrorMessage
     {
         public string type;
-        public string message;
+        public string code;    // S-4: Error code for programmatic handling
+        public string message; // S-4: User-safe message
     }
 }

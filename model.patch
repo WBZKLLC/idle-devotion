@@ -1,25 +1,40 @@
+diff --git a/frontend/services/unityBridge.ts b/frontend/services/unityBridge.ts
+index 5184d26..a048851 100644
+--- a/frontend/services/unityBridge.ts
++++ b/frontend/services/unityBridge.ts
+@@ -321,3 +321,5 @@ export const UnityBridge = {
+       }
+     : undefined, // F17: Not available in production builds
+ };
++
++export default UnityBridge;
 diff --git a/model.patch b/model.patch
-index 1812db8..e69de29 100644
+index 221e251..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,20 +0,0 @@
--diff --git a/frontend/app/guild.tsx b/frontend/app/guild.tsx
--index 9141fd3..86c79a0 100644
----- a/frontend/app/guild.tsx
--+++ b/frontend/app/guild.tsx
--@@ -54,6 +54,7 @@ export default function GuildScreen() {
--   useEffect(() => {
--     if (hydrated && user) {
--       loadGuildData();
--+      loadGuildLevelInfo();
--     } else if (hydrated && !user) {
--       setIsLoading(false);
--     }
--@@ -65,6 +66,7 @@ export default function GuildScreen() {
--     }
--     if (guildData && activeTab === 'donate') {
--       loadDonationHistory();
--+      loadGuildLevelInfo();
--     }
--   }, [guildData, activeTab]);
-- 
+@@ -1,25 +0,0 @@
+-diff --git a/model.patch b/model.patch
+-index 1812db8..e69de29 100644
+---- a/model.patch
+-+++ b/model.patch
+-@@ -1,20 +0,0 @@
+--diff --git a/frontend/app/guild.tsx b/frontend/app/guild.tsx
+--index 9141fd3..86c79a0 100644
+----- a/frontend/app/guild.tsx
+--+++ b/frontend/app/guild.tsx
+--@@ -54,6 +54,7 @@ export default function GuildScreen() {
+--   useEffect(() => {
+--     if (hydrated && user) {
+--       loadGuildData();
+--+      loadGuildLevelInfo();
+--     } else if (hydrated && !user) {
+--       setIsLoading(false);
+--     }
+--@@ -65,6 +66,7 @@ export default function GuildScreen() {
+--     }
+--     if (guildData && activeTab === 'donate') {
+--       loadDonationHistory();
+--+      loadGuildLevelInfo();
+--     }
+--   }, [guildData, activeTab]);
+-- 

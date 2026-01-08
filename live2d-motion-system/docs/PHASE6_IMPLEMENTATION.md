@@ -4,6 +4,40 @@
 
 ---
 
+## Dependency Information (S-7 Auditability)
+
+### React Native Unity Package
+
+| Field | Value |
+|-------|-------|
+| **Package Name** | `@azesmway/react-native-unity` |
+| **Pinned Version** | `1.0.7` |
+| **npm Registry** | https://www.npmjs.com/package/@azesmway/react-native-unity |
+| **GitHub Repository** | https://github.com/azesmway/react-native-unity |
+| **Release Tag** | `v1.0.7` (February 2024) |
+| **Commit Hash** | See package-lock.json after install |
+| **License** | MIT |
+| **New Architecture Support** | Yes (Fabric/TurboModules) |
+
+### Fallback Plan Trigger Conditions
+
+The fallback to a custom native module (Option B) is triggered if ANY of the following occur:
+
+1. **Package Incompatibility**: `@azesmway/react-native-unity` fails to build with Expo SDK 54 / RN 0.81
+2. **Build Errors**: Gradle/CocoaPods dependency conflicts that cannot be resolved within 4 hours
+3. **Runtime Crashes**: Unity view crashes on Android ARM64 devices
+4. **Message Delivery Failure**: `postMessage` calls do not reach Unity after verified scene setup
+5. **Package Abandonment**: No releases or commits for 12+ months after project start
+
+### Fallback Implementation (Option B)
+
+If triggered, implement a custom native module:
+- **Android**: Kotlin module in `android/app/src/main/java/.../UnityBridgeModule.kt`
+- **iOS**: Swift module in `ios/UnityBridgeModule.swift`
+- **Interface**: Same `postMessage(gameObject, method, message)` signature
+
+---
+
 ## Implementation Summary
 
 ### Created Files

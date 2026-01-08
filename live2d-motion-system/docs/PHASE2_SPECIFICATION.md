@@ -266,10 +266,10 @@ All parameters use **official Live2D Cubism naming conventions** for compatibili
 
 ```json
 "ratingClamps": {
-  "ParamBustX": { "min": -0.25, "max": 0.25 },
-  "ParamBustY": { "min": -0.25, "max": 0.25 },
-  "ParamBaseX": { "min": -0.30, "max": 0.30 },
-  "ParamBaseY": { "min": -0.20, "max": 0.20 }
+  "ParamChestSoftX": { "min": -0.3, "max": 0.3 },
+  "ParamChestSoftY": { "min": -0.3, "max": 0.3 },
+  "ParamAbdomenSoft": { "min": -0.2, "max": 0.2 },
+  "ParamPelvisShift": { "min": -0.15, "max": 0.15 }
 }
 ```
 

@@ -79,28 +79,6 @@ export default function GuildWarScreen() {
   const [selectedTarget, setSelectedTarget] = useState<LeaderboardEntry | null>(null);
   const [activeTab, setActiveTab] = useState<'war' | 'leaderboard' | 'history'>('war');
 
-  // Animations
-  const flameAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    // Flame animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(flameAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
-        Animated.timing(flameAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
-      ])
-    ).start();
-
-    // Pulse animation for attack button
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.05, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
   useEffect(() => {
     if (hydrated && user) {
       loadAllData();

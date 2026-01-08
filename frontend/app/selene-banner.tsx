@@ -185,8 +185,8 @@ export default function SeleneBannerScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* URGENT TIMER */}
-          <Animated.View style={[styles.timerContainer, { transform: [{ translateX: shakeAnim }] }]}>
+          {/* URGENT TIMER - Static */}
+          <View style={styles.timerContainer}>
             <LinearGradient
               colors={[getUrgencyColor() + '40', getUrgencyColor() + '10']}
               style={styles.timerGradient}
@@ -197,7 +197,7 @@ export default function SeleneBannerScreen() {
               </Text>
               <View style={[styles.urgencyDot, { backgroundColor: getUrgencyColor() }]} />
             </LinearGradient>
-          </Animated.View>
+          </View>
 
           {/* NARRATIVE HOOK */}
           <View style={styles.narrativeBox}>
@@ -206,21 +206,18 @@ export default function SeleneBannerScreen() {
             </Text>
           </View>
 
-          {/* SELENE SHOWCASE */}
-          <Animated.View style={[styles.heroShowcase, { transform: [{ scale: pulseAnim }] }]}>
+          {/* SELENE SHOWCASE - Static */}
+          <View style={styles.heroShowcase}>
             <LinearGradient
               colors={[COLORS.chrono.primary + '30', COLORS.chrono.dark + '20', '#1e1b4b20']}
               style={styles.heroGradient}
             >
-              {/* Chrono Glow */}
-              <Animated.View
+              {/* Chrono Glow - Static */}
+              <View
                 style={[
                   styles.heroGlow,
                   {
-                    opacity: glowAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.2, 0.7],
-                    }),
+                    opacity: 0.4,
                     backgroundColor: COLORS.chrono.glow,
                   },
                 ]}
@@ -272,7 +269,7 @@ export default function SeleneBannerScreen() {
                 <Text style={styles.exclusiveText}>EXCLUSIVE FOR 6 MONTHS</Text>
               </View>
             </LinearGradient>
-          </Animated.View>
+          </View>
 
           {/* PITY PROGRESS */}
           <View style={styles.pitySection}>

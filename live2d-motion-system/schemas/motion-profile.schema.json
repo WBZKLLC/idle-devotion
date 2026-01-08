@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://divineheros.com/schemas/motion-profile.schema.json",
+  "title": "Live2D Motion Profile Schema",
+  "description": "Engine-agnostic motion profile for Live2D parameter-driven animation",
+  "type": "object",
+  "required": ["id", "version", "state", "duration", "parameters"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this motion profile",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version for compatibility",
+      "enum": ["1.0.0"]
+    },
+    "state": {
+      "type": "string",
+      "description": "Motion state category",
+      "enum": ["idle", "combat", "banner", "summon", "victory", "defeat"]
+    },
+    "duration": {
+      "type": "number",
+      "description": "Total duration of one motion cycle in seconds",
+      "minimum": 0.1,
+      "maximum": 30.0
+    },
+    "loop": {
+      "type": "boolean",
+      "description": "Whether the motion should loop",
+      "default": true
+    },
+    "globalIntensity": {
+      "type": "number",
+      "description": "Global multiplier for all parameter amplitudes (0.0 - 2.0)",
+      "minimum": 0.0,
+      "maximum": 2.0,
+      "default": 1.0
+    },
+    "globalSpeed": {
+      "type": "number",
+      "description": "Global multiplier for all parameter speeds (0.1 - 3.0)",
+      "minimum": 0.1,
+      "maximum": 3.0,
+      "default": 1.0
+    },
+    "blendInDuration": {
+      "type": "number",
+      "description": "Time to blend from previous profile (seconds)",
+      "minimum": 0.0,
+      "maximum": 5.0,
+      "default": 0.5
+    },
+    "blendOutDuration": {
+      "type": "number",
+      "description": "Time to blend to next profile (seconds)",
+      "minimum": 0.0,
+      "maximum": 5.0,
+      "default": 0.5
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Per-parameter motion definitions",
+      "additionalProperties": false,
+      "properties": {
+        "ParamBodyAngleX": { "$ref": "#/$defs/parameterMotion" },
+        "ParamBodyAngleY": { "$ref": "#/$defs/parameterMotion" },
+        "ParamBodyAngleZ": { "$ref": "#/$defs/parameterMotion" },
+        "ParamBreath": { "$ref": "#/$defs/parameterMotion" },
+        "ParamChestSoftX": { "$ref": "#/$defs/parameterMotion" },
+        "ParamChestSoftY": { "$ref": "#/$defs/parameterMotion" },
+        "ParamAbdomenSoft": { "$ref": "#/$defs/parameterMotion" },
+        "ParamPelvisShift": { "$ref": "#/$defs/parameterMotion" },
+        "ParamMotionIntensity": { "$ref": "#/$defs/parameterMotion" },
+        "ParamMotionSpeed": { "$ref": "#/$defs/parameterMotion" },
+        "ParamEyeOpenL": { "$ref": "#/$defs/parameterMotion" },
+        "ParamEyeOpenR": { "$ref": "#/$defs/parameterMotion" },
+        "ParamEyeBallX": { "$ref": "#/$defs/parameterMotion" },
+        "ParamEyeBallY": { "$ref": "#/$defs/parameterMotion" },
+        "ParamBrowLY": { "$ref": "#/$defs/parameterMotion" },
+        "ParamBrowRY": { "$ref": "#/$defs/parameterMotion" },
+        "ParamMouthOpenY": { "$ref": "#/$defs/parameterMotion" },
+        "ParamMouthForm": { "$ref": "#/$defs/parameterMotion" },
+        "ParamArmLA": { "$ref": "#/$defs/parameterMotion" },
+        "ParamArmRA": { "$ref": "#/$defs/parameterMotion" },
+        "ParamHairFront": { "$ref": "#/$defs/parameterMotion" },
+        "ParamHairSide": { "$ref": "#/$defs/parameterMotion" },
+        "ParamHairBack": { "$ref": "#/$defs/parameterMotion" }
+      }
+    },
+    "ratingClamps": {
+      "type": "object",
+      "description": "Rating-safe hard clamps enforced at runtime",
+      "$ref": "#/$defs/ratingClamps"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata for tooling",
+      "properties": {
+        "author": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "parameterMotion": {
+      "type": "object",
+      "description": "Motion definition for a single Live2D parameter",
+      "required": ["amplitude", "speed"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this parameter is active",
+          "default": true
+        },
+        "amplitude": {
+          "type": "number",
+          "description": "Peak deviation from base value (-1.0 to 1.0 normalized)",
+          "minimum": -1.0,
+          "maximum": 1.0
+        },
+        "speed": {
+          "type": "number",
+          "description": "Oscillation speed multiplier (0.1 - 5.0)",
+          "minimum": 0.1,
+          "maximum": 5.0,
+          "default": 1.0
+        },
+        "phase": {
+          "type": "number",
+          "description": "Phase offset in radians (0 - 2π)",
+          "minimum": 0,
+          "maximum": 6.283185307,
+          "default": 0
+        },
+        "easing": {
+          "type": "string",
+          "description": "Easing function for this parameter",
+          "enum": ["linear", "sine", "ease_in", "ease_out", "ease_in_out", "bounce", "elastic"],
+          "default": "sine"
+        },
+        "waveform": {
+          "type": "string",
+          "description": "Oscillation waveform type",
+          "enum": ["sine", "triangle", "square", "sawtooth", "noise"],
+          "default": "sine"
+        },
+        "baseValue": {
+          "type": "number",
+          "description": "Center value for oscillation",
+          "default": 0.0
+        },
+        "minClamp": {
+          "type": "number",
+          "description": "Hard minimum value (rating-safe)",
+          "default": -1.0
+        },
+        "maxClamp": {
+          "type": "number",
+          "description": "Hard maximum value (rating-safe)",
+          "default": 1.0
+        }
+      }
+    },
+    "ratingClamps": {
+      "type": "object",
+      "description": "Global rating-safe clamps applied after all calculations",
+      "properties": {
+        "ParamChestSoftX": { "$ref": "#/$defs/clampRange" },
+        "ParamChestSoftY": { "$ref": "#/$defs/clampRange" },
+        "ParamAbdomenSoft": { "$ref": "#/$defs/clampRange" },
+        "ParamPelvisShift": { "$ref": "#/$defs/clampRange" }
+      },
+      "default": {
+        "ParamChestSoftX": { "min": -0.3, "max": 0.3 },
+        "ParamChestSoftY": { "min": -0.3, "max": 0.3 },
+        "ParamAbdomenSoft": { "min": -0.2, "max": 0.2 },
+        "ParamPelvisShift": { "min": -0.15, "max": 0.15 }
+      }
+    },
+    "clampRange": {
+      "type": "object",
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    }
+  }
+}

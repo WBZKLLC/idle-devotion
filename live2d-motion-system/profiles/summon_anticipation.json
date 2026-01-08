@@ -1,0 +1,113 @@
+{
+  "id": "summon_anticipation",
+  "version": "1.0.0",
+  "state": "summon",
+  "duration": 3.0,
+  "loop": true,
+  "globalIntensity": 1.3,
+  "globalSpeed": 0.8,
+  "blendInDuration": 0.8,
+  "blendOutDuration": 0.5,
+  "parameters": {
+    "ParamBreath": {
+      "enabled": true,
+      "amplitude": 0.45,
+      "speed": 0.6,
+      "phase": 0,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.6,
+      "maxClamp": 0.6
+    },
+    "ParamBodyAngleX": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "speed": 0.4,
+      "phase": 0,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.3,
+      "maxClamp": 0.3
+    },
+    "ParamBodyAngleY": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "speed": 0.35,
+      "phase": 1.57,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.1,
+      "minClamp": -0.25,
+      "maxClamp": 0.35
+    },
+    "ParamEyeBallX": {
+      "enabled": true,
+      "amplitude": 0.15,
+      "speed": 0.2,
+      "phase": 0,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamEyeBallY": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "speed": 0.25,
+      "phase": 1.57,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.05,
+      "minClamp": -0.4,
+      "maxClamp": 0.4
+    },
+    "ParamMouthOpenY": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "speed": 0.3,
+      "phase": 0,
+      "easing": "ease_in",
+      "waveform": "sine",
+      "baseValue": 0.05,
+      "minClamp": 0.0,
+      "maxClamp": 0.3
+    },
+    "ParamHairFront": {
+      "enabled": true,
+      "amplitude": 0.15,
+      "speed": 0.5,
+      "phase": 0,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.4,
+      "maxClamp": 0.4
+    },
+    "ParamHairSide": {
+      "enabled": true,
+      "amplitude": 0.12,
+      "speed": 0.45,
+      "phase": 0.7,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.4,
+      "maxClamp": 0.4
+    }
+  },
+  "ratingClamps": {
+    "ParamChestSoftX": { "min": -0.3, "max": 0.3 },
+    "ParamChestSoftY": { "min": -0.3, "max": 0.3 },
+    "ParamAbdomenSoft": { "min": -0.2, "max": 0.2 },
+    "ParamPelvisShift": { "min": -0.15, "max": 0.15 }
+  },
+  "metadata": {
+    "author": "DivineHeros Team",
+    "created": "2025-01-01T00:00:00Z",
+    "description": "Anticipation motion during summon sequence",
+    "tags": ["summon", "anticipation", "gacha"]
+  }
+}

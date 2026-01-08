@@ -1,0 +1,113 @@
+{
+  "id": "idle_default",
+  "version": "1.0.0",
+  "state": "idle",
+  "duration": 4.0,
+  "loop": true,
+  "globalIntensity": 1.0,
+  "globalSpeed": 1.0,
+  "blendInDuration": 0.5,
+  "blendOutDuration": 0.5,
+  "parameters": {
+    "ParamBreath": {
+      "enabled": true,
+      "amplitude": 0.3,
+      "speed": 0.8,
+      "phase": 0,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamBodyAngleX": {
+      "enabled": true,
+      "amplitude": 0.05,
+      "speed": 0.3,
+      "phase": 1.57,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.2,
+      "maxClamp": 0.2
+    },
+    "ParamBodyAngleY": {
+      "enabled": true,
+      "amplitude": 0.03,
+      "speed": 0.25,
+      "phase": 0.785,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.15,
+      "maxClamp": 0.15
+    },
+    "ParamBodyAngleZ": {
+      "enabled": true,
+      "amplitude": 0.02,
+      "speed": 0.2,
+      "phase": 3.14,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.1,
+      "maxClamp": 0.1
+    },
+    "ParamEyeOpenL": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "speed": 0.15,
+      "phase": 0,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 1.0,
+      "minClamp": 0.0,
+      "maxClamp": 1.0
+    },
+    "ParamEyeOpenR": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "speed": 0.15,
+      "phase": 0,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 1.0,
+      "minClamp": 0.0,
+      "maxClamp": 1.0
+    },
+    "ParamHairFront": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "speed": 0.5,
+      "phase": 0.5,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.3,
+      "maxClamp": 0.3
+    },
+    "ParamHairSide": {
+      "enabled": true,
+      "amplitude": 0.06,
+      "speed": 0.4,
+      "phase": 1.0,
+      "easing": "sine",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.3,
+      "maxClamp": 0.3
+    }
+  },
+  "ratingClamps": {
+    "ParamChestSoftX": { "min": -0.3, "max": 0.3 },
+    "ParamChestSoftY": { "min": -0.3, "max": 0.3 },
+    "ParamAbdomenSoft": { "min": -0.2, "max": 0.2 },
+    "ParamPelvisShift": { "min": -0.15, "max": 0.15 }
+  },
+  "metadata": {
+    "author": "DivineHeros Team",
+    "created": "2025-01-01T00:00:00Z",
+    "description": "Default idle breathing and subtle sway motion",
+    "tags": ["idle", "default", "breathing"]
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "id": "banner_reveal",
+  "version": "1.0.0",
+  "state": "banner",
+  "duration": 6.0,
+  "loop": false,
+  "globalIntensity": 1.5,
+  "globalSpeed": 0.6,
+  "blendInDuration": 1.0,
+  "blendOutDuration": 1.5,
+  "parameters": {
+    "ParamBreath": {
+      "enabled": true,
+      "amplitude": 0.5,
+      "speed": 0.5,
+      "phase": 0,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.7,
+      "maxClamp": 0.7
+    },
+    "ParamBodyAngleX": {
+      "enabled": true,
+      "amplitude": 0.15,
+      "speed": 0.3,
+      "phase": 0,
+      "easing": "ease_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.4,
+      "maxClamp": 0.4
+    },
+    "ParamBodyAngleY": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "speed": 0.25,
+      "phase": 1.57,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.15,
+      "minClamp": -0.3,
+      "maxClamp": 0.4
+    },
+    "ParamBodyAngleZ": {
+      "enabled": true,
+      "amplitude": 0.08,
+      "speed": 0.2,
+      "phase": 0,
+      "easing": "ease_out",
+      "waveform": "sine",
+      "baseValue": -0.05,
+      "minClamp": -0.2,
+      "maxClamp": 0.2
+    },
+    "ParamEyeOpenL": {
+      "enabled": true,
+      "amplitude": 0.0,
+      "speed": 0.1,
+      "phase": 0,
+      "easing": "linear",
+      "waveform": "sine",
+      "baseValue": 1.0,
+      "minClamp": 0.9,
+      "maxClamp": 1.0
+    },
+    "ParamEyeOpenR": {
+      "enabled": true,
+      "amplitude": 0.0,
+      "speed": 0.1,
+      "phase": 0,
+      "easing": "linear",
+      "waveform": "sine",
+      "baseValue": 1.0,
+      "minClamp": 0.9,
+      "maxClamp": 1.0
+    },
+    "ParamEyeBallX": {
+      "enabled": true,
+      "amplitude": 0.1,
+      "speed": 0.15,
+      "phase": 0,
+      "easing": "ease_in_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamMouthForm": {
+      "enabled": true,
+      "amplitude": 0.2,
+      "speed": 0.1,
+      "phase": 0,
+      "easing": "ease_out",
+      "waveform": "sine",
+      "baseValue": 0.3,
+      "minClamp": 0.0,
+      "maxClamp": 0.6
+    },
+    "ParamHairFront": {
+      "enabled": true,
+      "amplitude": 0.2,
+      "speed": 0.4,
+      "phase": 0,
+      "easing": "ease_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamHairSide": {
+      "enabled": true,
+      "amplitude": 0.15,
+      "speed": 0.35,
+      "phase": 0.5,
+      "easing": "ease_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    },
+    "ParamHairBack": {
+      "enabled": true,
+      "amplitude": 0.18,
+      "speed": 0.3,
+      "phase": 1.0,
+      "easing": "ease_out",
+      "waveform": "sine",
+      "baseValue": 0.0,
+      "minClamp": -0.5,
+      "maxClamp": 0.5
+    }
+  },
+  "ratingClamps": {
+    "ParamChestSoftX": { "min": -0.3, "max": 0.3 },
+    "ParamChestSoftY": { "min": -0.3, "max": 0.3 },
+    "ParamAbdomenSoft": { "min": -0.2, "max": 0.2 },
+    "ParamPelvisShift": { "min": -0.15, "max": 0.15 }
+  },
+  "metadata": {
+    "author": "DivineHeros Team",
+    "created": "2025-01-01T00:00:00Z",
+    "description": "Dramatic banner reveal with slow, elegant motion",
+    "tags": ["banner", "summon", "reveal", "dramatic"]
+  }
+}

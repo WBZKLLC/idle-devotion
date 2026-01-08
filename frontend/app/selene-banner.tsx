@@ -67,17 +67,6 @@ export default function SeleneBannerScreen() {
           // Show unlock cinematic
           // setShowUnlockCinematic(true);
         }
-        
-        // Urgency shake animation
-        if (data.time_remaining?.urgency_level === 'CRITICAL' || data.time_remaining?.urgency_level === 'HIGH') {
-          Animated.loop(
-            Animated.sequence([
-              Animated.timing(shakeAnim, { toValue: 3, duration: 100, useNativeDriver: true }),
-              Animated.timing(shakeAnim, { toValue: -3, duration: 100, useNativeDriver: true }),
-              Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
-            ])
-          ).start();
-        }
       }
     } catch (error) {
       console.error('Error loading Selene banner:', error);

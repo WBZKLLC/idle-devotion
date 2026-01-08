@@ -43,11 +43,6 @@ export default function GuildScreen() {
   const [donationHistory, setDonationHistory] = useState<any[]>([]);
   const [isDonating, setIsDonating] = useState(false);
   const [guildLevelInfo, setGuildLevelInfo] = useState<any>(null);
-  
-  // Boss animation
-  const bossShakeAnim = useRef(new Animated.Value(0)).current;
-  const damagePopAnim = useRef(new Animated.Value(0)).current;
-  const bossScaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (hydrated && user) {

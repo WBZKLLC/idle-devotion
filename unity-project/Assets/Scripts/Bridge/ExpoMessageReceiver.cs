@@ -3,9 +3,11 @@
 // Phase 6: Receives JSON messages from Expo and routes to MotionStateController
 // 
 // CONSTRAINT: This file is NEW - does NOT modify Phase 3 Core/*.cs files
+// SECURITY: Implements S-1 to S-6 security controls
 // =============================================================================
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Live2DMotion.Bridge
@@ -14,16 +16,13 @@ namespace Live2DMotion.Bridge
     /// Receives messages from Expo/React Native via the Unity bridge.
     /// Routes commands to the MotionStateController.
     /// 
-    /// RESPONSIBILITIES:
-    /// - Parse incoming JSON messages from Expo
-    /// - Validate message format
-    /// - Forward to appropriate controller methods
-    /// - Log all received commands for debugging
-    /// 
-    /// PROHIBITED:
-    /// - Animation logic (handled by Core/MotionParameterDriver)
-    /// - Profile loading (handled by Core/MotionProfileLoader)
-    /// - Parameter manipulation (handled by Core/MotionParameterDriver)
+    /// SECURITY CONTROLS:
+    /// - S-1: Session token validation
+    /// - S-2: Strict schema validation
+    /// - S-3: Rate limiting (10 msg/sec)
+    /// - S-4: Sanitized error responses
+    /// - S-5: Debug-only logging
+    /// - S-6: Singleton lifecycle safety
     /// </summary>
     public class ExpoMessageReceiver : MonoBehaviour
     {
@@ -34,21 +33,94 @@ namespace Live2DMotion.Bridge
         [Tooltip("Reference to the MotionParameterDriver from Phase 3")]
         public Live2DMotion.Core.MotionParameterDriver parameterDriver;
 
-        [Header("Debug")]
-        [SerializeField] private bool logAllMessages = true;
+        [Header("Security Settings")]
+        [Tooltip("Maximum message size in bytes (S-1)")]
+        [SerializeField] private int maxMessageSize = 4096;
+
+        [Tooltip("Maximum messages per second (S-3)")]
+        [SerializeField] private float maxMessagesPerSecond = 10f;
+
+        [Tooltip("Require session token for messages (S-1)")]
+        [SerializeField] private bool requireSessionToken = true;
 
         // Singleton for easy access from native bridge
         public static ExpoMessageReceiver Instance { get; private set; }
 
+        // S-1: Session token for authentication
+        private string _sessionToken = null;
+        private bool _isSessionEstablished = false;
+
+        // S-3: Rate limiting
+        private Queue<float> _messageTimestamps = new Queue<float>();
+        private float _rateLimitWindow = 1f; // 1 second window
+
+        // S-2: Valid message types (strict whitelist)
+        private static readonly HashSet<string> ValidMessageTypes = new HashSet<string>
+        {
+            "SET_STATE",
+            "SET_INTENSITY",
+            "SET_SPEED",
+            "STOP_MOTION",
+            "RESET_TO_IDLE",
+            "HANDSHAKE" // S-1: For session establishment
+        };
+
+        // S-2: Valid states (strict whitelist)
+        private static readonly HashSet<string> ValidStates = new HashSet<string>
+        {
+            "idle", "combat", "banner", "summon", 
+            "victory", "defeat", "dialogue", "special"
+        };
+
+        // S-6: Track initialization state
+        private bool _isInitialized = false;
+
         private void Awake()
         {
+            // S-6: Prevent duplicate registration
             if (Instance != null && Instance != this)
             {
+                LogDebug("Duplicate ExpoMessageReceiver detected, destroying");
                 Destroy(gameObject);
                 return;
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            _isInitialized = true;
+
+            // S-1: Generate session token on startup
+            _sessionToken = GenerateSessionToken();
+            LogDebug($"Session token generated: {_sessionToken.Substring(0, 8)}...");
+        }
+
+        private void OnDestroy()
+        {
+            // S-6: Clean up singleton reference
+            if (Instance == this)
+            {
+                Instance = null;
+                _isInitialized = false;
+            }
+        }
+
+        /// <summary>
+        /// S-1: Generate a random session token for handshake
+        /// </summary>
+        private string GenerateSessionToken()
+        {
+            var bytes = new byte[32];
+            var rng = new System.Security.Cryptography.RNGCryptoServiceProvider();
+            rng.GetBytes(bytes);
+            return Convert.ToBase64String(bytes);
+        }
+
+        /// <summary>
+        /// S-1: Get the session token for Expo to use in handshake
+        /// Called by BridgeInitializer to send token to Expo
+        /// </summary>
+        public string GetSessionToken()
+        {
+            return _sessionToken;
         }
 
         /// <summary>
@@ -58,20 +130,68 @@ namespace Live2DMotion.Bridge
         /// <param name="jsonMessage">JSON string from Expo dispatcher</param>
         public void OnExpoMessage(string jsonMessage)
         {
-            if (logAllMessages)
+            // S-1: Check message size limit
+            if (jsonMessage == null || jsonMessage.Length > maxMessageSize)
             {
-                Debug.Log($"[ExpoMessageReceiver] Received: {jsonMessage}");
+                SendErrorSanitized("MSG_TOO_LARGE", "Message exceeds size limit");
+                LogDebug($"Rejected: message size {jsonMessage?.Length ?? 0} > {maxMessageSize}");
+                return;
             }
+
+            // S-3: Rate limiting check
+            if (!CheckRateLimit())
+            {
+                SendErrorSanitized("RATE_LIMITED", "Too many requests");
+                LogDebug("Rejected: rate limit exceeded");
+                return;
+            }
+
+            // S-5: Debug-only payload logging
+            LogDebug($"Received: {jsonMessage}");
 
             try
             {
-                // Parse the message
+                // S-2: Parse JSON with try/catch
                 var message = JsonUtility.FromJson<ExpoMessage>(jsonMessage);
 
                 if (message == null)
                 {
-                    SendError("Failed to parse message: null result");
+                    SendErrorSanitized("PARSE_ERROR", "Invalid message format");
                     return;
+                }
+
+                // S-2: Validate message type is in whitelist
+                if (string.IsNullOrEmpty(message.type) || !ValidMessageTypes.Contains(message.type))
+                {
+                    SendErrorSanitized("INVALID_TYPE", "Unknown message type");
+                    LogDebug($"Rejected: unknown type '{message.type}'");
+                    return;
+                }
+
+                // S-1: Handle handshake for session establishment
+                if (message.type == "HANDSHAKE")
+                {
+                    HandleHandshake(message);
+                    return;
+                }
+
+                // S-1: Require valid session for all other messages
+                if (requireSessionToken && !_isSessionEstablished)
+                {
+                    SendErrorSanitized("NO_SESSION", "Session not established");
+                    LogDebug("Rejected: no session established");
+                    return;
+                }
+
+                // S-1: Validate session token if provided
+                if (requireSessionToken && !string.IsNullOrEmpty(message.sessionToken))
+                {
+                    if (message.sessionToken != _sessionToken)
+                    {
+                        SendErrorSanitized("INVALID_TOKEN", "Session token mismatch");
+                        LogDebug("Rejected: invalid session token");
+                        return;
+                    }
                 }
 
                 // Route based on message type
@@ -96,37 +216,88 @@ namespace Live2DMotion.Bridge
                     case "RESET_TO_IDLE":
                         HandleResetToIdle();
                         break;
-
-                    default:
-                        SendError($"Unknown message type: {message.type}");
-                        break;
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError($"[ExpoMessageReceiver] Error processing message: {e.Message}");
-                SendError($"Exception: {e.Message}");
+                // S-4: Never expose internal exception details
+                LogError($"Exception processing message: {e.Message}");
+                SendErrorSanitized("INTERNAL_ERROR", "Message processing failed");
             }
+        }
+
+        /// <summary>
+        /// S-1: Handle session handshake
+        /// </summary>
+        private void HandleHandshake(ExpoMessage message)
+        {
+            if (message.sessionToken == _sessionToken)
+            {
+                _isSessionEstablished = true;
+                LogDebug("Session established successfully");
+                
+                // Send confirmation back to Expo
+                ExpoMessageSender.Instance?.SendHandshakeConfirmed();
+            }
+            else
+            {
+                SendErrorSanitized("HANDSHAKE_FAILED", "Invalid handshake token");
+                LogDebug("Handshake failed: token mismatch");
+            }
+        }
+
+        /// <summary>
+        /// S-3: Check if message is within rate limit
+        /// </summary>
+        private bool CheckRateLimit()
+        {
+            float currentTime = Time.unscaledTime;
+
+            // Remove timestamps outside the window
+            while (_messageTimestamps.Count > 0 && 
+                   currentTime - _messageTimestamps.Peek() > _rateLimitWindow)
+            {
+                _messageTimestamps.Dequeue();
+            }
+
+            // Check if under limit
+            if (_messageTimestamps.Count >= maxMessagesPerSecond)
+            {
+                return false;
+            }
+
+            // Record this message
+            _messageTimestamps.Enqueue(currentTime);
+            return true;
         }
 
         private void HandleSetState(ExpoMessage message)
         {
+            // S-2: Validate state is in whitelist
             if (string.IsNullOrEmpty(message.state))
             {
-                SendError("SET_STATE missing state field");
+                SendErrorSanitized("MISSING_STATE", "State field required");
+                return;
+            }
+
+            string stateLower = message.state.ToLowerInvariant();
+            if (!ValidStates.Contains(stateLower))
+            {
+                SendErrorSanitized("INVALID_STATE", "State not recognized");
+                LogDebug($"Rejected: invalid state '{message.state}'");
                 return;
             }
 
             if (stateController == null)
             {
-                SendError("MotionStateController not assigned");
+                SendErrorSanitized("NOT_READY", "Controller not available");
                 return;
             }
 
             // Parse state string to enum
             if (!Enum.TryParse<Live2DMotion.Core.MotionState>(message.state, true, out var motionState))
             {
-                SendError($"Invalid state: {message.state}");
+                SendErrorSanitized("INVALID_STATE", "State not recognized");
                 return;
             }
 
@@ -138,67 +309,100 @@ namespace Live2DMotion.Bridge
                 message.rarity
             );
 
-            Debug.Log($"[ExpoMessageReceiver] State set to: {motionState}");
+            LogDebug($"State set to: {motionState}");
         }
 
         private void HandleSetIntensity(ExpoMessage message)
         {
             if (parameterDriver == null)
             {
-                SendError("MotionParameterDriver not assigned");
+                SendErrorSanitized("NOT_READY", "Driver not available");
                 return;
             }
 
-            // Clamp value to valid range
+            // S-2: Validate numeric bounds (0.0 - 2.0)
+            if (message.value < 0f || message.value > 2f)
+            {
+                LogDebug($"Intensity {message.value} clamped to valid range");
+            }
+            
             float intensity = Mathf.Clamp(message.value, 0f, 2f);
             parameterDriver.SetGlobalIntensity(intensity);
 
-            Debug.Log($"[ExpoMessageReceiver] Intensity set to: {intensity}");
+            LogDebug($"Intensity set to: {intensity}");
         }
 
         private void HandleSetSpeed(ExpoMessage message)
         {
             if (parameterDriver == null)
             {
-                SendError("MotionParameterDriver not assigned");
+                SendErrorSanitized("NOT_READY", "Driver not available");
                 return;
             }
 
-            // Clamp value to valid range
+            // S-2: Validate numeric bounds (0.1 - 3.0)
+            if (message.value < 0.1f || message.value > 3f)
+            {
+                LogDebug($"Speed {message.value} clamped to valid range");
+            }
+
             float speed = Mathf.Clamp(message.value, 0.1f, 3f);
             parameterDriver.SetGlobalSpeed(speed);
 
-            Debug.Log($"[ExpoMessageReceiver] Speed set to: {speed}");
+            LogDebug($"Speed set to: {speed}");
         }
 
         private void HandleStopMotion()
         {
             if (parameterDriver == null)
             {
-                SendError("MotionParameterDriver not assigned");
+                SendErrorSanitized("NOT_READY", "Driver not available");
                 return;
             }
 
             parameterDriver.StopMotion();
-            Debug.Log("[ExpoMessageReceiver] Motion stopped");
+            LogDebug("Motion stopped");
         }
 
         private void HandleResetToIdle()
         {
             if (stateController == null)
             {
-                SendError("MotionStateController not assigned");
+                SendErrorSanitized("NOT_READY", "Controller not available");
                 return;
             }
 
             stateController.SetState(Live2DMotion.Core.MotionState.Idle);
-            Debug.Log("[ExpoMessageReceiver] Reset to Idle");
+            LogDebug("Reset to Idle");
         }
 
-        private void SendError(string errorMessage)
+        /// <summary>
+        /// S-4: Send sanitized error (no internal details)
+        /// </summary>
+        private void SendErrorSanitized(string errorCode, string userMessage)
         {
-            Debug.LogError($"[ExpoMessageReceiver] Error: {errorMessage}");
-            ExpoMessageSender.Instance?.SendError(errorMessage);
+            ExpoMessageSender.Instance?.SendErrorSanitized(errorCode, userMessage);
+        }
+
+        /// <summary>
+        /// S-5: Debug-only logging
+        /// </summary>
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void LogDebug(string message)
+        {
+            Debug.Log($"[ExpoMessageReceiver] {message}");
+        }
+
+        /// <summary>
+        /// S-5: Error logging (always enabled but sanitized)
+        /// </summary>
+        private void LogError(string message)
+        {
+            #if DEBUG
+            Debug.LogError($"[ExpoMessageReceiver] {message}");
+            #else
+            Debug.LogError("[ExpoMessageReceiver] An error occurred");
+            #endif
         }
     }
 
@@ -215,5 +419,6 @@ namespace Live2DMotion.Bridge
         public string heroClass;
         public string rarity;
         public float value;
+        public string sessionToken; // S-1: For authentication
     }
 }

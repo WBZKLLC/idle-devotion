@@ -76,6 +76,22 @@ namespace Live2DMotion.Bridge
         }
 
         /// <summary>
+        /// S-1/F16: Send SESSION_READY with token to Expo at initialization
+        /// This MUST be received by Expo before any commands are accepted
+        /// </summary>
+        public void SendSessionReady(string sessionToken)
+        {
+            var message = new SessionReadyMessage
+            {
+                type = "SESSION_READY",
+                sessionToken = sessionToken
+            };
+
+            SendToExpo(JsonUtility.ToJson(message));
+            LogDebug($"SESSION_READY sent");
+        }
+
+        /// <summary>
         /// S-1: Send handshake confirmation with session token
         /// </summary>
         public void SendHandshakeConfirmed()

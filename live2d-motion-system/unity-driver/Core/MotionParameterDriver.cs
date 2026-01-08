@@ -311,6 +311,7 @@ namespace DivineHeros.Live2D.Motion
 
         /// <summary>
         /// Apply all profile parameters to Live2D model
+        /// HARD RULE: Runtime offsets are TRANSIENT and passed to solver, not stored on profile
         /// </summary>
         private void ApplyProfileParameters()
         {
@@ -327,9 +328,13 @@ namespace DivineHeros.Live2D.Motion
                 string paramName = kvp.Key;
                 ParameterMotion motion = kvp.Value;
 
-                // Calculate current profile value
+                // Get TRANSIENT runtime offsets (stored separately from profile)
+                RuntimeParameterOffsets offsets = GetRuntimeOffsets(paramName);
+
+                // Calculate current profile value with TRANSIENT offsets
                 float currentValue = WaveformSolver.CalculateParameterValue(
-                    motion, profileTime, globalIntensity, globalSpeed);
+                    motion, profileTime, globalIntensity, globalSpeed,
+                    offsets.amplitudeOffset, offsets.frequencyOffset);
 
                 // Blend with previous profile if transitioning
                 float finalValue = currentValue;
@@ -338,8 +343,9 @@ namespace DivineHeros.Live2D.Motion
                     float prevGlobalIntensity = previousProfile.globalModifiers.intensity;
                     float prevGlobalSpeed = previousProfile.globalModifiers.speed;
 
+                    // Previous profile uses zero offsets (offsets were cleared on state change)
                     float previousValue = WaveformSolver.CalculateParameterValue(
-                        prevMotion, profileTime, prevGlobalIntensity, prevGlobalSpeed);
+                        prevMotion, profileTime, prevGlobalIntensity, prevGlobalSpeed, 0f, 0f);
 
                     finalValue = Mathf.Lerp(previousValue, currentValue, blendFactor);
                 }
@@ -363,7 +369,7 @@ namespace DivineHeros.Live2D.Motion
                         float prevValue = WaveformSolver.CalculateParameterValue(
                             prevMotion, profileTime,
                             previousProfile.globalModifiers.intensity,
-                            previousProfile.globalModifiers.speed);
+                            previousProfile.globalModifiers.speed, 0f, 0f);
 
                         float finalValue = Mathf.Lerp(prevValue, prevMotion.baseValue, blendFactor);
                         finalValue = ApplyRatingClamp(kvp.Key, finalValue);

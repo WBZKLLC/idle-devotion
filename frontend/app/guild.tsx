@@ -421,18 +421,8 @@ export default function GuildScreen() {
                 <View style={styles.tabContent}>
                   {bossData ? (
                     <>
-                      {/* Boss Display */}
-                      <Animated.View 
-                        style={[
-                          styles.bossContainer,
-                          { 
-                            transform: [
-                              { translateX: bossShakeAnim },
-                              { scale: bossScaleAnim }
-                            ] 
-                          }
-                        ]}
-                      >
+                      {/* Boss Display - Static */}
+                      <View style={styles.bossContainer}>
                         <LinearGradient
                           colors={bossData.defeated ? ['#555', '#333'] : ['#8e44ad', '#6c3483']}
                           style={styles.bossCard}
@@ -471,31 +461,18 @@ export default function GuildScreen() {
                           )}
                         </LinearGradient>
                         
-                        {/* Damage Popup */}
+                        {/* Static Damage Display */}
                         {lastAttackResult && (
-                          <Animated.View 
-                            style={[
-                              styles.damagePopup,
-                              {
-                                opacity: damagePopAnim,
-                                transform: [{
-                                  translateY: damagePopAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0, -50]
-                                  })
-                                }]
-                              }
-                            ]}
-                          >
+                          <View style={styles.damagePopup}>
                             <Text style={[
                               styles.damageText,
                               lastAttackResult.is_critical && styles.criticalDamage
                             ]}>
                               {lastAttackResult.is_critical ? '💥 CRIT! ' : ''}-{lastAttackResult.damage_dealt?.toLocaleString()}
                             </Text>
-                          </Animated.View>
+                          </View>
                         )}
-                      </Animated.View>
+                      </View>
                       
                       {/* Attack Button */}
                       <TouchableOpacity

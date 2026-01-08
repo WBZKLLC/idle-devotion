@@ -397,9 +397,9 @@ export default function GuildWarScreen() {
                         </TouchableOpacity>
                       ))}
 
-                    {/* Attack Button */}
+                    {/* Attack Button - Static */}
                     {selectedTarget && (
-                      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                      <View>
                         <TouchableOpacity
                           style={[styles.attackButton, isAttacking && styles.attackButtonDisabled]}
                           onPress={() => attackGuild(selectedTarget.guild_id)}
@@ -416,7 +416,7 @@ export default function GuildWarScreen() {
                             )}
                           </LinearGradient>
                         </TouchableOpacity>
-                      </Animated.View>
+                      </View>
                     )}
                   </View>
                 )}

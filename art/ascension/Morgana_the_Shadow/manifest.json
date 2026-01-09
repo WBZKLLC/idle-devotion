@@ -2,7 +2,7 @@
   "hero": "Morgana the Shadow",
   "hero_id": "morgana_the_shadow",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Umbral Initiate",

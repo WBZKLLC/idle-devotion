@@ -969,7 +969,7 @@ HERO_POOL = [
     Hero(name="Kane the Berserker", rarity="SR", element="Fire", hero_class="Warrior",
          base_hp=1100, base_atk=170, base_def=80, base_speed=95, position="front",
          skills=create_warrior_skills("SR"),
-         image_url="https://img.freepik.com/free-photo/anime-japanese-character_23-2151478202.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/9ngqqo95_1470e2cd-98b3-482f-acb6-fafc44807b7f_0.webp",
          description="Fury incarnate, dealing devastating blows"),
     
     # Mages (Back Line)

@@ -981,7 +981,7 @@ HERO_POOL = [
     Hero(name="Lysander the Frost", rarity="SR", element="Water", hero_class="Mage",
          base_hp=950, base_atk=175, base_def=75, base_speed=95, position="back",
          skills=create_mage_skills("SR"),
-         image_url="https://img.freepik.com/free-photo/anime-character-with-blue-hair_23-2151499092.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/9ijpyi0f_c9ee07c0-d764-41db-928a-fd8a81db116c_0.webp",
          description="Master of ice who freezes enemies solid"),
     Hero(name="Theron the Storm", rarity="SR", element="Wind", hero_class="Mage",
          base_hp=880, base_atk=185, base_def=65, base_speed=110, position="back",

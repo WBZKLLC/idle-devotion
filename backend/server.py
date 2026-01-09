@@ -1071,7 +1071,7 @@ HERO_POOL = [
     Hero(name="Raphael the Eternal", rarity="UR+", element="Light", hero_class="Mage",
          base_hp=2800, base_atk=500, base_def=220, base_speed=115, position="back",
          skills=create_mage_skills("UR+"),
-         image_url="https://cdn.pixabay.com/photo/2024/11/15/22/10/ai-generated-9200292_1280.png",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/thladr5g_f649bfb6-10cc-460a-ba97-832e416a36a6_0.webp",
          description="The supreme deity of magic and transcendence"),
     Hero(name="Michael the Archangel", rarity="UR+", element="Light", hero_class="Warrior",
          base_hp=3200, base_atk=450, base_def=280, base_speed=105, position="front",

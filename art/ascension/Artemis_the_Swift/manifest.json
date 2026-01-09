@@ -2,7 +2,7 @@
   "hero": "Artemis the Swift",
   "hero_id": "artemis_the_swift",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Wind Initiate",

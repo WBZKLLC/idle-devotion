@@ -1,0 +1,39 @@
+{
+  "hero": "Morgana the Shadow",
+  "hero_id": "morgana_the_shadow",
+  "default_star": 3,
+  "complete": false,
+  "ascension_images": {
+    "1_star": {
+      "title": "Umbral Initiate",
+      "url": "https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/y8zidqu0_8ea3c09a-8f9e-4e53-b80a-cbef9ca790bc_0.webp",
+      "status": "received"
+    },
+    "2_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "3_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting",
+      "note": "Will become default image_url"
+    },
+    "4_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "5_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "6_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    }
+  }
+}

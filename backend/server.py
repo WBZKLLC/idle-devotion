@@ -1011,7 +1011,7 @@ HERO_POOL = [
     Hero(name="Leon the Paladin", rarity="SSR", element="Light", hero_class="Warrior",
          base_hp=1800, base_atk=220, base_def=160, base_speed=92, position="front",
          skills=create_warrior_skills("SSR"),
-         image_url="https://img.freepik.com/free-photo/anime-knight-with-sword_23-2152013379.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/6peescvq_fa7fcb4a-3719-4d48-8692-33ad74918ec6_0.webp",
          description="Holy warrior blessed by the divine"),
     
     # Mages

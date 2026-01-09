@@ -1,0 +1,39 @@
+{
+  "hero": "Marcus the Shield",
+  "hero_id": "marcus_the_shield",
+  "default_star": 3,
+  "complete": false,
+  "ascension_images": {
+    "1_star": {
+      "title": "The Iron Defender",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/3duo5yx4_4cce188b-257b-4783-b632-1cbeaf9029b1_0.webp",
+      "status": "received"
+    },
+    "2_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "3_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting",
+      "note": "Will become default image_url"
+    },
+    "4_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "5_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "6_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    }
+  }
+}

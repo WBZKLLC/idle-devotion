@@ -1018,7 +1018,7 @@ HERO_POOL = [
     Hero(name="Lucian the Divine", rarity="SSR", element="Light", hero_class="Mage",
          base_hp=1400, base_atk=260, base_def=120, base_speed=98, position="back",
          skills=create_mage_skills("SSR"),
-         image_url="https://img.freepik.com/free-photo/anime-samurai-warrior-with-katana-pink-petals_23-2151995161.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/f7fqkty9_13d8d012-2401-426a-a0d8-1a9afedff057_0.webp",
          description="An angelic being with devastating magic"),
     Hero(name="Morgana the Shadow", rarity="SSR", element="Dark", hero_class="Mage",
          base_hp=1300, base_atk=280, base_def=100, base_speed=102, position="back",

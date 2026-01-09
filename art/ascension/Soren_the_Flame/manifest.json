@@ -15,10 +15,10 @@
       "status": "received"
     },
     "3_star": {
-      "title": null,
-      "url": null,
-      "status": "awaiting",
-      "note": "Will become default image_url"
+      "title": "Flame Adept",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/0f8i5knu_e5bd6276-a5ec-4e9d-8169-89acac57097c_0.webp",
+      "status": "received",
+      "note": "DEFAULT - Used as image_url in app"
     },
     "4_star": {
       "title": null,

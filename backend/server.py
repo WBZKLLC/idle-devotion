@@ -959,7 +959,7 @@ HERO_POOL = [
     Hero(name="Azrael the Fallen", rarity="SR", element="Dark", hero_class="Warrior", 
          base_hp=1200, base_atk=150, base_def=100, base_speed=90, position="front",
          skills=create_warrior_skills("SR"),
-         image_url="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400",
+         image_url="https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/50j0skb7_d761d1ac-f0ff-4f14-8a7f-87e5cc648362_0.webp",
          description="A fallen angel seeking redemption through battle"),
     Hero(name="Marcus the Shield", rarity="SR", element="Earth", hero_class="Warrior",
          base_hp=1400, base_atk=130, base_def=120, base_speed=85, position="front",

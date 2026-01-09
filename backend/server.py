@@ -1064,7 +1064,7 @@ HERO_POOL = [
     Hero(name="Selene the Moonbow", rarity="UR", element="Dark", hero_class="Archer",
          base_hp=1900, base_atk=400, base_def=160, base_speed=125, position="back",
          skills=create_archer_skills("UR"),
-         image_url="https://cdn.pixabay.com/photo/2024/11/21/09/29/ai-generated-9213316_1280.png",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/ookkqikz_1949fe60-a799-4d0d-8103-0130d0644d51_0.webp",
          description="Huntress of the night, death from the shadows"),
     
     # ========== UR+ HEROES (Divine Summon Exclusive) ==========

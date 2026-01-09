@@ -1006,7 +1006,7 @@ HERO_POOL = [
     Hero(name="Darius the Void", rarity="SSR", element="Dark", hero_class="Warrior",
          base_hp=2000, base_atk=200, base_def=180, base_speed=88, position="front",
          skills=create_warrior_skills("SSR"),
-         image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499067.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/2wqe1exw_877d7d48-2f40-4ae0-944d-a6946400e548_0.webp",
          description="A demonic guardian with impenetrable defense"),
     Hero(name="Leon the Paladin", rarity="SSR", element="Light", hero_class="Warrior",
          base_hp=1800, base_atk=220, base_def=160, base_speed=92, position="front",

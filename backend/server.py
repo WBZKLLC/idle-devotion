@@ -1037,7 +1037,7 @@ HERO_POOL = [
     Hero(name="Orion the Mystic", rarity="SSR+", element="Water", hero_class="Mage",
          base_hp=1700, base_atk=310, base_def=140, base_speed=105, position="back",
          skills=create_mage_skills("SSR+"),
-         image_url="https://img.freepik.com/free-photo/anime-character-water-magic-effects_23-2151499138.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/r0wkb1xk_5bbd14c2-d4c3-4477-b6fa-3cdf4aabdae9_1.webp",
          description="A rare sorcerer who commands the tides"),
     Hero(name="Phoenix the Reborn", rarity="SSR+", element="Fire", hero_class="Warrior",
          base_hp=2100, base_atk=280, base_def=170, base_speed=95, position="front",

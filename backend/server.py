@@ -1054,7 +1054,7 @@ HERO_POOL = [
     Hero(name="Seraphiel the Radiant", rarity="UR", element="Light", hero_class="Mage",
          base_hp=2000, base_atk=380, base_def=180, base_speed=110, position="back",
          skills=create_mage_skills("UR"),
-         image_url="https://cdn.pixabay.com/photo/2024/08/01/18/20/anime-8937912_1280.png",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/yd2leerw_65d04397-928b-4153-af53-96c39918910e_0.webp",
          description="An archangel with power beyond mortal comprehension"),
     Hero(name="Malachi the Destroyer", rarity="UR", element="Fire", hero_class="Warrior",
          base_hp=2500, base_atk=350, base_def=200, base_speed=100, position="front",

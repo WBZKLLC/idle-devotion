@@ -1,0 +1,39 @@
+{
+  "hero": "Seraphiel the Radiant",
+  "hero_id": "seraphiel_the_radiant",
+  "default_star": 3,
+  "complete": false,
+  "ascension_images": {
+    "1_star": {
+      "title": "Novice of Light",
+      "url": "https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/89fjgrbr_bafe20c6-aaaa-4508-80bf-a730e4ae8b76_1.webp",
+      "status": "received"
+    },
+    "2_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "3_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting",
+      "note": "Will become default image_url"
+    },
+    "4_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "5_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "6_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    }
+  }
+}

@@ -998,7 +998,7 @@ HERO_POOL = [
     Hero(name="Robin the Hunter", rarity="SR", element="Earth", hero_class="Archer",
          base_hp=1050, base_atk=165, base_def=85, base_speed=105, position="back",
          skills=create_archer_skills("SR"),
-         image_url="https://img.freepik.com/free-photo/anime-character-full-body-portrait_23-2151499069.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/yoie191d_c8795d3c-31ba-4cb8-8c5f-13453eb66a1c_1.webp",
          description="Never misses his mark, ever"),
     
     # ========== SSR HEROES ==========

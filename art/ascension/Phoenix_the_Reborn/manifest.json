@@ -2,7 +2,7 @@
   "hero": "Phoenix the Reborn",
   "hero_id": "phoenix_the_reborn",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Ember Initiate",

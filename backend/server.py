@@ -1081,7 +1081,7 @@ HERO_POOL = [
     Hero(name="Apollyon the Fallen", rarity="UR+", element="Dark", hero_class="Archer",
          base_hp=2600, base_atk=520, base_def=200, base_speed=135, position="back",
          skills=create_archer_skills("UR+"),
-         image_url="https://cdn.pixabay.com/photo/2025/01/08/02/22/prince-9318043_1280.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/by0e84wz_72919b08-6082-4031-8fc1-0e7a4dc1433c_1.webp",
          description="The angel of the abyss, bringer of destruction"),
 ]
 

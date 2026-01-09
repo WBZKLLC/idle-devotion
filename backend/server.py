@@ -1076,7 +1076,7 @@ HERO_POOL = [
     Hero(name="Michael the Archangel", rarity="UR+", element="Light", hero_class="Warrior",
          base_hp=3200, base_atk=450, base_def=280, base_speed=105, position="front",
          skills=create_warrior_skills("UR+"),
-         image_url="https://cdn.pixabay.com/photo/2020/04/21/04/23/angel-5070736_1280.png",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/esd84dro_a9902469-a543-4564-a32d-1d5c5f6d3834_1.webp",
          description="Commander of the heavenly host, invincible in combat"),
     Hero(name="Apollyon the Fallen", rarity="UR+", element="Dark", hero_class="Archer",
          base_hp=2600, base_atk=520, base_def=200, base_speed=135, position="back",

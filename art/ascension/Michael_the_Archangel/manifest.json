@@ -2,7 +2,7 @@
   "hero": "Michael the Archangel",
   "hero_id": "michael_the_archangel",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Initiate of Judgment",

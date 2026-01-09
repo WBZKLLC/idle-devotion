@@ -1042,7 +1042,7 @@ HERO_POOL = [
     Hero(name="Phoenix the Reborn", rarity="SSR+", element="Fire", hero_class="Warrior",
          base_hp=2100, base_atk=280, base_def=170, base_speed=95, position="front",
          skills=create_warrior_skills("SSR+"),
-         image_url="https://img.freepik.com/free-photo/anime-warrior-flames-armor_23-2151499142.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/ir1idv9o_b2bd213d-4d35-4988-828c-a7c378dbabcd_0.webp",
          description="Rising from ashes, immortal in battle"),
     Hero(name="Gale the Windwalker", rarity="SSR+", element="Wind", hero_class="Archer",
          base_hp=1600, base_atk=300, base_def=130, base_speed=130, position="back",

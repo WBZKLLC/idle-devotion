@@ -1,187 +1,136 @@
 <analysis>
-
-**original_problem_statement**:
-The user's primary goal is a major, multi-phase architectural migration to a Live2D-native animation system, deprecating all CSS-based animations. The core principle of this architecture is a strict separation of concerns:
-- **JSON Profiles**: The single source of truth for all animation data.
-- **Unity Runtime**: The sole executor of motion, consuming the JSON profiles.
-- **Expo (React Native) App**: A dumb state dispatcher that only sends high-level commands (e.g., enter combat state) to the Unity runtime and contains absolutely no animation logic itself.
+<original_problem_statement>
+The user has pivoted from a large-scale engineering task (Live2D animation system migration) to a design-focused task. The new primary goal is to replace all hero portrait images in the application to align with a new, detailed art direction.
 
 PRODUCT REQUIREMENTS:
-*   **P0: Live2D Animation Migration**: A multi-phase task to design and implement the new animation architecture.
-    *   **Phase 1: Decommission Legacy Animation (COMPLETED)**: Remove all CSS and JavaScript-based character animations from the Expo app.
-    *   **Phase 2: Data & Design (COMPLETED)**: Design and document the engine-agnostic JSON schemas, motion profiles, and safety constraints.
-    *   **Phase 3: Unity Live2D Driver Implementation (COMPLETED)**: Create the C# scripts for a reference Unity runtime that consumes the JSON profiles and enforces all rules.
-    *   **Phase 4: Expo State Dispatcher (COMPLETED)**: Implement the Expo-side services and hooks to send state commands to the (currently separate) Unity runtime.
-    *   **Phase 5: System Validation & Documentation (IN PROGRESS)**: Consolidate all documentation and create build-time validation tooling for the JSON profiles.
-*   **P1: Re-enable RevenueCat (PAUSED)**: Paused due to native dependency issues with Expo Go. A re-enabling guide exists.
-*   **P2: Backend Code Cleanup (NOT STARTED)**: Legacy, duplicate code in  needs refactoring.
+- **P0: Hero Portrait Overhaul**: A design-only task to replace all 22 hero portraits.
+  - **Phase 1: Art Direction Definition (COMPLETED)**: User provided a comprehensive art style guide and a Design Authority Document defining the emotional, visual, and power archetypes for each of the 22 heroes.
+  - **Phase 2: Asset Replacement (IN PROGRESS)**: The user is providing a 6-image ascension set for each hero. The agent's task is to:
+    1.  Receive the images for a hero.
+    2.  Archive all 6 images in a structured folder: .
+    3.  Use the **3-star image** as the **only** default portrait by updating the  field for that hero in .
+    4.  **Strict Constraint**: No modifications to code logic, schemas, Unity, or Live2D systems are permitted. This is a content/configuration change only.
+- **PAUSED: Live2D/Unity Integration (Phase 6)**: The previous task of implementing a real-time bridge between Expo and Unity is on hold.
+- **PAUSED: Re-enable RevenueCat (P1)**: Paused due to native dependency issues.
+- **NOT STARTED: Backend Code Cleanup (P2)**: Legacy, duplicate code in  needs refactoring.
 
+</original_problem_statement>
 **User's preferred language**: English
 
 **what currently exists?**
-The project has successfully completed the first four phases of a major architectural migration to a JSON-driven Live2D motion system.
-- **Frontend (Expo)**: All previous CSS/JS character animations have been stripped out, leaving characters static. A new state dispatcher system (, ) has been implemented to send state commands, adhering to the strict rule of containing no animation logic.
-- **Live2D Motion System**: A new directory  contains the complete architecture.
-    - ** & **: Contain the v2 JSON schemas and example motion profiles that are the single source of truth for all animations.
-    - ****: Contains the complete, validated C# reference implementation for a Unity runtime that consumes the JSON profiles, enforces rating-safe clamps, and handles all motion execution.
-    - ** & **: Contain extensive documentation for each phase and the beginnings of Phase 5, including new documentation files and a build-time validation script.
+The project has a backend file, , which contains a hardcoded list of 22 heroes. A new asset archiving system has been established at , with subdirectories for each hero to store their 6 ascension images. For the first 6 heroes, the  in  has been updated to point to their respective 3-star portrait URL, and their full 6-image sets are archived.
 
 **Last working item**:
-    - Last item agent was working: The agent was in the middle of implementing **Phase 5: System Validation & Documentation Consolidation**. It had just finished writing the four required deliverable files: , , , and the Node.js validation script . The agent was about to test the validation script and then perform the mandatory self-validation check for Phase 5.
+    - Last item agent was working: The agent was in the middle of processing the ascension images for the 7th hero, **Kai the Tempest**. It had just received the 1-star image (Wind Initiate), created the archive directory for Kai at , stored the image and its metadata in , and was awaiting the 2-star image.
     - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? manual testing by curl. The agent must run ╔═══════════════════════════════════════════════════════════╗
-║       Live2D Motion Profile Validator v1.0.0              ║
-║       Schema Version: 2.0.0                               ║
-╚═══════════════════════════════════════════════════════════╝
-
-=== Validating 5 profiles in /app/live2d-motion-system/profiles/v2 ===
-
-✅ PASS: banner_reveal.json
-✅ PASS: banner_reveal_ur.json
-✅ PASS: combat_ready.json
-✅ PASS: idle_default.json
-✅ PASS: summon_anticipation.json
-
---- Also checking root profiles directory ---
-❌ FAIL: banner_reveal.json
-   - Missing required field: schemaVersion
-❌ FAIL: combat_ready.json
-   - Missing required field: schemaVersion
-❌ FAIL: idle_default.json
-   - Missing required field: schemaVersion
-❌ FAIL: summon_anticipation.json
-   - Missing required field: schemaVersion
-
-═══════════════════════════════════════════════════════════
-                      VALIDATION SUMMARY
-═══════════════════════════════════════════════════════════
-  Total profiles:  9
-  Passed:          5
-  Failed:          4
-═══════════════════════════════════════════════════════════
-
-❌ VALIDATION FAILED - Fix errors before deployment to test the script. It should verify that the script passes on valid profiles and fails (with exit code 1) on deliberately malformed profiles to ensure its correctness.
+    - Agent Testing Done: N/A
+    - Which testing method agent to use? Manual verification. The agent should view  after updating a hero's 3-star image to confirm the  string has been correctly replaced. No functional testing is needed.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Backend Code Cleanup (P2)
-  
-  Issues Detail:
-  - Issue 1: 
-     - Attempted fixes: None.
-     - Next debug checklist:
-        1.  Review  and identify endpoints that are duplicated in modular router files (e.g., , ).
-        2.  Delete the old, duplicate endpoint definitions from .
-        3.  Restart the backend and perform regression testing on the affected features to ensure no functionality was broken.
-     - Why fix this issue and what will be achieved with the fix? To remove technical debt, prevent potential bugs from conflicting route definitions, and improve backend code maintainability.
-     - Status:  NOT STARTED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? Backend
-     - Blocked on other issue: None
+  - There are no outstanding bugs or issues. The primary focus is the ongoing asset replacement task.
 
 **In progress Task List**:
-  - Task 1:  Phase 5: System Validation & Documentation Consolidation (P0)
+  - Task 1:  Update All Hero Portraits (P0)
 
  Task Detail:
   - Task 1: 
-     - Where to resume: The agent has created all necessary files for Phase 5. The immediate next step is to **test the validation script** at . After confirming the script works, the agent must perform the full **Mandatory Self-Validation Check** for Phase 5 against the 12 failure conditions defined in the proposal, and then submit the final completion summary for user approval.
-     - What will be achieved with this? This will complete the entire Live2D migration project, delivering final documentation and a crucial build-time tool to ensure the integrity of all future animation data.
-     - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? N/A (Tooling and documentation task)
-     - Blocked on something: None
+     - Where to resume: The agent has processed the 1-star image for **Kai the Tempest**. It should now wait for the user to provide the 2-star, 3-star (which will be used to update ), 4-star, 5-star, and 6-star images for Kai, processing each one according to the established archive and update workflow. This process will then be repeated for the remaining 15 heroes.
+     - What will be achieved with this? All 22 hero portraits in the application will be visually updated to match the user's new art direction.
+     - Status:  IN PROGRESS (6 of 22 heroes complete, 1 in progress)
+     - Should Test frontend/backend/both after fix? N/A
+     - Blocked on something: User to provide the next set of images for Kai the Tempest.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P1: Re-enable RevenueCat Integration**: Follow the instructions in . This will require setting up a native development build.
-*   **Future Tasks:**
-    *   **P2: Refine Selene Monetization Simulation**: The file  contains logic that has not been addressed.
+    *   **P0: Complete Hero Portrait Updates**: Continue the process for the remaining 15 heroes after Kai the Tempest is done.
+*   **Future Tasks (Currently PAUSED):**
+    *   **Phase 6: Expo ↔ Unity Transport Integration**: Implement the real, on-device communication bridge between the Expo frontend and the Unity runtime. Scaffolding and security review were completed, but the task was paused.
+    *   **P1: Re-enable RevenueCat Integration**: Follow the guide in .
+    *   **P2: Backend Code Cleanup**: Refactor  to remove legacy, duplicated endpoints.
+    *   **P2: Refine Selene Monetization Simulation**: The file  contains unaddressed logic.
 
 **Completed work in this session**
-- **Live2D Motion System Architecture (Phases 1-4)**
-  - **Phase 1: Decommissioned Legacy Animation**: Systematically removed all CSS and  API-based character animations from the frontend. Deleted .
-  - **Phase 2: Data & Design**: Designed and documented the v2 JSON schema, parameter naming conventions, and rating-safe validation rules. Created example JSON motion profiles.
-  - **Phase 3: Unity Live2D Driver Implementation**: Implemented the complete C# driver in  for consuming JSON profiles, including runtime enforcement of safety rules.
-  - **Phase 4: Expo State Dispatcher Implementation**: Created the Expo-side state management system in  (, , ), which is strictly for sending state signals to Unity.
+- **Hero Archetype Definition**: Established a Design Authority Document and a detailed archetype list for all 22 heroes based on user input, defining their emotional, visual, and power layers.
+- **Asset Archiving System**: Created a directory structure at  and a  system to archive all 6 ascension images for each hero while only using one in the app.
+- **Hero Portrait Updates (6 of 22 complete)**:
+  - **Azrael the Fallen**:  updated to 3-star portrait.
+  - **Marcus the Shield**:  updated to 3-star portrait.
+  - **Kane the Berserker**:  updated to 3-star portrait.
+  - **Soren the Flame**:  updated to 3-star portrait.
+  - **Lysander the Frost**:  updated to 3-star portrait.
+  - **Theron the Storm**:  updated to 3-star portrait.
 
 **Earlier issues found/mentioned but not fixed**
    - **Refactor **: The task to remove legacy, duplicate endpoints from  remains outstanding. This is a source of technical debt and potential future bugs.
 
 **Known issue recurrence from previous fork**
-  - **Issue recurrence in previous fork**: Backend code in  contains legacy, duplicated endpoints which have caused bugs in past sessions.
-  - **Recurrence count**: 1+
+  - **Issue recurrence in previous fork**: Backend code in  contains legacy, duplicated endpoints.
+  - **Recurrence count**: 2+
   - **Status**: NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Strict Engine Boundary Enforcement**: The core principle of the new architecture. Expo is ONLY a state dispatcher. Unity is ONLY a motion executor. JSON is the ONLY source of truth for animation data.
-- **Mandatory Self-Validation Framework**: A strict process introduced by the user where every completed phase must be accompanied by a detailed checklist proving compliance with all architectural rules (Failure Conditions). The agent must assume its work is wrong until proven correct against this checklist.
-- **Build-time Data Validation**: The introduction of a standalone script () to validate data integrity (schemas, safety rules) during a build step, rather than relying solely on runtime checks.
+- **Design-First Workflow**: The current work is entirely driven by user-provided design specifications and assets, with a strict no code change rule.
+- **Asset Archiving**: A manual process of storing provided assets in a structured way for potential future use, without integrating them into the app's current logic. The  file in each folder acts as a local database for these assets.
+- **Configuration-as-Code**: The hero list hardcoded in  is being treated as a configuration file. The agent is modifying this configuration, not the application's executable code.
 
 **key DB schema**
-  - No DB schema changes were made in this session.
+  - No DB schema changes. Hero data is hardcoded in .
+
+**changes in tech stack**
+  - None.
 
 **All files of reference**
-*   **Created/Majorly Updated in this session**:
-    *   : The entire directory is the main product of this session's work.
-        *    (Phase 3): All C# files for the reference implementation.
-        *   ,  (Phase 2): The JSON data definitions.
-        *    & related files (Phase 4): The Expo-side command sender.
-        *    & related files (Phase 5): New consolidated documentation.
-        *    (Phase 5): The new build-time validation script.
-*   **Refactored/Deleted in this session**:
-    *   : Multiple screen files were stripped of their animation code.
-    *   : This file was deleted.
+*   **Modified in this task**:
+    *   : The  for 6 heroes has been updated.
+*   **Created in this task**:
+    *   : Entire directory and its contents for 7 heroes (Azrael, Marcus, Kane, Soren, Lysander, Theron, Kai). Each subdirectory contains image files and a .
 
 **Critical Info for New Agent**
-- **The Mandatory Self-Validation Rule is Law**: This is the most important rule. For ANY phase completion, you MUST provide a Failure Conditions Check table, explicitly proving that all architectural constraints were met. Assume your work is wrong until you have proven it correct against the checklist.
-- **Respect the Architecture Boundaries**: Do not add ANY animation logic (no , interpolation, easing, etc.) to the Expo app. Do not have Expo parse JSON profiles. Its only job is to dispatch state commands. All motion execution is the responsibility of the Unity driver, driven by the JSON data.
-- **Your Immediate Task**: You must complete **Phase 5**. This involves:
-    1.  Testing the validation script at .
-    2.  Performing the complete self-validation check for Phase 5.
-    3.  Submitting the final completion summary for user approval.
+- **DESIGN PHASE IS ACTIVE**: Your current and only task is to continue the hero portrait replacement. Do NOT attempt to work on any other paused tasks (like the Unity bridge or RevenueCat).
+- **THE 3-STAR RULE IS LAW**: For every hero, the user will provide 6 images. You must archive all 6, but only the **3-star image URL** should be used to update the  field in .
+- **NO CODE OR SCHEMA CHANGES**: Do not add new fields to the  model (like ). Do not change any UI to handle different star portraits. This is a simple content replacement task.
+- **Follow the established workflow**: For each new hero, create the  directory, add images and update the manifest as they are received, and update  only when the 3-star image arrives.
 
 **documents created in this job**
-  - 
-  - 
-  -  (in progress)
-  -  (in progress)
-  -  (in progress)
+  -  files for each hero being processed.
 
-**Last 10 User Messages and any pending HUMAN messages** 
-1.  **User**: Approves Phase 4 proposal and authorizes implementation.
-2.  **Agent**: Implements Phase 4 (Expo dispatcher) and submits a completion summary with a full self-validation check.
-3.  **User**: Approves Phase 4 and authorizes a proposal for Phase 5 (Validation & Docs).
-4.  **Agent**: Submits the detailed proposal for Phase 5.
-5.  **User**: Approves the Phase 5 proposal and authorizes implementation with a strict docs/tools only modification constraint.
-6.  **Agent**: Begins Phase 5 implementation, creating the documentation and tooling files. (LATEST AGENT ACTION)
-7.  **User (from msg 246)**: Awaiting Phase 5 completion report.
-8.  **User (from msg 231)**: Awaiting Phase 4 completion report.
-9.  **User (from msg 229)**: Awaiting Phase 4 proposal.
-10. **User (from msg 211)**: Awaiting corrected Phase 3 re-validation.
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: Provides 1-star image for **Kai the Tempest**. (LATEST)
+2.  **User**: Provides 6-star image for Theron the Storm.
+3.  **User**: Provides 5-star image for Theron the Storm.
+4.  **User**: Provides 4-star image for Theron the Storm.
+5.  **User**: Provides 3-star image for Theron the Storm.
+6.  **User**: Provides 2-star image for Theron the Storm.
+7.  **User**: Provides 1-star image for Theron the Storm.
+8.  **User**: Provides 6-star image for Lysander the Frost.
+9.  **User**: Provides 5-star image for Lysander the Frost.
+10. **User**: Provides 4-star image for Lysander the Frost.
 
 **Project Health Check:**
-*   **Broken**: Nothing is functionally broken. The animation system is intentionally static on the frontend pending integration with a native Unity view.
-*   **Mocked**: The bridge between Expo and Unity () in  is a mock, as there is no actual Unity instance connected.
-*   **Paused**: RevenueCat integration remains paused.
+*   **Broken**: None.
+*   **Mocked**: The Expo to Unity communication bridge () remains mocked.
+*   **Paused**: Unity integration (Phase 6), RevenueCat integration (P1).
 
 **3rd Party Integrations**
-*   **OpenAI GPT-4 (via Emergent LLM Key)**: Used for backend AI narration.
-*   **RevenueCat (Payments)**: The  packages are installed, but the integration is disabled in the code. Re-enabling requires a development build.
+*   **OpenAI GPT-4**: Used for backend AI narration (via Emergent LLM Key).
+*   **RevenueCat**: Packages installed, but integration is disabled.
+*   **@azesmway/react-native-unity**: Scaffolding code exists but is not fully integrated or tested.
 
 **Testing status**
   - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: None. Character static-ness is the intended outcome of Phase 1.
+  - Known regressions: None.
 
 **Credentials to test flow:**
 - **Username:** Adam
 - **Password:** Adam123!
 
 **What agent forgot to execute**
-- The agent has correctly prioritized the user's main task (Live2D migration) and has not yet addressed the lower-priority technical debt of refactoring .
+The agent has correctly followed the user's directive to pivot from a major engineering task to a design-focused one. All paused tasks were put on hold at the user's implicit command. Nothing has been forgotten.
 
 </analysis>

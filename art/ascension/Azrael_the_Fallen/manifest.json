@@ -1,0 +1,38 @@
+{
+  "hero": "Azrael the Fallen",
+  "hero_id": "azrael_the_fallen",
+  "default_star": 3,
+  "ascension_images": {
+    "1_star": {
+      "title": "The Broken Guardian",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/yjod2qd0_95b3a7be-120c-4531-8415-8d303b7a5f49_0.webp",
+      "status": "received"
+    },
+    "2_star": {
+      "title": "The Silent Oath",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/emfq32l5_9a81ab6c-442d-4210-a64e-e5dcade985ec_0.webp",
+      "status": "received"
+    },
+    "3_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting",
+      "note": "This will become the default image_url"
+    },
+    "4_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "5_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "6_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    }
+  }
+}

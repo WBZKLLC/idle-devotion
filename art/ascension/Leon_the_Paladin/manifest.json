@@ -15,10 +15,10 @@
       "status": "received"
     },
     "3_star": {
-      "title": null,
-      "url": null,
-      "status": "awaiting",
-      "note": "Will become default image_url"
+      "title": "Sanctified Guardian",
+      "url": "https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/6peescvq_fa7fcb4a-3719-4d48-8692-33ad74918ec6_0.webp",
+      "status": "received",
+      "note": "DEFAULT - Used as image_url in server.py"
     },
     "4_star": {
       "title": null,

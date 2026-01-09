@@ -1023,7 +1023,7 @@ HERO_POOL = [
     Hero(name="Morgana the Shadow", rarity="SSR", element="Dark", hero_class="Mage",
          base_hp=1300, base_atk=280, base_def=100, base_speed=102, position="back",
          skills=create_mage_skills("SSR"),
-         image_url="https://img.freepik.com/free-photo/portrait-anime-character_23-2151499119.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/x9t7n51w_8228dfa1-3572-49cb-b789-5a621764f5d3_1.webp",
          description="Mistress of dark arts and forbidden spells"),
     
     # Archers

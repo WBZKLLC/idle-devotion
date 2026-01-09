@@ -2,7 +2,7 @@
   "hero": "Seraphiel the Radiant",
   "hero_id": "seraphiel_the_radiant",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Novice of Light",

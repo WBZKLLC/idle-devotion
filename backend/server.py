@@ -993,7 +993,7 @@ HERO_POOL = [
     Hero(name="Kai the Tempest", rarity="SR", element="Wind", hero_class="Archer",
          base_hp=1000, base_atk=170, base_def=80, base_speed=115, position="back",
          skills=create_archer_skills("SR"),
-         image_url="https://img.freepik.com/free-photo/anime-character-portrait-illustration_23-2151499104.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/srpcitke_1815eeaa-cab8-4cd7-9ba9-ab4bf787b3dc_1.webp",
          description="Swift as the wind, deadly as the storm"),
     Hero(name="Robin the Hunter", rarity="SR", element="Earth", hero_class="Archer",
          base_hp=1050, base_atk=165, base_def=85, base_speed=105, position="back",

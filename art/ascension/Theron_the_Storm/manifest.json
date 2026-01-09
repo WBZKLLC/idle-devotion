@@ -2,7 +2,7 @@
   "hero": "Theron the Storm",
   "hero_id": "theron_the_storm",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Storm Initiate",
@@ -31,9 +31,10 @@
       "status": "received"
     },
     "6_star": {
-      "title": null,
-      "url": null,
-      "status": "awaiting"
+      "title": "Living Tempest",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/hsvb63vk_3fa7d310-3595-457f-9735-bf3c2593d184_0.webp",
+      "status": "received",
+      "note": "FINAL FORM - Full ascension"
     }
   }
 }

@@ -15,10 +15,10 @@
       "status": "received"
     },
     "3_star": {
-      "title": null,
-      "url": null,
-      "status": "awaiting",
-      "note": "Will become default image_url"
+      "title": "Bearer of the Bastion",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/m81tep7w_0da7bd86-d35a-40ea-a1a5-46944c7d8e0b_1.webp",
+      "status": "received",
+      "note": "DEFAULT - Used as image_url in app"
     },
     "4_star": {
       "title": null,

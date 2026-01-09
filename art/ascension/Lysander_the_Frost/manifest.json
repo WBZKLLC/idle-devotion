@@ -2,7 +2,7 @@
   "hero": "Lysander the Frost",
   "hero_id": "lysander_the_frost",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Initiate of Frost",
@@ -31,9 +31,10 @@
       "status": "received"
     },
     "6_star": {
-      "title": null,
-      "url": null,
-      "status": "awaiting"
+      "title": "Living Glacier",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/t0mshno5_11148f01-49e1-413b-b435-b96b49aea334_0.webp",
+      "status": "received",
+      "note": "FINAL FORM - Full ascension"
     }
   }
 }

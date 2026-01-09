@@ -1047,7 +1047,7 @@ HERO_POOL = [
     Hero(name="Gale the Windwalker", rarity="SSR+", element="Wind", hero_class="Archer",
          base_hp=1600, base_atk=300, base_def=130, base_speed=130, position="back",
          skills=create_archer_skills("SSR+"),
-         image_url="https://img.freepik.com/free-photo/anime-character-wind-element_23-2151499156.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/ndsa97l6_8a14cd8a-b83b-4232-9425-a0f490dace6c_1.webp",
          description="Moves faster than the eye can see"),
     
     # ========== UR HEROES (Premium Crystal Exclusive) ==========

@@ -2,7 +2,7 @@
   "hero": "Darius the Void",
   "hero_id": "darius_the_void",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Shadow Initiate",

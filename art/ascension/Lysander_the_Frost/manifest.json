@@ -1,0 +1,39 @@
+{
+  "hero": "Lysander the Frost",
+  "hero_id": "lysander_the_frost",
+  "default_star": 3,
+  "complete": false,
+  "ascension_images": {
+    "1_star": {
+      "title": "Initiate of Frost",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/097po0um_fa0129c3-8b73-4cea-8008-412095a828f8_1.webp",
+      "status": "received"
+    },
+    "2_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "3_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting",
+      "note": "Will become default image_url"
+    },
+    "4_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "5_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "6_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    }
+  }
+}

@@ -1030,7 +1030,7 @@ HERO_POOL = [
     Hero(name="Artemis the Swift", rarity="SSR", element="Wind", hero_class="Archer",
          base_hp=1500, base_atk=250, base_def=130, base_speed=120, position="back",
          skills=create_archer_skills("SSR"),
-         image_url="https://img.freepik.com/free-photo/anime-character-ready-battle_23-2151499125.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/o6074mys_5fe0fdf8-21e7-49f5-870e-259f14fb1409_1.webp",
          description="Goddess of the hunt, unmatched in speed"),
     
     # ========== SSR+ HEROES (Common Summon Exclusive) ==========

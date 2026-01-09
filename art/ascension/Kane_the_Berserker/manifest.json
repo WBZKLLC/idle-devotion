@@ -2,7 +2,7 @@
   "hero": "Kane the Berserker",
   "hero_id": "kane_the_berserker",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "The Unchained Spark",
@@ -31,9 +31,10 @@
       "status": "received"
     },
     "6_star": {
-      "title": null,
-      "url": null,
-      "status": "awaiting"
+      "title": "Avatar of the Flame",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/4h08llqe_fd73a153-c82c-420d-9730-053c15f14ca7_1.webp",
+      "status": "received",
+      "note": "FINAL FORM - Full ascension"
     }
   }
 }

@@ -2,7 +2,7 @@
   "hero": "Selene the Moonbow",
   "hero_id": "selene_the_moonbow",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Devotee of the Pale Moon",

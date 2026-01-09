@@ -1,0 +1,39 @@
+{
+  "hero": "Kane the Berserker",
+  "hero_id": "kane_the_berserker",
+  "default_star": 3,
+  "complete": false,
+  "ascension_images": {
+    "1_star": {
+      "title": "The Unchained Spark",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/prox8nic_28980990-faf6-443d-a2f1-84778b2912e6_1.webp",
+      "status": "received"
+    },
+    "2_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "3_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting",
+      "note": "Will become default image_url"
+    },
+    "4_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "5_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "6_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    }
+  }
+}

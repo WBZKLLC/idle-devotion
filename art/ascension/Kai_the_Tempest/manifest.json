@@ -1,0 +1,39 @@
+{
+  "hero": "Kai the Tempest",
+  "hero_id": "kai_the_tempest",
+  "default_star": 3,
+  "complete": false,
+  "ascension_images": {
+    "1_star": {
+      "title": "Wind Initiate",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/owi9laph_2f219cad-b80c-4cee-85ea-a7442160042b_0.webp",
+      "status": "received"
+    },
+    "2_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "3_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting",
+      "note": "Will become default image_url"
+    },
+    "4_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "5_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    },
+    "6_star": {
+      "title": null,
+      "url": null,
+      "status": "awaiting"
+    }
+  }
+}

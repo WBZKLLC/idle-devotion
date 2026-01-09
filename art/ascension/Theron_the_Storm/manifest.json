@@ -15,10 +15,10 @@
       "status": "received"
     },
     "3_star": {
-      "title": null,
-      "url": null,
-      "status": "awaiting",
-      "note": "Will become default image_url"
+      "title": "Lightning Adept",
+      "url": "https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/k3vlxynj_4677f199-45e6-40e9-9041-90a2ceaa4bef_1.webp",
+      "status": "received",
+      "note": "DEFAULT - Used as image_url in app"
     },
     "4_star": {
       "title": null,

@@ -986,7 +986,7 @@ HERO_POOL = [
     Hero(name="Theron the Storm", rarity="SR", element="Wind", hero_class="Mage",
          base_hp=880, base_atk=185, base_def=65, base_speed=110, position="back",
          skills=create_mage_skills("SR"),
-         image_url="https://img.freepik.com/free-photo/intense-anime-fighter-with-energy-blade_23-2152031302.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/k3vlxynj_4677f199-45e6-40e9-9041-90a2ceaa4bef_1.webp",
          description="Commands lightning and thunder with ease"),
     
     # Archers (Back Line)

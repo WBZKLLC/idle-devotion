@@ -964,7 +964,7 @@ HERO_POOL = [
     Hero(name="Marcus the Shield", rarity="SR", element="Earth", hero_class="Warrior",
          base_hp=1400, base_atk=130, base_def=120, base_speed=85, position="front",
          skills=create_warrior_skills("SR"),
-         image_url="https://img.freepik.com/free-photo/anime-style-portrait-traditional-japanese-samurai-character_23-2151499073.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/m81tep7w_0da7bd86-d35a-40ea-a1a5-46944c7d8e0b_1.webp",
          description="A stalwart defender who never retreats"),
     Hero(name="Kane the Berserker", rarity="SR", element="Fire", hero_class="Warrior",
          base_hp=1100, base_atk=170, base_def=80, base_speed=95, position="front",

@@ -2,7 +2,7 @@
   "hero": "Leon the Paladin",
   "hero_id": "leon_the_paladin",
   "default_star": 3,
-  "complete": false,
+  "complete": true,
   "ascension_images": {
     "1_star": {
       "title": "Radiant Initiate",

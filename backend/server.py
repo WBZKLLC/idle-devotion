@@ -976,7 +976,7 @@ HERO_POOL = [
     Hero(name="Soren the Flame", rarity="SR", element="Fire", hero_class="Mage",
          base_hp=900, base_atk=180, base_def=70, base_speed=100, position="back",
          skills=create_mage_skills("SR"),
-         image_url="https://img.freepik.com/free-photo/anime-character-wearing-dynamic-action-pose_23-2151500236.jpg",
+         image_url="https://customer-assets.emergentagent.com/job_anim-architecture/artifacts/0f8i5knu_e5bd6276-a5ec-4e9d-8169-89acac57097c_0.webp",
          description="A passionate sorcerer wielding infernal flames"),
     Hero(name="Lysander the Frost", rarity="SR", element="Water", hero_class="Mage",
          base_hp=950, base_atk=175, base_def=75, base_speed=95, position="back",

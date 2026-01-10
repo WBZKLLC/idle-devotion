@@ -250,6 +250,8 @@ export default function HeroProgressionScreen() {
 
   const loadHero = useCallback(async () => {
     if (!heroId) return;
+    if (!user) return; // Require user for ensure
+    if (isPromoting) return; // Don't fight optimistic UI mid-flight
 
     setIsLoading(true);
     try {
@@ -275,8 +277,11 @@ export default function HeroProgressionScreen() {
         setPreviewTier(unlockedTierForHero(ensuredHero));
       }
       
-      // Clear any local override since store is now fresh
-      setLocalHeroOverride(null);
+      // Clear local override only when store has caught up AND we're not promoting
+      // This prevents UI flicker during optimistic updates
+      if (!isPromoting && isOverrideCaughtUp) {
+        setLocalHeroOverride(null);
+      }
     } catch (e) {
       console.error('hero-progression load error', e);
       // IMPORTANT: do not set hero to null here.
@@ -284,7 +289,14 @@ export default function HeroProgressionScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [heroId, user?.username, getUserHeroById, selectUserHeroById]);
+  }, [
+    heroId,
+    user,
+    isPromoting,
+    isOverrideCaughtUp,
+    getUserHeroById,
+    selectUserHeroById,
+  ]);
 
   useEffect(() => {
     if (hydrated && user && heroId) loadHero();

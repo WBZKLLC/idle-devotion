@@ -86,8 +86,8 @@ export default function GachaScreen() {
       const result = await pullGacha(pullType, currencyType);
       setGachaResult(result);
       
-      // Refresh heroes to get updated tier info
-      await fetchUserHeroes();
+      // Smart refresh: targeted if few heroes, full roster if many
+      await refreshHeroesAfterGacha(result);
       
       setShowResult(true);
     } catch (error: any) {

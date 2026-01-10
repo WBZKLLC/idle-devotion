@@ -81,6 +81,11 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Maintenance mode gate - emergency kill switch
+  if (isFeatureEnabled('MAINTENANCE_MODE')) {
+    return <MaintenanceScreen />;
+  }
+
   return <>{children}</>;
 }
 

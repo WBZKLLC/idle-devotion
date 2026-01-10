@@ -57,11 +57,16 @@ export default function LeaderboardScreen() {
   const loadLeaderboard = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/leaderboard/${activeType}?limit=50`).catch(() => ({ data: [] }));
-      const data = response.data || [];
+      // Use centralized API wrapper
+      let data: any[] = [];
+      try {
+        data = await getLeaderboard(activeType, 50);
+      } catch {
+        data = [];
+      }
       
       // Map API response to expected format and add rank numbers
-      const rankedData = data.map((entry: any, index: number) => ({
+      const rankedData = (data || []).map((entry: any, index: number) => ({
         rank: entry.rank || index + 1,
         username: entry.username,
         score: entry.rating || entry.power || entry.total_power || entry.floor || entry.score || 0,

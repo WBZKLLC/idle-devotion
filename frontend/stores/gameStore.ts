@@ -3,6 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 
+// Centralized API wrappers - fetchUserHeroes now uses this
+import { getUserHeroes } from '../lib/api';
+
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 // Storage keys

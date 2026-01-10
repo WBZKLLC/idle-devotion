@@ -134,6 +134,18 @@ const saveAuthData = async (username: string, token: string) => {
   }
 };
 
+// Helper to index userHeroes by id for O(1) lookups
+function indexUserHeroesById(list: UserHero[] | undefined | null): Record<string, UserHero> {
+  const byId: Record<string, UserHero> = {};
+  if (!Array.isArray(list)) return byId;
+  for (const h of list) {
+    const id = String((h as any)?.id ?? '');
+    if (!id) continue;
+    byId[id] = h;
+  }
+  return byId;
+}
+
 // Helper to clear auth data
 const clearAuthData = async () => {
   try {

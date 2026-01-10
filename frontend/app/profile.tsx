@@ -548,7 +548,7 @@ export default function ProfileScreen() {
                           styles.frameCard,
                           frame.is_equipped && styles.frameCardEquipped,
                         ]}
-                        onPress={() => frame.is_equipped ? unequipFrame() : equipFrame(frame.id)}
+                        onPress={() => frame.is_equipped ? handleUnequipFrame() : handleEquipFrame(frame.id)}
                         disabled={loadingFrames}
                       >
                         <ProfileFrame

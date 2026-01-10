@@ -965,19 +965,9 @@ const loginStyles = StyleSheet.create({
   screenContainer: {
     flex: 1,
     backgroundColor: '#080614',
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 18,
   },
   
-  // Background image
-  backgroundImage: {
-    position: 'absolute',
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-    top: 0,
-    left: 0,
-  },
+  // Note: Background image styles are now inline using useWindowDimensions() for perfect centering
   
   // OVERLAY 1: Vignette
   vignetteOverlay: {

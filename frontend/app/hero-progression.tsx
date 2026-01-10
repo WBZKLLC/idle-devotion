@@ -354,24 +354,6 @@ export default function HeroProgressionScreen() {
     setShowConfirmAscend(false);
     Alert.alert('Coming Soon', 'Rarity ascension is planned but not wired yet.');
   }, []);
-      );
-    } catch (e) {
-      console.error('post-ascend refresh error', e);
-    } finally {
-      setIsAscending(false);
-    }
-  }, [
-    API_BASE,
-    canAscend,
-    fetchUser,
-    fetchUserHeroes,
-    heroData,
-    heroId,
-    heroName,
-    loadHero,
-    rarityNext,
-    user?.username,
-  ]);
 
   // ----------------------------
   // RENDER STATES

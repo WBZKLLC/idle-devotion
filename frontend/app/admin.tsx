@@ -120,10 +120,7 @@ export default function AdminPanelScreen() {
     
     setProcessing(true);
     try {
-      await axios.post(
-        `${API_BASE}/admin/grant-resources/${selectedUser.username}?admin_key=${user.username}`,
-        { resources }
-      );
+      await adminGrantResources(selectedUser.username, user.username, resources);
       Alert.alert('Success', `Resources granted to ${selectedUser.username}`);
       setShowGrantModal(false);
       setGrantResources({ gems: '', coins: '', gold: '', divine_essence: '' });

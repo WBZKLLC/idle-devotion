@@ -290,7 +290,6 @@ export default function HeroProgressionScreen() {
     isOverrideCaughtUp,
     getUserHeroById,
     getHeroProgression,
-    selectUserHeroById,
   ]);
 
   useEffect(() => {

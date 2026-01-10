@@ -88,13 +88,19 @@ export default function HeroProgressionScreen() {
   // IMPORTANT: heroId must be UserHero.id (the instance primary key), NOT hero_id (base hero template).
   // The promote-star endpoint expects user_hero_id.
   const { heroId } = useLocalSearchParams<{ heroId: string }>();
-  const { user, fetchUser, fetchUserHeroes, userHeroes, getUserHeroById } = useGameStore();
+  const { user, fetchUser, fetchUserHeroes, userHeroes, getUserHeroById, selectUserHeroById } = useGameStore();
 
   const [isLoading, setIsLoading] = useState(true);
 
-  // Local copy for optimistic updates (don't mutate store directly)
-  const [hero, setHero] = useState<any>(null);
-  const [heroData, setHeroData] = useState<any>(null);
+  // Store-derived hero (cache-first, O(1) lookup)
+  const storeHero = selectUserHeroById(heroId ? String(heroId) : undefined);
+  
+  // Local copy for optimistic updates (initialized from store, updated optimistically)
+  const [localHeroOverride, setLocalHeroOverride] = useState<any>(null);
+  
+  // Effective hero: use local override if set (optimistic), else store
+  const hero = localHeroOverride ?? storeHero ?? null;
+  const heroData = hero?.hero_data ?? null;
 
   const [previewTier, setPreviewTier] = useState<DisplayTier>(1);
 

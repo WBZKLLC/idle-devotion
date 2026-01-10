@@ -571,6 +571,7 @@ export default function HeroDetailScreen() {
           onClose={handleCloseCinematic}
           videoSource={cinematicVideoSource}
           heroName={heroData?.name || 'Hero'}
+          heroKey={heroData ? heroNameToId(heroData.name) : 'unknown'}
         />
       </SafeAreaView>
     </View>

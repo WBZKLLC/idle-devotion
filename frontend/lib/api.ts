@@ -317,3 +317,19 @@ export async function purchasePackage(
   );
   return res.data;
 }
+
+export async function purchaseCrystals(username: string, packageId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/store/purchase-crystals`, null, {
+    params: { username: u, package_id: packageId }
+  });
+  return res.data;
+}
+
+export async function purchaseDivine(username: string, packageId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/store/purchase-divine`, null, {
+    params: { username: u, package_id: packageId }
+  });
+  return res.data;
+}

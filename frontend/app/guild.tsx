@@ -232,10 +232,8 @@ export default function GuildScreen() {
   const loadGuildLevelInfo = async () => {
     if (!user) return;
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user.username}/level-info`);
-      if (response.ok) {
-        setGuildLevelInfo(await response.json());
-      }
+      const data = await getGuildLevelInfo(user.username);
+      setGuildLevelInfo(data);
     } catch (error) {
       console.error('Failed to load guild level info:', error);
     }

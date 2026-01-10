@@ -18,6 +18,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 
+// Centralized API wrappers (no raw fetch in screens - critical for monetization)
+import {
+  getCrystalPackages,
+  getDivinePackages,
+  getVipInfo,
+  purchasePackage,
+} from '../lib/api';
+
 interface CrystalPackage {
   id: string;
   price_usd: number;

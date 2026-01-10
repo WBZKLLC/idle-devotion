@@ -320,7 +320,7 @@ export default function HeroUpgradeScreen() {
                 
                 <TouchableOpacity
                   style={styles.promoteButton}
-                  onPress={promoteHeroStar}
+                  onPress={promoteHeroStarLocal}
                   disabled={isUpgrading || (heroDetails.duplicates || 0) < heroDetails.shards_for_next_star || heroDetails.stars >= 6}
                 >
                   <LinearGradient

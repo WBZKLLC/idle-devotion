@@ -152,6 +152,21 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Hero pool retrieval works (8 heroes available). User hero collection and character rating calculation working. Hero upgrade system correctly rejects upgrades without sufficient duplicates."
+      - working: true
+        agent: "main"
+        comment: "✅ IMPLEMENTED: Single-hero fetch endpoint GET /api/user/{username}/heroes/{user_hero_id}. Returns enriched hero with hero_data and ascension images. Frontend flag SINGLE_HERO_ENDPOINT_AVAILABLE flipped to true. All CI guards pass."
+
+  - task: "Single hero fetch endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ IMPLEMENTED: GET /api/user/{username}/heroes/{user_hero_id} - Canonical single-hero fetch endpoint. Returns enriched hero with hero_data and ascension_images. Tested successfully with curl."
 
   - task: "Hero upgrade/rank up system"
     implemented: true

@@ -148,8 +148,8 @@ export default function GuildWarScreen() {
   const loadAttackHistory = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/guild-war/history/${user.username}?limit=20`);
-      setAttackHistory(response.data.attacks || []);
+      const data = await getGuildWarHistory(user.username, 20);
+      setAttackHistory(data.attacks || []);
     } catch (error) {
       console.error('Error loading history:', error);
     }

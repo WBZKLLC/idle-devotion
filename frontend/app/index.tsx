@@ -8,6 +8,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  ImageBackground,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGameStore, useHydration } from '../stores/gameStore';
@@ -16,11 +21,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Sidebar from '../components/Sidebar';
 
-// Regal Color Palette
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Raphael the Eternal - 5+ Star (6-star) Skin
+const RAPHAEL_5PLUS_IMAGE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
+
+// Regal Color Palette - Enhanced for celestial theme
 const COLORS = {
-  navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },
+  navy: { darkest: '#050a14', dark: '#0a1222', primary: '#0f1a2e', medium: '#1a2740', light: '#2d4263' },
   gold: { darkest: '#8b7355', dark: '#b8860b', primary: '#c9a227', medium: '#d4af37', light: '#e6c666', pale: '#f5e6c4' },
   cream: { pure: '#ffffff', light: '#fefefe', soft: '#f8f6f0', warm: '#f5f0e6', dark: '#e8e0d0' },
+  violet: { dark: '#2d1b4e', primary: '#5b3d8a', light: '#8b6bb8', glow: '#a78bfa' },
+  celestial: { deep: '#0d0a1a', mid: '#1a1330', accent: '#3b2d5f' },
 };
 
 export default function HomeScreen() {

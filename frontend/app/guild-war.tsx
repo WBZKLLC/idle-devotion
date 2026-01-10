@@ -110,8 +110,8 @@ export default function GuildWarScreen() {
 
   const loadWarStatus = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/guild-war/status`);
-      setWarStatus(response.data);
+      const data = await getGuildWarStatus();
+      setWarStatus(data);
     } catch (error) {
       console.error('Error loading war status:', error);
     }

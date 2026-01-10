@@ -17,6 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 
+// Centralized API wrappers (no raw fetch in screens)
+import { getSeleneBannerStatus, pullSeleneBanner } from '../lib/api';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const COLORS = {

@@ -307,6 +307,21 @@ export async function startCampaignBattle(
   return res.data;
 }
 
+export async function completeCampaignStage(
+  username: string,
+  chapterId: number,
+  stageNum: number,
+  stars: number = 3
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/campaign/stage/${chapterId}/${stageNum}/complete`,
+    { stars },
+    { params: { username: u } }
+  );
+  return res.data;
+}
+
 // ─────────────────────────────────────────────────────────────
 // DUNGEONS / STAGES (dungeons.tsx)
 // ─────────────────────────────────────────────────────────────

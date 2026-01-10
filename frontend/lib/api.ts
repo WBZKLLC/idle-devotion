@@ -399,6 +399,56 @@ export async function pullEventBanner(username: string, bannerId: string, multi:
 }
 
 // ─────────────────────────────────────────────────────────────
+// CHAT (chat.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getChatBubbles(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}/chat-bubbles`);
+  return res.data;
+}
+
+export async function getChatMessages(params?: {
+  channel_type?: string;
+  limit?: number;
+  before?: string;
+}) {
+  const res = await api.get(`/chat/messages`, { params });
+  return res.data;
+}
+
+export async function getUserChatBubble(senderUsername: string) {
+  const s = requireUsername(senderUsername);
+  const res = await api.get(`/chat/user-bubble/${encodeURIComponent(s)}`);
+  return res.data;
+}
+
+export async function sendChatMessage(payload: {
+  username: string;
+  message: string;
+  channel_type?: string;
+  language?: string;
+}) {
+  const u = requireUsername(payload.username);
+  const res = await api.post(
+    `/chat/send`,
+    null,
+    { params: { username: u, message: payload.message, channel_type: payload.channel_type, language: payload.language } }
+  );
+  return res.data;
+}
+
+export async function equipChatBubble(username: string, bubbleId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/user/${encodeURIComponent(u)}/equip-chat-bubble`,
+    null,
+    { params: { bubble_id: bubbleId } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // GUILD (guild.tsx)
 // ─────────────────────────────────────────────────────────────
 

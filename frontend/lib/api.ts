@@ -102,13 +102,36 @@ export async function fetchUser(username: string) {
 
 // ─────────────────────────────────────────────────────────────
 // GACHA / SUMMON
+// POST /api/gacha/pull?username=...
 // ─────────────────────────────────────────────────────────────
 
-export async function performSummon(username: string, summonType: 'single' | 'multi') {
+export async function pullGacha(
+  username: string,
+  pullType: 'single' | 'multi',
+  currencyType: 'gems' | 'coins'
+) {
   const u = requireUsername(username);
-  const res = await api.post(`/gacha/summon`, null, {
-    params: { username: u, summon_type: summonType },
-  });
+  const res = await api.post(
+    `/gacha/pull`,
+    { pull_type: pullType, currency_type: currencyType },
+    { params: { username: u } }
+  );
+  return res.data;
+}
+
+// Legacy alias for backwards compatibility
+export async function performSummon(username: string, summonType: 'single' | 'multi') {
+  return pullGacha(username, summonType, 'gems');
+}
+
+// ─────────────────────────────────────────────────────────────
+// HERO UPGRADE
+// POST /api/user/{username}/heroes/{heroInstanceId}/upgrade
+// ─────────────────────────────────────────────────────────────
+
+export async function upgradeHero(username: string, heroInstanceId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/user/${encodeURIComponent(u)}/heroes/${encodeURIComponent(heroInstanceId)}/upgrade`);
   return res.data;
 }
 

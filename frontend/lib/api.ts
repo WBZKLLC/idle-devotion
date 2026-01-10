@@ -60,6 +60,22 @@ export async function getHeroProgression(username: string, heroId: string) {
   return res.data;
 }
 
+// ─────────────────────────────────────────────────────────────
+// SINGLE HERO FETCH (fallback when hero not in store cache)
+// NOTE: Temporary implementation - fetches full list and filters.
+// Replace with GET /user/{username}/heroes/{userHeroId} once backend exists.
+// Screens call getUserHeroById() and never hit list endpoints directly.
+// ─────────────────────────────────────────────────────────────
+
+export async function getUserHeroById(username: string, userHeroId: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}/heroes`);
+  const list = Array.isArray(res.data) ? res.data : (res.data?.heroes ?? res.data ?? []);
+  const found = list.find((h: any) => String(h?.id) === String(userHeroId));
+  if (!found) throw new Error('Hero not found');
+  return found;
+}
+
 // RULE: All hero endpoints live here.
 // Screens should not build URLs manually (prevents drift).
 

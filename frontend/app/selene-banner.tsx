@@ -90,16 +90,12 @@ export default function SeleneBannerScreen() {
       // Show bundles if triggered
       if (data.triggered_bundles?.length > 0 && !data.has_selene) {
         // Will show after results modal closes
-        }
-        
-        await fetchUser();
-        await loadBannerData();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to summon');
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to perform summon');
+      
+      await fetchUser();
+      await loadBannerData();
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to perform summon');
     } finally {
       setIsPulling(false);
     }

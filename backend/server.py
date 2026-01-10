@@ -3162,6 +3162,8 @@ FEATURE_FLAGS_CONFIG = {
         "CAMPAIGN_SWEEP": True,
         # 5+ star hero video previews
         "HERO_CINEMATICS": True,
+        # Hero progression screen
+        "HERO_PROGRESSION_ENABLED": True,
         # Example rollout: 15% of users
         # "NEW_FEATURE": {"enabled": True, "rollout": 0.15},
     }

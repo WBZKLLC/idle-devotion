@@ -1138,6 +1138,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 215, 140, 0.10)',
   },
   tierChipLocked: { opacity: 0.45 },
+  tierChipAwakening: { 
+    borderColor: 'rgba(180, 130, 255, 0.4)',
+    backgroundColor: 'rgba(180, 130, 255, 0.08)',
+  },
 
   tierThumbWrap: { width: '100%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', marginBottom: 6 },
   tierThumb: { width: '100%', height: '100%' },

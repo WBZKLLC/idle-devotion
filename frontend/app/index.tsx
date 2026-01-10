@@ -435,16 +435,15 @@ export default function HomeScreen() {
   // AUTHENTICATED DASHBOARD
   return (
     <View style={styles.container}>
-      {/* Background: Sanctum environment art for dashboard */}
+      {/* Background: Sanctum environment (local asset - instant render, no flicker) */}
       <CenteredBackground 
-        source={{ uri: SANCTUM_BG_IMAGE }} 
+        source={SANCTUM_BG_IMAGE} 
         mode="contain" 
-        zoom={1.02}
+        zoom={1.04}
         opacity={1}
-        waitForSize
       />
       <SanctumAtmosphere />
-      <DivineOverlays vignette={true} rays={false} grain={true} />
+      <DivineOverlays vignette grain />
       
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {/* Header */}

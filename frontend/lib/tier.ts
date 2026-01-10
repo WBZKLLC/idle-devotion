@@ -45,19 +45,26 @@ export const effectiveTierForHero = (
 
 /**
  * Resolve ascension art EXACTLY from API response.
- * NO GUESSING. NO FALLBACKS except explicit.
+ * IMPORTANT: Returns a STRING url (or undefined), NOT an { uri: ... } object.
+ * This prevents "Objects are not valid as a React child" errors.
  */
 export const resolveTierArt = (
   heroData: any,
-  tier: DisplayTier
-): string | null => {
-  if (!heroData?.ascension_images) return heroData?.image_url ?? null;
+  tier: number
+): string | undefined => {
+  const t = String(Math.max(1, Math.min(6, Number(tier) || 1)));
 
-  return (
-    heroData.ascension_images[String(tier)] ||
-    heroData.image_url ||
-    null
-  );
+  const asc = heroData?.ascension_images;
+  if (asc && typeof asc === 'object') {
+    const v = asc[t];
+    if (typeof v === 'string' && v.length > 0) return v;
+  }
+
+  // Fallback to default image_url but still a STRING
+  const img = heroData?.image_url;
+  if (typeof img === 'string' && img.length > 0) return img;
+
+  return undefined;
 };
 
 /**

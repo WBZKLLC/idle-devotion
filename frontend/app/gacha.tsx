@@ -16,6 +16,15 @@ import { useGameStore } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
+// Centralized tier logic (SINGLE SOURCE OF TRUTH)
+import {
+  DisplayTier,
+  displayStars,
+  unlockedTierForHero,
+  computeUserMaxUnlockedTier,
+  TIER_LABELS,
+} from '../lib/tier';
+
 // ✅ Shared 2Dlive shell (UI-only)
 import {
   CenteredBackground,
@@ -29,42 +38,6 @@ const RARITY_COLORS: { [key: string]: string } = {
   'SSR': '#9C27B0',
   'UR': '#FF9800',
   'UR+': '#F44336',
-};
-
-// ----------------------------
-// TIER HELPERS (exact match to heroes.tsx)
-// ----------------------------
-type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
-
-const displayStars = (h: any) => {
-  const s = Number(h?.stars ?? 0);
-  if (!isFinite(s)) return 0;
-  return Math.max(0, Math.min(6, s));
-};
-
-const unlockedTierForHero = (h: any): DisplayTier => {
-  const stars = displayStars(h);
-  const awaken = Number(h?.awakening_level ?? 0);
-  if (awaken > 0 || stars >= 5) return 6;
-  return (Math.max(1, Math.min(5, (stars + 1))) as DisplayTier);
-};
-
-const computeUserMaxUnlockedTier = (heroes: any[]): DisplayTier => {
-  let max: DisplayTier = 1;
-  for (const h of heroes || []) {
-    const t = unlockedTierForHero(h);
-    if (t > max) max = t;
-  }
-  return max;
-};
-
-const TIER_LABELS: Record<DisplayTier, string> = {
-  1: '1★',
-  2: '2★',
-  3: '3★',
-  4: '4★',
-  5: '5★',
-  6: '5★+',
 };
 
 /**

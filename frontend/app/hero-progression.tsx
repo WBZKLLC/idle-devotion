@@ -49,7 +49,7 @@ import {
   starsToTierIndex,
   tierLabel,
   labelForTier,
-} from '../lib/tier';
+} from '../lib/progression';
 
 // 2Dlive shell (UI-only)
 import {

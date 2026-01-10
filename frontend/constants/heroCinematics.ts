@@ -46,7 +46,7 @@ export type HeroId =
  */
 
 // Video availability flag - set to true when actual videos are added
-export const VIDEOS_AVAILABLE = false;
+export const VIDEOS_AVAILABLE = true;
 
 // Placeholder video source (can be a static image or loading animation)
 // This is returned when VIDEOS_AVAILABLE is false

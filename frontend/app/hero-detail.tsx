@@ -168,6 +168,14 @@ export default function HeroDetailScreen() {
   // Compute unlocked tier from hero stars/awakening (MUST be before early returns)
   const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero]);
 
+  // Enforce tier gating reactively - if hero data changes, clamp selectedTier
+  useEffect(() => {
+    if (!hero) return;
+    const unlocked = unlockedTierForHero(hero);
+    if (selectedTier > unlocked) setSelectedTier(unlocked);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hero?.id, hero?.stars, hero?.awakening_level]);
+
   useEffect(() => {
     if (hydrated && user && id) {
       loadHeroData();

@@ -218,9 +218,7 @@ export default function AdminPanelScreen() {
           onPress: async () => {
             setProcessing(true);
             try {
-              await axios.delete(
-                `${API_BASE}/admin/delete-account/${selectedUser.username}?admin_key=${user.username}`
-              );
+              await adminDeleteAccount(selectedUser.username, user.username);
               Alert.alert('Deleted', `${selectedUser.username}'s account has been deleted`);
               setShowActionModal(false);
               setSelectedUser(null);

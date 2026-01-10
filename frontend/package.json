@@ -12,7 +12,8 @@
     "guard:hero": "node scripts/guard-no-hero-list-fallback.mjs",
     "guard:tier": "node scripts/guard-no-direct-tier-imports.mjs",
     "guard:select-hero": "node scripts/guard-select-user-hero-by-id.mjs",
-    "guard": "npm run guard:hero && npm run guard:tier && npm run guard:select-hero"
+    "guard:user-heroes-map": "node scripts/guard-user-heroes-map-sync.mjs",
+    "guard": "npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map"
   },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",

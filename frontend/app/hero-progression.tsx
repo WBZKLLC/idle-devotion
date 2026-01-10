@@ -109,7 +109,7 @@ export default function HeroProgressionScreen() {
     !!storeHero &&
     String(localHeroOverride.id) === String(storeHero.id) &&
     (storeHero.stars ?? 0) >= (localHeroOverride.stars ?? 0) &&
-    (storeHero.duplicates ?? 0) === (localHeroOverride.duplicates ?? storeHero.duplicates ?? 0);
+    (storeHero.duplicates ?? 0) === (localHeroOverride.duplicates ?? 0);
 
   const [previewTier, setPreviewTier] = useState<DisplayTier>(1);
 

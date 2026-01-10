@@ -361,7 +361,7 @@ export default function HeroDetailScreen() {
                 compact
               />
               <Text style={styles.tierHint}>
-                Unlocked: {unlockedTier === 6 ? '5★+' : `${unlockedTier}★`} • Stars: {displayStars(hero)} • Awakening: {hero?.awakening_level ?? 0}
+                Unlocked: {tierLabel(unlockedTier)} • Stars: {displayStars(hero)} • Awakening: {hero?.awakening_level ?? 0}
               </Text>
             </GlassCard>
           )}

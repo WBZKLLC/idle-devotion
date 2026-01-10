@@ -20,8 +20,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Sidebar from '../components/Sidebar';
 
-// Raphael the Eternal - 5+ Star (6-star) Skin
+// Raphael the Eternal - 5+ Star (6-star) Skin (Login screen)
 const RAPHAEL_5PLUS_IMAGE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
+
+// Dashboard background (Sanctum environment art)
+// Using a celestial temple/sanctum style background
+const SANCTUM_BG_IMAGE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
+// TODO: Replace with actual sanctum environment art when available
 
 // Regal Color Palette - Enhanced for celestial theme
 const COLORS = {

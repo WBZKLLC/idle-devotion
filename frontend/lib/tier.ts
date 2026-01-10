@@ -255,3 +255,13 @@ export const TIER_LABEL_ARRAY: { tier: DisplayTier; label: string }[] = [
 export const getTierLabel = (tier: DisplayTier): string => {
   return TIER_LABELS[tier] || `${tier}★`;
 };
+
+/**
+ * Canonical tier label resolver with clamping.
+ * USE THIS in UI instead of inline `TIER_LABELS[tier] || \`${tier}★\`` patterns.
+ * Handles out-of-range values safely.
+ */
+export function labelForTier(tier: number): string {
+  const t = clampTier(tier);
+  return TIER_LABELS[t as DisplayTier] ?? `${t}★`;
+}

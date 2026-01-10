@@ -42,6 +42,74 @@ const CLASS_ICONS: { [key: string]: string } = {
   'Archer': 'locate',
 };
 
+// ============================================================================
+// DISPLAY TIER SYSTEM (UI-only)
+// ============================================================================
+type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
+
+// Show EXACT backend star count (0..6) for UI
+const displayStars = (h: any) => {
+  const s = Number(h?.stars ?? 0);
+  if (!isFinite(s)) return 0;
+  return Math.max(0, Math.min(6, s));
+};
+
+// Tier unlock mapping (UI-only) aligned to backend stars:
+// stars=0 -> tier 1 unlocked
+// stars=1 -> tier 2 unlocked
+// stars=2 -> tier 3 unlocked
+// stars=3 -> tier 4 unlocked
+// stars=4 -> tier 5 unlocked
+// stars>=5 OR awakening>0 -> tier 6 unlocked (5★+)
+const unlockedTierForHero = (h: any): DisplayTier => {
+  const stars = displayStars(h);
+  const awaken = Number(h?.awakening_level ?? 0);
+
+  if (awaken > 0 || stars >= 5) return 6;
+
+  const tier = (stars + 1) as DisplayTier; // 0..4 -> 1..5
+  return Math.max(1, Math.min(5, tier)) as DisplayTier;
+};
+
+// Tries to resolve tier art from common hero data shapes.
+// Falls back to heroData.image_url, then to sanctum environment.
+const resolveTierArt = (heroData: any, tier: DisplayTier) => {
+  if (!heroData) return null;
+
+  // Backend now sends ascension_images with keys "1" to "6"
+  const tKey = String(tier);
+
+  // Primary: heroData.ascension_images (from backend manifest loading)
+  const fromAscension =
+    heroData?.ascension_images?.[tKey] ||
+    heroData?.ascension_images?.[tier];
+
+  if (typeof fromAscension === 'string' && fromAscension.length > 0) {
+    return { uri: fromAscension };
+  }
+
+  // Fallback shapes (if backend uses different structure)
+  const fromObj =
+    heroData?.tier_images?.[tKey] ||
+    heroData?.tier_images?.[tier];
+
+  if (typeof fromObj === 'string' && fromObj.length > 0) return { uri: fromObj };
+
+  const fromArrayIndex = heroData?.images_by_tier?.[tier - 1];
+  if (typeof fromArrayIndex === 'string' && fromArrayIndex.length > 0) return { uri: fromArrayIndex };
+
+  const fromImagesArray =
+    heroData?.images?.find?.((x: any) => Number(x?.tier) === tier)?.url ||
+    heroData?.images?.find?.((x: any) => String(x?.tier) === tKey)?.url;
+
+  if (typeof fromImagesArray === 'string' && fromImagesArray.length > 0) return { uri: fromImagesArray };
+
+  // Final fallback: single image_url
+  if (typeof heroData?.image_url === 'string' && heroData.image_url.length > 0) return { uri: heroData.image_url };
+
+  return null;
+};
+
 export default function HeroDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, fetchUser } = useGameStore();
@@ -57,22 +125,28 @@ export default function HeroDetailScreen() {
   const [showCinematicModal, setShowCinematicModal] = useState(false);
   const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
 
+  // Tier selection (1..6), gated by unlocks
+  const [selectedTier, setSelectedTier] = useState<DisplayTier>(1);
+
+  // Keep selectedTier valid when hero loads or upgrades
+  useEffect(() => {
+    if (!hero) return;
+    const unlocked = unlockedTierForHero(hero);
+    setSelectedTier(prev => (prev > unlocked ? unlocked : prev));
+  }, [hero?.stars, hero?.awakening_level]);
+
   // ----------------------------
-  // HERO 5+ BACKGROUND ART
+  // TIER-BASED ART (background + portrait)
   // ----------------------------
-  // Use the hero's image_url as background, or fallback to Sanctum
-  const hero5PlusArt = useMemo(() => {
-    if (heroData?.image_url) {
-      return { uri: heroData.image_url };
-    }
-    // Fallback to Sanctum environment if no hero image
-    return require('../assets/backgrounds/sanctum_environment_01.jpg');
-  }, [heroData?.image_url]);
+  const tierArt = useMemo(() => {
+    const resolved = resolveTierArt(heroData, selectedTier);
+    return resolved ?? require('../assets/backgrounds/sanctum_environment_01.jpg');
+  }, [heroData, selectedTier]);
 
   // Check if hero is at 5+ star (final ascension)
   const isFivePlusStar = useCallback(() => {
     if (!hero) return false;
-    return (hero.star_level || 0) >= 6;
+    return unlockedTierForHero(hero) === 6;
   }, [hero]);
 
   // Check if hero is UR or UR+ (for preview button visibility)
@@ -200,9 +274,9 @@ export default function HeroDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 2Dlive Background: Hero 5+ Art centered */}
+      {/* 2Dlive Background: Tier-based Art centered */}
       <CenteredBackground 
-        source={hero5PlusArt} 
+        source={tierArt} 
         mode="contain" 
         zoom={1.06} 
         opacity={1}
@@ -251,11 +325,11 @@ export default function HeroDetailScreen() {
                   ]} 
                 />
                 
-                {/* Hero image - Static */}
+                {/* Hero image - Uses selected tier art */}
                 <View style={styles.heroImageContainer}>
-                  {heroData.image_url ? (
+                  {tierArt ? (
                     <Image
-                      source={{ uri: heroData.image_url }}
+                      source={tierArt as any}
                       style={{ width: 180, height: 250 }}
                       resizeMode="contain"
                     />
@@ -278,15 +352,67 @@ export default function HeroDetailScreen() {
                   </View>
                 )}
                 
-                {/* Star Level */}
+                {/* Star Level - shows 0 stars as 0 (no forced "1 star") */}
                 <View style={styles.starsContainer}>
-                  {Array.from({ length: hero.star_level || 1 }).map((_, i) => (
-                    <Ionicons key={i} name="star" size={14} color={COLORS.gold.primary} />
-                  ))}
+                  {displayStars(hero) > 0 &&
+                    Array.from({ length: displayStars(hero) }).map((_, i) => (
+                      <Ionicons key={i} name="star" size={14} color={COLORS.gold.primary} />
+                    ))}
+                  {unlockedTierForHero(hero) === 6 && (
+                    <Text style={styles.plusMark}>+</Text>
+                  )}
                 </View>
               </LinearGradient>
             </GlassCard>
           </TouchableOpacity>
+
+          {/* Tier Selector (gated) */}
+          <GlassCard style={{ marginBottom: 16 }}>
+            <Text style={styles.sectionTitle}>Ascension Tier</Text>
+
+            <View style={styles.tierRow}>
+              {([1, 2, 3, 4, 5, 6] as DisplayTier[]).map((tier) => {
+                const unlocked = unlockedTierForHero(hero);
+                const locked = tier > unlocked;
+                const active = tier === selectedTier;
+
+                return (
+                  <TouchableOpacity
+                    key={tier}
+                    style={[
+                      styles.tierChip,
+                      active && styles.tierChipActive,
+                      locked && styles.tierChipLocked,
+                    ]}
+                    activeOpacity={locked ? 1 : 0.85}
+                    onPress={() => {
+                      if (locked) return;
+                      setSelectedTier(tier);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.tierChipText,
+                        active && styles.tierChipTextActive,
+                        locked && styles.tierChipTextLocked,
+                      ]}
+                    >
+                      {tier === 6 ? '5★+' : `${tier}★`}
+                    </Text>
+                    {locked ? (
+                      <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.45)" />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={styles.tierHint}>
+              Unlocked: {unlockedTierForHero(hero) === 6 ? '5★+' : `${unlockedTierForHero(hero)}★`} •
+              Current Stars: {displayStars(hero)}
+              {Number(hero?.awakening_level ?? 0) > 0 ? ` • Awakening: ${hero.awakening_level}` : ''}
+            </Text>
+          </GlassCard>
 
           {/* Level & XP - Glass Card */}
           <GlassCard style={styles.levelCardWrapper}>
@@ -558,6 +684,51 @@ const styles = StyleSheet.create({
     marginTop: 8,
     zIndex: 1,
     gap: 2,
+    alignItems: 'center',
+  },
+  
+  // Tier Selector
+  tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tierChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  tierChipActive: {
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+    borderColor: 'rgba(255, 215, 140, 0.92)',
+  },
+  tierChipLocked: {
+    opacity: 0.6,
+  },
+  tierChipText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.78)',
+  },
+  tierChipTextActive: {
+    color: '#0A0B10',
+  },
+  tierChipTextLocked: {
+    color: 'rgba(255,255,255,0.50)',
+  },
+  tierHint: {
+    marginTop: 10,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: '700',
+  },
+  plusMark: {
+    marginLeft: 4,
+    color: 'rgba(255, 215, 140, 0.95)',
+    fontWeight: '900',
+    fontSize: 14,
   },
   
   // Level Card

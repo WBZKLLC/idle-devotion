@@ -140,6 +140,14 @@ export const isAtMaxStars = (stars: number): boolean => {
   return normalizeBackendStars(stars) >= MAX_STAR_TIER;
 };
 
+/**
+ * Format tier number for UI display.
+ * USE THIS instead of inline ternaries like `tier === 6 ? '5★+' : \`${tier}★\``
+ */
+export const tierLabel = (tier: number): string => {
+  return tier >= MAX_STAR_TIER ? '5★+' : `${tier}★`;
+};
+
 // ─────────────────────────────────────────────────────────────
 // TIER CLAMPING & EFFECTIVE TIER
 // ─────────────────────────────────────────────────────────────

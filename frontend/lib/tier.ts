@@ -60,6 +60,10 @@ export const displayStars = (hero: any): number => {
   return getHeroBackendStars(hero);
 };
 
+// ─────────────────────────────────────────────────────────────
+// STARS → TIER MAPPING (single source of truth)
+// ─────────────────────────────────────────────────────────────
+
 /**
  * Maps backend stars + awakening to unlocked tier.
  *
@@ -78,12 +82,39 @@ export const displayStars = (hero: any): number => {
  * awakening_level = 4 → tier 10 (10★)
  */
 export const unlockedTierForHero = (hero: any): DisplayTier => {
-  const stars = displayStars(hero);
+  const stars = getHeroBackendStars(hero);
   const awaken = Number(hero?.awakening_level ?? 0);
 
   // For now, cap at tier 6 (5★+). Awakening tiers will be added later.
   if (awaken > 0 || stars >= 5) return 6;
   return (Math.max(1, Math.min(5, stars + 1)) as DisplayTier);
+};
+
+/**
+ * Convert stars directly to tier index (without hero object).
+ * Use this for pure star→tier mapping without awakening.
+ */
+export const starsToTierIndex = (stars: BackendStars): DisplayTier => {
+  const s = normalizeBackendStars(stars);
+  if (s >= 5) return 6;
+  return (Math.max(1, Math.min(5, s + 1)) as DisplayTier);
+};
+
+/**
+ * Convert tier index to art key string for ascension_images lookup.
+ */
+export const tierIndexToArtKey = (tierIndex: number): TierArtKey => {
+  return String(Math.max(1, Math.min(MAX_STAR_TIER, tierIndex)));
+};
+
+/**
+ * Convenience: stars → tier art key in one call.
+ * USE THIS for simple star-to-art lookups.
+ */
+export const starsToTierArtKey = (stars: number): TierArtKey => {
+  const s = normalizeBackendStars(stars);
+  const t = starsToTierIndex(s);
+  return tierIndexToArtKey(t);
 };
 
 /**

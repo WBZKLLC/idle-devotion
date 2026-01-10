@@ -393,7 +393,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       // Uses centralized API wrapper from lib/api.ts
       const heroes = await getUserHeroes(user.username);
-      set({ userHeroes: heroes, isLoading: false });
+      set({
+        userHeroes: heroes,
+        userHeroesById: indexUserHeroesById(heroes),
+        isLoading: false,
+      });
     } catch (error) {
       set({ error: 'Failed to fetch heroes', isLoading: false });
       console.error('Failed to fetch heroes:', error);

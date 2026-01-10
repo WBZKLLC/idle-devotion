@@ -42,13 +42,14 @@ import {
   unlockedTierForHero,
   resolveTierArt,
   TIER_LABELS,
-  TIER_LABEL_ARRAY,
   MAX_STAR_TIER,
   nextBackendStar,
   isAtMaxStars,
   starsToTierIndex,
   tierLabel,
   labelForTier,
+  tierSelectorOptions,
+  labelForTierDisplay,
 } from '../lib/progression';
 
 // 2Dlive shell (UI-only)

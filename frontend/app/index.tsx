@@ -72,8 +72,8 @@ export default function HomeScreen() {
   const loadInstantCooldown = async () => {
     if (!user) return;
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user.username}`);
-      const userData = await response.json();
+      // Use centralized API wrapper
+      const userData = await apiFetchUser(user.username);
       if (userData.last_instant_collect) {
         const lastCollect = new Date(userData.last_instant_collect);
         const now = new Date();

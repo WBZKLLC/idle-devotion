@@ -10,6 +10,7 @@ import {
   Image,
   useWindowDimensions,
   Platform,
+  Alert,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,9 @@ import COLORS from '../theme/colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import HeroCinematicModal from '../components/HeroCinematicModal';
 import { getHeroCinematicVideo, heroNameToId, VIDEOS_AVAILABLE } from '../constants/heroCinematics';
+
+// Feature flags (SINGLE SOURCE OF TRUTH)
+import { isFeatureEnabled } from '../lib/features';
 
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {

@@ -210,20 +210,37 @@ export default function HeroProgressionScreen() {
 
     setIsLoading(true);
     try {
-      // Ensure store heroes are loaded
-      if (!userHeroes || userHeroes.length === 0) {
-        await fetchUserHeroes();
+      // Try the progression endpoint first (via centralized api.ts)
+      // This may return richer data if backend supports it
+      let found: any = null;
+      
+      try {
+        const progressionData = await getHeroProgression(user.username, heroId);
+        if (progressionData) {
+          // If backend has a dedicated progression endpoint, use that data
+          found = progressionData;
+        }
+      } catch {
+        // Progression endpoint doesn't exist or failed - fall back to userHeroes
       }
 
-      // Prefer store data first
-      let found = (userHeroes || []).find((h: any) => h?.id === heroId);
-
-      // Fallback to direct fetch
+      // Fallback: use store data
       if (!found) {
-        const resp = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user.username}/heroes`);
-        if (resp.ok) {
-          const list = await resp.json();
-          found = (list || []).find((h: any) => h?.id === heroId);
+        // Ensure store heroes are loaded
+        if (!userHeroes || userHeroes.length === 0) {
+          await fetchUserHeroes();
+        }
+
+        // Prefer store data
+        found = (userHeroes || []).find((h: any) => h?.id === heroId);
+
+        // Last resort: direct fetch from user heroes endpoint
+        if (!found) {
+          const resp = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user.username}/heroes`);
+          if (resp.ok) {
+            const list = await resp.json();
+            found = (list || []).find((h: any) => h?.id === heroId);
+          }
         }
       }
 

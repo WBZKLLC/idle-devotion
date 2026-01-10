@@ -399,6 +399,48 @@ export async function pullEventBanner(username: string, bannerId: string, multi:
 }
 
 // ─────────────────────────────────────────────────────────────
+// PROFILE / FRAMES (profile.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getUserGuild(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/guild/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function getUserFrames(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}/frames`);
+  return res.data;
+}
+
+export async function equipFrameApi(username: string, frameId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/user/${encodeURIComponent(u)}/equip-frame`,
+    null,
+    { params: { frame_id: frameId } }
+  );
+  return res.data;
+}
+
+export async function unequipFrameApi(username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/user/${encodeURIComponent(u)}/unequip-frame`);
+  return res.data;
+}
+
+export async function redeemCode(username: string, code: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/codes/redeem`,
+    null,
+    { params: { username: u, code } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // LAUNCH BANNER (launch-banner.tsx)
 // ─────────────────────────────────────────────────────────────
 

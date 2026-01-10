@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 
+// ✅ 2Dlive shell (UI-only)
+import { CenteredBackground, DivineOverlays, SanctumAtmosphere } from '../components/DivineShell';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
   : '/api';
+
+// ✅ Campaign environment background (local recommended)
+const CAMPAIGN_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
 // Dark Fantasy Color Palette
 const COLORS = {
@@ -103,17 +109,17 @@ export default function CampaignScreen() {
   const [stages, setStages] = useState<Stage[]>([]);
   const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
   const [activeTab, setActiveTab] = useState<'chapters' | 'stages'>('chapters');
-  
+
   // Battle state
   const [isBattling, setIsBattling] = useState(false);
   const [battleResult, setBattleResult] = useState<any>(null);
   const [showBattleModal, setShowBattleModal] = useState(false);
-  
+
   // Dialogue state
   const [showDialogue, setShowDialogue] = useState(false);
   const [dialogueLines, setDialogueLines] = useState<DialogueLine[]>([]);
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
-  
+
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -164,7 +170,7 @@ export default function CampaignScreen() {
 
   const startBattle = async (stage: Stage) => {
     if (!user || !selectedChapter) return;
-    
+
     setSelectedStage(stage);
     setIsBattling(true);
     setShowBattleModal(true);
@@ -175,20 +181,20 @@ export default function CampaignScreen() {
         `${API_BASE}/campaign/stage/${selectedChapter.id}/${stage.stage}/complete?username=${user.username}`,
         { stars: 3 } // Auto 3-star for MVP
       );
-      
-      setBattleResult({...response.data, victory: response.data.success});
-      
+
+      setBattleResult({ ...response.data, victory: response.data.success });
+
       // Show dialogue if first clear
       if (response.data.first_clear && response.data.dialogue) {
         setDialogueLines(response.data.dialogue);
         setCurrentDialogueIndex(0);
         setShowDialogue(true);
       }
-      
+
       // Refresh data
       await fetchUser();
       await loadChapterStages(selectedChapter);
-      
+
     } catch (error: any) {
       Alert.alert('Battle Failed', error.response?.data?.detail || 'Unable to complete stage');
       setShowBattleModal(false);
@@ -215,29 +221,41 @@ export default function CampaignScreen() {
     return COLORS.acts[act as keyof typeof COLORS.acts] || COLORS.acts[1];
   };
 
-  // Loading screen
+  // ----------------------------
+  // 2Dlive wrapped loading screen (UI-only)
+  // ----------------------------
   if (!hydrated || loading) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+      <View style={styles.root}>
+        <CenteredBackground source={CAMPAIGN_BG} mode="contain" zoom={1.03} opacity={1} />
+        <SanctumAtmosphere />
+        <DivineOverlays vignette={true} rays={false} grain={true} />
+
         <SafeAreaView style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.gold.primary} />
           <Text style={styles.loadingText}>Loading Campaign...</Text>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     );
   }
 
-  // Not logged in
+  // ----------------------------
+  // 2Dlive wrapped not-logged-in (UI-only)
+  // ----------------------------
   if (!user) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+      <View style={styles.root}>
+        <CenteredBackground source={CAMPAIGN_BG} mode="contain" zoom={1.03} opacity={1} />
+        <SanctumAtmosphere />
+        <DivineOverlays vignette={true} rays={false} grain={true} />
+
         <SafeAreaView style={styles.centerContainer}>
           <Text style={styles.errorText}>Please login to access the campaign</Text>
           <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/')}>
             <Text style={styles.loginBtnText}>Go to Login</Text>
           </TouchableOpacity>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     );
   }
 
@@ -245,8 +263,8 @@ export default function CampaignScreen() {
   const renderChapterCard = ({ item: chapter }: { item: Chapter }) => {
     const actColor = getActColor(chapter.act);
     const visuals = CHAPTER_VISUALS[chapter.id] || CHAPTER_VISUALS[1];
-    const progressPercent = chapter.progress.total > 0 
-      ? (chapter.progress.cleared / chapter.progress.total) * 100 
+    const progressPercent = chapter.progress.total > 0
+      ? (chapter.progress.cleared / chapter.progress.total) * 100
       : 0;
 
     return (
@@ -377,13 +395,21 @@ export default function CampaignScreen() {
     );
   };
 
+  // ----------------------------
+  // Main screen (2Dlive wrapped)
+  // ----------------------------
   return (
-    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+    <View style={styles.root}>
+      <CenteredBackground source={CAMPAIGN_BG} mode="contain" zoom={1.03} opacity={1} />
+      <SanctumAtmosphere />
+      <DivineOverlays vignette={true} rays={false} grain={true} />
+
+      {/* Your original content starts here (unchanged) */}
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => activeTab === 'stages' ? setActiveTab('chapters') : router.back()} 
+          <TouchableOpacity
+            onPress={() => activeTab === 'stages' ? setActiveTab('chapters') : router.back()}
             style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
@@ -460,8 +486,8 @@ export default function CampaignScreen() {
                 style={styles.stageModalGradient}
               >
                 {/* Close button */}
-                <TouchableOpacity 
-                  style={styles.modalClose} 
+                <TouchableOpacity
+                  style={styles.modalClose}
                   onPress={() => setSelectedStage(null)}
                 >
                   <Ionicons name="close" size={24} color={COLORS.cream.pure} />
@@ -472,9 +498,9 @@ export default function CampaignScreen() {
                     {/* Stage header */}
                     <View style={styles.stageModalHeader}>
                       <Text style={styles.stageModalTitle}>
-                        {selectedStage.is_boss ? '👹 BOSS STAGE' : 
-                         selectedStage.is_mini_boss ? '⚔️ ELITE STAGE' : 
-                         `Stage ${selectedStage.stage}`}
+                        {selectedStage.is_boss ? '👹 BOSS STAGE' :
+                          selectedStage.is_mini_boss ? '⚔️ ELITE STAGE' :
+                            `Stage ${selectedStage.stage}`}
                       </Text>
                       <Text style={styles.stageModalSub}>
                         Chapter {selectedStage.chapter}-{selectedStage.stage}
@@ -594,7 +620,7 @@ export default function CampaignScreen() {
                     <Text style={styles.battleResultTitle}>
                       {battleResult.victory ? '🎉 VICTORY!' : '💀 DEFEAT'}
                     </Text>
-                    
+
                     {battleResult.first_clear && (
                       <View style={styles.firstClearBadge}>
                         <Ionicons name="star" size={16} color={COLORS.gold.primary} />
@@ -666,8 +692,8 @@ export default function CampaignScreen() {
           animationType="fade"
           onRequestClose={() => setShowDialogue(false)}
         >
-          <TouchableOpacity 
-            style={styles.dialogueOverlay} 
+          <TouchableOpacity
+            style={styles.dialogueOverlay}
             activeOpacity={1}
             onPress={advanceDialogue}
           >
@@ -697,12 +723,16 @@ export default function CampaignScreen() {
           </TouchableOpacity>
         </Modal>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // ✅ New root wrapper for 2Dlive background layers
+  root: { flex: 1, backgroundColor: '#05060A' },
+
   container: { flex: 1 },
+
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16 },
   errorText: { color: COLORS.cream.dark, fontSize: 16, textAlign: 'center', marginBottom: 16 },

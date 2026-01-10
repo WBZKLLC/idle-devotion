@@ -147,7 +147,7 @@ export default function GuildScreen() {
     }
   };
 
-  const leaveGuild = async () => {
+  const handleLeaveGuild = async () => {
     Alert.alert(
       'Leave Guild',
       'Are you sure you want to leave the guild?',
@@ -158,15 +158,10 @@ export default function GuildScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await fetch(
-                `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/leave?username=${user?.username}`,
-                { method: 'POST' }
-              );
-              if (response.ok) {
-                Alert.alert('Success', 'You left the guild');
-                setGuildData(null);
-                loadAvailableGuilds();
-              }
+              await leaveGuildApi(user?.username || '');
+              Alert.alert('Success', 'You left the guild');
+              setGuildData(null);
+              loadAvailableGuilds();
             } catch (error) {
               Alert.alert('Error', 'Failed to leave guild');
             }

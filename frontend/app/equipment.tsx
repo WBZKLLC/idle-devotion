@@ -15,7 +15,14 @@ import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
+
+// Centralized API wrappers (no raw axios in screens)
+import {
+  getUserEquipment,
+  getUserRunes,
+  getEquipmentHeroes,
+  enhanceEquipment as apiEnhanceEquipment,
+} from '../lib/api';
 
 const COLORS = {
   navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },
@@ -30,7 +37,7 @@ const COLORS = {
   },
 };
 
-const API_BASE = '/api';
+// API_BASE removed - using centralized lib/api.ts wrappers
 
 const SLOT_ICONS: {[key: string]: string} = {
   weapon: 'flash',

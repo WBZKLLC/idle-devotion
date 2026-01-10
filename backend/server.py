@@ -2079,6 +2079,38 @@ async def get_user_heroes(username: str):
     
     return enriched_heroes
 
+@api_router.get("/user/{username}/heroes/{user_hero_id}")
+async def get_user_hero_by_id(username: str, user_hero_id: str):
+    """Get a single hero owned by user by its user_hero_id (not hero_id).
+    
+    This is the canonical single-hero fetch endpoint.
+    Returns the enriched hero with hero_data and ascension images.
+    """
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Find the user's hero instance by id
+    user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
+    if not user_hero:
+        raise HTTPException(status_code=404, detail="Hero not found")
+    
+    # Enrich with hero data + ascension images
+    hero_data = await db.heroes.find_one({"id": user_hero["hero_id"]})
+    if hero_data:
+        hero_dict = convert_objectid(hero_data)
+        # Add ascension images from manifest if available
+        ascension_images = get_ascension_images(hero_dict.get("name", ""))
+        if ascension_images:
+            hero_dict["ascension_images"] = ascension_images
+        return {
+            **convert_objectid(user_hero),
+            "hero_data": hero_dict
+        }
+    
+    # Fallback: return hero without enrichment if catalog entry missing
+    return convert_objectid(user_hero)
+
 @api_router.post("/user/{username}/heroes/{hero_instance_id}/upgrade")
 async def upgrade_hero(username: str, hero_instance_id: str):
     """Upgrade hero rank using duplicates"""

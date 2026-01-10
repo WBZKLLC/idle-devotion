@@ -427,8 +427,25 @@ export default function HomeScreen() {
     );
   }
 
+  // AUTHENTICATED DASHBOARD
   return (
-    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+    <View style={styles.container}>
+      {/* Background: Raphael 5+ Star Skin for dashboard */}
+      <CenteredBackground 
+        source={{ uri: RAPHAEL_5PLUS_IMAGE }} 
+        mode="contain" 
+        zoom={1.02}
+        opacity={0.25}
+      />
+      <DivineOverlays vignette={true} rays={false} grain={true} />
+      
+      {/* Dark gradient overlay for better readability */}
+      <LinearGradient 
+        colors={['rgba(10, 22, 40, 0.92)', 'rgba(13, 27, 42, 0.95)']} 
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="none"
+      />
+      
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {/* Header */}
         <View style={styles.header}>

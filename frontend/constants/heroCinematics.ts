@@ -75,7 +75,7 @@ export function getHeroCinematicVideo(heroId: string): any | undefined {
  */
 export function hasCinematicVideo(heroId: string): boolean {
   if (!VIDEOS_AVAILABLE) return false;
-  return heroId in HERO_5PLUS_CINEMATICS;
+  return Boolean(HERO_5PLUS_CINEMATICS[heroId as HeroId]);
 }
 
 /**

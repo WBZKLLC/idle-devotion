@@ -664,6 +664,39 @@ export default function HeroProgressionScreen() {
             )}
           </GlassCard>
 
+          {/* Awakening Preview - Only for 6★ heroes */}
+          {effectiveUnlockedTier === 6 && (
+            <GlassCard style={styles.block}>
+              <View style={styles.promoHeader}>
+                <Text style={styles.blockTitle}>Awakening Path</Text>
+                <View style={styles.comingSoonBadge}>
+                  <Ionicons name="time-outline" size={12} color="#FFD700" />
+                  <Text style={styles.comingSoonText}>FUTURE</Text>
+                </View>
+              </View>
+
+              <Text style={styles.blockSub}>
+                Your hero has reached 5★+ (maximum stars). The Awakening System will allow transcendence to tiers 7★ through 10★.
+              </Text>
+
+              <Pressable
+                onPress={() => Router.push('/awakening-preview')}
+                style={styles.awakeningPreviewBtn}
+              >
+                <LinearGradient
+                  colors={['rgba(123, 104, 238, 0.85)', 'rgba(155, 89, 182, 0.85)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.awakeningPreviewBtnInner}
+                >
+                  <Ionicons name="sparkles" size={18} color="rgba(255,255,255,0.95)" />
+                  <Text style={styles.awakeningPreviewBtnText}>Preview Awakening Tiers</Text>
+                  <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+                </LinearGradient>
+              </Pressable>
+            </GlassCard>
+          )}
+
           {/* Rarity Ascension (DO BOTH: add this) */}
           <GlassCard style={styles.block}>
             <View style={styles.promoHeader}>

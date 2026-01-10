@@ -688,8 +688,8 @@ export default function HeroProgressionScreen() {
             )}
           </GlassCard>
 
-          {/* Awakening Preview - Only for 6★ heroes */}
-          {effectiveUnlockedTier === 6 && (
+          {/* Awakening Preview - Only for 6★ heroes (GATED by feature flag) */}
+          {FEATURES.AWAKENING_PREVIEW_UI && effectiveUnlockedTier === 6 && (
             <GlassCard style={styles.block}>
               <View style={styles.promoHeader}>
                 <Text style={styles.blockTitle}>Awakening Path</Text>
@@ -721,8 +721,8 @@ export default function HeroProgressionScreen() {
             </GlassCard>
           )}
 
-          {/* Awakening Tier Cards (7★–10★ scaffold) - Only for 6★ heroes */}
-          {effectiveUnlockedTier === 6 && (
+          {/* Awakening Tier Cards (7★–10★ scaffold) - Only for 6★ heroes (GATED by feature flag) */}
+          {FEATURES.AWAKENING_PREVIEW_UI && effectiveUnlockedTier === 6 && (
             <GlassCard style={styles.block}>
               <Text style={styles.blockTitle}>🌙 Awakening Tiers</Text>
               <Text style={styles.blockSub}>

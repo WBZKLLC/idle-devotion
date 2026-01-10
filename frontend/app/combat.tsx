@@ -17,6 +17,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { router } from 'expo-router';
 
+// Centralized API wrappers (no raw fetch in screens)
+import { startDetailedCombat } from '../lib/api';
+
 interface CombatTurn {
   turn: number;
   actor: string;

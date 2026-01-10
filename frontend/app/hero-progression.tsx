@@ -456,7 +456,7 @@ export default function HeroProgressionScreen() {
                 </View>
                 <View style={styles.tierPill}>
                   <Text style={styles.tierPillText}>
-                    {previewTier === 6 ? '5★+' : `${previewTier}★`}
+                    {tierLabel(previewTier)}
                     {previewTier > effectiveUnlockedTier ? ' (LOCKED)' : ''}
                   </Text>
                 </View>

@@ -59,8 +59,8 @@ export default function ProfileScreen() {
     if (!user) return;
     setLoadingGuild(true);
     try {
-      const response = await axios.get(`${API_BASE}/guild/${user.username}`);
-      setGuildInfo(response.data);
+      const data = await getUserGuild(user.username);
+      setGuildInfo(data);
     } catch (error) {
       // User not in a guild
       setGuildInfo(null);

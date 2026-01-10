@@ -184,6 +184,7 @@ const getStoredAuthData = async (): Promise<{username: string | null; token: str
 export const useGameStore = create<GameState>((set, get) => ({
   user: null,
   userHeroes: [],
+  userHeroesById: {},
   allHeroes: [],
   isLoading: false,
   error: null,

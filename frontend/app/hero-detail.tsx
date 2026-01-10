@@ -104,17 +104,15 @@ export default function HeroDetailScreen() {
   const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
 
   // Tier selection (DEFAULT = 1-star art)
-  const [selectedTier, setSelectedTier] = useState<number>(1);
+  const [selectedTier, setSelectedTier] = useState<DisplayTier>(1);
 
   // Selected tier art (background + portrait)
-  const tierArt = useMemo(() => {
-    return resolveTierArt(heroData, selectedTier);
-  }, [heroData, selectedTier]);
+  const tierArt = useMemo(() => resolveTierArt(heroData, selectedTier), [heroData, selectedTier]);
 
   // Check if hero is at 5+ star (final ascension)
   const isFivePlusStar = useCallback(() => {
     if (!hero) return false;
-    return unlockedTierFromHero(hero) === 6;
+    return unlockedTierForHero(hero) === 6;
   }, [hero]);
 
   // Check if hero is UR or UR+ (for preview button visibility)

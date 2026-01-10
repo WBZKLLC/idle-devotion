@@ -457,7 +457,10 @@ export default function HeroProgressionScreen() {
 
                 <View style={styles.metaRow}>
                   <Text style={styles.metaLabel}>Shards</Text>
-                  <Text style={styles.metaValue}>{shards.toLocaleString()}</Text>
+                  <View>
+                    <Text style={styles.metaValue}>{shards.toLocaleString()}</Text>
+                    <Text style={styles.shardHint}>Earn from duplicate summons</Text>
+                  </View>
                 </View>
 
                 <View style={styles.metaRow}>

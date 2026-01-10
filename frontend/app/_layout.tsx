@@ -49,19 +49,8 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
     restore();
   }, [hydrateRemoteFeatures, hydrateAuth]);
 
-  // REVENUECAT DISABLED - Uncomment when finalizing:
-  // useEffect(() => {
-  //   if (user?.username) {
-  //     try {
-  //       setUserId(user.username);
-  //     } catch (error) {
-  //       console.log('[App] RevenueCat setUserId skipped:', error);
-  //     }
-  //   }
-  // }, [user?.username]);
-
   // Show loading while restoring session
-  if (isRestoring && !isHydrated) {
+  if (isRestoring) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.gold.primary} />

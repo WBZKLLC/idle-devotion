@@ -693,6 +693,50 @@ export default function HeroProgressionScreen() {
             </GlassCard>
           )}
 
+          {/* Awakening Tier Cards (7★–10★ scaffold) - Only for 6★ heroes */}
+          {effectiveUnlockedTier === 6 && (
+            <GlassCard style={styles.block}>
+              <Text style={styles.blockTitle}>🌙 Awakening Tiers</Text>
+              <Text style={styles.blockSub}>
+                Future awakening system. Unlock by reaching 6★ and spending Awakening Shards.
+              </Text>
+
+              <View style={styles.awakeningGrid}>
+                {[7, 8, 9, 10].map((tier) => {
+                  // Map awakening_level to unlocked: 7→1, 8→2, 9→3, 10→4
+                  const unlocked = (hero?.awakening_level || 0) >= (tier - 6);
+                  return (
+                    <View
+                      key={tier}
+                      style={[
+                        styles.awakeningCard,
+                        unlocked && styles.awakeningCardUnlocked,
+                      ]}
+                    >
+                      <View style={styles.awakeningCardTop}>
+                        <Text style={styles.awakeningTierText}>{tier}★</Text>
+                        <View style={[styles.awakeningPill, unlocked && styles.awakeningPillUnlocked]}>
+                          <Text style={styles.awakeningPillText}>{unlocked ? 'UNLOCKED' : 'LOCKED'}</Text>
+                        </View>
+                      </View>
+
+                      <Text style={styles.awakeningCardTitle}>Awakening Tier {tier - 6}</Text>
+                      <Text style={styles.awakeningCardSub}>
+                        Planned system • No effects yet
+                      </Text>
+
+                      <View style={styles.awakeningDivider} />
+
+                      <Text style={styles.awakeningHint}>
+                        Coming soon: passives, VFX, and tier {tier} art.
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </GlassCard>
+          )}
+
           {/* Rarity Ascension (DO BOTH: add this) */}
           <GlassCard style={styles.block}>
             <View style={styles.promoHeader}>

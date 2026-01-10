@@ -361,23 +361,21 @@ export default function HeroDetailScreen() {
             <Text style={styles.sectionTitle}>Ascension Tier</Text>
 
             <View style={styles.tierRow}>
-              {([1, 2, 3, 4, 5, 6] as number[]).map((tier) => {
-                const locked = tier > unlockedTier;
-                const active = tier === selectedTier;
+              {[1,2,3,4,5,6].map((t) => {
+                const locked = t > unlockedTier;
+                const active = t === selectedTier;
 
                 return (
                   <TouchableOpacity
-                    key={tier}
+                    key={t}
+                    activeOpacity={0.85}
+                    disabled={locked}
+                    onPress={() => setSelectedTier(t)}
                     style={[
                       styles.tierChip,
                       active && styles.tierChipActive,
                       locked && styles.tierChipLocked,
                     ]}
-                    activeOpacity={locked ? 1 : 0.85}
-                    onPress={() => {
-                      if (locked) return;
-                      setSelectedTier(tier);
-                    }}
                   >
                     <Text
                       style={[
@@ -386,10 +384,11 @@ export default function HeroDetailScreen() {
                         locked && styles.tierChipTextLocked,
                       ]}
                     >
-                      {tier === 6 ? '5★+' : `${tier}★`}
+                      {t === 6 ? '6★+' : `${t}★`}
                     </Text>
+
                     {locked ? (
-                      <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.45)" />
+                      <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.55)" />
                     ) : null}
                   </TouchableOpacity>
                 );
@@ -397,9 +396,7 @@ export default function HeroDetailScreen() {
             </View>
 
             <Text style={styles.tierHint}>
-              Unlocked: {unlockedTier === 6 ? '5★+' : `${unlockedTier}★`} •
-              Current Stars: {displayStars(hero)}
-              {Number(hero?.awakening_level ?? 0) > 0 ? ` • Awakening: ${hero.awakening_level}` : ''}
+              Unlocked: {unlockedTier === 6 ? '6★+' : `${unlockedTier}★`} (Stars: {displayStars(hero)} • Awakening: {hero?.awakening_level ?? 0})
             </Text>
           </GlassCard>
 

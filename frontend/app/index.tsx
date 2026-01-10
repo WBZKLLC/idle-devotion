@@ -1017,6 +1017,8 @@ const loginStyles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'flex-start',
+    paddingHorizontal: 20,
+    paddingTop: 18,
     paddingBottom: 26,
   },
   

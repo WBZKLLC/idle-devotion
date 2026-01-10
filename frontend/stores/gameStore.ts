@@ -495,7 +495,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!user) throw new Error('No user found');
 
     // 2) Fetch single hero via API wrapper
-    const fresh = await apiGetUserHeroById(String(user.username), String(id));
+    let fresh;
+    try {
+      fresh = await apiGetUserHeroById(String(user.username), String(id));
+    } catch (e: any) {
+      throw new Error(
+        `[GameStore.getUserHeroById] Failed to ensure hero. username=${user.username} id=${id}. ` +
+        `Original: ${e?.message ?? String(e)}`
+      );
+    }
 
     // 3) Cache the result (merge into store)
     set((s) => ({

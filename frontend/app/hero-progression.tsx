@@ -43,6 +43,7 @@ import {
   MAX_STAR_TIER,
   nextBackendStar,
   isAtMaxStars,
+  starsToTierIndex,
 } from '../lib/tier';
 
 // 2Dlive shell (UI-only)

@@ -89,7 +89,7 @@ function resolveTierArt(heroData: any, tier: DisplayTier) {
 }
 
 export default function HeroDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, tier } = useLocalSearchParams<{ id: string; tier?: string }>();
   const { user, fetchUser } = useGameStore();
   const hydrated = useHydration();
   const { width: screenW } = useWindowDimensions();

@@ -973,11 +973,8 @@ export async function verifyAuthToken(token: string) {
 // USER (gameStore.ts helpers)
 // ─────────────────────────────────────────────────────────────
 
-export async function fetchUser(username: string) {
-  const u = requireUsername(username);
-  const res = await api.get(`/user/${encodeURIComponent(u)}`);
-  return res.data;
-}
+// NOTE: fetchUser is already defined at line ~98, re-exported here for clarity
+// Do not add duplicate fetchUser - it causes SyntaxError
 
 export async function getUserCR(username: string) {
   const u = requireUsername(username);

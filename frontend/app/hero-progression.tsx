@@ -377,9 +377,16 @@ export default function HeroProgressionScreen() {
   }, []);
 
   // ----------------------------
-  // RENDER STATES
+  // RENDER STATES (stable mode - no branch flipping)
   // ----------------------------
-  if (!hydrated || isLoading) {
+  const renderMode =
+    !hydrated || isLoading ? 'loading' :
+    !user ? 'not-found' :
+    !hero || !heroData ? 'not-found' :
+    'ready';
+
+  // Loading view
+  if (renderMode === 'loading') {
     return (
       <View style={styles.root}>
         <CenteredBackground source={SANCTUM_BG} mode="contain" zoom={1.04} opacity={1} />
@@ -394,7 +401,8 @@ export default function HeroProgressionScreen() {
     );
   }
 
-  if (!user || !hero || !heroData) {
+  // Not found view
+  if (renderMode === 'not-found') {
     return (
       <View style={styles.root}>
         <CenteredBackground source={SANCTUM_BG} mode="contain" zoom={1.04} opacity={1} />
@@ -411,6 +419,8 @@ export default function HeroProgressionScreen() {
       </View>
     );
   }
+
+  // Ready - main view
 
   const tierIsCinematic = effectiveUnlockedTier === 6 && VIDEOS_AVAILABLE;
 

@@ -382,7 +382,7 @@ export default function GachaScreen() {
                       {/* Tier indicator */}
                       <View style={styles.tierIndicator}>
                         <Text style={styles.tierIndicatorText}>
-                          {heroStars > 0 ? `${heroStars}★` : 'NEW'} · Tier {TIER_LABELS[heroTier]}
+                          {labelForStars(heroStars)} · Tier {TIER_LABELS[heroTier]}
                         </Text>
                       </View>
                       

@@ -35,6 +35,15 @@ const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
 // ✅ Campaign environment background (confirmed path)
 const CAMPAIGN_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
+// Act-specific stage backgrounds (Option B)
+// Put these files in: /app/frontend/assets/backgrounds/
+const ACT_BACKGROUNDS: Record<number, any> = {
+  1: require('../assets/backgrounds/act_01_bg.jpg'),
+  2: require('../assets/backgrounds/act_02_bg.jpg'),
+  3: require('../assets/backgrounds/act_03_bg.jpg'),
+  4: require('../assets/backgrounds/act_04_bg.jpg'),
+};
+
 // Dark Fantasy Color Palette
 const COLORS = {
   navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },

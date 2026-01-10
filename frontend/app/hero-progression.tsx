@@ -907,6 +907,7 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   metaLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: '800' },
   metaValue: { color: 'rgba(255,255,255,0.90)', fontSize: 12.5, fontWeight: '900' },
+  shardHint: { marginTop: 2, fontSize: 9, color: 'rgba(255,255,255,0.45)', fontWeight: '700' },
   starLine: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   plusMark: { marginLeft: 2, color: 'rgba(255, 215, 140, 0.92)', fontSize: 12, fontWeight: '900' },
 

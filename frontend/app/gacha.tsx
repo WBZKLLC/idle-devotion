@@ -20,7 +20,7 @@ import { router } from 'expo-router';
 import {
   CenteredBackground,
   DivineOverlays,
-  SanctumAtmosphere,
+  SummonAtmosphere,
   GlassCard,
 } from '../components/DivineShell';
 
@@ -90,7 +90,7 @@ export default function GachaScreen() {
     return (
       <View style={styles.root}>
         <CenteredBackground source={SUMMON_STAGE_BG} mode="contain" zoom={1.05} opacity={1} />
-        <SanctumAtmosphere />
+        <SummonAtmosphere />
         <DivineOverlays vignette rays grain />
         <View style={styles.centerContainer}>
           <Ionicons name="person-circle" size={48} color="rgba(255, 215, 140, 0.9)" />

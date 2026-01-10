@@ -32,34 +32,22 @@ function MaintenanceScreen() {
 
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {
-  const { isHydrated, hydrateAuth, user } = useGameStore();
-  // Use selector pattern for better performance
+  const hydrateAuth = useGameStore(s => s.hydrateAuth);
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
-  // REVENUECAT DISABLED - Uncomment when finalizing:
-  // const { initialize: initRevenueCat, setUserId } = useRevenueCatStore();
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
     const restore = async () => {
       // Hydrate feature flags (fast - uses cache first, non-blocking)
-      hydrateRemoteFeatures().catch((e) => {
-        console.log('[App] Feature flags hydration error (non-blocking):', e);
-      });
+      hydrateRemoteFeatures().catch(() => {});
       
-      // Hydrate auth from storage (token-based, platform-safe)
-      if (!isHydrated) {
-        await hydrateAuth();
-      }
-      // REVENUECAT DISABLED - Uncomment when finalizing:
-      // try {
-      //   await initRevenueCat();
-      // } catch (error) {
-      //   console.log('[App] RevenueCat init skipped:', error);
-      // }
+      // Hydrate auth from storage - ALWAYS runs, no conditional
+      await hydrateAuth().catch(() => {});
+      
       setIsRestoring(false);
     };
     restore();
-  }, [hydrateRemoteFeatures, hydrateAuth, isHydrated]);
+  }, [hydrateRemoteFeatures, hydrateAuth]);
 
   // REVENUECAT DISABLED - Uncomment when finalizing:
   // useEffect(() => {

@@ -51,7 +51,7 @@ export default function GachaScreen() {
   // ----------------------------
   // EXISTING LOGIC (UNTOUCHED)
   // ----------------------------
-  const { user, pullGacha, isLoading, userHeroes, fetchUserHeroes } = useGameStore();
+  const { user, pullGacha, isLoading, userHeroes, refreshHeroesAfterGacha } = useGameStore();
   const [showResult, setShowResult] = useState(false);
   const [gachaResult, setGachaResult] = useState<any>(null);
   

@@ -73,7 +73,7 @@ export const computeUserMaxUnlockedTier = (heroes: any[]): DisplayTier => {
 };
 
 /**
- * Tier labels for UI
+ * Tier labels for UI (object format for lookup)
  */
 export const TIER_LABELS: Record<DisplayTier, string> = {
   1: '1★',
@@ -83,3 +83,15 @@ export const TIER_LABELS: Record<DisplayTier, string> = {
   5: '5★',
   6: '5★+',
 };
+
+/**
+ * Tier labels array for mapping in UI selectors
+ */
+export const TIER_LABEL_ARRAY: { tier: DisplayTier; label: string }[] = [
+  { tier: 1, label: '1★' },
+  { tier: 2, label: '2★' },
+  { tier: 3, label: '3★' },
+  { tier: 4, label: '4★' },
+  { tier: 5, label: '5★' },
+  { tier: 6, label: '5★+' },
+];

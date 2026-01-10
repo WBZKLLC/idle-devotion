@@ -157,3 +157,43 @@ export async function pullSeleneBanner(username: string, multi: boolean) {
   );
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// TEAM BUILDER
+// ─────────────────────────────────────────────────────────────
+
+export async function getTeamsFull(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/team/${encodeURIComponent(u)}/full`);
+  return res.data;
+}
+
+export async function updateTeamSlots(teamId: string, username: string, slotsData: any) {
+  const u = requireUsername(username);
+  const res = await api.put(
+    `/team/${encodeURIComponent(teamId)}/slots`,
+    slotsData,
+    { params: { username: u } }
+  );
+  return res.data;
+}
+
+export async function createTeamFull(username: string, teamName: string, slotsData: any) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/team/create-full`,
+    slotsData,
+    { params: { username: u, team_name: teamName } }
+  );
+  return res.data;
+}
+
+export async function setActiveTeam(teamId: string, username: string) {
+  const u = requireUsername(username);
+  const res = await api.put(
+    `/team/${encodeURIComponent(teamId)}/set-active`,
+    null,
+    { params: { username: u } }
+  );
+  return res.data;
+}

@@ -324,9 +324,12 @@ export default function HeroProgressionScreen() {
 
       const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars });
       if (newTier > effectiveUnlockedTier) {
-        Alert.alert('Star Promoted! 🌟', `New tier unlocked: ${TIER_LABELS[newTier as DisplayTier] || `${newTier}★`}`);
+        Alert.alert(
+          'Star Promoted! 🌟',
+          `New tier art unlocked: ${TIER_LABELS[newTier as DisplayTier] || `${newTier}★`}\n\nReturn to Hero Detail to preview your new art!`
+        );
       } else {
-        Alert.alert('Star Promoted! 🌟', `Now at ${newStars} star(s).`);
+        Alert.alert('Star Promoted! 🌟', `Now at ${newStars} star(s). Keep collecting shards!`);
       }
     } catch (e: any) {
       if (rollbackRef.current?.hero) setHero(rollbackRef.current.hero);

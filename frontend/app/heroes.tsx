@@ -66,23 +66,30 @@ export default function HeroesScreen() {
     }
   };
 
-  // ⭐ UI-only "default stars = 1"
-  // If backend returns 0/undefined, we treat it as 1 for display + derived power display.
-  const safeStars = (hero: any) => {
+  // UI display stars: show EXACT backend value (0..6)
+  const displayStars = (hero: any) => {
     const s = Number(hero?.stars ?? 0);
-    return Math.max(1, isFinite(s) ? s : 1);
+    if (!isFinite(s)) return 0;
+    return Math.max(0, Math.min(6, s));
   };
 
-  // Tier unlock rule (UI-only):
-  // - tiers 1..5 are unlocked by stars (min 1)
-  // - tier 6 (5★+) unlocked if awakening_level > 0 OR stars >= 6 (if your data ever uses 6)
+  // Tier unlock mapping (UI-only):
+  // - Tier 1 is ALWAYS available (even if stars=0)
+  // - stars=0 -> unlock tier 1
+  // - stars=1 -> unlock tier 2
+  // - stars=2 -> unlock tier 3
+  // - stars=3 -> unlock tier 4
+  // - stars=4 -> unlock tier 5
+  // - stars>=5 OR awakening>0 -> unlock tier 6 (5★+)
   const unlockedTierForHero = (hero: any): DisplayTier => {
-    const stars = safeStars(hero);
+    const stars = displayStars(hero);
     const awaken = Number(hero?.awakening_level ?? 0);
 
-    if (stars >= 6) return 6;
-    if (awaken > 0) return 6;
-    return (Math.min(5, stars) as DisplayTier);
+    if (awaken > 0 || stars >= 5) return 6;
+
+    // Map 0..4 stars -> tier 1..5
+    const tier = (stars + 1) as DisplayTier;
+    return (Math.max(1, Math.min(5, tier)) as DisplayTier);
   };
 
   // How far the user can set the GLOBAL display tier
@@ -110,8 +117,7 @@ export default function HeroesScreen() {
 
     const levelMult = 1 + (hero.level - 1) * 0.05;
 
-    // UI-only: use safeStars (min 1) so a "new hero" doesn't look broken
-    const starMult = 1 + (safeStars(hero) - 1) * 0.1;
+    const starMult = 1 + displayStars(hero) * 0.1; // stars=0 => no bonus
 
     const awakenMult = 1 + (hero.awakening_level || 0) * 0.2;
 
@@ -361,11 +367,13 @@ export default function HeroesScreen() {
                         </Text>
                       </View>
 
-                      {/* Stars (always show at least 1) */}
+                      {/* Stars (0 stars = no stars shown) */}
                       <View style={styles.starsContainer}>
-                        {Array.from({ length: Math.min(5, safeStars(hero)) }).map((_, i) => (
-                          <Ionicons key={i} name="star" size={10} color="rgba(255, 215, 140, 0.92)" />
-                        ))}
+                        {displayStars(hero) > 0 &&
+                          Array.from({ length: Math.min(5, displayStars(hero)) }).map((_, i) => (
+                            <Ionicons key={i} name="star" size={10} color="rgba(255, 215, 140, 0.92)" />
+                          ))}
+
                         {unlockedTier === 6 && <Text style={styles.plusMark}>+</Text>}
                       </View>
 

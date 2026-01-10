@@ -376,7 +376,7 @@ export default function HeroUpgradeScreen() {
                         <View style={styles.lockBadge}>
                           <Ionicons name="lock-closed" size={14} color={COLORS.cream.dark} />
                           <Text style={styles.lockText}>
-                            Lv.{skill.unlock_level}{skill.unlock_stars > 0 ? ` • ${skill.unlock_stars}★` : ''}
+                            Lv.{skill.unlock_level}{starsSuffix(skill.unlock_stars)}
                           </Text>
                         </View>
                       )}

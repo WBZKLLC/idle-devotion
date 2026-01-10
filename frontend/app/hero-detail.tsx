@@ -416,7 +416,32 @@ export default function HeroDetailScreen() {
               <Text style={styles.promoteText}>⭐ Stars</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Preview 5+ Cinematic Button - Only for UR/UR+ heroes not yet at 5+ star */}
+          {isHighRarity() && !isFivePlusStar() && VIDEOS_AVAILABLE && (
+            <TouchableOpacity 
+              style={styles.preview5PlusButton}
+              onPress={handlePreview5PlusCinematic}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#9c27b0', '#7b1fa2']}
+                style={styles.preview5PlusGradient}
+              >
+                <Ionicons name="play-circle" size={20} color={COLORS.cream.pure} />
+                <Text style={styles.preview5PlusText}>Preview 5+ Cinematic</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </ScrollView>
+
+        {/* 5+ Star Cinematic Modal */}
+        <HeroCinematicModal
+          visible={showCinematicModal}
+          onClose={handleCloseCinematic}
+          videoSource={cinematicVideoSource}
+          heroName={heroData?.name || 'Hero'}
+        />
       </SafeAreaView>
     </LinearGradient>
   );

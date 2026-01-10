@@ -85,8 +85,14 @@ export default function HeroDetailScreen() {
   // Tier selection (DEFAULT = 1-star art)
   const [selectedTier, setSelectedTier] = useState<DisplayTier>(1);
 
-  // Selected tier art (background + portrait)
-  const tierArt = useMemo(() => resolveTierArt(heroData, selectedTier), [heroData, selectedTier]);
+  // Selected tier art URL (string, not {uri: ...} object)
+  const tierArtUrl = useMemo(() => resolveTierArt(heroData, selectedTier), [heroData, selectedTier]);
+  
+  // Image source for tier art (properly wrapped)
+  const tierArtSource = useMemo(() => {
+    if (tierArtUrl) return { uri: tierArtUrl };
+    return require('../assets/backgrounds/sanctum_environment_01.jpg');
+  }, [tierArtUrl]);
 
   // Check if hero is at 5+ star (final ascension)
   const isFivePlusStar = useCallback(() => {

@@ -95,17 +95,16 @@ export default function StoreScreen() {
   };
 
   const loadStoreData = async () => {
+    if (!user?.username) return;
+    
     setIsLoading(true);
     try {
-      const [packagesRes, divineRes, vipRes] = await Promise.all([
-        fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/store/crystal-packages`),
-        fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/store/divine-packages?username=${user?.username}`),
-        fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/vip/info/${user?.username}`)
+      // Use centralized API wrappers (parallel loads preserved)
+      const [packagesData, divineData, vipData] = await Promise.all([
+        getCrystalPackages(),
+        getDivinePackages(user.username),
+        getVipInfo(user.username),
       ]);
-      
-      const packagesData = await packagesRes.json();
-      const divineData = await divineRes.json();
-      const vipData = await vipRes.json();
       
       const packagesObj = packagesData.packages || packagesData;
       const packagesArray = Object.values(packagesObj) as CrystalPackage[];

@@ -1,6 +1,14 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+
+// Platform-safe storage utilities
+import { 
+  storageGet, 
+  storageSet, 
+  storageRemove, 
+  clearAuthStorage,
+  STORAGE_KEYS 
+} from '../lib/storage';
 
 // Centralized API wrappers - store actions use these (no direct URL construction)
 import {
@@ -19,12 +27,6 @@ import {
   getUserCR,
   setProfilePicture,
 } from '../lib/api';
-
-// Storage keys
-const STORAGE_KEYS = {
-  USERNAME: 'divine_heroes_username',
-  AUTH_TOKEN: 'divine_heroes_auth_token',
-};
 
 interface User {
   id: string;

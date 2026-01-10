@@ -109,12 +109,10 @@ export default function EventsScreen() {
     
     setIsPulling(true);
     try {
-      const response = await axios.post(`${API_BASE}/event-banners/${bannerId}/pull`, null, {
-        params: { username: user.username, multi: isMulti }
-      });
+      const result = await pullEventBanner(user.username, bannerId, isMulti);
       
-      if (response.data.heroes && response.data.heroes.length > 0) {
-        const heroNames = response.data.heroes.map((h: any) => `⭐ ${h.name} (${h.rarity})`).join('\n');
+      if (result.heroes && result.heroes.length > 0) {
+        const heroNames = result.heroes.map((h: any) => `⭐ ${h.name} (${h.rarity})`).join('\n');
         Alert.alert('🎉 Summon Results!', heroNames);
         await fetchUser();
       }

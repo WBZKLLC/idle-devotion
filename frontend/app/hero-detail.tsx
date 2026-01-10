@@ -174,7 +174,7 @@ export default function HeroDetailScreen() {
     }
   }, [hydrated, user, id]);
 
-  // Cache-first hero loading: prefer store, fallback to API wrapper
+  // Cache-first hero loading: prefer store selector, fallback to API wrapper
   const loadHeroData = async () => {
     try {
       setIsLoading(true);
@@ -191,11 +191,8 @@ export default function HeroDetailScreen() {
         setSelectedTier(effective);
       };
 
-      // 1) Cache-first: if heroes already in store, pull directly
-      const cached = Array.isArray(userHeroes)
-        ? userHeroes.find((h: any) => String(h?.id) === String(id))
-        : null;
-
+      // 1) Cache-first: use store selector (single source of truth for cache lookup)
+      const cached = selectUserHeroById(id);
       if (cached) {
         applyHero(cached);
         return;
@@ -204,18 +201,15 @@ export default function HeroDetailScreen() {
       // 2) If cache missing, fetch heroes list once into store, then select
       if (user && (!userHeroes || userHeroes.length === 0)) {
         await fetchUserHeroes();
-        // Re-check store after fetch (note: this relies on store being updated synchronously)
-        const storeHeroes = useGameStore.getState().userHeroes;
-        const afterFetch = Array.isArray(storeHeroes)
-          ? storeHeroes.find((h: any) => String(h?.id) === String(id))
-          : null;
+        // Re-check store after fetch using selector
+        const afterFetch = useGameStore.getState().selectUserHeroById(id);
         if (afterFetch) {
           applyHero(afterFetch);
           return;
         }
       }
 
-      // 3) Final fallback: API wrapper fetch + filter (never builds URLs directly)
+      // 3) Final fallback: API wrapper fetch single hero (prevents full list re-fetch)
       const fresh = await getUserHeroById(String(user?.username), String(id));
       applyHero(fresh);
     } catch (error) {

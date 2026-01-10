@@ -2062,14 +2062,19 @@ async def get_user_heroes(username: str):
     
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
     
-    # Enrich with hero data
+    # Enrich with hero data + ascension images
     enriched_heroes = []
     for uh in user_heroes:
         hero_data = await db.heroes.find_one({"id": uh["hero_id"]})
         if hero_data:
+            hero_dict = convert_objectid(hero_data)
+            # Add ascension images from manifest if available
+            ascension_images = get_ascension_images(hero_dict.get("name", ""))
+            if ascension_images:
+                hero_dict["ascension_images"] = ascension_images
             enriched_heroes.append({
                 **convert_objectid(uh),
-                "hero_data": convert_objectid(hero_data)
+                "hero_data": hero_dict
             })
     
     return enriched_heroes

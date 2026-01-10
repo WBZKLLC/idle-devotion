@@ -422,7 +422,7 @@ export default function ChatScreen() {
               />
               <TouchableOpacity 
                 style={[styles.sendButton, !newMessage.trim() && styles.sendButtonDisabled]}
-                onPress={sendMessage}
+                onPress={handleSendMessage}
                 disabled={sending || !newMessage.trim()}
               >
                 {sending ? (

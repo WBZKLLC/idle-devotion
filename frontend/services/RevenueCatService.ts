@@ -219,23 +219,12 @@ class RevenueCatService {
   // Notify backend about purchase
   private async notifyBackendPurchase(productId: string, transactionId: string): Promise<void> {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/purchase/verify`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: this.userId,
-            product_id: productId,
-            transaction_id: transactionId,
-            platform: Platform.OS,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        console.error('Backend purchase verification failed');
-      }
+      await verifyPurchase({
+        username: this.userId || '',
+        productId,
+        transactionId,
+        platform: Platform.OS as 'ios' | 'android' | 'web',
+      });
     } catch (error) {
       console.error('Failed to notify backend:', error);
     }

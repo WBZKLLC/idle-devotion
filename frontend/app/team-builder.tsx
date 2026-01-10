@@ -16,6 +16,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 
+// Centralized API wrappers (no raw fetch in screens)
+import { getTeamsFull, updateTeamSlots, createTeamFull, setActiveTeam } from '../lib/api';
+
 interface TeamSlot {
   slot: number;
   position: 'front' | 'back';

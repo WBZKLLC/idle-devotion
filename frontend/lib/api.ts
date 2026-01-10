@@ -399,6 +399,46 @@ export async function pullEventBanner(username: string, bannerId: string, multi:
 }
 
 // ─────────────────────────────────────────────────────────────
+// GUILD WAR (guild-war.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getGuildWarStatus() {
+  const res = await api.get(`/guild-war/status`);
+  return res.data;
+}
+
+export async function getGuildWarLeaderboard(limit: number = 50) {
+  const res = await api.get(`/guild-war/leaderboard`, {
+    params: { limit },
+  });
+  return res.data;
+}
+
+export async function getGuildWarHistory(username: string, limit: number = 20) {
+  const u = requireUsername(username);
+  const res = await api.get(`/guild-war/history/${encodeURIComponent(u)}`, {
+    params: { limit },
+  });
+  return res.data;
+}
+
+export async function registerGuildWar(username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/guild-war/register/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function attackGuildWarApi(username: string, targetGuildId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/guild-war/attack/${encodeURIComponent(u)}`,
+    null,
+    { params: { target_guild_id: targetGuildId } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // CHAT (chat.tsx)
 // ─────────────────────────────────────────────────────────────
 

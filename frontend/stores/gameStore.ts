@@ -232,19 +232,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
-      const response = await axios.post(
-        `${BACKEND_URL}/api/auth/set-password?username=${encodeURIComponent(username)}&new_password=${encodeURIComponent(password)}`
-      );
+      const data = await apiSetPassword(username, password);
       
-      const { token } = response.data;
+      const { token } = data;
       
       // Now login to get user data
-      const userResponse = await axios.get(`${BACKEND_URL}/api/user/${username}`);
+      const userData = await apiFetchUser(username);
       
       // Save auth data
       await saveAuthData(username, token);
       
-      set({ user: userResponse.data, authToken: token, isLoading: false, needsPassword: false });
+      set({ user: userData, authToken: token, isLoading: false, needsPassword: false });
       
       return { success: true };
     } catch (error: any) {
@@ -269,13 +267,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (username && token) {
         // Verify token is still valid
         try {
-          const verifyResponse = await axios.get(`${BACKEND_URL}/api/auth/verify`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const verifyData = await verifyAuthToken(token);
           
-          if (verifyResponse.data.valid) {
+          if (verifyData.valid) {
             console.log('restoreSession: token valid, user restored');
-            set({ user: verifyResponse.data.user, authToken: token, isHydrated: true });
+            set({ user: verifyData.user, authToken: token, isHydrated: true });
             return;
           }
         } catch (e) {
@@ -284,9 +280,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         
         // Fall back to legacy username-based restore for old accounts
         try {
-          const response = await axios.get(`${BACKEND_URL}/api/user/${username}`);
-          console.log('restoreSession: legacy user found', response.data.username);
-          set({ user: response.data, isHydrated: true });
+          const userData = await apiFetchUser(username);
+          console.log('restoreSession: legacy user found', userData.username);
+          set({ user: userData, isHydrated: true });
           return;
         } catch (error) {
           console.log('restoreSession: user not found, clearing storage');

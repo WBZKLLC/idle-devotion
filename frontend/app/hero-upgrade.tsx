@@ -16,6 +16,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 
+// Centralized API wrappers (no raw fetch in screens)
+import { getHeroDetails, levelUpHero as apiLevelUpHero, promoteHeroStar, awakenHero as apiAwakenHero } from '../lib/api';
+
 export default function HeroUpgradeScreen() {
   const { heroId } = useLocalSearchParams<{ heroId: string }>();
   const router = useRouter();

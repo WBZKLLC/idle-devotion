@@ -123,17 +123,6 @@ interface GameState {
   refreshHeroesAfterGacha: (result: any) => Promise<void>;
 }
 
-// Helper to save auth data using platform-safe storage
-const saveAuthData = async (username: string, token: string) => {
-  try {
-    await storageSet(STORAGE_KEYS.USERNAME, username);
-    await storageSet(STORAGE_KEYS.AUTH_TOKEN, token);
-    console.log('[saveAuthData] Auth data saved for:', username);
-  } catch (e) {
-    console.error('[saveAuthData] Failed to save auth data:', e);
-  }
-};
-
 // Helper to index userHeroes by id for O(1) lookups
 function indexUserHeroesById(list: UserHero[] | undefined | null): Record<string, UserHero> {
   const byId: Record<string, UserHero> = {};
@@ -154,14 +143,6 @@ function setUserHeroesState(set: any, heroes: UserHero[]) {
     userHeroesById: indexUserHeroesById(heroes),
   });
 }
-
-// Helper to get stored auth data using platform-safe storage
-const getStoredAuthData = async (): Promise<{username: string | null; token: string | null}> => {
-  const username = await storageGet(STORAGE_KEYS.USERNAME);
-  const token = await storageGet(STORAGE_KEYS.AUTH_TOKEN);
-  if (__DEV__) console.log('[getStoredAuthData] username:', username ? '(exists)' : '(null)', 'token:', token ? '(exists)' : '(null)');
-  return { username, token };
-};
 
 export const useGameStore = create<GameState>((set, get) => ({
   user: null,

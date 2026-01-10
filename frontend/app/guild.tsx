@@ -357,7 +357,7 @@ export default function GuildScreen() {
                     </View>
                   ))}
                   
-                  <TouchableOpacity style={styles.leaveButton} onPress={leaveGuild}>
+                  <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveGuild}>
                     <Text style={styles.leaveButtonText}>Leave Guild</Text>
                   </TouchableOpacity>
                 </View>

@@ -27,6 +27,8 @@ const VIOLATIONS = [
     name: 'Direct featureStore import in UI',
     pattern: /from\s+['"].*stores\/featureStore['"]/,
     message: 'UI should use isFeatureEnabled() from lib/features.ts, not featureStore directly',
+    // _layout.tsx is allowed because it handles app boot hydration
+    allowedFiles: ['app/_layout.tsx'],
   },
   {
     name: 'Direct /v1/features fetch',

@@ -164,8 +164,9 @@ export default function DungeonsScreen() {
 
   const loadStagesInfo = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/stages/info`);
-      setStagesInfo(response.data);
+      // Use centralized API wrapper
+      const data = await getStagesInfo();
+      setStagesInfo(data);
     } catch (error) {
       console.error('Error loading stages info:', error);
     }
@@ -174,8 +175,9 @@ export default function DungeonsScreen() {
   const loadUserProgress = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/stages/${user.username}/progress`);
-      setUserProgress(response.data);
+      // Use centralized API wrapper
+      const data = await getDungeonProgress(user.username);
+      setUserProgress(data);
     } catch (error) {
       console.error('Error loading progress:', error);
     }
@@ -184,8 +186,9 @@ export default function DungeonsScreen() {
   const loadUserStamina = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/economy/${user.username}/stamina`);
-      setUserStamina(response.data.current_stamina || 100);
+      // Use centralized API wrapper
+      const data = await getStamina(user.username);
+      setUserStamina(data.current_stamina || 100);
     } catch (error) {
       console.error('Error loading stamina:', error);
     }

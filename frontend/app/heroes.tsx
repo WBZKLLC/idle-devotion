@@ -307,10 +307,10 @@ export default function HeroesScreen() {
                 const heroData = hero.hero_data;
                 const power = calculatePower(hero);
 
+                // Use centralized tier logic from lib/tier.ts
+                const effectiveTier = effectiveTierForHero(hero, displayTier);
+                const tierSource = tierArtToSource(heroData, effectiveTier);
                 const unlockedTier = unlockedTierForHero(hero);
-                const effectiveTier: DisplayTier = (displayTier <= unlockedTier ? displayTier : unlockedTier);
-
-                const tierSource = resolveTierArt(heroData, effectiveTier);
 
                 return (
                   <Pressable
@@ -347,7 +347,7 @@ export default function HeroesScreen() {
                       {/* Tier display (shows what tier is being displayed, and whether limited) */}
                       <View style={styles.tierBadge}>
                         <Text style={styles.tierBadgeText}>
-                          {effectiveTier === 6 ? '5★+' : `${effectiveTier}★`}
+                          {TIER_LABELS[effectiveTier]}
                           {effectiveTier < displayTier ? ' (LOCKED)' : ''}
                         </Text>
                       </View>

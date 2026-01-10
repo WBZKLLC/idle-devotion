@@ -157,6 +157,40 @@ def generate_stable_hero_id(hero_name: str, rarity: str) -> str:
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Ascension Images Helper - loads from /app/art/ascension/<HeroName>/manifest.json
+ASCENSION_CACHE: Dict[str, dict] = {}
+
+def get_ascension_images(hero_name: str) -> dict:
+    """Load ascension images from manifest file for a hero.
+    Returns dict with keys "1" through "6" mapping to image URLs.
+    """
+    if hero_name in ASCENSION_CACHE:
+        return ASCENSION_CACHE[hero_name]
+    
+    # Convert hero name to folder format: "Phoenix the Reborn" -> "Phoenix_the_Reborn"
+    folder_name = hero_name.replace(" ", "_")
+    manifest_path = Path("/app/art/ascension") / folder_name / "manifest.json"
+    
+    result = {}
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, 'r') as f:
+                data = json.load(f)
+                # Convert "1_star", "2_star" keys to "1", "2" etc.
+                if "ascension_images" in data:
+                    for key, value in data["ascension_images"].items():
+                        # Extract star number from "1_star", "2_star", etc.
+                        star_num = key.split("_")[0]
+                        if isinstance(value, dict) and "url" in value:
+                            result[star_num] = value["url"]
+                        elif isinstance(value, str):
+                            result[star_num] = value
+        except Exception as e:
+            logging.warning(f"Failed to load ascension manifest for {hero_name}: {e}")
+    
+    ASCENSION_CACHE[hero_name] = result
+    return result
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)

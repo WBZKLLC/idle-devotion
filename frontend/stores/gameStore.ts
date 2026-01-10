@@ -93,6 +93,7 @@ interface GameState {
   needsPassword: boolean;  // For legacy accounts without passwords
   
   // Actions
+  hydrateAuth: () => Promise<void>;  // Called on app boot to restore auth from storage
   initUser: (username: string, password?: string) => Promise<void>;
   registerUser: (username: string, password: string) => Promise<{success: boolean; error?: string}>;
   loginWithPassword: (username: string, password: string) => Promise<{success: boolean; error?: string}>;

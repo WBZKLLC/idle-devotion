@@ -28,6 +28,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
 
+// Feature flags (SINGLE SOURCE OF TRUTH)
+import { FEATURES } from '../lib/features';
+
 // Centralized API calls (SINGLE SOURCE OF TRUTH for endpoints)
 // getHeroProgression + promoteHeroStar + getUserHeroById - all hero endpoints live in lib/api.ts
 import { getHeroProgression, promoteHeroStar, getUserHeroById } from '../lib/api';

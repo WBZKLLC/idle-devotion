@@ -280,3 +280,40 @@ export async function startDetailedCombat(username: string, enemyName: string, e
   });
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// STORE / MONETIZATION (store.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getCrystalPackages() {
+  const res = await api.get(`/store/crystal-packages`);
+  return res.data;
+}
+
+export async function getDivinePackages(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/store/divine-packages`, {
+    params: { username: u },
+  });
+  return res.data;
+}
+
+export async function getVipInfo(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/vip/info/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function purchasePackage(
+  username: string,
+  packageId: string,
+  paymentMethod?: string
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/store/purchase`,
+    { package_id: packageId, payment_method: paymentMethod },
+    { params: { username: u } }
+  );
+  return res.data;
+}

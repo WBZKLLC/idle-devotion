@@ -342,6 +342,18 @@ backend:
         agent: "testing"
         comment: "✅ TESTED: Journey System APIs fully functional. All 2 endpoints tested successfully (100% success rate). GET /api/journey/Adam returns complete 7-day journey data with account age (4 days), current day (4), and all 7 days configured with proper structure (unlocked status, current status, login claimed status). Days 1-4 unlocked, Day 4 is current, Days 5-7 locked as expected. POST /api/journey/Adam/claim-login?day=1 successfully claims Day 1 login reward with rewards: 100 crystals, 50,000 gold, 100 stamina. Authentication with Adam/Adam123! working. Journey progression tracking correctly. All requirements from review request met."
 
+  - task: "5+ Star Hero Cinematic Video Feature"
+    implemented: true
+    working: false
+    file: "/app/frontend/components/HeroCinematicModal.tsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "🎬 TESTED: 5+ Star Hero Cinematic Video Feature partially functional. ✅ WORKING: Preview 5+ button appears correctly on UR/UR+ heroes (Apollyon the Fallen tested), button visibility rules working (only UR/UR+ show button), modal opens with correct hero name and '5+ Star Ascension' title, graceful error handling implemented (no crashes), modal close functionality working, memory leak test passed (3 open/close cycles). ❌ ISSUE: Video loading fails - modal displays 'Failed to load video' error message. All 22 MP4 files confirmed present in /app/frontend/assets/videos/hero_5plus/. Root cause likely require() path resolution in React Native/Expo environment. T1-T3,T5 tests passed, T4 graceful error handling confirmed. F1-F7 failure conditions all passed (no crashes, proper error handling). RECOMMENDATION: Investigate video loading mechanism - may need expo-video package or different asset loading approach."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

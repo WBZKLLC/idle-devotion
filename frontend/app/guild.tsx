@@ -136,23 +136,14 @@ export default function GuildScreen() {
     }
   };
 
-  const joinGuild = async (guildId: string) => {
+  const handleJoinGuild = async (guildId: string) => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/join?username=${user?.username}&guild_id=${guildId}`,
-        { method: 'POST' }
-      );
-      
-      if (response.ok) {
-        Alert.alert('Success!', 'Joined guild successfully!');
-        setShowJoinModal(false);
-        loadGuildData();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to join guild');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to join guild');
+      await joinGuildApi(user?.username || '', guildId);
+      Alert.alert('Success!', 'Joined guild successfully!');
+      setShowJoinModal(false);
+      loadGuildData();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to join guild');
     }
   };
 

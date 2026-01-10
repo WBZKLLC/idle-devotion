@@ -37,34 +37,41 @@ const src = fs.readFileSync(filePath, "utf8");
 
 const hits = [];
 
-// (1) Direct object set({ ... userHeroes: ... })
-const reDirect = /set\s*\(\s*\{[\s\S]*?userHeroes\s*:/g;
+// Strategy: find all occurrences of "userHeroes:" that appear to be in a set() context
+// Look backwards to see if it's inside a set({ or set((s) => { return {
 
-// (2) Functional set((s)=>{ ... return { userHeroes: ... } ... })
-const reFnReturn = /set\s*\(\s*\(\s*s\s*\)\s*=>\s*\{[\s\S]*?return\s*\{[\s\S]*?userHeroes\s*:/g;
+// Find all "userHeroes:" occurrences
+const userHeroesRe = /userHeroes\s*:/g;
+let m;
 
-function collectMatches(re, kind) {
-  let m;
-  while ((m = re.exec(src))) {
-    const start = m.index;
-    const snippet = src.slice(start, start + 320);
-    hits.push({ start, snippet, kind });
+while ((m = userHeroesRe.exec(src))) {
+  const pos = m.index;
+  
+  // Look at context before this match (up to 200 chars back)
+  const before = src.slice(Math.max(0, pos - 200), pos);
+  
+  // Check if this looks like it's inside a set() call
+  const isInSet = before.includes('set(') || before.includes('set((');
+  
+  // Skip if this is in the interface definition or initial state
+  const isInterfaceOrInitial = before.includes('interface') || 
+                               before.includes('create<GameState>') ||
+                               before.includes('setUserHeroesState');
+  
+  if (isInSet && !isInterfaceOrInitial) {
+    // Get snippet around the match
+    const snippet = src.slice(Math.max(0, pos - 50), pos + 200);
+    hits.push({ pos, snippet });
   }
 }
 
-collectMatches(reDirect, "set({ ... })");
-collectMatches(reFnReturn, "set((s)=>{ return { ... } })");
-
-// A match is bad if it doesn't include userHeroesById in the nearby snippet.
+// A match is bad if it doesn't include userHeroesById nearby
 const bad = hits.filter((h) => !h.snippet.includes("userHeroesById"));
 
-// Also allow setUserHeroesState (which is the approved helper)
-const reallyBad = bad.filter((h) => !h.snippet.includes("setUserHeroesState"));
-
-if (reallyBad.length) {
+if (bad.length) {
   console.error("\n[guard:user-heroes-map] ❌ Found set({ userHeroes: ... }) not accompanied by userHeroesById.\n");
-  for (const b of reallyBad) {
-    console.error(`- ${b.kind} near index ${b.start}:\n${b.snippet.slice(0, 200)}...\n---`);
+  for (const b of bad) {
+    console.error(`- Near index ${b.pos}:\n${b.snippet.slice(0, 180)}...\n---`);
   }
   console.error(
     "Fix: set both userHeroes and userHeroesById together, or use setUserHeroesState(set, heroes).\n"

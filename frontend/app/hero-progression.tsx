@@ -997,6 +997,7 @@ export default function HeroProgressionScreen() {
           onClose={closeCinematic}
           videoSource={cinematicVideoSource}
           heroName={heroName}
+          heroKey={heroData ? heroNameToId(heroData.name) : 'unknown'}
         />
       </SafeAreaView>
     </View>

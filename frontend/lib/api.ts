@@ -267,3 +267,15 @@ export async function saveModeTeam(username: string, mode: string, heroIds: stri
   );
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// COMBAT (combat.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function startDetailedCombat(username: string, enemyName: string, enemyPower: number) {
+  const u = requireUsername(username);
+  const res = await api.post(`/combat/detailed`, null, {
+    params: { username: u, enemy_name: enemyName, enemy_power: enemyPower }
+  });
+  return res.data;
+}

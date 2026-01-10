@@ -347,7 +347,8 @@ export default function HeroProgressionScreen() {
       }));
 
       await fetchUser();
-      await fetchUserHeroes();
+      // Refresh only this hero (not full roster) to get updated data
+      await getUserHeroById(String(heroId), { forceRefresh: true });
 
       const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars });
       if (newTier > effectiveUnlockedTier) {

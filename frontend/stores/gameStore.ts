@@ -112,7 +112,8 @@ interface GameState {
   selectUserHeroById: (id: string | undefined) => UserHero | undefined;
   
   // Single-hero ensure: cache-first + API fallback (keeps fetch logic out of screens)
-  getUserHeroById: (id: string) => Promise<UserHero>;
+  // Use forceRefresh: true after upgrade/promotion to get fresh data without list fetch
+  getUserHeroById: (id: string, opts?: { forceRefresh?: boolean }) => Promise<UserHero>;
 }
 
 // Helper to save auth data

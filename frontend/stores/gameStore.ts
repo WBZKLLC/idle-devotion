@@ -82,6 +82,7 @@ interface UserHero {
 interface GameState {
   user: User | null;
   userHeroes: UserHero[];
+  userHeroesById: Record<string, UserHero>;
   allHeroes: Hero[];
   isLoading: boolean;
   error: string | null;

@@ -130,15 +130,7 @@ export default function HeroesScreen() {
   const RARITIES = ['SR', 'SSR', 'SSR+', 'UR', 'UR+'];
   const CLASSES = ['Warrior', 'Mage', 'Archer'];
 
-  // Display tier buttons
-  const TIER_LABELS: { tier: DisplayTier; label: string }[] = [
-    { tier: 1, label: '1★' },
-    { tier: 2, label: '2★' },
-    { tier: 3, label: '3★' },
-    { tier: 4, label: '4★' },
-    { tier: 5, label: '5★' },
-    { tier: 6, label: '5★+' },
-  ];
+  // Use TIER_LABEL_ARRAY from lib/tier.ts for display tier buttons
 
   if (!user) {
     return (

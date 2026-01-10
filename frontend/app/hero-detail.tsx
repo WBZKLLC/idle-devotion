@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { router, useLocalSearchParams } from 'expo-router';
+import HeroCinematicModal from '../components/HeroCinematicModal';
+import { getHeroCinematicVideo, heroNameToId, VIDEOS_AVAILABLE } from '../constants/heroCinematics';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'N': '#9e9e9e',

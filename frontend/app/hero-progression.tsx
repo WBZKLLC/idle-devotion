@@ -583,7 +583,7 @@ export default function HeroProgressionScreen() {
             </Text>
 
             <View style={styles.tierRow}>
-              {TIER_LABELS.map(({ tier, label }) => {
+              {TIER_LABEL_ARRAY.map(({ tier, label }) => {
                 const locked = tier > effectiveUnlockedTier;
                 const active = tier === previewTier;
 

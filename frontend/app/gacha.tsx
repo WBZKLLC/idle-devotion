@@ -71,14 +71,24 @@ const TIER_LABELS: Record<DisplayTier, string> = {
  * GACHA / SUMMON — 2Dlive UI shell
  * - ALL original logic preserved (pullGacha, pity, currency, modal)
  * - UI wrap only using DivineShell components
+ * - NEW: Tier unlock detection + celebration on summon
  */
 export default function GachaScreen() {
   // ----------------------------
   // EXISTING LOGIC (UNTOUCHED)
   // ----------------------------
-  const { user, pullGacha, isLoading } = useGameStore();
+  const { user, pullGacha, isLoading, userHeroes, fetchUserHeroes } = useGameStore();
   const [showResult, setShowResult] = useState(false);
   const [gachaResult, setGachaResult] = useState<any>(null);
+  
+  // ----------------------------
+  // TIER UNLOCK TRACKING
+  // ----------------------------
+  const [maxTierBefore, setMaxTierBefore] = useState<DisplayTier>(1);
+  const [newTierUnlocked, setNewTierUnlocked] = useState<DisplayTier | null>(null);
+
+  // Compute current max unlocked tier from all heroes
+  const currentMaxTier = useMemo(() => computeUserMaxUnlockedTier(userHeroes), [userHeroes]);
 
   const handlePull = async (pullType: 'single' | 'multi', currencyType: 'gems' | 'coins') => {
     if (!user) return;
@@ -94,18 +104,42 @@ export default function GachaScreen() {
       return;
     }
 
+    // Capture tier state BEFORE pull
+    setMaxTierBefore(currentMaxTier);
+    setNewTierUnlocked(null);
+
     try {
       const result = await pullGacha(pullType, currencyType);
       setGachaResult(result);
+      
+      // Refresh heroes to get updated tier info
+      await fetchUserHeroes();
+      
       setShowResult(true);
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to pull gacha');
     }
   };
 
+  // Check for new tier unlock when result shows
+  useEffect(() => {
+    if (showResult && gachaResult) {
+      const newMax = computeUserMaxUnlockedTier(userHeroes);
+      if (newMax > maxTierBefore) {
+        setNewTierUnlocked(newMax);
+      }
+    }
+  }, [showResult, gachaResult, userHeroes, maxTierBefore]);
+
   const closeResult = () => {
     setShowResult(false);
     setGachaResult(null);
+    setNewTierUnlocked(null);
+  };
+
+  const goToHeroes = () => {
+    closeResult();
+    router.push('/heroes');
   };
 
   const handleBack = () => {

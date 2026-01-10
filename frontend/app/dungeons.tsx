@@ -44,9 +44,7 @@ const COLORS = {
   },
 };
 
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
-  : '/api';
+// API_BASE removed - using centralized lib/api.ts wrappers
 
 // Stage type configurations
 const STAGE_TYPES = {

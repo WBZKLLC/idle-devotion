@@ -79,6 +79,7 @@ export async function getUserHeroById(username: string, userHeroId: string) {
   const u = requireUsername(username);
 
   if (SINGLE_HERO_ENDPOINT_AVAILABLE) {
+    if (__DEV__) console.log("[api] SINGLE_HERO_ENDPOINT_AVAILABLE=true (no list fallback permitted)");
     // Hard guardrail: no list fallback permitted once endpoint exists.
     try {
       const res = await api.get(singleHeroPath(u, userHeroId));

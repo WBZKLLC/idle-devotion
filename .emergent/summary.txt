@@ -1,163 +1,116 @@
 <analysis>
 
-<original_problem_statement>
-The user's initial goal was a massive, project-wide architectural refactoring of the frontend data fetching and progression logic. The core tasks were:
-
-1.  **Refactor :** Modify the hero detail screen to fetch a single hero's data instead of relying on a pre-fetched list of all heroes.
-2.  **Centralize Progression Logic:** Ensure all logic related to hero stars, tiers, and their display labels is centralized in  to eliminate logic drift in UI components.
-3.  **Architectural Hardening:** After the initial refactor, the user guided the agent through a comprehensive hardening process to make the new architecture robust, performant, and regression-proof. This involved adding O(1) lookups to the data store, creating smart refresh logic, implementing feature flags, and building a suite of CI guard scripts to enforce the new architectural rules.
+**original_problem_statement**:
+The user's initial goal was to continue a major architectural refactoring. The work for this session was divided into several user-driven phases:
+1.  **Implement Single-Hero Backend Endpoint**: Create the backend endpoint () required by the frontend's new architecture.
+2.  **Fix Pending Issues**: Address long-standing issues, including authentication state persistence and backend code cleanup.
+3.  **Implement Remote Feature Flags**: Build a robust, backend-driven, cacheable feature flag system to allow for dynamic feature toggling (e.g., , ).
+4.  **Stabilize Hero Progression Screen**: Debug and fix a critical, recurring Rendered more hooks than during the previous render error that was making the hero progression and detail screens unstable.
 
 **PRODUCT REQUIREMENTS (From session):**
-- **P0: Complete Hero-Detail Refactor:** Refactor  to use a single-hero-ensure pattern. (DONE)
-- **P0: Centralize Data Fetching & Caching:** Implement a performant, cache-first data fetching strategy in  using an O(1) lookup map. (DONE)
-- **P0: Harden Architecture with CI Guards:** Create a suite of scripts to programmatically enforce all new architectural invariants (e.g., API usage, data store sync, selector performance). (DONE)
-</original_problem_statement>
+- **P0: Implement Single-Hero Backend Endpoint.** (DONE)
+- **P0: Stabilize Hero Progression/Detail Screens.** The root cause was identified as state management instability, not a simple hook order violation. A major refactor of  was completed to fix this. (DONE)
+- **P0: Implement Remote Feature Flag System.** A complete system with backend endpoint, frontend store, caching, TTL, CI guards, and a maintenance mode gate was implemented. (DONE)
+- **P1: Fix Authentication Persistence.** This was attempted but the initial fix was ineffective. It has been re-prioritized to P0 as it is blocking all further testing. (IN PROGRESS)
+- **P2: Backend Code Cleanup.** A partial cleanup was performed, addressing one duplicate endpoint. (IN PROGRESS)
 
 **User's preferred language**: English
 
 **what currently exists?**
-The frontend architecture has been significantly refactored and hardened. All hero data fetching is now centralized in , which features a  map for fast O(1) lookups. The  screen exclusively uses this new single-hero-ensure pattern. All hero progression logic (math and display labels for stars/tiers) is centralized in  and exposed to the UI via a single barrel export, . Coming soon UI for the Awakening feature is now gated behind a feature flag.
-
-Most importantly, a suite of CI guard scripts has been created in  and wired into . These scripts programmatically enforce the new architecture, preventing regressions related to API usage, data store synchronization, and selector performance.
+The application now has a complete, robust, and backend-driven remote feature flag system, which includes a global maintenance mode gate. The backend has the required single-hero endpoint, and the frontend is configured to use it. Critically, the  screen has undergone a major state management refactor, replacing fragile local state with a store-first, selector-driven pattern that includes a safe mechanism for optimistic UI updates. This has resolved a major stability issue (a hooks mismatch crash) that was plaguing the hero screens. The CI guard suite has been expanded to 6 scripts, enforcing the new architectural rules for feature flags and API usage. However, the application is currently blocked by a critical authentication persistence issue on the web preview, preventing users from staying logged in after a page refresh.
 
 **Last working item**:
-    - Last item agent was working: The final architectural hardening task: creating and verifying the  script. This guard ensures that whenever the  array is mutated in the , the  lookup map is updated in sync, preventing cache desynchronization. The agent created the script, fixed a regex issue, wired it into the  guard chain, and verified that all guards pass.
-    - Status: COMPLETED
-    - Agent Testing Done: Y
-    - Which testing method agent to use? NA
-    - User Testing Done: Y
+    - Last item agent was working: The agent and user collaboratively diagnosed that the real blocker for testing is the authentication persistence issue. The user provided a detailed, platform-safe, token-based implementation plan to fix it. The agent was about to begin implementing this plan.
+    - Status: NOT STARTED
+    - Agent Testing Done: N/A
+    - Which testing method agent to use? both
+    - User Testing Done: N/A
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Authentication state persistence in web preview (P2)
-  - Issue 2: Address  technical debt (P3)
+  - Issue 1: Authentication state does not persist on web preview (P0)
+  - Issue 2: Address remaining  technical debt (P2)
   
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: None in this session. This has been consistently de-prioritized.
-     - Next debug checklist: 
-       1. Examine  for Zustand  middleware setup.
-       2. Review  hook usage across the app, especially in  and .
-       3. Test the login flow in the web preview to confirm if state (username, token) persists after a page reload.
-     - Why fix this issue and what will be achieved with the fix? Improves the developer and tester experience by preventing the need to re-login constantly in the web preview.
-     - Status:  NOT STARTED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: None
+     - **Description**: After logging in on the web preview, the session is lost upon a page refresh, forcing the user to log in again. This blocks all testing of flows that require navigation.
+     - **Attempted fixes**: An early fix attempt involving try/catch blocks around AsyncStorage in  was ineffective.
+     - **Next debug checklist**: 
+        1. **Implement the user's plan from message #505 verbatim.** This is a complete, platform-safe, token-based auth strategy.
+        2. Create  with platform-aware , , and  functions that use  on web and  on native.
+        3. Update the login handler in the  to save the received  to storage using .
+        4. Update the API client () to include an  header on all requests.
+        5. Create a  action in the  to be called on app boot, which reads the token from storage and fetches the user.
+        6. Wire  into the app's root layout ().
+        7. Update the logout flow to remove the token from storage.
+     - **Why fix this issue and what will be achieved with the fix?** This is a **CRITICAL BLOCKER**. Fixing it will enable proper testing of the application on the web preview and unblock all further development.
+     - **Status**:  NOT STARTED
+     - **Is recurring issue?** Y
+     - **Should Test frontend/backend/both after fix?** Both (to ensure API calls are authenticated correctly and frontend state persists).
+     - **Blocked on other issue**: None
+
   - Issue 2: 
-     - Attempted fixes: None. This is a known technical debt item from previous sessions.
-     - Next debug checklist: 
-       1. Read through .
-       2. Identify endpoints that are duplicates or serve legacy purposes.
-       3. Plan a consolidation strategy (e.g., merging similar endpoints, removing unused ones).
-     - Why fix this issue and what will be achieved with the fix? Reduces backend complexity, improves maintainability, and lowers the chance of bugs from legacy code.
-     - Status:  NOT STARTED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? Backend
-     - Blocked on other issue: None
+     - **Description**: The backend file  contains legacy, duplicated, and unorganized endpoints. This is a recurring issue noted in previous forks.
+     - **Attempted fixes**: The agent commented out one duplicate  endpoint and added a comment to a legacy  endpoint. This is only a partial fix.
+     - **Next debug checklist**: 
+        1. Perform a full review of the 140+ endpoints in .
+        2. Identify and group similar endpoints (e.g., the multiple abyss/story endpoints).
+        3. Plan a consolidation strategy to merge or remove redundant endpoints without breaking frontend functionality.
+     - **Why fix this issue and what will be achieved with the fix?** Reduces backend complexity, improves maintainability, and lowers the chance of bugs from legacy code.
+     - **Status**:  IN PROGRESS
+     - **Is recurring issue?** Y
+     - **Should Test frontend/backend/both after fix?** Backend
+     - **Blocked on other issue**: None
 
 **In progress Task List**:
   - None.
 
 **Upcoming and Future Tasks**
-The primary upcoming task is to complete the backend portion of the single-hero-fetch refactor.
-
 *   **Upcoming Tasks:**
-    *   **P0: Implement Single-Hero Backend Endpoint:**
-        *   Create a new endpoint in  (e.g., ).
-        *   Once implemented and tested, flip the  flag to  in .
-        *   Run yarn run v1.22.22
-$ npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map
-
-> frontend@1.0.0 guard:hero
-> node scripts/guard-no-hero-list-fallback.mjs
-
-[guard:no-hero-list-fallback] ℹ️  Flag is false — fallback may be reachable (allowed).
-
-> frontend@1.0.0 guard:tier
-> node scripts/guard-no-direct-tier-imports.mjs
-
-[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
-
-> frontend@1.0.0 guard:select-hero
-> node scripts/guard-select-user-hero-by-id.mjs
-
-[guard:selectUserHeroById] ✅ O(1) selector enforced.
-
-> frontend@1.0.0 guard:user-heroes-map
-> node scripts/guard-user-heroes-map-sync.mjs
-
-[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
-Done in 1.18s. in the frontend to confirm the  script now enforces the strict no-fallback path.
-*   **Future Tasks (from ROADMAP.md):**
+    *   **P0: Implement Platform-Safe Authentication.** This is the immediate next step, as detailed in Pending Issue 1.
+*   **Future Tasks (from ROADMAP.md & session):**
     *   **P1: Progression polish:** Further UI/UX improvements to the hero progression screens.
     *   **P1: Cinematics Phase 1:** Integrate and expand on the existing cinematics framework.
     *   **P2: Campaign Integration:** Deeper integration of the campaign system.
-    *   **P3: Re-enable RevenueCat:** The service was migrated to the API layer but is functionally disabled. This task involves re-enabling it and testing the purchase flow.
-    *   **P3: Backend code cleanup:** Aligns with the pending issue to address  technical debt.
+    *   **P3: Re-enable RevenueCat:** The service was migrated to the API layer but is functionally disabled.
+    *   **P3: Full Backend code cleanup:** Aligns with the pending issue to address  technical debt more thoroughly.
 
 **Completed work in this session**
-- **Architecture: O(1) Hero Cache:**
-  - Added  to .
-  - Refactored  to use the map for O(1) lookups.
-  - Ensured all actions (, ) write to both  list and  map to maintain sync.
-- **Architecture: Data Freshness & Smart Refresh:**
-  - Added a  option to  for targeted cache invalidation.
-  - Refactored  to use this targeted refresh after a promotion, avoiding a full roster fetch.
-  - Created a  store action that uses a heuristic (1-3 heroes = targeted refresh, 4+ = full refresh) to minimize network calls post-gacha.
-- **Architecture: Progression Logic Centralization:**
-  - Centralized all star/tier text formatting into  with helpers like , , and .
-  - Created  as a barrel export, making it the single, public API surface for UI components to consume progression logic.
-- **Architecture: Awakening Feature Gating:**
-  - Created  to house all feature flags.
-  - Gated all Awakening (tiers 7-10) preview UI behind the  flag.
-  - Centralized flag access through an  helper.
-- **CI: Architectural Guard Scripts:**
-  - Created and wired four critical guard scripts into  under yarn run v1.22.22
-$ npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map
-
-> frontend@1.0.0 guard:hero
-> node scripts/guard-no-hero-list-fallback.mjs
-
-[guard:no-hero-list-fallback] ℹ️  Flag is false — fallback may be reachable (allowed).
-
-> frontend@1.0.0 guard:tier
-> node scripts/guard-no-direct-tier-imports.mjs
-
-[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
-
-> frontend@1.0.0 guard:select-hero
-> node scripts/guard-select-user-hero-by-id.mjs
-
-[guard:selectUserHeroById] ✅ O(1) selector enforced.
-
-> frontend@1.0.0 guard:user-heroes-map
-> node scripts/guard-user-heroes-map-sync.mjs
-
-[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
-Done in 0.61s.:
-    - : Enforces that  cannot use the list-fetch fallback once the single-hero endpoint is enabled.
-    - : Prevents UI components from importing directly from  (must use ).
-    - : Ensures  maintains its O(1) performance by using the  map.
-    - : Enforces that  and  in the store are always mutated in sync.
+- **Single-Hero Endpoint:**
+  - Implemented  in .
+  - Enabled the  flag in .
+- **Remote Feature Flag System:**
+  - Created a  endpoint in .
+  - Built a complete frontend system with caching, TTL, and offline fallback (, , ).
+  - Implemented a global  gate in .
+- **Hero Progression Screen Stabilization (Hooks Crash Fix):**
+  - Refactored  to use a store-first, selector-driven state model ().
+  - Replaced fragile local  state with a robust  state for optimistic updates only.
+  - Rewrote  to be a stable ensure function that doesn't cause state churn.
+  - Merged conflicting  hooks for tier preview into a single, stable effect.
+  - Fixed a  dependency array in .
+- **UI & Architecture Hardening:**
+  - Made the tier selector UI in  aware of the  feature flag.
+  - Added 2 new CI guards:
+    - : Enforces read-only usage of feature flags in the UI.
+    - : Prevents incorrect usage of the  store action.
+  - Partially cleaned up backend endpoints in .
 
 **Earlier issues found/mentioned but not fixed**
-   - None in this session.
+   - The primary issue is the **Authentication Persistence**, which was identified, fixed ineffectively, and is now the main blocker.
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Backend code in  contains legacy, duplicated, and unorganized endpoints.
-  - Recurrence count: 6+
-  - Status: NOT STARTED
+  - **Issue recurrence in previous fork**: Backend code in  contains legacy, duplicated, and unorganized endpoints.
+  - **Recurrence count**: 6+
+  - **Status**: IN PROGRESS (partially addressed, but not fully resolved).
 
 **Code Architecture**
 guard
 
 **Key Technical Concepts**
-- **Zustand State Management:** Heavily refactored the  for performance and correctness.
-- **O(1) Data Lookups:** Implemented a  map () for instantaneous hero lookups from the cache.
-- **Cache-First & Write-Through Caching:** The store now uses a cache-first pattern () and ensures that single-hero fetches () write their results back to both the list and the map cache.
-- **Barrel Exports:** Created  to provide a clean, stable API surface for UI components, hiding the internal implementation of .
-- **Feature Flagging:** A centralized  file with an  helper gates all coming soon content.
-- **CI Guard Scripts:** A robust suite of Node.js scripts that perform static analysis on the codebase to enforce architectural rules, preventing regressions.
+- **Remote Feature Flags**: A complete system with a backend endpoint, a frontend Zustand store for caching with TTL (), and a centralized library () for evaluation.
+- **State Stability & Optimistic UI**: The refactor of  is a key pattern. It derives the canonical state from a store selector and uses a separate, temporary  state only for optimistic updates, which is then reconciled. This prevents state churn that was causing React hooks errors.
+- **CI Guard Scripts**: The suite of static analysis scripts was expanded to 6, programmatically enforcing architectural rules and preventing regressions.
+- **Zustand State Management**: Heavily used for  and the new .
 
 **key DB schema**
   - No DB schema changes occurred in this session.
@@ -167,23 +120,26 @@ guard
 
 **All files of reference**
 *   **Created in this session**:
-    *   : Centralizes feature flags (e.g., ).
-    *   : A barrel export file that serves as the single public API for all progression logic, re-exporting helpers from .
-    *   : Four new CI guard scripts to enforce architectural invariants.
+    *   : Helpers and types for the feature flag system.
+    *   : Zustand store for managing remote feature flags.
+    *   : CI guard for feature flag architecture.
+    *   : CI guard for a specific store action signature.
 *   **Heavily Modified in this session**:
-    *   : The heart of the refactor. Enhanced with an O(1) lookup map, targeted refresh logic, and sync enforcement.
-    *   : Centralized all star/tier display label logic, becoming the internal implementation for .
-    *   : Updated with new  scripts for the CI chain.
-    *   Multiple UI files (, , , etc.) were refactored to use the new centralized helpers and barrel exports.
+    *   : Complete state management overhaul to fix stability issues.
+    *   : Core feature flag evaluation logic.
+    *   : Added two new endpoints and cleaned one up.
+    *   : Wired in feature flag hydration and maintenance mode.
 
 **Critical Info for New Agent**
-- **The architecture is now locked by CI guards.** Before committing, run yarn run v1.22.22
-$ npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map
+- **The immediate and only P0 task is to fix the authentication persistence issue.** The app is unusable for testing until this is resolved. Follow the user's detailed, platform-safe, token-based plan from message #505. Do not try other methods; this plan is designed to work.
+- The hooks mismatch error is resolved. The root cause was state instability in , which has been fixed through a major refactor. The  change in  was a related optimization but not the core fix. Do not get sidetracked by this issue again.
+- The CI guard suite is now very robust (yarn run v1.22.22
+$ npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature
 
 > frontend@1.0.0 guard:hero
 > node scripts/guard-no-hero-list-fallback.mjs
 
-[guard:no-hero-list-fallback] ℹ️  Flag is false — fallback may be reachable (allowed).
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
 
 > frontend@1.0.0 guard:tier
 > node scripts/guard-no-direct-tier-imports.mjs
@@ -199,158 +155,39 @@ $ npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm r
 > node scripts/guard-user-heroes-map-sync.mjs
 
 [guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
-Done in 0.64s. in the  directory. If it fails, your changes violate the established architecture.
-- **Use the public progression API.** All UI components needing progression logic (math, labels, etc.) MUST import from . Do NOT import directly from .
-- **Use the store for data.** All hero data access MUST go through  selectors (). To refresh a specific hero's data from the backend, use .
-- **The next logical step** is implementing the single-hero endpoint on the backend and flipping the  flag in .
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+Done in 1.29s. in ). Run it after making changes to ensure you haven't violated architectural rules.
 
 **documents created in this job**
 - 
 - 
-- 
-- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Asks agent to extend the map-sync guard to cover functional BASH=/bin/bash
-BASHOPTS=checkwinsize:cmdhist:complete_fullquote:extquote:force_fignore:globasciiranges:globskipdots:hostcomplete:interactive_comments:patsub_replacement:progcomp:promptvars:sourcepath
-BASH_ALIASES=()
-BASH_ARGC=()
-BASH_ARGV=()
-BASH_CMDS=()
-BASH_EXECUTION_STRING=$'mkdir -p /app/.emergent && echo "<analysis>\n\n<original_problem_statement>\nThe user\'s initial goal was a massive, project-wide architectural refactoring of the frontend data fetching and progression logic. The core tasks were:\n\n1.  **Refactor `hero-detail.tsx`:** Modify the hero detail screen to fetch a single hero\'s data instead of relying on a pre-fetched list of all heroes.\n2.  **Centralize Progression Logic:** Ensure all logic related to hero stars, tiers, and their display labels is centralized in `lib/tier.ts` to eliminate "logic drift" in UI components.\n3.  **Architectural Hardening:** After the initial refactor, the user guided the agent through a comprehensive hardening process to make the new architecture robust, performant, and regression-proof. This involved adding O(1) lookups to the data store, creating smart refresh logic, implementing feature flags, and building a suite of CI guard scripts to enforce the new architectural rules.\n\n**PRODUCT REQUIREMENTS (From session):**\n- **P0: Complete Hero-Detail Refactor:** Refactor `hero-detail.tsx` to use a single-hero-ensure pattern. (DONE)\n- **P0: Centralize Data Fetching & Caching:** Implement a performant, cache-first data fetching strategy in `gameStore.ts` using an O(1) lookup map. (DONE)\n- **P0: Harden Architecture with CI Guards:** Create a suite of scripts to programmatically enforce all new architectural invariants (e.g., API usage, data store sync, selector performance). (DONE)\n</original_problem_statement>\n\n**User\'s preferred language**: English\n\n**what currently exists?**\nThe frontend architecture has been significantly refactored and hardened. All hero data fetching is now centralized in `gameStore.ts`, which features a `userHeroesById` map for fast O(1) lookups. The `hero-detail.tsx` screen exclusively uses this new single-hero-ensure pattern. All hero progression logic (math and display labels for stars/tiers) is centralized in `lib/tier.ts` and exposed to the UI via a single barrel export, `lib/progression.ts`. "Coming soon" UI for the "Awakening" feature is now gated behind a feature flag.\n\nMost importantly, a suite of CI guard scripts has been created in `/app/frontend/scripts/` and wired into `package.json`. These scripts programmatically enforce the new architecture, preventing regressions related to API usage, data store synchronization, and selector performance.\n\n**Last working item**:\n    - Last item agent was working: The final architectural hardening task: creating and verifying the `guard-user-heroes-map-sync.mjs` script. This guard ensures that whenever the `userHeroes` array is mutated in the `gameStore`, the `userHeroesById` lookup map is updated in sync, preventing cache desynchronization. The agent created the script, fixed a regex issue, wired it into the `package.json` guard chain, and verified that all guards pass.\n    - Status: COMPLETED\n    - Agent Testing Done: Y\n    - Which testing method agent to use? NA\n    - User Testing Done: Y\n\n**All Pending/In progress Issue list**:\n  - Issue 1: Authentication state persistence in web preview (P2)\n  - Issue 2: Address `server.py` technical debt (P3)\n  \n  Issues Detail:\n  - Issue 1: \n     - Attempted fixes: None in this session. This has been consistently de-prioritized.\n     - Next debug checklist: \n       1. Examine `/app/frontend/stores/gameStore.ts` for Zustand `persist` middleware setup.\n       2. Review `useHydration` hook usage across the app, especially in `_layout.tsx` and `index.tsx`.\n       3. Test the login flow in the web preview to confirm if state (username, token) persists after a page reload.\n     - Why fix this issue and what will be achieved with the fix? Improves the developer and tester experience by preventing the need to re-login constantly in the web preview.\n     - Status:  NOT STARTED\n     - Is recurring issue? Y\n     - Should Test frontend/backend/both after fix? Frontend\n     - Blocked on other issue: None\n  - Issue 2: \n     - Attempted fixes: None. This is a known technical debt item from previous sessions.\n     - Next debug checklist: \n       1. Read through `/app/backend/server.py`.\n       2. Identify endpoints that are duplicates or serve legacy purposes.\n       3. Plan a consolidation strategy (e.g., merging similar endpoints, removing unused ones).\n     - Why fix this issue and what will be achieved with the fix? Reduces backend complexity, improves maintainability, and lowers the chance of bugs from legacy code.\n     - Status:  NOT STARTED\n     - Is recurring issue? Y\n     - Should Test frontend/backend/both after fix? Backend\n     - Blocked on other issue: None\n\n**In progress Task List**:\n  - None.\n\n**Upcoming and Future Tasks**\nThe primary upcoming task is to complete the backend portion of the single-hero-fetch refactor.\n\n*   **Upcoming Tasks:**\n    *   **P0: Implement Single-Hero Backend Endpoint:**\n        *   Create a new endpoint in `/app/backend/server.py` (e.g., `GET /api/user/{username}/heroes/{userHeroId}`).\n        *   Once implemented and tested, flip the `SINGLE_HERO_ENDPOINT_AVAILABLE` flag to `true` in `/app/frontend/lib/api.ts`.\n        *   Run `yarn guard` in the frontend to confirm the `guard:hero` script now enforces the strict no-fallback path.\n*   **Future Tasks (from ROADMAP.md):**\n    *   **P1: Progression polish:** Further UI/UX improvements to the hero progression screens.\n    *   **P1: Cinematics Phase 1:** Integrate and expand on the existing cinematics framework.\n    *   **P2: Campaign Integration:** Deeper integration of the campaign system.\n    *   **P3: Re-enable RevenueCat:** The service was migrated to the API layer but is functionally disabled. This task involves re-enabling it and testing the purchase flow.\n    *   **P3: Backend code cleanup:** Aligns with the pending issue to address `server.py` technical debt.\n\n**Completed work in this session**\n- **Architecture: O(1) Hero Cache:**\n  - Added `userHeroesById: Record<string, UserHero>` to `gameStore.ts`.\n  - Refactored `selectUserHeroById` to use the map for O(1) lookups.\n  - Ensured all actions (`fetchUserHeroes`, `getUserHeroById`) write to both `userHeroes` list and `userHeroesById` map to maintain sync.\n- **Architecture: Data Freshness & Smart Refresh:**\n  - Added a `forceRefresh: true` option to `getUserHeroById` for targeted cache invalidation.\n  - Refactored `hero-progression.tsx` to use this targeted refresh after a promotion, avoiding a full roster fetch.\n  - Created a `refreshHeroesAfterGacha` store action that uses a heuristic (1-3 heroes = targeted refresh, 4+ = full refresh) to minimize network calls post-gacha.\n- **Architecture: Progression Logic Centralization:**\n  - Centralized all star/tier text formatting into `lib/tier.ts` with helpers like `tierLabel`, `labelForStars`, and `starsSuffix`.\n  - Created `lib/progression.ts` as a barrel export, making it the single, public API surface for UI components to consume progression logic.\n- **Architecture: Awakening Feature Gating:**\n  - Created `lib/features.ts` to house all feature flags.\n  - Gated all "Awakening" (tiers 7-10) preview UI behind the `AWAKENING_PREVIEW_UI` flag.\n  - Centralized flag access through an `isFeatureEnabled()` helper.\n- **CI: Architectural Guard Scripts:**\n  - Created and wired four critical guard scripts into `package.json` under `yarn guard`:\n    - `guard:hero`: Enforces that `api.ts` cannot use the list-fetch fallback once the single-hero endpoint is enabled.\n    - `guard:tier`: Prevents UI components from importing directly from `lib/tier.ts` (must use `lib/progression.ts`).\n    - `guard:select-hero`: Ensures `selectUserHeroById` maintains its O(1) performance by using the `userHeroesById` map.\n    - `guard:user-heroes-map`: Enforces that `userHeroes` and `userHeroesById` in the store are always mutated in sync.\n\n**Earlier issues found/mentioned but not fixed**\n   - None in this session.\n\n**Known issue recurrence from previous fork**\n  - Issue recurrence in previous fork: Backend code in `server.py` contains legacy, duplicated, and unorganized endpoints.\n  - Recurrence count: 6+\n  - Status: NOT STARTED\n\n**Code Architecture**\n```\n/app\n├── backend/\n│   └── server.py\n└── frontend/\n    ├── app/\n    │   ├── hero-detail.tsx      # REFACTORED: Uses single-hero ensure.\n    │   ├── hero-progression.tsx # REFACTORED: Uses targeted refresh & barrel imports.\n    │   ├── gacha.tsx            # REFACTORED: Uses smart refresh.\n    │   └── ... (other screens refactored to use progression barrel)\n    ├── lib/\n    │   ├── api.ts               # MODIFIED: Added flag for single-hero endpoint.\n    │   ├── features.ts          # CREATED: Single source for feature flags.\n    │   ├── progression.ts       # CREATED: Barrel export for UI progression logic.\n    │   └── tier.ts              # REFACTORED: Internal implementation of all prog logic.\n    ├── scripts/\n    │   ├── guard-no-direct-tier-imports.mjs\n    │   ├── guard-no-hero-list-fallback.mjs\n    │   ├── guard-select-user-hero-by-id.mjs\n    │   └── guard-user-heroes-map-sync.mjs\n    ├── stores/\n    │   └── gameStore.ts         # REFACTORED: Added O(1) map, smart refresh, sync logic.\n    └── package.json             # MODIFIED: Added `guard` scripts.\n```\n\n**Key Technical Concepts**\n- **Zustand State Management:** Heavily refactored the `gameStore` for performance and correctness.\n- **O(1) Data Lookups:** Implemented a `Record<string, UserHero>` map (`userHeroesById`) for instantaneous hero lookups from the cache.\n- **Cache-First & Write-Through Caching:** The store now uses a cache-first pattern (`selectUserHeroById`) and ensures that single-hero fetches (`getUserHeroById`) write their results back to both the list and the map cache.\n- **Barrel Exports:** Created `lib/progression.ts` to provide a clean, stable API surface for UI components, hiding the internal implementation of `lib/tier.ts`.\n- **Feature Flagging:** A centralized `lib/features.ts` file with an `isFeatureEnabled()` helper gates all "coming soon" content.\n- **CI Guard Scripts:** A robust suite of Node.js scripts that perform static analysis on the codebase to enforce architectural rules, preventing regressions.\n\n**key DB schema**\n  - No DB schema changes occurred in this session.\n\n**changes in tech stack**\n  - No new packages or technologies were added.\n\n**All files of reference**\n*   **Created in this session**:\n    *   `/app/frontend/lib/features.ts`: Centralizes feature flags (e.g., `AWAKENING_PREVIEW_UI`).\n    *   `/app/frontend/lib/progression.ts`: A barrel export file that serves as the single public API for all progression logic, re-exporting helpers from `tier.ts`.\n    *   `/app/frontend/scripts/guard-*.mjs`: Four new CI guard scripts to enforce architectural invariants.\n*   **Heavily Modified in this session**:\n    *   `/app/frontend/stores/gameStore.ts`: The heart of the refactor. Enhanced with an O(1) lookup map, targeted refresh logic, and sync enforcement.\n    *   `/app/frontend/lib/tier.ts`: Centralized all star/tier display label logic, becoming the internal implementation for `progression.ts`.\n    *   `/app/frontend/package.json`: Updated with new `guard` scripts for the CI chain.\n    *   Multiple UI files (`hero-detail.tsx`, `hero-progression.tsx`, `gacha.tsx`, etc.) were refactored to use the new centralized helpers and barrel exports.\n\n**Critical Info for New Agent**\n- **The architecture is now locked by CI guards.** Before committing, run `yarn guard` in the `/app/frontend` directory. If it fails, your changes violate the established architecture.\n- **Use the public progression API.** All UI components needing progression logic (math, labels, etc.) MUST import from `/app/frontend/lib/progression.ts`. Do NOT import directly from `lib/tier.ts`.\n- **Use the store for data.** All hero data access MUST go through `gameStore.ts` selectors (`selectUserHeroById`). To refresh a specific hero\'s data from the backend, use `await useGameStore.getState().getUserHeroById(id, { forceRefresh: true })`.\n- **The next logical step** is implementing the single-hero endpoint on the backend and flipping the `SINGLE_HERO_ENDPOINT_AVAILABLE` flag in `api.ts`.\n\n**documents created in this job**\n- `/app/frontend/scripts/guard-no-hero-list-fallback.mjs`\n- `/app/frontend/scripts/guard-no-direct-tier-imports.mjs`\n- `/app/frontend/scripts/guard-select-user-hero-by-id.mjs`\n- `/app/frontend/scripts/guard-user-heroes-map-sync.mjs`\n\n**Last 10 User Messages and any pending HUMAN messages**\n1.  **User:** Asks agent to extend the map-sync guard to cover functional `set` patterns. (LATEST)\n2.  **Agent:** Implements the change but the regex is too broad and fails.\n3.  **User:** Requests the agent to find and fix any unsynced `set({ userHeroes: ... })` blocks.\n4.  **Agent:** Verifies all existing `set` calls are already correctly synced.\n5.  **User:** Instructs agent to add a CI guard to enforce that `userHeroes` and `userHeroesById` are always set together.\n6.  **Agent:** Creates the guard, wires it into `package.json`, and verifies it passes.\n7.  **User:** Asks to confirm the JSON shape of the gacha pull response.\n8.  **Agent:** Investigates the backend code and uses `curl` to provide the exact JSON shape.\n9.  **User:** Instructs agent to tighten the gacha refresh logic using the now-known exact response shape.\n10. **Agent:** Implements the exact logic in `gameStore.ts`, removing the previous heuristic-based approach.\n\n**Project Health Check:**\n*   **Broken**: None. The frontend architecture is significantly more robust and performant.\n*   **Mocked**: Expo to Unity communication bridge. Rarity Ascension feature. RevenueCat integration. The backend single-hero endpoint is mocked on the frontend via a fallback.\n\n**3rd Party Integrations**\n*   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).\n*   **RevenueCat**: Packages installed, code migrated to `api.ts`, but the integration is functionally disabled.\n*   **@azesmway/react-native-unity**: Scaffolding code exists but is not integrated.\n*   **expo-av**: Used for video playback in cinematics.\n\n**Testing status**\n  - Testing agent used after significant changes: NO\n  - Troubleshoot agent used after agent stuck in loop: NO\n  - Test files created:\n    - `/app/frontend/scripts/guard-no-hero-list-fallback.mjs`\n    - `/app/frontend/scripts/guard-no-direct-tier-imports.mjs`\n    - `/app/frontend/scripts/guard-select-user-hero-by-id.mjs`\n    - `/app/frontend/scripts/guard-user-heroes-map-sync.mjs`\n  - Known regressions:\n      - Authentication state is not persisting correctly in the web preview. Status: Not fixed.\n\n**Credentials to test flow:**\n- Create a new user (e.g., \'testuser1\' with password \'password\') via the signup flow.\n\n**What agent forgot to execute**\n- The agent was extremely thorough and meticulously followed the user\'s detailed, iterative instructions. No tasks or steps were forgotten. The session was a model of guided architectural improvement.\n\n</analysis>" > /app/.emergent/summary.txt'
-BASH_LINENO=()
-BASH_LOADABLES_PATH=/usr/local/lib/bash:/usr/lib/bash:/opt/local/lib/bash:/usr/pkg/lib/bash:/opt/pkg/lib/bash:.
-BASH_SOURCE=()
-BASH_VERSINFO=([0]="5" [1]="2" [2]="15" [3]="1" [4]="release" [5]="aarch64-unknown-linux-gnu")
-BASH_VERSION='5.2.15(1)-release'
-DEBIAN_FRONTEND=noninteractive
-DIRSTACK=()
-ENABLE_RELOAD=true
-EUID=0
-GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D
-GROUPS=()
-HOME=/root
-HOSTNAME=agent-env-66e4bf6a-4f9a-4067-b891-65a7861efe52
-HOSTTYPE=aarch64
-IFS=$' \t\n'
-KUBERNETES_PORT=tcp://34.118.224.1:443
-KUBERNETES_PORT_443_TCP=tcp://34.118.224.1:443
-KUBERNETES_PORT_443_TCP_ADDR=34.118.224.1
-KUBERNETES_PORT_443_TCP_PORT=443
-KUBERNETES_PORT_443_TCP_PROTO=tcp
-KUBERNETES_SERVICE_HOST=34.118.224.1
-KUBERNETES_SERVICE_PORT=443
-KUBERNETES_SERVICE_PORT_HTTPS=443
-LANG=C.UTF-8
-MACHTYPE=aarch64-unknown-linux-gnu
-NEXT_TELEMETRY_DISABLED=1
-NODE_VERSION=20
-OLDPWD=/app
-OPTERR=1
-OPTIND=1
-OSTYPE=linux-gnu
-PATH=/root/.venv/bin:/opt/plugins-venv/bin:/opt/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-PIPESTATUS=([0]="0")
-PIP_NO_INPUT=1
-PLAYWRIGHT_BROWSERS_PATH=/pw-browsers
-PLUGIN_VENV_PATH=/opt/plugins-venv
-PPID=70
-PS4='+ '
-PWD=/app/frontend
-PYTHONUNBUFFERED=1
-PYTHON_SHA256=8d3ed8ec5c88c1c95f5e558612a725450d2452813ddad5e58fdb1a53b1209b78
-PYTHON_VERSION=3.11.14
-SHELL=/bin/bash
-SHELLOPTS=braceexpand:hashall:interactive-comments
-SHLVL=1
-STRIPE_API_KEY=sk_test_emergent
-TERM=dumb
-UID=0
-UV_COMPILE_BYTECODE=1
-VIRTUAL_ENV=/root/.venv
-_=/app/.emergent
-base_url=https://demobackend.emergentagent.com
-code_server_password=955fa40c
-integration_proxy_url=https://integrations.emergentagent.com
-monitor_polling_interval=1
-preview_endpoint=https://frontend-refactor.preview.emergentagent.com
-run_id=66e4bf6a-4f9a-4067-b891-65a7861efe52 patterns. (LATEST)
-2.  **Agent:** Implements the change but the regex is too broad and fails.
-3.  **User:** Requests the agent to find and fix any unsynced  blocks.
-4.  **Agent:** Verifies all existing BASH=/bin/bash
-BASHOPTS=checkwinsize:cmdhist:complete_fullquote:extquote:force_fignore:globasciiranges:globskipdots:hostcomplete:interactive_comments:patsub_replacement:progcomp:promptvars:sourcepath
-BASH_ALIASES=()
-BASH_ARGC=()
-BASH_ARGV=()
-BASH_CMDS=()
-BASH_EXECUTION_STRING=$'mkdir -p /app/.emergent && echo "<analysis>\n\n<original_problem_statement>\nThe user\'s initial goal was a massive, project-wide architectural refactoring of the frontend data fetching and progression logic. The core tasks were:\n\n1.  **Refactor `hero-detail.tsx`:** Modify the hero detail screen to fetch a single hero\'s data instead of relying on a pre-fetched list of all heroes.\n2.  **Centralize Progression Logic:** Ensure all logic related to hero stars, tiers, and their display labels is centralized in `lib/tier.ts` to eliminate "logic drift" in UI components.\n3.  **Architectural Hardening:** After the initial refactor, the user guided the agent through a comprehensive hardening process to make the new architecture robust, performant, and regression-proof. This involved adding O(1) lookups to the data store, creating smart refresh logic, implementing feature flags, and building a suite of CI guard scripts to enforce the new architectural rules.\n\n**PRODUCT REQUIREMENTS (From session):**\n- **P0: Complete Hero-Detail Refactor:** Refactor `hero-detail.tsx` to use a single-hero-ensure pattern. (DONE)\n- **P0: Centralize Data Fetching & Caching:** Implement a performant, cache-first data fetching strategy in `gameStore.ts` using an O(1) lookup map. (DONE)\n- **P0: Harden Architecture with CI Guards:** Create a suite of scripts to programmatically enforce all new architectural invariants (e.g., API usage, data store sync, selector performance). (DONE)\n</original_problem_statement>\n\n**User\'s preferred language**: English\n\n**what currently exists?**\nThe frontend architecture has been significantly refactored and hardened. All hero data fetching is now centralized in `gameStore.ts`, which features a `userHeroesById` map for fast O(1) lookups. The `hero-detail.tsx` screen exclusively uses this new single-hero-ensure pattern. All hero progression logic (math and display labels for stars/tiers) is centralized in `lib/tier.ts` and exposed to the UI via a single barrel export, `lib/progression.ts`. "Coming soon" UI for the "Awakening" feature is now gated behind a feature flag.\n\nMost importantly, a suite of CI guard scripts has been created in `/app/frontend/scripts/` and wired into `package.json`. These scripts programmatically enforce the new architecture, preventing regressions related to API usage, data store synchronization, and selector performance.\n\n**Last working item**:\n    - Last item agent was working: The final architectural hardening task: creating and verifying the `guard-user-heroes-map-sync.mjs` script. This guard ensures that whenever the `userHeroes` array is mutated in the `gameStore`, the `userHeroesById` lookup map is updated in sync, preventing cache desynchronization. The agent created the script, fixed a regex issue, wired it into the `package.json` guard chain, and verified that all guards pass.\n    - Status: COMPLETED\n    - Agent Testing Done: Y\n    - Which testing method agent to use? NA\n    - User Testing Done: Y\n\n**All Pending/In progress Issue list**:\n  - Issue 1: Authentication state persistence in web preview (P2)\n  - Issue 2: Address `server.py` technical debt (P3)\n  \n  Issues Detail:\n  - Issue 1: \n     - Attempted fixes: None in this session. This has been consistently de-prioritized.\n     - Next debug checklist: \n       1. Examine `/app/frontend/stores/gameStore.ts` for Zustand `persist` middleware setup.\n       2. Review `useHydration` hook usage across the app, especially in `_layout.tsx` and `index.tsx`.\n       3. Test the login flow in the web preview to confirm if state (username, token) persists after a page reload.\n     - Why fix this issue and what will be achieved with the fix? Improves the developer and tester experience by preventing the need to re-login constantly in the web preview.\n     - Status:  NOT STARTED\n     - Is recurring issue? Y\n     - Should Test frontend/backend/both after fix? Frontend\n     - Blocked on other issue: None\n  - Issue 2: \n     - Attempted fixes: None. This is a known technical debt item from previous sessions.\n     - Next debug checklist: \n       1. Read through `/app/backend/server.py`.\n       2. Identify endpoints that are duplicates or serve legacy purposes.\n       3. Plan a consolidation strategy (e.g., merging similar endpoints, removing unused ones).\n     - Why fix this issue and what will be achieved with the fix? Reduces backend complexity, improves maintainability, and lowers the chance of bugs from legacy code.\n     - Status:  NOT STARTED\n     - Is recurring issue? Y\n     - Should Test frontend/backend/both after fix? Backend\n     - Blocked on other issue: None\n\n**In progress Task List**:\n  - None.\n\n**Upcoming and Future Tasks**\nThe primary upcoming task is to complete the backend portion of the single-hero-fetch refactor.\n\n*   **Upcoming Tasks:**\n    *   **P0: Implement Single-Hero Backend Endpoint:**\n        *   Create a new endpoint in `/app/backend/server.py` (e.g., `GET /api/user/{username}/heroes/{userHeroId}`).\n        *   Once implemented and tested, flip the `SINGLE_HERO_ENDPOINT_AVAILABLE` flag to `true` in `/app/frontend/lib/api.ts`.\n        *   Run `yarn guard` in the frontend to confirm the `guard:hero` script now enforces the strict no-fallback path.\n*   **Future Tasks (from ROADMAP.md):**\n    *   **P1: Progression polish:** Further UI/UX improvements to the hero progression screens.\n    *   **P1: Cinematics Phase 1:** Integrate and expand on the existing cinematics framework.\n    *   **P2: Campaign Integration:** Deeper integration of the campaign system.\n    *   **P3: Re-enable RevenueCat:** The service was migrated to the API layer but is functionally disabled. This task involves re-enabling it and testing the purchase flow.\n    *   **P3: Backend code cleanup:** Aligns with the pending issue to address `server.py` technical debt.\n\n**Completed work in this session**\n- **Architecture: O(1) Hero Cache:**\n  - Added `userHeroesById: Record<string, UserHero>` to `gameStore.ts`.\n  - Refactored `selectUserHeroById` to use the map for O(1) lookups.\n  - Ensured all actions (`fetchUserHeroes`, `getUserHeroById`) write to both `userHeroes` list and `userHeroesById` map to maintain sync.\n- **Architecture: Data Freshness & Smart Refresh:**\n  - Added a `forceRefresh: true` option to `getUserHeroById` for targeted cache invalidation.\n  - Refactored `hero-progression.tsx` to use this targeted refresh after a promotion, avoiding a full roster fetch.\n  - Created a `refreshHeroesAfterGacha` store action that uses a heuristic (1-3 heroes = targeted refresh, 4+ = full refresh) to minimize network calls post-gacha.\n- **Architecture: Progression Logic Centralization:**\n  - Centralized all star/tier text formatting into `lib/tier.ts` with helpers like `tierLabel`, `labelForStars`, and `starsSuffix`.\n  - Created `lib/progression.ts` as a barrel export, making it the single, public API surface for UI components to consume progression logic.\n- **Architecture: Awakening Feature Gating:**\n  - Created `lib/features.ts` to house all feature flags.\n  - Gated all "Awakening" (tiers 7-10) preview UI behind the `AWAKENING_PREVIEW_UI` flag.\n  - Centralized flag access through an `isFeatureEnabled()` helper.\n- **CI: Architectural Guard Scripts:**\n  - Created and wired four critical guard scripts into `package.json` under `yarn guard`:\n    - `guard:hero`: Enforces that `api.ts` cannot use the list-fetch fallback once the single-hero endpoint is enabled.\n    - `guard:tier`: Prevents UI components from importing directly from `lib/tier.ts` (must use `lib/progression.ts`).\n    - `guard:select-hero`: Ensures `selectUserHeroById` maintains its O(1) performance by using the `userHeroesById` map.\n    - `guard:user-heroes-map`: Enforces that `userHeroes` and `userHeroesById` in the store are always mutated in sync.\n\n**Earlier issues found/mentioned but not fixed**\n   - None in this session.\n\n**Known issue recurrence from previous fork**\n  - Issue recurrence in previous fork: Backend code in `server.py` contains legacy, duplicated, and unorganized endpoints.\n  - Recurrence count: 6+\n  - Status: NOT STARTED\n\n**Code Architecture**\n```\n/app\n├── backend/\n│   └── server.py\n└── frontend/\n    ├── app/\n    │   ├── hero-detail.tsx      # REFACTORED: Uses single-hero ensure.\n    │   ├── hero-progression.tsx # REFACTORED: Uses targeted refresh & barrel imports.\n    │   ├── gacha.tsx            # REFACTORED: Uses smart refresh.\n    │   └── ... (other screens refactored to use progression barrel)\n    ├── lib/\n    │   ├── api.ts               # MODIFIED: Added flag for single-hero endpoint.\n    │   ├── features.ts          # CREATED: Single source for feature flags.\n    │   ├── progression.ts       # CREATED: Barrel export for UI progression logic.\n    │   └── tier.ts              # REFACTORED: Internal implementation of all prog logic.\n    ├── scripts/\n    │   ├── guard-no-direct-tier-imports.mjs\n    │   ├── guard-no-hero-list-fallback.mjs\n    │   ├── guard-select-user-hero-by-id.mjs\n    │   └── guard-user-heroes-map-sync.mjs\n    ├── stores/\n    │   └── gameStore.ts         # REFACTORED: Added O(1) map, smart refresh, sync logic.\n    └── package.json             # MODIFIED: Added `guard` scripts.\n```\n\n**Key Technical Concepts**\n- **Zustand State Management:** Heavily refactored the `gameStore` for performance and correctness.\n- **O(1) Data Lookups:** Implemented a `Record<string, UserHero>` map (`userHeroesById`) for instantaneous hero lookups from the cache.\n- **Cache-First & Write-Through Caching:** The store now uses a cache-first pattern (`selectUserHeroById`) and ensures that single-hero fetches (`getUserHeroById`) write their results back to both the list and the map cache.\n- **Barrel Exports:** Created `lib/progression.ts` to provide a clean, stable API surface for UI components, hiding the internal implementation of `lib/tier.ts`.\n- **Feature Flagging:** A centralized `lib/features.ts` file with an `isFeatureEnabled()` helper gates all "coming soon" content.\n- **CI Guard Scripts:** A robust suite of Node.js scripts that perform static analysis on the codebase to enforce architectural rules, preventing regressions.\n\n**key DB schema**\n  - No DB schema changes occurred in this session.\n\n**changes in tech stack**\n  - No new packages or technologies were added.\n\n**All files of reference**\n*   **Created in this session**:\n    *   `/app/frontend/lib/features.ts`: Centralizes feature flags (e.g., `AWAKENING_PREVIEW_UI`).\n    *   `/app/frontend/lib/progression.ts`: A barrel export file that serves as the single public API for all progression logic, re-exporting helpers from `tier.ts`.\n    *   `/app/frontend/scripts/guard-*.mjs`: Four new CI guard scripts to enforce architectural invariants.\n*   **Heavily Modified in this session**:\n    *   `/app/frontend/stores/gameStore.ts`: The heart of the refactor. Enhanced with an O(1) lookup map, targeted refresh logic, and sync enforcement.\n    *   `/app/frontend/lib/tier.ts`: Centralized all star/tier display label logic, becoming the internal implementation for `progression.ts`.\n    *   `/app/frontend/package.json`: Updated with new `guard` scripts for the CI chain.\n    *   Multiple UI files (`hero-detail.tsx`, `hero-progression.tsx`, `gacha.tsx`, etc.) were refactored to use the new centralized helpers and barrel exports.\n\n**Critical Info for New Agent**\n- **The architecture is now locked by CI guards.** Before committing, run `yarn guard` in the `/app/frontend` directory. If it fails, your changes violate the established architecture.\n- **Use the public progression API.** All UI components needing progression logic (math, labels, etc.) MUST import from `/app/frontend/lib/progression.ts`. Do NOT import directly from `lib/tier.ts`.\n- **Use the store for data.** All hero data access MUST go through `gameStore.ts` selectors (`selectUserHeroById`). To refresh a specific hero\'s data from the backend, use `await useGameStore.getState().getUserHeroById(id, { forceRefresh: true })`.\n- **The next logical step** is implementing the single-hero endpoint on the backend and flipping the `SINGLE_HERO_ENDPOINT_AVAILABLE` flag in `api.ts`.\n\n**documents created in this job**\n- `/app/frontend/scripts/guard-no-hero-list-fallback.mjs`\n- `/app/frontend/scripts/guard-no-direct-tier-imports.mjs`\n- `/app/frontend/scripts/guard-select-user-hero-by-id.mjs`\n- `/app/frontend/scripts/guard-user-heroes-map-sync.mjs`\n\n**Last 10 User Messages and any pending HUMAN messages**\n1.  **User:** Asks agent to extend the map-sync guard to cover functional `set` patterns. (LATEST)\n2.  **Agent:** Implements the change but the regex is too broad and fails.\n3.  **User:** Requests the agent to find and fix any unsynced `set({ userHeroes: ... })` blocks.\n4.  **Agent:** Verifies all existing `set` calls are already correctly synced.\n5.  **User:** Instructs agent to add a CI guard to enforce that `userHeroes` and `userHeroesById` are always set together.\n6.  **Agent:** Creates the guard, wires it into `package.json`, and verifies it passes.\n7.  **User:** Asks to confirm the JSON shape of the gacha pull response.\n8.  **Agent:** Investigates the backend code and uses `curl` to provide the exact JSON shape.\n9.  **User:** Instructs agent to tighten the gacha refresh logic using the now-known exact response shape.\n10. **Agent:** Implements the exact logic in `gameStore.ts`, removing the previous heuristic-based approach.\n\n**Project Health Check:**\n*   **Broken**: None. The frontend architecture is significantly more robust and performant.\n*   **Mocked**: Expo to Unity communication bridge. Rarity Ascension feature. RevenueCat integration. The backend single-hero endpoint is mocked on the frontend via a fallback.\n\n**3rd Party Integrations**\n*   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).\n*   **RevenueCat**: Packages installed, code migrated to `api.ts`, but the integration is functionally disabled.\n*   **@azesmway/react-native-unity**: Scaffolding code exists but is not integrated.\n*   **expo-av**: Used for video playback in cinematics.\n\n**Testing status**\n  - Testing agent used after significant changes: NO\n  - Troubleshoot agent used after agent stuck in loop: NO\n  - Test files created:\n    - `/app/frontend/scripts/guard-no-hero-list-fallback.mjs`\n    - `/app/frontend/scripts/guard-no-direct-tier-imports.mjs`\n    - `/app/frontend/scripts/guard-select-user-hero-by-id.mjs`\n    - `/app/frontend/scripts/guard-user-heroes-map-sync.mjs`\n  - Known regressions:\n      - Authentication state is not persisting correctly in the web preview. Status: Not fixed.\n\n**Credentials to test flow:**\n- Create a new user (e.g., \'testuser1\' with password \'password\') via the signup flow.\n\n**What agent forgot to execute**\n- The agent was extremely thorough and meticulously followed the user\'s detailed, iterative instructions. No tasks or steps were forgotten. The session was a model of guided architectural improvement.\n\n</analysis>" > /app/.emergent/summary.txt'
-BASH_LINENO=()
-BASH_LOADABLES_PATH=/usr/local/lib/bash:/usr/lib/bash:/opt/local/lib/bash:/usr/pkg/lib/bash:/opt/pkg/lib/bash:.
-BASH_SOURCE=()
-BASH_VERSINFO=([0]="5" [1]="2" [2]="15" [3]="1" [4]="release" [5]="aarch64-unknown-linux-gnu")
-BASH_VERSION='5.2.15(1)-release'
-DEBIAN_FRONTEND=noninteractive
-DIRSTACK=()
-ENABLE_RELOAD=true
-EUID=0
-GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D
-GROUPS=()
-HOME=/root
-HOSTNAME=agent-env-66e4bf6a-4f9a-4067-b891-65a7861efe52
-HOSTTYPE=aarch64
-IFS=$' \t\n'
-KUBERNETES_PORT=tcp://34.118.224.1:443
-KUBERNETES_PORT_443_TCP=tcp://34.118.224.1:443
-KUBERNETES_PORT_443_TCP_ADDR=34.118.224.1
-KUBERNETES_PORT_443_TCP_PORT=443
-KUBERNETES_PORT_443_TCP_PROTO=tcp
-KUBERNETES_SERVICE_HOST=34.118.224.1
-KUBERNETES_SERVICE_PORT=443
-KUBERNETES_SERVICE_PORT_HTTPS=443
-LANG=C.UTF-8
-MACHTYPE=aarch64-unknown-linux-gnu
-NEXT_TELEMETRY_DISABLED=1
-NODE_VERSION=20
-OLDPWD=/app
-OPTERR=1
-OPTIND=1
-OSTYPE=linux-gnu
-PATH=/root/.venv/bin:/opt/plugins-venv/bin:/opt/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-PIPESTATUS=([0]="0")
-PIP_NO_INPUT=1
-PLAYWRIGHT_BROWSERS_PATH=/pw-browsers
-PLUGIN_VENV_PATH=/opt/plugins-venv
-PPID=70
-PS4='+ '
-PWD=/app/frontend
-PYTHONUNBUFFERED=1
-PYTHON_SHA256=8d3ed8ec5c88c1c95f5e558612a725450d2452813ddad5e58fdb1a53b1209b78
-PYTHON_VERSION=3.11.14
-SHELL=/bin/bash
-SHELLOPTS=braceexpand:hashall:interactive-comments
-SHLVL=1
-STRIPE_API_KEY=sk_test_emergent
-TERM=dumb
-UID=0
-UV_COMPILE_BYTECODE=1
-VIRTUAL_ENV=/root/.venv
-_=/app/.emergent
-base_url=https://demobackend.emergentagent.com
-code_server_password=955fa40c
-integration_proxy_url=https://integrations.emergentagent.com
-monitor_polling_interval=1
-preview_endpoint=https://frontend-refactor.preview.emergentagent.com
-run_id=66e4bf6a-4f9a-4067-b891-65a7861efe52 calls are already correctly synced.
-5.  **User:** Instructs agent to add a CI guard to enforce that  and  are always set together.
-6.  **Agent:** Creates the guard, wires it into , and verifies it passes.
-7.  **User:** Asks to confirm the JSON shape of the gacha pull response.
-8.  **Agent:** Investigates the backend code and uses  to provide the exact JSON shape.
-9.  **User:** Instructs agent to tighten the gacha refresh logic using the now-known exact response shape.
-10. **Agent:** Implements the exact logic in , removing the previous heuristic-based approach.
+1.  **User (LATEST):** Provides a comprehensive, step-by-step plan to fix the auth persistence issue using a platform-safe, token-based strategy. This is the next critical task. (PENDING)
+2.  **User:** Asks for confirmation on whether the hero progression screen still has hook errors or optimistic update flickers.
+3.  **Agent:** Reports that the frontend testing agent found a hooks error in , fixes it, and re-runs tests to confirm the fix.
+4.  **Agent:** Tries to test the progression screen but is blocked by the login not working.
+5.  **User:** Instructs the agent to test the feature flags and then report on the hero progression screen's stability.
+6.  **Agent:** Completes the Done-Done checklist for feature flags, including implementing and testing the maintenance mode.
+7.  **User:** Provides the Done-Done checklist for finalizing the remote feature flag implementation and outlines the next steps for stabilizing the progression screen.
+8.  **Agent:** Implements the feature-flag-aware tier selector UI based on the user's plan.
+9.  **User:** Provides the plan to make the tier selector UI aware of the awakening feature flag.
+10. **Agent:** Finalizes the  refactor with the user's last set of production-hard improvements.
 
 **Project Health Check:**
-*   **Broken**: None. The frontend architecture is significantly more robust and performant.
-*   **Mocked**: Expo to Unity communication bridge. Rarity Ascension feature. RevenueCat integration. The backend single-hero endpoint is mocked on the frontend via a fallback.
+*   **Broken**: **Authentication Persistence**. The web preview does not maintain login state across page reloads, making the app difficult to test.
+*   **Mocked**: Expo to Unity communication bridge. Rarity Ascension feature. RevenueCat integration.
 
 **3rd Party Integrations**
 *   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).
@@ -359,20 +196,19 @@ run_id=66e4bf6a-4f9a-4067-b891-65a7861efe52 calls are already correctly synced.
 *   **expo-av**: Used for video playback in cinematics.
 
 **Testing status**
-  - Testing agent used after significant changes: NO
+  - Testing agent used after significant changes: YES (Successfully identified a hooks error in  and verified the fix).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created:
     - 
     - 
-    - 
-    - 
   - Known regressions:
-      - Authentication state is not persisting correctly in the web preview. Status: Not fixed.
+      - Authentication state is not persisting correctly in the web preview. This is a critical, unresolved issue.
 
 **Credentials to test flow:**
 - Create a new user (e.g., 'testuser1' with password 'password') via the signup flow.
+- A known working user is  with password .
 
 **What agent forgot to execute**
-- The agent was extremely thorough and meticulously followed the user's detailed, iterative instructions. No tasks or steps were forgotten. The session was a model of guided architectural improvement.
+- The agent's initial attempt to fix auth persistence was insufficient and was not re-verified, leading to it becoming a blocker later in the session. However, the agent correctly followed user guidance to address all other complex issues.
 
 </analysis>

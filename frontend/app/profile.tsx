@@ -140,14 +140,12 @@ export default function ProfileScreen() {
     setRedeemResult(null);
 
     try {
-      const response = await axios.post(
-        `${API_BASE}/codes/redeem?username=${encodeURIComponent(user.username)}&code=${encodeURIComponent(codeInput.trim())}`
-      );
+      const result = await redeemCode(user.username, codeInput.trim());
       
       setRedeemResult({
         success: true,
-        message: response.data.message,
-        rewards: response.data.rewards
+        message: result.message,
+        rewards: result.rewards
       });
       
       // Refresh user data to update currencies

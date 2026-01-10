@@ -1,68 +1,79 @@
 <analysis>
 <original_problem_statement>
-The user has pivoted from a large-scale engineering task (Live2D animation system migration) to a design-focused task. The new primary goal is to replace all hero portrait images in the application to align with a new, detailed art direction.
+The user initially requested a complete overhaul of all 22 hero portrait images to align with a new art direction. This task was successfully completed.
 
-PRODUCT REQUIREMENTS:
-- **P0: Hero Portrait Overhaul**: A design-only task to replace all 22 hero portraits.
-  - **Phase 1: Art Direction Definition (COMPLETED)**: User provided a comprehensive art style guide and a Design Authority Document defining the emotional, visual, and power archetypes for each of the 22 heroes.
-  - **Phase 2: Asset Replacement (IN PROGRESS)**: The user is providing a 6-image ascension set for each hero. The agent's task is to:
-    1.  Receive the images for a hero.
-    2.  Archive all 6 images in a structured folder: .
-    3.  Use the **3-star image** as the **only** default portrait by updating the  field for that hero in .
-    4.  **Strict Constraint**: No modifications to code logic, schemas, Unity, or Live2D systems are permitted. This is a content/configuration change only.
-- **PAUSED: Live2D/Unity Integration (Phase 6)**: The previous task of implementing a real-time bridge between Expo and Unity is on hold.
-- **PAUSED: Re-enable RevenueCat (P1)**: Paused due to native dependency issues.
-- **NOT STARTED: Backend Code Cleanup (P2)**: Legacy, duplicate code in  needs refactoring.
+The user then provided a new feature request:
+**FEATURE: 5+ STAR HERO TAP → PLAY HERO-SPECIFIC VIDEO (22 HEROES)**
 
+**GOAL:** When a user taps a hero who is currently displayed at **5+ star ascension (final tier)**, play that hero’s unique video.
+
+**PRODUCT REQUIREMENTS:**
+- **P0: Hero Portrait Overhaul (COMPLETED)**: Replaced all 22 hero portraits in  with their 3-star ascension image and archived all 6 ascension images for each hero in .
+- **P0: 5+ Star Hero Cinematic Feature (IN PROGRESS)**: Implement a frontend-only feature to play a unique video when a 5+ star hero is tapped.
+  - Create a video asset directory: .
+  - Create a mapping file  using static .
+  - Create a reusable modal component  using .
+  - Modify the hero detail screen to trigger the modal.
+  - **Fallback Logic**: If the hero's star level isn't available in the UI state, add a temporary Preview 5+ button for UR / UR+ heroes to trigger the video.
+- **PAUSED: Live2D/Unity Integration**: On hold.
+- **PAUSED: Re-enable RevenueCat (P1)**: Paused.
+- **NOT STARTED: Backend Code Cleanup (P2)**: Legacy code in  needs refactoring.
 </original_problem_statement>
+
 **User's preferred language**: English
 
 **what currently exists?**
-The project has a backend file, , which contains a hardcoded list of 22 heroes. A new asset archiving system has been established at , with subdirectories for each hero to store their 6 ascension images. For the first 6 heroes, the  in  has been updated to point to their respective 3-star portrait URL, and their full 6-image sets are archived.
+The initial task of updating all 22 hero portraits is complete. The  for every hero in  has been updated to their 3-star portrait, and all 132 ascension images are archived.
+
+For the new cinematic feature, the complete scaffolding is in place:
+-  library has been installed.
+- All 22  video files, provided by the user, have been downloaded and are correctly placed in .
+- The mapping file  has been created, and the feature flag  is set to . All 22 static  statements for the videos have been uncommented.
+- The reusable video modal component, , has been created.
+- The hero detail screen, , has been modified to include the Preview 5+ button for UR and UR+ heroes, which opens the cinematic modal. The logic to handle video playback is implemented.
 
 **Last working item**:
-    - Last item agent was working: The agent was in the middle of processing the ascension images for the 7th hero, **Kai the Tempest**. It had just received the 1-star image (Wind Initiate), created the archive directory for Kai at , stored the image and its metadata in , and was awaiting the 2-star image.
+    - Last item agent was working: The agent just finished the implementation phase of the 5+ Star Hero Cinematic feature. It downloaded the final batch of videos, verified all 22 files were present and correctly named, updated  to enable the feature and load the videos, and restarted the frontend services.
     - Status: IN PROGRESS
-    - Agent Testing Done: N/A
-    - Which testing method agent to use? Manual verification. The agent should view  after updating a hero's 3-star image to confirm the  string has been correctly replaced. No functional testing is needed.
+    - Agent Testing Done: N
+    - Which testing method agent to use? Frontend testing agent. The agent must verify the implementation against the user's acceptance tests.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - There are no outstanding bugs or issues. The primary focus is the ongoing asset replacement task.
+  - There are no known bugs or issues. The focus is on verifying the newly implemented feature.
 
 **In progress Task List**:
-  - Task 1:  Update All Hero Portraits (P0)
+  - Task 1:  Test and Verify the 5+ Star Hero Cinematic Feature (P0)
 
  Task Detail:
   - Task 1: 
-     - Where to resume: The agent has processed the 1-star image for **Kai the Tempest**. It should now wait for the user to provide the 2-star, 3-star (which will be used to update ), 4-star, 5-star, and 6-star images for Kai, processing each one according to the established archive and update workflow. This process will then be repeated for the remaining 15 heroes.
-     - What will be achieved with this? All 22 hero portraits in the application will be visually updated to match the user's new art direction.
-     - Status:  IN PROGRESS (6 of 22 heroes complete, 1 in progress)
-     - Should Test frontend/backend/both after fix? N/A
-     - Blocked on something: User to provide the next set of images for Kai the Tempest.
+     - Where to resume: The code is implemented and all assets are in place. The next agent must begin testing the feature.
+     - What will be achieved with this? This will confirm that the new video playback feature works correctly according to the user's detailed requirements and acceptance tests.
+     - Status:  NOT STARTED
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on something: Nothing.
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   **P0: Complete Hero Portrait Updates**: Continue the process for the remaining 15 heroes after Kai the Tempest is done.
 *   **Future Tasks (Currently PAUSED):**
-    *   **Phase 6: Expo ↔ Unity Transport Integration**: Implement the real, on-device communication bridge between the Expo frontend and the Unity runtime. Scaffolding and security review were completed, but the task was paused.
+    *   **Phase 6: Expo ↔ Unity Transport Integration**: Implement the real, on-device communication bridge.
     *   **P1: Re-enable RevenueCat Integration**: Follow the guide in .
     *   **P2: Backend Code Cleanup**: Refactor  to remove legacy, duplicated endpoints.
     *   **P2: Refine Selene Monetization Simulation**: The file  contains unaddressed logic.
 
 **Completed work in this session**
-- **Hero Archetype Definition**: Established a Design Authority Document and a detailed archetype list for all 22 heroes based on user input, defining their emotional, visual, and power layers.
-- **Asset Archiving System**: Created a directory structure at  and a  system to archive all 6 ascension images for each hero while only using one in the app.
-- **Hero Portrait Updates (6 of 22 complete)**:
-  - **Azrael the Fallen**:  updated to 3-star portrait.
-  - **Marcus the Shield**:  updated to 3-star portrait.
-  - **Kane the Berserker**:  updated to 3-star portrait.
-  - **Soren the Flame**:  updated to 3-star portrait.
-  - **Lysander the Frost**:  updated to 3-star portrait.
-  - **Theron the Storm**:  updated to 3-star portrait.
+- **Hero Portrait Overhaul (16 of 16 remaining heroes)**:
+  - Completed image archiving and  updates for Kai, Robin, Darius, Leon, Lucian, Morgana, Artemis, Orion, Phoenix, Gale, Seraphiel, Malachi, Selene, Raphael, Michael, and Apollyon. This completes the entire 22-hero set.
+- **Implemented 5+ Star Hero Cinematic Feature**:
+  - Installed  library.
+  - Created asset directory  and populated it with all 22 user-provided MP4 files.
+  - Created constant mapping file .
+  - Created reusable modal .
+  - Modified  to add a Preview 5+ button for UR/UR+ heroes and trigger the video modal.
+  - Enabled the feature by setting the  flag to  and uncommenting the video  paths.
+  - Generated a list of all 22 6-star hero portraits for the user.
 
 **Earlier issues found/mentioned but not fixed**
-   - **Refactor **: The task to remove legacy, duplicate endpoints from  remains outstanding. This is a source of technical debt and potential future bugs.
+   - **Refactor **: The task to remove legacy, duplicate endpoints from  remains outstanding. This is a source of technical debt.
 
 **Known issue recurrence from previous fork**
   - **Issue recurrence in previous fork**: Backend code in  contains legacy, duplicated endpoints.
@@ -73,42 +84,54 @@ The project has a backend file, , which contains a hardcoded list of 22 heroes. 
 
 
 **Key Technical Concepts**
-- **Design-First Workflow**: The current work is entirely driven by user-provided design specifications and assets, with a strict no code change rule.
-- **Asset Archiving**: A manual process of storing provided assets in a structured way for potential future use, without integrating them into the app's current logic. The  file in each folder acts as a local database for these assets.
-- **Configuration-as-Code**: The hero list hardcoded in  is being treated as a configuration file. The agent is modifying this configuration, not the application's executable code.
+- **Asset Archiving**: A manual process of storing provided assets (images, videos) in a structured way for future use.
+- **Configuration-as-Code**: The hero list in  and the video map in  are treated as configuration.
+- **Feature Flagging**: Use of the  boolean in  to enable or disable the cinematic feature.
+- **Video Playback**: Use of the  library to handle video loading, playback, and resource cleanup within a React Native modal.
+- **Static Assets**: Using  to bundle video assets directly into the app, ensuring they are available offline and load quickly.
 
 **key DB schema**
-  - No DB schema changes. Hero data is hardcoded in .
+- No DB schema changes. Hero data remains hardcoded in .
 
 **changes in tech stack**
-  - None.
+  - Added  to the frontend .
 
 **All files of reference**
-*   **Modified in this task**:
-    *   : The  for 6 heroes has been updated.
-*   **Created in this task**:
-    *   : Entire directory and its contents for 7 heroes (Azrael, Marcus, Kane, Soren, Lysander, Theron, Kai). Each subdirectory contains image files and a .
+*   **Created/Modified in this session**:
+    *   :  updated for all 22 heroes.
+    *   : Completed archiving for all 22 heroes.
+    *   : Added .
+    *   : New directory with 22  files.
+    *   : New file mapping heroes to videos.
+    *   : New component for video playback.
+    *   : Updated to integrate the cinematic feature.
+    *   : Report on the feature scaffolding.
 
 **Critical Info for New Agent**
-- **DESIGN PHASE IS ACTIVE**: Your current and only task is to continue the hero portrait replacement. Do NOT attempt to work on any other paused tasks (like the Unity bridge or RevenueCat).
-- **THE 3-STAR RULE IS LAW**: For every hero, the user will provide 6 images. You must archive all 6, but only the **3-star image URL** should be used to update the  field in .
-- **NO CODE OR SCHEMA CHANGES**: Do not add new fields to the  model (like ). Do not change any UI to handle different star portraits. This is a simple content replacement task.
-- **Follow the established workflow**: For each new hero, create the  directory, add images and update the manifest as they are received, and update  only when the 3-star image arrives.
+- **Your primary task is to TEST the new Hero Cinematic feature.** Do not re-implement anything. The code and assets are already in place.
+- **Follow the User's Acceptance Tests:** The user provided a clear list of tests (T1-T5) in their feature request (Chat Message 535).
+  - T1: Tapping a 5+ hero plays the correct video. (Use the Preview 5+ button on a UR/UR+ hero like Apollyon).
+  - T2: Closing the modal stops playback.
+  - T3: Tapping a non-5+ hero does nothing extra.
+  - T4: A missing video mapping doesn't crash the app (this is harder to test now that all are mapped, but review the code for safe-guards).
+  - T5: Open/close the video multiple times to check for memory leaks or lag.
+- The feature is activated via the temporary **Preview 5+** button on the detail pages of UR and UR+ rarity heroes.
 
 **documents created in this job**
-  -  files for each hero being processed.
+  -  for 16 additional heroes.
+  - 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Provides 1-star image for **Kai the Tempest**. (LATEST)
-2.  **User**: Provides 6-star image for Theron the Storm.
-3.  **User**: Provides 5-star image for Theron the Storm.
-4.  **User**: Provides 4-star image for Theron the Storm.
-5.  **User**: Provides 3-star image for Theron the Storm.
-6.  **User**: Provides 2-star image for Theron the Storm.
-7.  **User**: Provides 1-star image for Theron the Storm.
-8.  **User**: Provides 6-star image for Lysander the Frost.
-9.  **User**: Provides 5-star image for Lysander the Frost.
-10. **User**: Provides 4-star image for Lysander the Frost.
+1.  **User**: Uploads final 4 videos. (LATEST)
+2.  **User**: Requests upload of 5 more videos.
+3.  **User**: Uploads 5 videos.
+4.  **User**: Requests upload of 5 more videos.
+5.  **User**: Uploads 5 videos.
+6.  **User**: Gives instructions for the agent to follow after the video upload is complete.
+7.  **User**: Gives instructions for the agent to follow for the video upload process.
+8.  **User**: Provides the feature request for the 5+ STAR HERO TAP → PLAY HERO-SPECIFIC VIDEO.
+9.  **User**: Asks for a list of all 5+ star heroes with their hero IDs.
+10. **User**: Provides the 1-star image for Apollyon.
 
 **Project Health Check:**
 *   **Broken**: None.
@@ -119,9 +142,10 @@ The project has a backend file, , which contains a hardcoded list of 22 heroes. 
 *   **OpenAI GPT-4**: Used for backend AI narration (via Emergent LLM Key).
 *   **RevenueCat**: Packages installed, but integration is disabled.
 *   **@azesmway/react-native-unity**: Scaffolding code exists but is not fully integrated or tested.
+*   **expo-av**: Newly added for video playback.
 
 **Testing status**
-  - Testing agent used after significant changes: NO
+  - Testing agent used after significant changes: NO (The video feature has not been tested yet).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
   - Known regressions: None.
@@ -131,6 +155,6 @@ The project has a backend file, , which contains a hardcoded list of 22 heroes. 
 - **Password:** Adam123!
 
 **What agent forgot to execute**
-The agent has correctly followed the user's directive to pivot from a major engineering task to a design-focused one. All paused tasks were put on hold at the user's implicit command. Nothing has been forgotten.
+The agent has followed all instructions meticulously. It successfully completed the primary task and then fully implemented the scaffolding and asset integration for the new feature request. The only remaining step is to perform the validation and testing that was explicitly requested by the user as the final part of the new feature implementation.
 
 </analysis>

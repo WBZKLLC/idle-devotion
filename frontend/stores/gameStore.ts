@@ -500,11 +500,18 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setUser: (user: User | null) => set({ user }),
   
-  // Selector: find hero by ID from cache (O(n) lookup, but userHeroes is typically small)
+  // Selector: find hero by ID from cache (O(1) primary, O(n) fallback)
   selectUserHeroById: (id: string | undefined) => {
     if (!id) return undefined;
-    const { userHeroes } = get();
-    return userHeroes?.find((h: any) => String(h?.id) === String(id));
+    const key = String(id);
+    const { userHeroesById, userHeroes } = get();
+
+    // Primary: O(1) map lookup
+    const hit = userHeroesById?.[key];
+    if (hit) return hit;
+
+    // Secondary fallback (legacy safety) — should become unnecessary over time
+    return userHeroes?.find((h: any) => String(h?.id) === key);
   },
 
   // Single-hero ensure: cache-first lookup + API fallback (keeps logic out of screens)

@@ -41,8 +41,6 @@ const COLORS = {
   },
 };
 
-const API_BASE = '/api';
-
 interface GuildWarStatus {
   season: number;
   status: string;

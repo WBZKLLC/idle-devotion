@@ -324,7 +324,7 @@ export default function HeroProgressionScreen() {
 
       const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars });
       if (newTier > effectiveUnlockedTier) {
-        Alert.alert('Star Promoted! 🌟', `New tier unlocked: ${TIER_LABELS.find(t => t.tier === newTier)?.label}`);
+        Alert.alert('Star Promoted! 🌟', `New tier unlocked: ${TIER_LABELS[newTier as DisplayTier] || `${newTier}★`}`);
       } else {
         Alert.alert('Star Promoted! 🌟', `Now at ${newStars} star(s).`);
       }

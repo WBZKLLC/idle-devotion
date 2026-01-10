@@ -187,10 +187,10 @@ export default function ChatScreen() {
     }
   };
 
-  const equipBubble = async (bubbleId: string) => {
+  const handleEquipBubble = async (bubbleId: string) => {
     if (!user) return;
     try {
-      await axios.post(`${API_BASE}/user/${user.username}/equip-chat-bubble?bubble_id=${bubbleId}`);
+      await equipChatBubble(user.username, bubbleId);
       await loadUserBubble();
       setShowBubbleModal(false);
       Alert.alert('Success', 'Chat bubble equipped!');

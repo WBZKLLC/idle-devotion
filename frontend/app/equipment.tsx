@@ -100,18 +100,16 @@ export default function EquipmentScreen() {
   const enhanceEquipment = async (equipmentId: string, levels: number = 1) => {
     if (!user) return;
     try {
-      const response = await axios.post(`${API_BASE}/equipment/${user.username}/enhance`, {
-        equipment_id: equipmentId,
-        levels,
-      });
+      // Use centralized API wrapper
+      const result = await apiEnhanceEquipment(user.username, equipmentId, [{ id: 'enhance_stone', qty: levels }]);
       Alert.alert(
         '✨ Enhanced!',
-        `Level ${response.data.new_level}\n${response.data.gold_spent} Gold\n${response.data.stones_spent} Stones`
+        `Level ${result.new_level}\n${result.gold_spent} Gold\n${result.stones_spent} Stones`
       );
       fetchUser();
       loadData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Enhancement failed');
+      Alert.alert('Error', error?.message || 'Enhancement failed');
     }
   };
 

@@ -1062,6 +1062,18 @@ export async function verifyPurchase(payload: {
 }
 
 // ─────────────────────────────────────────────────────────────
+// REMOTE FEATURE FLAGS
+// GET /api/v1/features
+// ─────────────────────────────────────────────────────────────
+
+import type { RemoteFeaturesPayload } from './features';
+
+export async function fetchRemoteFeatures(): Promise<RemoteFeaturesPayload> {
+  const res = await api.get('/v1/features');
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // IDLE CLAIM (gameStore.ts)
 // ─────────────────────────────────────────────────────────────
 

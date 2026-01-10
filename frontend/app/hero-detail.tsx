@@ -297,7 +297,7 @@ export default function HeroDetailScreen() {
                 <View style={styles.heroImageContainer}>
                   {tierArt ? (
                     <Image
-                      source={tierArt as any}
+                      source={tierArtSource}
                       style={{ width: 180, height: 250 }}
                       resizeMode="contain"
                     />

@@ -1394,3 +1394,23 @@ function GlassCard(props: { children: React.ReactNode; style?: any }) {
     </View>
   );
 }
+
+/**
+ * SanctumAtmosphere - Adds a subtle violet "sanctum" wash for deeper environment feel
+ * Use between background and overlays for richer depth without Live2D
+ */
+function SanctumAtmosphere() {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(20, 18, 40, 0.18)",
+      }}
+    />
+  );
+}

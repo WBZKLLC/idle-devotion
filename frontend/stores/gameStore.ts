@@ -175,13 +175,29 @@ const getStoredAuthData = async (): Promise<{username: string | null; token: str
   let token = null;
   
   try {
+    // Try localStorage first (web)
     if (typeof window !== 'undefined' && window.localStorage) {
-      username = window.localStorage.getItem(STORAGE_KEYS.USERNAME);
-      token = window.localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      try {
+        username = window.localStorage.getItem(STORAGE_KEYS.USERNAME);
+        token = window.localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        if (username) {
+          console.log('[getStoredAuthData] Found in localStorage:', username);
+          return { username, token };
+        }
+      } catch (e) {
+        console.log('[getStoredAuthData] localStorage access failed:', e);
+      }
     }
-    if (!username) {
+    
+    // Fallback to AsyncStorage (native)
+    try {
       username = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
       token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (username) {
+        console.log('[getStoredAuthData] Found in AsyncStorage:', username);
+      }
+    } catch (e) {
+      console.log('[getStoredAuthData] AsyncStorage access failed:', e);
     }
   } catch (e) {
     console.error('Failed to get stored auth data:', e);

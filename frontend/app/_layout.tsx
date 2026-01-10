@@ -216,6 +216,27 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
   },
+  maintenanceContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.navy.darkest,
+    padding: 24,
+  },
+  maintenanceTitle: {
+    color: COLORS.gold.primary,
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  maintenanceText: {
+    color: COLORS.cream.soft,
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    opacity: 0.8,
+  },
   tabBar: {
     backgroundColor: COLORS.navy.darkest,
     borderTopColor: COLORS.gold.primary + '30',

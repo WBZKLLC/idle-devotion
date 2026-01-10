@@ -102,6 +102,15 @@ export default function HeroProgressionScreen() {
   const hero = localHeroOverride ?? storeHero ?? null;
   const heroData = hero?.hero_data ?? null;
 
+  // Check if store has "caught up" to the optimistic override
+  // Used to safely clear override without UI flicker
+  const isOverrideCaughtUp =
+    !!localHeroOverride &&
+    !!storeHero &&
+    String(localHeroOverride.id) === String(storeHero.id) &&
+    (storeHero.stars ?? 0) >= (localHeroOverride.stars ?? 0) &&
+    (storeHero.duplicates ?? 0) === (localHeroOverride.duplicates ?? storeHero.duplicates ?? 0);
+
   const [previewTier, setPreviewTier] = useState<DisplayTier>(1);
 
   // confirm modals

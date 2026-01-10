@@ -271,15 +271,9 @@ export default function HeroProgressionScreen() {
         }
       }
 
-      // Set preview tier from ensured hero
-      const ensuredHero = selectUserHeroById(String(heroId));
-      if (ensuredHero) {
-        setPreviewTier(unlockedTierForHero(ensuredHero));
-      }
-      
-      // Clear local override only when store has caught up AND we're not promoting
-      // This prevents UI flicker during optimistic updates
-      if (!isPromoting && isOverrideCaughtUp) {
+      // Clear local override only when store has caught up
+      // (isPromoting check at top already guarantees we're not promoting here)
+      if (isOverrideCaughtUp) {
         setLocalHeroOverride(null);
       }
     } catch (e) {
@@ -295,12 +289,21 @@ export default function HeroProgressionScreen() {
     isPromoting,
     isOverrideCaughtUp,
     getUserHeroById,
+    getHeroProgression,
     selectUserHeroById,
   ]);
 
   useEffect(() => {
     if (hydrated && user && heroId) loadHero();
   }, [hydrated, user, heroId, loadHero]);
+
+  // Sync preview tier from canonical hero source (store or override)
+  // This keeps tier preview purely derived, not set inside async callbacks
+  useEffect(() => {
+    if (!hero) return;
+    const tier = unlockedTierForHero(hero);
+    setPreviewTier(tier);
+  }, [hero]);
 
   const openCinematic = useCallback(() => {
     if (!heroData) return;

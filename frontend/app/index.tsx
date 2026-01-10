@@ -440,17 +440,11 @@ export default function HomeScreen() {
         source={{ uri: SANCTUM_BG_IMAGE }} 
         mode="contain" 
         zoom={1.02}
-        opacity={0.25}
+        opacity={1}
+        waitForSize
       />
       <SanctumAtmosphere />
       <DivineOverlays vignette={true} rays={false} grain={true} />
-      
-      {/* Dark gradient overlay for better readability */}
-      <LinearGradient 
-        colors={['rgba(10, 22, 40, 0.92)', 'rgba(13, 27, 42, 0.95)']} 
-        style={StyleSheet.absoluteFillObject}
-        pointerEvents="none"
-      />
       
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {/* Header */}

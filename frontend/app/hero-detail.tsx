@@ -42,61 +42,67 @@ const CLASS_ICONS: { [key: string]: string } = {
   'Archer': 'locate',
 };
 
-// ============================================================================
-// DISPLAY TIER SYSTEM (UI-only)
-// ============================================================================
-type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
+// ----------------------------
+// Tier / Stars utilities (EXACT to backend + your mapping)
+// ----------------------------
 
-// Show EXACT backend star count (0..6) for UI
-const displayStars = (h: any) => {
-  const s = Number(h?.stars ?? 0);
-  if (!isFinite(s)) return 0;
-  return Math.max(0, Math.min(6, s));
-};
+function displayStars(hero: any): number {
+  const s = Number(hero?.stars ?? 0);
+  if (!Number.isFinite(s)) return 0;
+  return Math.max(0, Math.min(6, Math.floor(s)));
+}
 
-// Tier unlock mapping (UI-only) aligned to backend stars:
-// stars=0 -> tier 1 unlocked
-// stars=1 -> tier 2 unlocked
-// stars=2 -> tier 3 unlocked
-// stars=3 -> tier 4 unlocked
-// stars=4 -> tier 5 unlocked
-// stars>=5 OR awakening>0 -> tier 6 unlocked (5★+)
-const unlockedTierForHero = (h: any): DisplayTier => {
-  const stars = displayStars(h);
-  const awaken = Number(h?.awakening_level ?? 0);
+/**
+ * EXACT unlock mapping (as per your spec):
+ * stars=0 → unlock tier 1
+ * stars=1 → unlock tier 2
+ * stars=2 → unlock tier 3
+ * stars=3 → unlock tier 4
+ * stars=4 → unlock tier 5
+ * stars>=5 OR awakening>0 → unlock tier 6 (5★+)
+ */
+function unlockedTierFromHero(hero: any): number {
+  const stars = displayStars(hero);
+  const awakening = Number(hero?.awakening_level ?? 0);
+  const hasAwaken = Number.isFinite(awakening) && awakening > 0;
 
-  if (awaken > 0 || stars >= 5) return 6;
+  if (stars >= 5 || hasAwaken) return 6;
+  // stars 0..4 map to tiers 1..5
+  return Math.max(1, Math.min(5, stars + 1));
+}
 
-  const tier = (stars + 1) as DisplayTier; // 0..4 -> 1..5
-  return Math.max(1, Math.min(5, tier)) as DisplayTier;
-};
+function clampTier(tier: number): number {
+  const t = Number(tier);
+  if (!Number.isFinite(t)) return 1;
+  return Math.max(1, Math.min(6, Math.floor(t)));
+}
 
-// Tries to resolve tier art from common hero data shapes.
-// Falls back to heroData.image_url, then to sanctum environment.
-const resolveTierArt = (heroData: any, tier: DisplayTier) => {
-  if (!heroData) return null;
+/**
+ * resolveTierArt (NO GUESSING):
+ * - Uses heroData.ascension_images[String(tier)] exactly (API format "1".."6")
+ * - If missing, falls back to heroData.image_url
+ * - If missing, falls back to Sanctum environment
+ */
+function resolveTierArt(heroData: any, tier: number) {
+  const t = clampTier(tier);
 
-  // Backend now sends ascension_images with keys "1" to "6"
-  const tKey = String(tier);
+  const asc = heroData?.ascension_images;
+  const tierUrl =
+    asc && typeof asc === 'object'
+      ? (asc[String(t)] as string | undefined)
+      : undefined;
 
-  // Primary: heroData.ascension_images (from backend manifest loading)
-  const fromAscension =
-    heroData?.ascension_images?.[tKey] ||
-    heroData?.ascension_images?.[tier];
-
-  if (typeof fromAscension === 'string' && fromAscension.length > 0) {
-    return { uri: fromAscension };
+  if (typeof tierUrl === 'string' && tierUrl.length > 0) {
+    return { uri: tierUrl };
   }
 
-  // Fallback shapes (if backend uses different structure)
-  const fromObj =
-    heroData?.tier_images?.[tKey] ||
-    heroData?.tier_images?.[tier];
+  const baseUrl = heroData?.image_url;
+  if (typeof baseUrl === 'string' && baseUrl.length > 0) {
+    return { uri: baseUrl };
+  }
 
-  if (typeof fromObj === 'string' && fromObj.length > 0) return { uri: fromObj };
-
-  const fromArrayIndex = heroData?.images_by_tier?.[tier - 1];
-  if (typeof fromArrayIndex === 'string' && fromArrayIndex.length > 0) return { uri: fromArrayIndex };
+  return require('../assets/backgrounds/sanctum_environment_01.jpg');
+}
 
   const fromImagesArray =
     heroData?.images?.find?.((x: any) => Number(x?.tier) === tier)?.url ||

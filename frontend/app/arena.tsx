@@ -84,15 +84,26 @@ export default function ArenaScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      const [recordRes, opponentsRes, leaderboardRes] = await Promise.all([
-        axios.get(`${API_BASE}/arena/record/${user.username}`).catch(() => ({ data: null })),
-        axios.get(`${API_BASE}/arena/opponents/${user.username}`).catch(() => ({ data: [] })),
-        axios.get(`${API_BASE}/leaderboard/arena?limit=20`).catch(() => ({ data: [] })),
-      ]);
+      // Use centralized API wrappers (parallel loads, no .catch swallowing)
+      let recordData = null;
+      let opponentsData: ArenaOpponent[] = [];
+      let leaderboardData: any[] = [];
       
-      setRecord(recordRes.data || { rating: 1000, rank: 999, wins: 0, losses: 0, win_streak: 0, best_streak: 0, tickets: 5, max_tickets: 5 });
-      setOpponents(opponentsRes.data || generateMockOpponents());
-      setLeaderboard(leaderboardRes.data || []);
+      try {
+        recordData = await getArenaRecord(user.username);
+      } catch { recordData = null; }
+      
+      try {
+        opponentsData = await getArenaOpponents(user.username);
+      } catch { opponentsData = []; }
+      
+      try {
+        leaderboardData = await getLeaderboard('arena', 20);
+      } catch { leaderboardData = []; }
+      
+      setRecord(recordData || { rating: 1000, rank: 999, wins: 0, losses: 0, win_streak: 0, best_streak: 0, tickets: 5, max_tickets: 5 });
+      setOpponents(opponentsData.length > 0 ? opponentsData : generateMockOpponents());
+      setLeaderboard(leaderboardData || []);
     } catch (error) {
       console.error('Error loading arena:', error);
     } finally {

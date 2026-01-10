@@ -1,49 +1,80 @@
 // /app/frontend/lib/featureUtils.ts
-/**
- * Utility functions for feature flag system.
- * Kept separate to avoid circular dependencies.
- */
 
-/**
- * Simple hash function for deterministic rollout bucketing.
- * Uses djb2 algorithm - fast and good distribution.
- * 
- * @param str - String to hash
- * @returns number - Hash value
- */
-export function createHash(str: string): number {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) + hash) ^ char; // hash * 33 ^ char
-  }
-  return Math.abs(hash);
-}
-
-/**
- * AsyncStorage key for feature flag cache
- */
 export const FEATURES_STORAGE_KEY = '@idledevotion/features/v1';
+export const DEFAULT_FEATURES_TTL_SECONDS = 3600; // 1h fallback if server omits
+export const MIN_FEATURES_TTL_SECONDS = 60; // don't thrash the endpoint
+export const MAX_FEATURES_TTL_SECONDS = 24 * 60 * 60; // 24h clamp
 
-/**
- * Cached feature payload shape
- */
-export interface CachedFeaturesPayload {
-  savedAt: number;      // ms epoch when saved
-  nextFetchAt: number;  // ms epoch when cache expires
-  payload: {
-    version: number;
-    ttlSeconds: number;
-    flags: Record<string, unknown>;
-  };
+export type RemoteFlagValue =
+  | boolean
+  | {
+      enabled: boolean;
+      rollout?: number; // 0..1
+    };
+
+export type RemoteFeaturesPayload = {
+  version: number;
+  ttlSeconds?: number;
+  flags: Record<string, RemoteFlagValue>;
+};
+
+export type NormalizedRemoteFlag = {
+  enabled: boolean;
+  rollout?: number; // 0..1
+};
+
+export function clamp01(n: number): number {
+  if (Number.isNaN(n)) return 0;
+  if (n < 0) return 0;
+  if (n > 1) return 1;
+  return n;
+}
+
+export function clampTtlSeconds(ttlSeconds?: number): number {
+  const raw = typeof ttlSeconds === 'number' ? ttlSeconds : DEFAULT_FEATURES_TTL_SECONDS;
+  const clamped = Math.max(MIN_FEATURES_TTL_SECONDS, Math.min(MAX_FEATURES_TTL_SECONDS, raw));
+  return clamped;
+}
+
+export function normalizeRemoteFlagValue(value: RemoteFlagValue): NormalizedRemoteFlag {
+  if (typeof value === 'boolean') return { enabled: value };
+  const enabled = !!value.enabled;
+  const rollout =
+    typeof value.rollout === 'number' ? clamp01(value.rollout) : undefined;
+  return rollout === undefined ? { enabled } : { enabled, rollout };
+}
+
+export function normalizeRemoteFlags(
+  flags: Record<string, RemoteFlagValue> | undefined | null,
+): Record<string, NormalizedRemoteFlag> {
+  const out: Record<string, NormalizedRemoteFlag> = {};
+  if (!flags) return out;
+
+  for (const [k, v] of Object.entries(flags)) {
+    out[k] = normalizeRemoteFlagValue(v);
+  }
+  return out;
 }
 
 /**
- * Default TTL if backend doesn't specify (1 hour)
+ * Fast deterministic 32-bit FNV-1a hash.
+ * Good enough for rollout bucketing; not for cryptography.
  */
-export const DEFAULT_TTL_SECONDS = 3600;
+export function fnv1a32(input: string): number {
+  let hash = 0x811c9dc5; // offset basis
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    // hash *= 16777619 (with 32-bit overflow)
+    hash = (hash + (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24)) >>> 0;
+  }
+  return hash >>> 0;
+}
 
 /**
- * Minimum time between fetches to prevent spam (5 minutes)
+ * Convert a stable identifier into a bucket in [0,1).
  */
-export const MIN_FETCH_INTERVAL_MS = 5 * 60 * 1000;
+export function bucket01(stableId: string): number {
+  const h = fnv1a32(stableId);
+  // 2^32 = 4294967296
+  return h / 4294967296;
+}

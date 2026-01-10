@@ -205,8 +205,8 @@ export default function HeroesScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerTitles}>
-            <Text style={styles.title}>Heroes</Text>
-            <Text style={styles.subtitle}>{userHeroes.length} Collected</Text>
+            <Text style={styles.title}>Idle Devotion</Text>
+            <Text style={styles.subtitle}>A Soul Bound Fantasy • {userHeroes.length} Heroes</Text>
           </View>
 
           <Pressable onPress={() => router.back()} style={styles.backBtn}>

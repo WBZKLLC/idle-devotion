@@ -209,6 +209,43 @@ export function SanctumAtmosphere() {
 }
 
 /**
+ * SummonAtmosphere - Lighter wash for dramatic summon stage art
+ * - Lighter violet so art stays punchy
+ * - Stronger bottom fade for dense buttons
+ */
+export function SummonAtmosphere() {
+  return (
+    <>
+      {/* Lighter wash so art stays punchy */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(20, 18, 40, 0.10)",
+        }}
+      />
+
+      {/* Stronger bottom fade for dense buttons */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 280,
+          backgroundColor: "rgba(0,0,0,0.26)",
+        }}
+      />
+    </>
+  );
+}
+
+/**
  * GlassCard - Divine glass + gold stroke card wrapper
  * Use to wrap any content for unified celestial styling
  */

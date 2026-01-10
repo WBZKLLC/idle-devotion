@@ -95,7 +95,7 @@ export default function GachaScreen() {
         <View style={styles.centerContainer}>
           <Ionicons name="person-circle" size={48} color="rgba(255, 215, 140, 0.9)" />
           <Text style={styles.noUserText}>Please login first</Text>
-          <Pressable style={styles.loginBtn} onPress={() => router.replace('/')}>
+          <Pressable style={styles.loginBtn} onPress={() => router.push('/')}>
             <Text style={styles.loginBtnText}>Go to Login</Text>
           </Pressable>
         </View>

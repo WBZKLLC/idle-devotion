@@ -184,7 +184,7 @@ export default function HeroesScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tierRow}>
             <Text style={styles.tierLabel}>Display Tier</Text>
 
-            {TIER_LABELS.map(({ tier, label }) => {
+            {TIER_LABEL_ARRAY.map(({ tier, label }) => {
               const locked = tier > userMaxUnlockedTier;
               const active = displayTier === tier;
 

@@ -1183,6 +1183,39 @@ const styles = StyleSheet.create({
   },
   awakeningPreviewBtnText: { color: 'rgba(255,255,255,0.95)', fontSize: 13, fontWeight: '900' },
 
+  // Awakening Tier Cards (7★–10★)
+  awakeningGrid: { marginTop: 12, gap: 12 },
+  awakeningCard: {
+    backgroundColor: 'rgba(20, 18, 40, 0.65)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  awakeningCardUnlocked: {
+    borderColor: 'rgba(255, 215, 140, 0.55)',
+    backgroundColor: 'rgba(255, 215, 140, 0.08)',
+  },
+  awakeningCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  awakeningTierText: { fontSize: 20, fontWeight: '900', color: 'rgba(255,255,255,0.92)' },
+  awakeningPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  awakeningPillUnlocked: {
+    backgroundColor: 'rgba(255, 215, 140, 0.20)',
+    borderColor: 'rgba(255, 215, 140, 0.45)',
+  },
+  awakeningPillText: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.85)' },
+  awakeningCardTitle: { marginTop: 10, fontSize: 14, fontWeight: '900', color: 'rgba(255,255,255,0.92)' },
+  awakeningCardSub: { marginTop: 4, fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: '700' },
+  awakeningDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 12 },
+  awakeningHint: { fontSize: 11, color: 'rgba(255,255,255,0.50)', lineHeight: 16, fontWeight: '700' },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.78)',

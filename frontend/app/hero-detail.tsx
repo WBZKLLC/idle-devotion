@@ -674,40 +674,46 @@ const styles = StyleSheet.create({
   },
   
   // Tier Selector
-  tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tierChip: {
+  tierRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  tierChip: {
+    minWidth: 64,
     paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
   },
   tierChipActive: {
     backgroundColor: 'rgba(255, 215, 140, 0.92)',
     borderColor: 'rgba(255, 215, 140, 0.92)',
   },
   tierChipLocked: {
-    opacity: 0.6,
+    opacity: 0.55,
   },
   tierChipText: {
+    color: 'rgba(255,255,255,0.78)',
     fontSize: 12,
     fontWeight: '900',
-    color: 'rgba(255,255,255,0.78)',
   },
   tierChipTextActive: {
     color: '#0A0B10',
   },
   tierChipTextLocked: {
-    color: 'rgba(255,255,255,0.50)',
+    color: 'rgba(255,255,255,0.62)',
   },
   tierHint: {
     marginTop: 10,
-    fontSize: 11,
     color: 'rgba(255,255,255,0.55)',
+    fontSize: 11.5,
     fontWeight: '700',
   },
   plusMark: {

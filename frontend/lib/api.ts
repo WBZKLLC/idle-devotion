@@ -76,6 +76,17 @@ export async function getUserHeroById(username: string, userHeroId: string) {
   return found;
 }
 
+// ─────────────────────────────────────────────────────────────
+// FULL HERO LIST (centralized; screens must not call axios/fetch directly)
+// Rule: screens import getUserHeroes()/getUserHeroById() — never hit /user/:username/heroes directly.
+// ─────────────────────────────────────────────────────────────
+
+export async function getUserHeroes(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}/heroes`);
+  return Array.isArray(res.data) ? res.data : (res.data?.heroes ?? res.data ?? []);
+}
+
 // RULE: All hero endpoints live here.
 // Screens should not build URLs manually (prevents drift).
 

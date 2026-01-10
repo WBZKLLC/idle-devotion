@@ -722,7 +722,7 @@ export default function HeroProgressionScreen() {
           )}
 
           {/* Awakening Tier Cards (7★–10★ scaffold) - Only for 6★ heroes (GATED by feature flag) */}
-          {FEATURES.AWAKENING_PREVIEW_UI && effectiveUnlockedTier === 6 && (
+          {isFeatureEnabled('AWAKENING_PREVIEW_UI') && effectiveUnlockedTier === 6 && (
             <GlassCard style={styles.block}>
               <Text style={styles.blockTitle}>🌙 Awakening Tiers</Text>
               <Text style={styles.blockSub}>

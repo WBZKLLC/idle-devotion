@@ -11,6 +11,8 @@ config.cacheStores = [
   new FileStore({ root: path.join(root, 'cache') }),
 ];
 
+// Add video file extensions to asset extensions for proper bundling
+config.resolver.assetExts.push('mp4', 'webm', 'mov', 'avi', 'mkv');
 
 // // Exclude unnecessary directories from file watching
 // config.watchFolders = [__dirname];

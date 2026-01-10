@@ -399,6 +399,60 @@ export async function pullEventBanner(username: string, bannerId: string, multi:
 }
 
 // ─────────────────────────────────────────────────────────────
+// ADMIN (admin.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function adminGetUser(usernameOrId: string) {
+  const q = requireUsername(usernameOrId);
+  const res = await api.get(`/user/${encodeURIComponent(q)}`);
+  return res.data;
+}
+
+export async function adminGrantResources(targetUsername: string, adminKey: string, resources: Record<string, number>) {
+  const res = await api.post(
+    `/admin/grant-resources/${encodeURIComponent(targetUsername)}`,
+    { resources },
+    { params: { admin_key: adminKey } }
+  );
+  return res.data;
+}
+
+export async function adminSetVIP(targetUsername: string, adminKey: string, vipLevel: number) {
+  const res = await api.post(
+    `/admin/set-vip/${encodeURIComponent(targetUsername)}`,
+    null,
+    { params: { admin_key: adminKey, vip_level: vipLevel } }
+  );
+  return res.data;
+}
+
+export async function adminMuteUser(targetUsername: string, adminKey: string, durationHours: number) {
+  const res = await api.post(
+    `/admin/mute-user/${encodeURIComponent(targetUsername)}`,
+    null,
+    { params: { admin_key: adminKey, duration_hours: durationHours } }
+  );
+  return res.data;
+}
+
+export async function adminBanUser(targetUsername: string, adminKey: string, reason: string) {
+  const res = await api.post(
+    `/admin/ban-user/${encodeURIComponent(targetUsername)}`,
+    null,
+    { params: { admin_key: adminKey, reason } }
+  );
+  return res.data;
+}
+
+export async function adminDeleteAccount(targetUsername: string, adminKey: string) {
+  const res = await api.delete(
+    `/admin/delete-account/${encodeURIComponent(targetUsername)}`,
+    { params: { admin_key: adminKey } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // GUILD WAR (guild-war.tsx)
 // ─────────────────────────────────────────────────────────────
 

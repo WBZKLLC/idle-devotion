@@ -25,7 +25,7 @@ import {
   resolveTierArt,
   computeUserMaxUnlockedTier,
   TIER_LABELS,
-} from '../lib/tier';
+} from '../lib/progression';
 
 // Shared animated TierSelector component
 import TierSelector from '../components/TierSelector';

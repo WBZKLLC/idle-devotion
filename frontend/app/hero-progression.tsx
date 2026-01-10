@@ -343,7 +343,8 @@ export default function HeroProgressionScreen() {
     setShowConfirmPromote(false);
     setIsPromoting(true);
 
-    rollbackRef.current = { hero };
+    // Store canonical pre-optimistic value for rollback (prefer store over current hero)
+    rollbackRef.current = { hero: storeHero ?? hero };
 
     // OPTIMISTIC APPLY (local override)
     const optimisticHero = {
@@ -375,7 +376,8 @@ export default function HeroProgressionScreen() {
       // Clear local override now that store is fresh
       setLocalHeroOverride(null);
 
-      const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars });
+      // Compute newTier using authoritative server values
+      const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars, duplicates: remaining });
       if (newTier > effectiveUnlockedTier) {
         Alert.alert(
           'Star Promoted! 🌟',
@@ -385,7 +387,7 @@ export default function HeroProgressionScreen() {
         Alert.alert('Star Promoted! 🌟', `Now at ${newStars} star(s). Keep collecting shards!`);
       }
     } catch (e: any) {
-      // Rollback to previous hero state
+      // Rollback to canonical pre-optimistic hero state
       if (rollbackRef.current?.hero) setLocalHeroOverride(rollbackRef.current.hero);
       Alert.alert('Promotion failed', e?.response?.data?.detail || 'Unable to promote this hero right now.');
     } finally {
@@ -394,6 +396,7 @@ export default function HeroProgressionScreen() {
     }
   }, [
     hero,
+    storeHero,
     heroId,
     isMaxStars,
     nextStar,

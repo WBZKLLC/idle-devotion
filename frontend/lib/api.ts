@@ -241,3 +241,29 @@ export async function awakenHero(heroId: string, username: string) {
   });
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// HERO MANAGER (hero-manager.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getTeamsByMode(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/team/${encodeURIComponent(u)}/by-mode`);
+  return res.data;
+}
+
+export async function getTeamsList(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/team/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function saveModeTeam(username: string, mode: string, heroIds: string[]) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/team/save-mode-team`,
+    { hero_ids: heroIds },
+    { params: { username: u, mode } }
+  );
+  return res.data;
+}

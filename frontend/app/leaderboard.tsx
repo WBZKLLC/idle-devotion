@@ -14,12 +14,12 @@ import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
 import COLORS from '../theme/colors';
 
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
-  : '/api';
+// Centralized API wrappers (no raw axios in screens)
+import { getLeaderboard } from '../lib/api';
+
+// API_BASE removed - using centralized lib/api.ts wrappers
 
 interface LeaderboardEntry {
   rank: number;

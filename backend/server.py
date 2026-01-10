@@ -3137,6 +3137,57 @@ async def battle_chapter(username: str, chapter_number: int):
 async def root():
     return {"message": "Gacha Game API", "version": "1.0"}
 
+# ==================== FEATURE FLAGS (Remote Config) ====================
+
+# Feature flag configuration - update this to change feature availability
+# Supported shapes:
+# - boolean: hard on/off
+# - { "enabled": bool, "rollout": float }: percentage rollout (0..1)
+FEATURE_FLAGS_CONFIG = {
+    # Version number - increment when flags change
+    "version": 1,
+    # TTL in seconds (how long clients should cache)
+    "ttlSeconds": 3600,  # 1 hour
+    # Feature flags
+    "flags": {
+        # Awakening Preview UI (tiers 7★-10★)
+        "AWAKENING_PREVIEW_UI": False,
+        # Enhanced pity display in gacha
+        "GACHA_PITY_UI": True,
+        # Redesigned authentication screens
+        "NEW_LOGIN_FLOW": False,
+        # Maintenance mode (shows maintenance screen)
+        "MAINTENANCE_MODE": False,
+        # Multi-sweep cleared stages
+        "CAMPAIGN_SWEEP": True,
+        # 5+ star hero video previews
+        "HERO_CINEMATICS": True,
+        # Example rollout: 15% of users
+        # "NEW_FEATURE": {"enabled": True, "rollout": 0.15},
+    }
+}
+
+@api_router.get("/v1/features")
+async def get_feature_flags():
+    """
+    Get remote feature flag configuration.
+    
+    Returns:
+        {
+            "version": int,           # Config version (for cache invalidation)
+            "ttlSeconds": int,        # How long to cache (seconds)
+            "flags": {                # Feature flags
+                "FLAG_NAME": bool | {"enabled": bool, "rollout": float}
+            }
+        }
+    
+    Clients should:
+    1. Cache this response for ttlSeconds
+    2. Use version to detect changes
+    3. Apply flags client-side with rollout computed per-user
+    """
+    return FEATURE_FLAGS_CONFIG
+
 # ==================== SUPPORT SYSTEM ====================
 @api_router.post("/support/ticket")
 async def create_support_ticket(username: str, subject: str, message: str):

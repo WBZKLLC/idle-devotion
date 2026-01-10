@@ -349,75 +349,11 @@ export default function HeroProgressionScreen() {
     fetchUserHeroes,
   ]);
 
-  // --- Ascension: UI-only wiring that tries a few common endpoint shapes ---
+  // --- Ascension: UI-only placeholder (endpoint may not exist yet) ---
   const tryAscend = useCallback(async () => {
-    if (!user?.username || !heroId || !heroData) return;
-    if (!rarityNext) {
-      Alert.alert('Max Rarity', 'This hero is already at maximum rarity.');
-      return;
-    }
-    if (!canAscend) {
-      Alert.alert('Ascension Locked', 'Reach 5★+ (tier 6) to attempt rarity ascension.');
-      return;
-    }
-
     setShowConfirmAscend(false);
-    setIsAscending(true);
-
-    // We do NOT optimistically change rarity (server rules unknown).
-    // We *do* show success if endpoint responds.
-    const candidates = [
-      // Most likely if you mirror promote-star style
-      { url: `${API_BASE}/hero/${heroId}/ascend`, params: { username: user.username } },
-      { url: `${API_BASE}/hero/${heroId}/ascend-rarity`, params: { username: user.username } },
-      // If your backend uses /hero/{user_hero_id}/ascend?username
-      { url: `${API_BASE}/hero/${heroId}/ascend?username=${encodeURIComponent(user.username)}`, params: undefined as any },
-      // If you have a nested user route (older style)
-      { url: `${API_BASE}/hero/${user.username}/hero/${heroId}/ascend`, params: undefined as any },
-    ];
-
-    let lastErr: any = null;
-    let successPayload: any = null;
-
-    for (const c of candidates) {
-      try {
-        const resp = c.params
-          ? await axios.post(c.url, null, { params: c.params })
-          : await axios.post(c.url);
-        successPayload = resp?.data ?? { success: true };
-        lastErr = null;
-        break;
-      } catch (e: any) {
-        const status = e?.response?.status;
-        // If it's "not found", keep trying the next candidate.
-        // If it's a real validation error (400/403), stop and show it.
-        if (status === 404) {
-          lastErr = e;
-          continue;
-        }
-        lastErr = e;
-        break;
-      }
-    }
-
-    try {
-      if (!successPayload) {
-        Alert.alert(
-          'Ascension not available yet',
-          'No ascension endpoint responded. Wire the backend ascension route and this button will start working.'
-        );
-        return;
-      }
-
-      // Reload hero data + store
-      await fetchUser();
-      await fetchUserHeroes();
-      await loadHero();
-
-      Alert.alert(
-        'Ascension complete ✨',
-        successPayload?.message ||
-          `If the server upgraded rarity, ${heroName} should now reflect it across the UI.`
+    Alert.alert('Coming Soon', 'Rarity ascension is planned but not wired yet.');
+  }, []);
       );
     } catch (e) {
       console.error('post-ascend refresh error', e);

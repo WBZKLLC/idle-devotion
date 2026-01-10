@@ -10,6 +10,7 @@
  * - Close button
  * - Proper cleanup on close (stops playback, unloads video, releases memory)
  * - Fail-safe: never crashes if video is missing
+ * - Platform-specific handling for web vs native
  */
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
@@ -27,6 +28,7 @@ import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+import { Asset } from 'expo-asset';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

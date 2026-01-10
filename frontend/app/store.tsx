@@ -23,7 +23,8 @@ import {
   getCrystalPackages,
   getDivinePackages,
   getVipInfo,
-  purchasePackage,
+  purchaseCrystals as apiPurchaseCrystals,
+  purchaseDivine as apiPurchaseDivine,
 } from '../lib/api';
 
 interface CrystalPackage {

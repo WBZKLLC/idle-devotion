@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   Alert,
   Modal,
   Image,
+  Platform,
+  Pressable,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+
+// ✅ Shared 2Dlive shell (UI-only)
+import {
+  CenteredBackground,
+  DivineOverlays,
+  SanctumAtmosphere,
+  GlassCard,
+} from '../components/DivineShell';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'SR': '#4CAF50',
@@ -21,7 +31,15 @@ const RARITY_COLORS: { [key: string]: string } = {
   'UR+': '#F44336',
 };
 
+/**
+ * GACHA / SUMMON — 2Dlive UI shell
+ * - ALL original logic preserved (pullGacha, pity, currency, modal)
+ * - UI wrap only using DivineShell components
+ */
 export default function GachaScreen() {
+  // ----------------------------
+  // EXISTING LOGIC (UNTOUCHED)
+  // ----------------------------
   const { user, pullGacha, isLoading } = useGameStore();
   const [showResult, setShowResult] = useState(false);
   const [gachaResult, setGachaResult] = useState<any>(null);
@@ -54,147 +72,209 @@ export default function GachaScreen() {
     setGachaResult(null);
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
+  // ----------------------------
+  // BACKGROUND (Summon Stage)
+  // ----------------------------
+  const SUMMON_STAGE_BG = useMemo(() => {
+    return require('../assets/backgrounds/summon_stage_01.jpg');
+  }, []);
+
+  // ----------------------------
+  // NO USER STATE
+  // ----------------------------
   if (!user) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.noUserText}>Please login first</Text>
+      <View style={styles.root}>
+        <CenteredBackground source={SUMMON_STAGE_BG} mode="contain" zoom={1.05} opacity={1} />
+        <SanctumAtmosphere />
+        <DivineOverlays vignette rays grain />
+        <View style={styles.centerContainer}>
+          <Ionicons name="person-circle" size={48} color="rgba(255, 215, 140, 0.9)" />
+          <Text style={styles.noUserText}>Please login first</Text>
+          <Pressable style={styles.loginBtn} onPress={() => router.replace('/')}>
+            <Text style={styles.loginBtnText}>Go to Login</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
+    <View style={styles.root}>
+      {/* 2Dlive Background: Summon Stage */}
+      <CenteredBackground source={SUMMON_STAGE_BG} mode="contain" zoom={1.05} opacity={1} />
+
+      {/* Summon screens can have a touch more drama than dashboard */}
+      <SanctumAtmosphere />
+      <DivineOverlays vignette rays grain />
+
+      {/* TOP BAR */}
+      <View style={styles.topBar}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>‹</Text>
+        </Pressable>
+
+        <View style={styles.topTitles}>
           <Text style={styles.title}>Divine Summon</Text>
           <Text style={styles.subtitle}>Call upon legendary heroes</Text>
         </View>
 
-        {/* Currency Display */}
-        <View style={styles.currencyDisplay}>
-          <View style={styles.currencyItem}>
-            <Ionicons name="diamond" size={24} color="#FF6B9D" />
-            <Text style={styles.currencyText}>{user.gems}</Text>
-          </View>
-          <View style={styles.currencyItem}>
-            <Ionicons name="cash" size={24} color="#FFD700" />
-            <Text style={styles.currencyText}>{user.coins}</Text>
-          </View>
+        <View style={styles.currencyMini}>
+          <Text style={styles.currencyText}>💎 {user.gems.toLocaleString()}</Text>
+          <Text style={styles.currencyText}>🪙 {user.coins.toLocaleString()}</Text>
         </View>
+      </View>
 
+      {/* CONTENT */}
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Pity Counter */}
-        <View style={styles.pityCard}>
-          <Text style={styles.pityLabel}>Pity Counter</Text>
-          <Text style={styles.pityValue}>{user.pity_counter} / 50</Text>
-          <View style={styles.pityBar}>
-            <View
-              style={[
-                styles.pityFill,
-                { width: `${(user.pity_counter / 50) * 100}%` },
-              ]}
-            />
-          </View>
-          <Text style={styles.pityText}>
-            {50 - user.pity_counter} pulls until guaranteed SSR!
-          </Text>
-        </View>
-
-        {/* Summon Buttons - Gems */}
-        <View style={styles.summonSection}>
-          <Text style={styles.sectionTitle}>Premium Summon (Gems)</Text>
+        <GlassCard>
+          <Text style={styles.sectionTitle}>Omen</Text>
+          <Text style={styles.sectionHint}>Each pull leaves a mark. The sanctum remembers.</Text>
           
-          <TouchableOpacity
-            style={styles.summonButton}
-            onPress={() => handlePull('single', 'gems')}
-            disabled={isLoading}
-          >
-            <View style={styles.summonContent}>
-              <Ionicons name="diamond" size={32} color="#FF6B9D" />
-              <View style={styles.summonInfo}>
-                <Text style={styles.summonTitle}>Single Summon</Text>
-                <Text style={styles.summonCost}>100 Gems</Text>
-              </View>
+          <View style={styles.pityContainer}>
+            <View style={styles.pityHeader}>
+              <Text style={styles.pityLabel}>Pity Counter</Text>
+              <Text style={styles.pityValue}>{user.pity_counter} / 50</Text>
             </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.summonButton, styles.multiButton]}
-            onPress={() => handlePull('multi', 'gems')}
-            disabled={isLoading}
-          >
-            <View style={styles.summonContent}>
-              <Ionicons name="diamond" size={32} color="#FF6B9D" />
-              <View style={styles.summonInfo}>
-                <Text style={styles.summonTitle}>10x Summon</Text>
-                <Text style={styles.summonCost}>900 Gems</Text>
-                <Text style={styles.discountText}>Save 100 Gems!</Text>
-              </View>
+            <View style={styles.pityBar}>
+              <View style={[styles.pityFill, { width: `${(user.pity_counter / 50) * 100}%` }]} />
             </View>
-          </TouchableOpacity>
-        </View>
+            <Text style={styles.pityHint}>{50 - user.pity_counter} pulls until guaranteed SSR!</Text>
+          </View>
+        </GlassCard>
 
-        {/* Summon Buttons - Coins */}
-        <View style={styles.summonSection}>
-          <Text style={styles.sectionTitle}>Standard Summon (Coins)</Text>
+        <View style={{ height: 12 }} />
+
+        {/* Premium Summon (Gems) */}
+        <GlassCard>
+          <Text style={styles.sectionTitle}>Premium Summon</Text>
+          <View style={styles.pillRow}>
+            <View style={styles.pill}>
+              <Text style={styles.pillKey}>Currency</Text>
+              <Text style={styles.pillVal}>💎 Gems</Text>
+            </View>
+            <View style={styles.pill}>
+              <Text style={styles.pillKey}>Rate</Text>
+              <Text style={styles.pillVal}>UR+ Focus</Text>
+            </View>
+          </View>
+
+          <View style={{ height: 12 }} />
+
+          <View style={styles.actionsRow}>
+            <TouchableOpacity 
+              style={styles.actionBtn} 
+              onPress={() => handlePull('single', 'gems')}
+              disabled={isLoading}
+            >
+              <Ionicons name="diamond" size={20} color="#FF6B9D" />
+              <Text style={styles.actionText}>Summon x1</Text>
+              <Text style={styles.actionCost}>100 Gems</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionBtnPrimary} 
+              onPress={() => handlePull('multi', 'gems')}
+              disabled={isLoading}
+            >
+              <Ionicons name="diamond" size={20} color="#0A0B10" />
+              <Text style={styles.actionTextPrimary}>Summon x10</Text>
+              <Text style={styles.actionCostPrimary}>900 Gems</Text>
+              <Text style={styles.discountBadge}>SAVE 100!</Text>
+            </TouchableOpacity>
+          </View>
+        </GlassCard>
+
+        <View style={{ height: 12 }} />
+
+        {/* Standard Summon (Coins) */}
+        <GlassCard>
+          <Text style={styles.sectionTitle}>Standard Summon</Text>
+          <View style={styles.pillRow}>
+            <View style={styles.pill}>
+              <Text style={styles.pillKey}>Currency</Text>
+              <Text style={styles.pillVal}>🪙 Coins</Text>
+            </View>
+            <View style={styles.pill}>
+              <Text style={styles.pillKey}>Rate</Text>
+              <Text style={styles.pillVal}>Standard</Text>
+            </View>
+          </View>
+
+          <View style={{ height: 12 }} />
+
+          <View style={styles.actionsRow}>
+            <TouchableOpacity 
+              style={styles.actionBtn} 
+              onPress={() => handlePull('single', 'coins')}
+              disabled={isLoading}
+            >
+              <Ionicons name="cash" size={20} color="#FFD700" />
+              <Text style={styles.actionText}>Summon x1</Text>
+              <Text style={styles.actionCost}>1,000 Coins</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionBtnPrimary} 
+              onPress={() => handlePull('multi', 'coins')}
+              disabled={isLoading}
+            >
+              <Ionicons name="cash" size={20} color="#0A0B10" />
+              <Text style={styles.actionTextPrimary}>Summon x10</Text>
+              <Text style={styles.actionCostPrimary}>9,000 Coins</Text>
+              <Text style={styles.discountBadge}>SAVE 1K!</Text>
+            </TouchableOpacity>
+          </View>
+        </GlassCard>
+
+        <View style={{ height: 12 }} />
+
+        {/* Drop Rates */}
+        <GlassCard>
+          <Text style={styles.sectionTitle}>Drop Rates</Text>
+          <Text style={styles.sectionHint}>Pledge your pull to the covenant—mercy is not guaranteed.</Text>
           
-          <TouchableOpacity
-            style={styles.summonButton}
-            onPress={() => handlePull('single', 'coins')}
-            disabled={isLoading}
-          >
-            <View style={styles.summonContent}>
-              <Ionicons name="cash" size={32} color="#FFD700" />
-              <View style={styles.summonInfo}>
-                <Text style={styles.summonTitle}>Single Summon</Text>
-                <Text style={styles.summonCost}>1,000 Coins</Text>
-              </View>
+          <View style={{ height: 10 }} />
+          
+          <View style={styles.ratesGrid}>
+            <View style={styles.rateRow}>
+              <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['SR'] }]} />
+              <Text style={styles.rateText}>SR (Rare)</Text>
+              <Text style={styles.ratePercent}>60%</Text>
             </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.summonButton, styles.multiButton]}
-            onPress={() => handlePull('multi', 'coins')}
-            disabled={isLoading}
-          >
-            <View style={styles.summonContent}>
-              <Ionicons name="cash" size={32} color="#FFD700" />
-              <View style={styles.summonInfo}>
-                <Text style={styles.summonTitle}>10x Summon</Text>
-                <Text style={styles.summonCost}>9,000 Coins</Text>
-                <Text style={styles.discountText}>Save 1,000 Coins!</Text>
-              </View>
+            <View style={styles.rateRow}>
+              <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['SSR'] }]} />
+              <Text style={styles.rateText}>SSR (Epic)</Text>
+              <Text style={styles.ratePercent}>30%</Text>
             </View>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.rateRow}>
+              <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['UR'] }]} />
+              <Text style={styles.rateText}>UR (Legendary)</Text>
+              <Text style={styles.ratePercent}>9%</Text>
+            </View>
+            <View style={styles.rateRow}>
+              <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['UR+'] }]} />
+              <Text style={styles.rateText}>UR+ (God-like)</Text>
+              <Text style={styles.ratePercent}>1%</Text>
+            </View>
+          </View>
+        </GlassCard>
 
-        {/* Rates Info */}
-        <View style={styles.ratesCard}>
-          <Text style={styles.ratesTitle}>Drop Rates</Text>
-          <View style={styles.rateRow}>
-            <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['SR'] }]} />
-            <Text style={styles.rateText}>SR (Rare): 60%</Text>
-          </View>
-          <View style={styles.rateRow}>
-            <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['SSR'] }]} />
-            <Text style={styles.rateText}>SSR (Epic): 30%</Text>
-          </View>
-          <View style={styles.rateRow}>
-            <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['UR'] }]} />
-            <Text style={styles.rateText}>UR (Legendary): 9%</Text>
-          </View>
-          <View style={styles.rateRow}>
-            <View style={[styles.rarityDot, { backgroundColor: RARITY_COLORS['UR+'] }]} />
-            <Text style={styles.rateText}>UR+ (God-like): 1%</Text>
-          </View>
-        </View>
+        <View style={{ height: 24 }} />
       </ScrollView>
 
       {/* Loading Overlay */}
       {isLoading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#FF6B9D" />
-          <Text style={styles.loadingText}>Summoning...</Text>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color="#FF6B9D" />
+            <Text style={styles.loadingText}>Summoning...</Text>
+          </View>
         </View>
       )}
 
@@ -207,9 +287,12 @@ export default function GachaScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Summon Results!</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Summon Results!</Text>
+              <Text style={styles.modalSubtitle}>Heroes have answered your call</Text>
+            </View>
             
-            <ScrollView style={styles.resultScroll}>
+            <ScrollView style={styles.resultScroll} showsVerticalScrollIndicator={false}>
               {gachaResult?.heroes.map((hero: any, index: number) => (
                 <View
                   key={index}
@@ -233,7 +316,9 @@ export default function GachaScreen() {
                       {hero.hero_data?.rarity}
                     </Text>
                     {hero.duplicates > 0 && (
-                      <Text style={styles.duplicateText}>Duplicate +{hero.duplicates}</Text>
+                      <View style={styles.duplicateBadge}>
+                        <Text style={styles.duplicateText}>+{hero.duplicates} Duplicate</Text>
+                      </View>
                     )}
                   </View>
                 </View>
@@ -246,208 +331,300 @@ export default function GachaScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f0f1e',
+  root: { flex: 1, backgroundColor: '#05060A' },
+  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  noUserText: { color: 'rgba(255,255,255,0.8)', fontSize: 16, fontWeight: '700' },
+  loginBtn: { 
+    backgroundColor: 'rgba(255, 215, 140, 0.92)', 
+    paddingHorizontal: 24, 
+    paddingVertical: 12, 
+    borderRadius: 14,
+    marginTop: 8,
   },
-  content: {
-    padding: 16,
-  },
-  header: {
+  loginBtnText: { color: '#0A0B10', fontSize: 14, fontWeight: '900' },
+
+  // Top Bar
+  topBar: {
+    paddingTop: Platform.select({ ios: 54, android: 34, default: 34 }),
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    gap: 10,
   },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  backBtnText: {
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 24,
+    fontWeight: '900',
+    marginTop: -2,
+  },
+
+  topTitles: { flex: 1 },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FF6B9D',
-    marginBottom: 8,
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#999',
+    marginTop: 2,
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 12.5,
+    fontWeight: '700',
   },
-  currencyDisplay: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 32,
-    marginBottom: 24,
-  },
-  currencyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+
+  currencyMini: {
+    alignItems: 'flex-end',
+    gap: 4,
   },
   currencyText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 12.5,
+    fontWeight: '800',
   },
-  pityCard: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: '#FF6B9D',
+
+  // Content
+  scrollArea: { flex: 1 },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
-  pityLabel: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 4,
+
+  sectionTitle: {
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0.3,
   },
-  pityValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FF6B9D',
-    marginBottom: 8,
+  sectionHint: {
+    marginTop: 6,
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 12.5,
+    lineHeight: 18,
   },
+
+  // Pills
+  pillRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  pill: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  pillKey: {
+    color: 'rgba(255,255,255,0.60)',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  pillVal: {
+    marginTop: 4,
+    color: 'rgba(255,255,255,0.90)',
+    fontSize: 12.5,
+    fontWeight: '900',
+  },
+
+  // Actions
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  actionBtnPrimary: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+  },
+  actionText: {
+    color: 'rgba(255,255,255,0.90)',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+    marginTop: 6,
+  },
+  actionCost: {
+    marginTop: 4,
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  actionTextPrimary: {
+    color: '#0A0B10',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginTop: 6,
+  },
+  actionCostPrimary: {
+    marginTop: 4,
+    color: 'rgba(10,11,16,0.75)',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  discountBadge: {
+    marginTop: 4,
+    color: '#4CAF50',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+
+  // Pity
+  pityContainer: { marginTop: 12 },
+  pityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pityLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '700' },
+  pityValue: { color: 'rgba(255, 215, 140, 0.95)', fontSize: 16, fontWeight: '900' },
   pityBar: {
     width: '100%',
     height: 8,
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 4,
-    marginBottom: 8,
+    marginTop: 8,
     overflow: 'hidden',
   },
   pityFill: {
     height: '100%',
-    backgroundColor: '#FF6B9D',
+    backgroundColor: 'rgba(255, 215, 140, 0.95)',
+    borderRadius: 4,
   },
-  pityText: {
-    fontSize: 12,
-    color: '#999',
+  pityHint: {
+    marginTop: 6,
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+    fontWeight: '600',
   },
-  summonSection: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 12,
-  },
-  summonButton: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#333',
-  },
-  multiButton: {
-    borderColor: '#FF6B9D',
-  },
-  summonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  summonInfo: {
-    flex: 1,
-  },
-  summonTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  summonCost: {
-    fontSize: 14,
-    color: '#999',
-  },
-  discountText: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
-  ratesCard: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  ratesTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 12,
-  },
+
+  // Rates
+  ratesGrid: { gap: 8 },
   rateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 8,
+    gap: 10,
+    paddingVertical: 6,
   },
   rarityDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
   rateText: {
-    fontSize: 14,
-    color: '#999',
+    flex: 1,
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12.5,
+    fontWeight: '700',
   },
+  ratePercent: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12.5,
+    fontWeight: '900',
+  },
+
+  // Loading
   loadingOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  loadingCard: {
+    backgroundColor: 'rgba(10, 12, 18, 0.95)',
+    borderRadius: 22,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 140, 0.3)',
+  },
   loadingText: {
-    color: '#fff',
-    fontSize: 18,
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 16,
+    fontWeight: '800',
     marginTop: 16,
   },
+
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
   },
   modalContent: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: 'rgba(10, 12, 18, 0.98)',
+    borderRadius: 22,
+    padding: 20,
     width: '100%',
-    maxWidth: 500,
+    maxWidth: 400,
     maxHeight: '80%',
-    borderWidth: 2,
-    borderColor: '#FF6B9D',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 215, 140, 0.4)',
   },
+  modalHeader: { alignItems: 'center', marginBottom: 16 },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FF6B9D',
-    textAlign: 'center',
-    marginBottom: 16,
+    fontSize: 22,
+    fontWeight: '900',
+    color: 'rgba(255, 215, 140, 0.95)',
+    letterSpacing: 0.3,
+  },
+  modalSubtitle: {
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+    fontWeight: '600',
   },
   resultScroll: {
-    maxHeight: 400,
+    maxHeight: 380,
   },
   heroResultCard: {
     flexDirection: 'row',
-    backgroundColor: '#0f0f1e',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 16,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 10,
     borderWidth: 2,
   },
   heroResultImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   heroResultInfo: {
     flex: 1,
@@ -455,36 +632,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   heroResultName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
+    fontSize: 15,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.92)',
+    letterSpacing: 0.2,
   },
   heroResultRarity: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: 4,
+  },
+  duplicateBadge: {
+    marginTop: 6,
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
   duplicateText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#FFD700',
+    fontWeight: '800',
   },
   closeButton: {
-    backgroundColor: '#FF6B9D',
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+    borderRadius: 16,
     padding: 16,
     marginTop: 16,
     alignItems: 'center',
   },
   closeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  noUserText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
+    color: '#0A0B10',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0.4,
   },
 });

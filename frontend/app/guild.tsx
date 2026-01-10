@@ -684,7 +684,7 @@ export default function GuildScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalConfirmBtn, isCreating && styles.modalConfirmDisabled]}
-                  onPress={createGuild}
+                  onPress={handleCreateGuild}
                   disabled={isCreating}
                 >
                   {isCreating ? (

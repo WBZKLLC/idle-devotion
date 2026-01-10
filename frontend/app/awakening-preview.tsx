@@ -73,7 +73,7 @@ const AWAKENING_TIERS = [
 
 export default function AwakeningPreviewScreen() {
   // Gate the entire screen behind the feature flag
-  if (!FEATURES.AWAKENING_PREVIEW_UI) {
+  if (!isFeatureEnabled('AWAKENING_PREVIEW_UI')) {
     return (
       <View style={styles.container}>
         <CenteredBackground source={SANCTUM_BG} mode="cover" zoom={1.15} opacity={0.35} />

@@ -108,7 +108,7 @@ export async function fetchUser(username: string) {
 export async function pullGacha(
   username: string,
   pullType: 'single' | 'multi',
-  currencyType: 'gems' | 'coins'
+  currencyType: string // 'gems' | 'coins' | 'crystals' | 'divine_essence'
 ) {
   const u = requireUsername(username);
   const res = await api.post(

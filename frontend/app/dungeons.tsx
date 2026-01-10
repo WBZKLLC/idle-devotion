@@ -22,8 +22,8 @@ import {
   getStagesInfo,
   getDungeonProgress,
   getStamina,
-  startDungeonStage,
-  sweepDungeonStage,
+  battleDungeonStage,
+  sweepDungeonStageByType,
 } from '../lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

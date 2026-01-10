@@ -20,7 +20,7 @@ import COLORS from '../theme/colors';
 import { getHeroDetails, levelUpHero as apiLevelUpHero, promoteHeroStar, awakenHero as apiAwakenHero } from '../lib/api';
 
 // Centralized tier logic (single source of truth for star/tier calculations)
-import { MAX_STAR_TIER, displayStars } from '../lib/tier';
+import { MAX_STAR_TIER, displayStars, starsSuffix } from '../lib/tier';
 
 export default function HeroUpgradeScreen() {
   const { heroId } = useLocalSearchParams<{ heroId: string }>();

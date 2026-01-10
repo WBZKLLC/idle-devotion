@@ -103,27 +103,12 @@ export default function HeroProgressionScreen() {
   // rollback for optimistic
   const rollbackRef = useRef<{ hero: any } | null>(null);
 
-  const displayStars = useCallback((h: any) => {
-    // exact backend stars value (0..6)
-    return clampInt(h?.stars ?? 0, 0, 6);
-  }, []);
-
-  const unlockedTierForHero = useCallback(
-    (h: any): DisplayTier => {
-      const stars = displayStars(h);
-      const awaken = clampInt(h?.awakening_level ?? 0, 0, 99);
-
-      if (awaken > 0 || stars >= 5) return 6;
-      const t = (stars + 1) as DisplayTier; // 0..4 -> 1..5
-      return Math.max(1, Math.min(5, t)) as DisplayTier;
-    },
-    [displayStars]
-  );
+  // Use imported displayStars and unlockedTierForHero from lib/tier.ts
 
   const effectiveUnlockedTier = useMemo<DisplayTier>(() => {
     if (!hero) return 1;
     return unlockedTierForHero(hero);
-  }, [hero, unlockedTierForHero]);
+  }, [hero]);
 
   // Keep preview tier sane if hero updates
   useEffect(() => {

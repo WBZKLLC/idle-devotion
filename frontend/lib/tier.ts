@@ -1,22 +1,63 @@
 // /app/frontend/lib/tier.ts
-// SINGLE SOURCE OF TRUTH for stars → tiers → art → gating
-// DO NOT reimplement this logic elsewhere
+/**
+ * SINGLE SOURCE OF TRUTH:
+ * - backend stars (0–6) normalization
+ * - stars -> tier mapping
+ * - tier -> art key mapping
+ *
+ * No other file should re-implement these rules.
+ * All star/tier logic MUST flow through this module.
+ */
+
+// ─────────────────────────────────────────────────────────────
+// TYPE DEFINITIONS
+// ─────────────────────────────────────────────────────────────
 
 // 1–6 = Star tiers (currently active)
 // 7–10 = Future Awakening tiers (NOT ACTIVE YET)
 export type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type BackendStars = number; // 0–6 from backend
+export type TierArtKey = string;   // "1" through "6" for ascension_images lookup
 
 // UI should clamp to MAX_STAR_TIER for now
 export const MAX_STAR_TIER = 6;
 export const MAX_AWAKENING_TIER = 10;
 
+// ─────────────────────────────────────────────────────────────
+// CORE NORMALIZATION (prevents drift)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Normalize raw backend stars to valid range (0-6).
+ * This is the ONLY function that should clamp star values.
+ */
+export const normalizeBackendStars = (stars: number): BackendStars => {
+  const n = Number.isFinite(stars) ? Math.floor(stars) : 0;
+  return Math.max(0, Math.min(MAX_STAR_TIER, n));
+};
+
+/**
+ * Extract backend stars from hero object.
+ * Handles multiple possible field names to prevent drift.
+ * 
+ * USE THIS instead of accessing hero.stars directly.
+ */
+export const getHeroBackendStars = (hero: any): BackendStars => {
+  const raw =
+    hero?.stars ??
+    hero?.new_stars ??
+    hero?.backend_stars ??
+    hero?.star_count ??
+    0;
+  return normalizeBackendStars(Number(raw));
+};
+
 /**
  * Raw backend stars (0–6). UI shows EXACT value.
+ * @deprecated Use getHeroBackendStars() for new code
  */
 export const displayStars = (hero: any): number => {
-  const s = Number(hero?.stars ?? 0);
-  if (!isFinite(s)) return 0;
-  return Math.max(0, Math.min(6, s));
+  return getHeroBackendStars(hero);
 };
 
 /**

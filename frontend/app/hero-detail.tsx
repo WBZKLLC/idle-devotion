@@ -165,6 +165,9 @@ export default function HeroDetailScreen() {
     setCinematicVideoSource(null);
   }, []);
 
+  // Compute unlocked tier from hero stars/awakening (MUST be before early returns)
+  const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero]);
+
   useEffect(() => {
     if (hydrated && user && id) {
       loadHeroData();

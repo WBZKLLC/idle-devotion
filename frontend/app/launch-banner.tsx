@@ -141,30 +141,14 @@ export default function LaunchBannerScreen() {
     
     setPulling(true);
     try {
-      const response = await axios.post(
-        `${API_BASE}/launch-banner/pull/${user.username}?multi=${multi}`
-      ).catch(() => ({
-        data: {
-          heroes: multi ? Array(10).fill(null).map((_, i) => ({
-            hero_name: i === 9 ? 'Aethon, the Eternal Flame' : ['Phoenix Warrior', 'Flame Mage', 'Fire Knight'][i % 3],
-            rarity: i === 9 ? 'UR+' : ['R', 'SR', 'SSR'][Math.floor(Math.random() * 3)],
-            is_featured: i === 9,
-          })) : [{
-            hero_name: Math.random() > 0.99 ? 'Aethon, the Eternal Flame' : 'Flame Acolyte',
-            rarity: Math.random() > 0.99 ? 'UR+' : 'R',
-            is_featured: Math.random() > 0.99,
-          }],
-          new_pity: (bannerData?.pity_count || 0) + (multi ? 10 : 1),
-          gems_spent: cost,
-        }
-      }));
+      const result = await pullLaunchBanner(user.username, multi);
       
-      setPullResult(response.data);
+      setPullResult(result);
       setShowResultModal(true);
       
       setBannerData((prev: any) => ({
         ...prev,
-        pity_count: response.data.new_pity,
+        pity_count: result.new_pity,
       }));
       
       await fetchUser();

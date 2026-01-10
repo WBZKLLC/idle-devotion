@@ -15,7 +15,14 @@ import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
+
+// Centralized API wrappers (no raw axios in screens)
+import {
+  getAbyssStatus,
+  getAbyssLeaderboard,
+  getAbyssRecords,
+  attackAbyss,
+} from '../lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -37,7 +44,7 @@ const COLORS = {
   },
 };
 
-const API_BASE = '/api';
+// API_BASE removed - using centralized lib/api.ts wrappers
 const MAX_LEVELS = 1000;
 
 export default function AbyssScreen() {

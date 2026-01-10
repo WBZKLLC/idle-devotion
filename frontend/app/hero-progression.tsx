@@ -682,7 +682,7 @@ export default function HeroProgressionScreen() {
                     <Text style={styles.previewValue}>
                       {(() => {
                         const simTier = unlockedTierForHero({ ...hero, stars: nextStar });
-                        return TIER_LABELS.find(t => t.tier === simTier)?.label || `${simTier}★`;
+                        return TIER_LABELS[simTier as DisplayTier] || `${simTier}★`;
                       })()}
                     </Text>
                   </View>

@@ -14,12 +14,9 @@ import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
 import COLORS from '../theme/colors';
 
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
-  : '/api';
+// NOTE: Battle Pass currently uses mock data - no API calls needed yet
 
 interface PassReward {
   tier: number;

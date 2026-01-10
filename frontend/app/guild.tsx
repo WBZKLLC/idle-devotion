@@ -423,7 +423,7 @@ export default function GuildScreen() {
                       {/* Attack Button */}
                       <TouchableOpacity
                         style={[styles.attackButton, (isAttacking || bossData.defeated || attacksRemaining <= 0) && styles.attackButtonDisabled]}
-                        onPress={attackBoss}
+                        onPress={handleAttackBoss}
                         disabled={isAttacking || bossData.defeated || attacksRemaining <= 0}
                       >
                         <LinearGradient

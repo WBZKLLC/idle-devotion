@@ -331,9 +331,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   logout: async () => {
-    await clearAuthStorage();
+    await clearAuthData();
+    apiSetAuthToken(null);
     set({ user: null, userHeroes: [], userHeroesById: {}, allHeroes: [], authToken: null, needsPassword: false });
-    console.log('[logout] User logged out, auth storage cleared');
+    console.log('[logout] User logged out, auth cleared');
   },
 
   fetchUser: async () => {

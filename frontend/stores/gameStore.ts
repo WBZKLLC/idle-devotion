@@ -114,6 +114,9 @@ interface GameState {
   // Single-hero ensure: cache-first + API fallback (keeps fetch logic out of screens)
   // Use forceRefresh: true after upgrade/promotion to get fresh data without list fetch
   getUserHeroById: (id: string, opts?: { forceRefresh?: boolean }) => Promise<UserHero>;
+  
+  // Smart post-gacha refresh: targeted if few heroes, full roster if many
+  refreshHeroesAfterGacha: (result: any) => Promise<void>;
 }
 
 // Helper to save auth data

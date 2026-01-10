@@ -3005,21 +3005,21 @@ async def get_all_chapters():
     chapters = await db.chapters.find().sort("chapter_number", 1).to_list(100)
     return [convert_objectid(chapter) for chapter in chapters]
 
-@api_router.get("/story/progress/{username}")
-async def get_user_progress(username: str):
-    """Get user's story progress"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    progress = await db.user_progress.find_one({"user_id": user["id"]})
-    if not progress:
-        # Create initial progress
-        progress = UserProgress(user_id=user["id"])
-        await db.user_progress.insert_one(progress.dict())
-        progress = await db.user_progress.find_one({"user_id": user["id"]})
-    
-    return convert_objectid(progress)
+# LEGACY: Simplified story progress endpoint - superseded by /story/progress/{username} at line ~6738
+# which uses story_progress collection with stage-level tracking.
+# Keeping commented for reference but removing from active routes to prevent duplicate endpoint issues.
+# @api_router.get("/story/progress/{username}")
+# async def get_user_progress_legacy(username: str):
+#     """Get user's story progress (LEGACY - use enhanced version instead)"""
+#     user = await db.users.find_one({"username": username})
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     progress = await db.user_progress.find_one({"user_id": user["id"]})
+#     if not progress:
+#         progress = UserProgress(user_id=user["id"])
+#         await db.user_progress.insert_one(progress.dict())
+#         progress = await db.user_progress.find_one({"user_id": user["id"]})
+#     return convert_objectid(progress)
 
 @api_router.post("/story/battle/{username}/{chapter_number}")
 async def battle_chapter(username: str, chapter_number: int):

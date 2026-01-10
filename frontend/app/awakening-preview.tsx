@@ -1,6 +1,7 @@
 // /app/frontend/app/awakening-preview.tsx
 // Aspirational UX screen showing locked 7★–10★ awakening tiers
 // Design-only - NO backend calls
+// GATED by FEATURES.AWAKENING_PREVIEW_UI flag
 
 import React from 'react';
 import {
@@ -16,6 +17,9 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+
+// Feature flags (SINGLE SOURCE OF TRUTH)
+import { FEATURES } from '../lib/features';
 
 // 2Dlive shell
 import {

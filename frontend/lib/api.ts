@@ -380,6 +380,45 @@ export async function enhanceEquipment(
 }
 
 // ─────────────────────────────────────────────────────────────
+// EVENTS / EVENT BANNERS (events.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getEventBanners() {
+  const res = await api.get(`/event-banners`);
+  return res.data;
+}
+
+export async function pullEventBanner(username: string, bannerId: string, multi: boolean = false) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/event-banners/${encodeURIComponent(bannerId)}/pull`,
+    null,
+    { params: { username: u, multi } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// LAUNCH BANNER (launch-banner.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getLaunchBannerStatus(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/launch-banner/status/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function pullLaunchBanner(username: string, multi: boolean = false) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/launch-banner/pull/${encodeURIComponent(u)}`,
+    null,
+    { params: { multi } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // LOGIN REWARDS (login-rewards.tsx)
 // ─────────────────────────────────────────────────────────────
 

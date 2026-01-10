@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 
 // Feature flags (SINGLE SOURCE OF TRUTH)
-import { FEATURES } from '../lib/features';
+import { isFeatureEnabled } from '../lib/features';
 
 // 2Dlive shell
 import {

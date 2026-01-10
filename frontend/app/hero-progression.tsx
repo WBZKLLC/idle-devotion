@@ -314,14 +314,6 @@ export default function HeroProgressionScreen() {
     if (hydrated && user && heroId) loadHero();
   }, [hydrated, user, heroId, loadHero]);
 
-  // Sync preview tier from canonical hero source (store or override)
-  // This keeps tier preview purely derived, not set inside async callbacks
-  useEffect(() => {
-    if (!hero) return;
-    const tier = unlockedTierForHero(hero);
-    setPreviewTier(tier);
-  }, [hero]);
-
   const openCinematic = useCallback(() => {
     if (!heroData) return;
     const heroIdForVideo = heroNameToId(heroData.name);

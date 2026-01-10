@@ -165,18 +165,16 @@ export default function ChatScreen() {
     }
   };
 
-  const sendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!user || !newMessage.trim()) return;
     
     setSending(true);
     try {
-      await axios.post(`${API_BASE}/chat/send`, null, {
-        params: {
-          username: user.username,
-          channel_type: selectedChannel,
-          message: newMessage.trim(),
-          language: selectedLanguage,
-        }
+      await sendChatMessage({
+        username: user.username,
+        channel_type: selectedChannel,
+        message: newMessage.trim(),
+        language: selectedLanguage,
       });
       
       setNewMessage('');

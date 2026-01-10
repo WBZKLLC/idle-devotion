@@ -277,97 +277,206 @@ export default function HomeScreen() {
 
   if (!user) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark, COLORS.navy.primary]} style={styles.container}>
-        <SafeAreaView style={styles.loginContainer} edges={['top', 'left', 'right']}>
-          <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>DH</Text>
-            </View>
-            <Text style={styles.gameTitle}>Divine Heroes</Text>
-            <Text style={styles.gameSubtitle}>Collect • Battle • Conquer</Text>
-          </View>
-          <View style={styles.loginCard}>
-            <Text style={styles.loginLabel}>{isRegistering ? 'Create Account' : 'Login'}</Text>
-            
-            {authError ? (
-              <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={16} color="#e74c3c" />
-                <Text style={styles.errorText}>{authError}</Text>
-              </View>
-            ) : null}
-            
-            <TextInput
-              style={styles.loginInput}
-              value={username}
-              onChangeText={setUsername}
-              placeholder="Username"
-              placeholderTextColor={COLORS.navy.light}
-              autoCapitalize="none"
-              autoCorrect={false}
+      <View style={styles.loginScreenContainer}>
+        {/* Background with Raphael 5+ Star Skin */}
+        <ImageBackground
+          source={{ uri: RAPHAEL_5PLUS_IMAGE }}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          {/* Gradient Overlays for readability */}
+          <LinearGradient
+            colors={['rgba(5, 10, 20, 0.75)', 'rgba(13, 10, 26, 0.85)', 'rgba(5, 10, 20, 0.95)']}
+            style={styles.backgroundOverlay}
+          />
+          
+          {/* Subtle vignette effect */}
+          <LinearGradient
+            colors={['transparent', 'rgba(5, 10, 20, 0.6)']}
+            style={styles.vignetteBottom}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+        </ImageBackground>
+        
+        {/* Celestial particle texture overlay */}
+        <View style={styles.particleOverlay} pointerEvents="none">
+          {[...Array(20)].map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.star,
+                {
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  opacity: Math.random() * 0.5 + 0.2,
+                  width: Math.random() * 2 + 1,
+                  height: Math.random() * 2 + 1,
+                }
+              ]}
             />
-            
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Password"
-                placeholderTextColor={COLORS.navy.light}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity 
-                style={styles.eyeButton} 
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Ionicons 
-                  name={showPassword ? 'eye-off' : 'eye'} 
-                  size={20} 
-                  color={COLORS.navy.light} 
-                />
-              </TouchableOpacity>
-            </View>
-            
-            {isRegistering && (
-              <TextInput
-                style={styles.loginInput}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm Password"
-                placeholderTextColor={COLORS.navy.light}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-              />
-            )}
-            
-            <TouchableOpacity style={styles.loginButton} onPress={handleStartGame}>
-              <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.loginButtonGradient}>
-                <Text style={styles.loginButtonText}>
-                  {isRegistering ? 'Create Account' : 'Begin Journey'}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.switchAuthMode} 
-              onPress={() => {
-                setIsRegistering(!isRegistering);
-                setAuthError('');
-                setConfirmPassword('');
-              }}
+          ))}
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoid}
+        >
+          <SafeAreaView style={styles.loginSafeArea} edges={['top', 'left', 'right']}>
+            <ScrollView 
+              contentContainerStyle={styles.loginScrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.switchAuthText}>
-                {isRegistering ? 'Already have an account? Login' : 'New player? Create Account'}
-              </Text>
-            </TouchableOpacity>
-            
-            <View style={styles.securityNote}>
-              <Ionicons name="shield-checkmark" size={14} color={COLORS.gold.primary} />
-              <Text style={styles.securityNoteText}>Your account is protected with a secure password</Text>
-            </View>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
+              {/* Logo Section */}
+              <View style={styles.logoContainer}>
+                <View style={styles.logoCircle}>
+                  <LinearGradient
+                    colors={[COLORS.violet.light, COLORS.violet.primary, COLORS.violet.dark]}
+                    style={styles.logoGradient}
+                  >
+                    <Text style={styles.logoText}>DH</Text>
+                  </LinearGradient>
+                </View>
+                <Text style={styles.gameTitle}>DIVINE HEROES</Text>
+                <Text style={styles.gameSubtitle}>Enter the Divine Nexus</Text>
+              </View>
+
+              {/* Login Card */}
+              <View style={styles.loginCard}>
+                {/* Glow border effect */}
+                <LinearGradient
+                  colors={[COLORS.violet.glow + '40', COLORS.gold.primary + '30', COLORS.violet.glow + '40']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.cardGlow}
+                />
+                
+                <View style={styles.loginCardInner}>
+                  <Text style={styles.loginLabel}>
+                    {isRegistering ? 'Create Account' : 'Welcome Back'}
+                  </Text>
+                  <Text style={styles.loginSubLabel}>
+                    {isRegistering ? 'Begin your divine journey' : 'Your heroes await'}
+                  </Text>
+                  
+                  {/* Error Display */}
+                  {authError ? (
+                    <View style={styles.errorBox}>
+                      <Ionicons name="alert-circle" size={16} color="#f87171" />
+                      <Text style={styles.errorText}>{authError}</Text>
+                    </View>
+                  ) : null}
+                  
+                  {/* Username Input */}
+                  <View style={styles.inputContainer}>
+                    <View style={styles.inputIconContainer}>
+                      <Ionicons name="person" size={18} color={COLORS.violet.light} />
+                    </View>
+                    <TextInput
+                      style={styles.loginInput}
+                      value={username}
+                      onChangeText={setUsername}
+                      placeholder="Username"
+                      placeholderTextColor={COLORS.navy.light}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                  </View>
+                  
+                  {/* Password Input */}
+                  <View style={styles.inputContainer}>
+                    <View style={styles.inputIconContainer}>
+                      <Ionicons name="lock-closed" size={18} color={COLORS.violet.light} />
+                    </View>
+                    <TextInput
+                      style={styles.loginInput}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="Password"
+                      placeholderTextColor={COLORS.navy.light}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity 
+                      style={styles.eyeButton} 
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      <Ionicons 
+                        name={showPassword ? 'eye-off' : 'eye'} 
+                        size={20} 
+                        color={COLORS.violet.light} 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {/* Confirm Password (Registration) */}
+                  {isRegistering && (
+                    <View style={styles.inputContainer}>
+                      <View style={styles.inputIconContainer}>
+                        <Ionicons name="shield-checkmark" size={18} color={COLORS.violet.light} />
+                      </View>
+                      <TextInput
+                        style={styles.loginInput}
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        placeholder="Confirm Password"
+                        placeholderTextColor={COLORS.navy.light}
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                      />
+                    </View>
+                  )}
+                  
+                  {/* Login Button */}
+                  <TouchableOpacity style={styles.loginButton} onPress={handleStartGame}>
+                    <LinearGradient 
+                      colors={[COLORS.violet.primary, COLORS.violet.dark]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.loginButtonGradient}
+                    >
+                      <Text style={styles.loginButtonText}>
+                        {isRegistering ? 'CREATE ACCOUNT' : 'BEGIN JOURNEY'}
+                      </Text>
+                      <Ionicons name="arrow-forward" size={20} color={COLORS.cream.pure} />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  
+                  {/* Switch Auth Mode */}
+                  <TouchableOpacity 
+                    style={styles.switchAuthMode} 
+                    onPress={() => {
+                      setIsRegistering(!isRegistering);
+                      setAuthError('');
+                      setConfirmPassword('');
+                    }}
+                  >
+                    <Text style={styles.switchAuthText}>
+                      {isRegistering ? 'Already have an account? ' : 'New player? '}
+                      <Text style={styles.switchAuthHighlight}>
+                        {isRegistering ? 'Login' : 'Create Account'}
+                      </Text>
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  {/* Security Note */}
+                  <View style={styles.securityNote}>
+                    <Ionicons name="shield-checkmark" size={14} color={COLORS.gold.primary} />
+                    <Text style={styles.securityNoteText}>Secured with encrypted authentication</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Footer Attribution */}
+              <View style={styles.loginFooter}>
+                <Text style={styles.footerText}>Featuring Raphael the Eternal</Text>
+                <Text style={styles.footerSubText}>5+ Star Ascension</Text>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </View>
     );
   }
 

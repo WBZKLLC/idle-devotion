@@ -60,13 +60,19 @@ export default function JourneyScreen() {
   }, [hydrated, user?.username]);
 
   const loadJourneyData = async () => {
+    if (!user?.username) return;
     setLoading(true);
     try {
-      // Load journey data from API
-      const response = await axios.get(`${API_BASE}/journey/status/${user?.username}`).catch(() => ({ data: null }));
+      // Use centralized API wrapper
+      let responseData = null;
+      try {
+        responseData = await getJourneyStatus(user.username);
+      } catch {
+        responseData = null;
+      }
       
-      if (response.data) {
-        setCurrentDay(response.data.current_day || user?.login_days || 1);
+      if (responseData) {
+        setCurrentDay(responseData.current_day || user?.login_days || 1);
         // Use API data if available
       }
       

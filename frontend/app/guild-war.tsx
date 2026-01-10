@@ -129,9 +129,7 @@ export default function GuildWarScreen() {
   const loadUserGuild = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/guild/${user.username}`);
-      // API returns guild data directly, not under a 'guild' key
-      const guildData = response.data;
+      const guildData = await getGuild(user.username);
       setUserGuild(guildData);
       // User has a guild if we got valid data back
       const hasGuild = !!guildData?.id;

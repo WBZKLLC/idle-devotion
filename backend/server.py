@@ -3157,7 +3157,7 @@ FEATURE_FLAGS_CONFIG = {
         # Redesigned authentication screens
         "NEW_LOGIN_FLOW": False,
         # Maintenance mode (shows maintenance screen)
-        "MAINTENANCE_MODE": False,
+        "MAINTENANCE_MODE": True,  # TESTING - flip back to False after test
         # Multi-sweep cleared stages
         "CAMPAIGN_SWEEP": True,
         # 5+ star hero video previews

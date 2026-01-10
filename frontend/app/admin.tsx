@@ -14,6 +14,14 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import {
+  adminGetUser,
+  adminGrantResources,
+  adminSetVIP,
+  adminMuteUser,
+  adminBanUser,
+  adminDeleteAccount,
+} from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';

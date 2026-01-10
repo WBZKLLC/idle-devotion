@@ -18,14 +18,15 @@ const COLORS = {
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const { isHydrated, restoreSession, user } = useGameStore();
-  const { hydrateRemoteFeatures, featuresReady } = useFeatureStore();
+  // Use selector pattern for better performance
+  const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
   // REVENUECAT DISABLED - Uncomment when finalizing:
   // const { initialize: initRevenueCat, setUserId } = useRevenueCatStore();
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
     const restore = async () => {
-      // Hydrate feature flags (fast - uses cache first)
+      // Hydrate feature flags (fast - uses cache first, non-blocking)
       hydrateRemoteFeatures().catch((e) => {
         console.log('[App] Feature flags hydration error (non-blocking):', e);
       });
@@ -42,7 +43,7 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       setIsRestoring(false);
     };
     restore();
-  }, []);
+  }, [hydrateRemoteFeatures]);
 
   // REVENUECAT DISABLED - Uncomment when finalizing:
   // useEffect(() => {

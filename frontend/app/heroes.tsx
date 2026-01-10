@@ -25,6 +25,7 @@ import {
   resolveTierArt,
   computeUserMaxUnlockedTier,
   TIER_LABELS,
+  TIER_LABEL_ARRAY,
 } from '../lib/tier';
 
 // 2Dlive shell (UI-only)

@@ -315,10 +315,10 @@ export default function HomeScreen() {
                 </View>
                 
                 {/* Title */}
-                <Text style={loginStyles.title}>DIVINE HEROES</Text>
+                <Text style={loginStyles.title}>IDLE DEVOTION</Text>
                 
                 {/* Subtitle */}
-                <Text style={loginStyles.subtitle}>ENTER THE DIVINE NEXUS</Text>
+                <Text style={loginStyles.subtitle}>A SOUL BOUND FANTASY</Text>
               </View>
 
               {/* LOGIN CARD */}

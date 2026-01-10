@@ -120,12 +120,12 @@ export default function HeroDetailScreen() {
   const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
 
   // Tier selection (1..6), gated by unlocks
-  const [selectedTier, setSelectedTier] = useState<DisplayTier>(1);
+  const [selectedTier, setSelectedTier] = useState<number>(1);
 
   // Keep selectedTier valid when hero loads or upgrades
   useEffect(() => {
     if (!hero) return;
-    const unlocked = unlockedTierForHero(hero);
+    const unlocked = unlockedTierFromHero(hero);
     setSelectedTier(prev => (prev > unlocked ? unlocked : prev));
   }, [hero?.stars, hero?.awakening_level]);
 
@@ -133,14 +133,13 @@ export default function HeroDetailScreen() {
   // TIER-BASED ART (background + portrait)
   // ----------------------------
   const tierArt = useMemo(() => {
-    const resolved = resolveTierArt(heroData, selectedTier);
-    return resolved ?? require('../assets/backgrounds/sanctum_environment_01.jpg');
+    return resolveTierArt(heroData, selectedTier);
   }, [heroData, selectedTier]);
 
   // Check if hero is at 5+ star (final ascension)
   const isFivePlusStar = useCallback(() => {
     if (!hero) return false;
-    return unlockedTierForHero(hero) === 6;
+    return unlockedTierFromHero(hero) === 6;
   }, [hero]);
 
   // Check if hero is UR or UR+ (for preview button visibility)

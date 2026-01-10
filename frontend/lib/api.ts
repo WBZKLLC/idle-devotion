@@ -3,6 +3,7 @@
 // Screens should import from here to prevent endpoint string drift
 
 import axios from 'axios';
+import { storageGet, STORAGE_KEYS } from './storage';
 
 const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
 const API_BASE = RAW
@@ -13,6 +14,24 @@ export const api = axios.create({
   baseURL: API_BASE,
   timeout: 20000,
 });
+
+// Request interceptor to attach Authorization header
+api.interceptors.request.use(
+  async (config) => {
+    try {
+      const token = await storageGet(STORAGE_KEYS.AUTH_TOKEN);
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+        if (__DEV__) console.log('[api] Authorization header attached');
+      }
+    } catch (e) {
+      console.warn('[api] Failed to get auth token for request:', e);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export function requireUsername(username?: string) {
   if (!username) throw new Error('Missing username');

@@ -4,6 +4,7 @@ import { StyleSheet, Platform, View, ActivityIndicator, Text } from 'react-nativ
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStore } from '../stores/gameStore';
+import { useFeatureStore } from '../stores/featureStore';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 
@@ -17,12 +18,18 @@ const COLORS = {
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const { isHydrated, restoreSession, user } = useGameStore();
+  const { hydrateRemoteFeatures, featuresReady } = useFeatureStore();
   // REVENUECAT DISABLED - Uncomment when finalizing:
   // const { initialize: initRevenueCat, setUserId } = useRevenueCatStore();
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
     const restore = async () => {
+      // Hydrate feature flags (fast - uses cache first)
+      hydrateRemoteFeatures().catch((e) => {
+        console.log('[App] Feature flags hydration error (non-blocking):', e);
+      });
+      
       if (!isHydrated) {
         await restoreSession();
       }

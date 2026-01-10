@@ -17,7 +17,13 @@ import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
+
+// Centralized API wrappers (no raw axios in screens)
+import {
+  getCampaignChapters,
+  getCampaignChapterDetail,
+  completeCampaignStage,
+} from '../lib/api';
 
 // ✅ 2Dlive shell (UI-only)
 import {
@@ -28,9 +34,8 @@ import {
 } from '../components/DivineShell';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
-  : '/api';
+
+// API_BASE removed - using centralized lib/api.ts wrappers
 
 // ✅ Campaign environment background (confirmed path)
 const CAMPAIGN_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');

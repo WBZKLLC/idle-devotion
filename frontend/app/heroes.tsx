@@ -16,6 +16,17 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../theme/colors';
 
+// Centralized tier logic (SINGLE SOURCE OF TRUTH)
+import {
+  DisplayTier,
+  displayStars,
+  unlockedTierForHero,
+  effectiveTierForHero,
+  resolveTierArt,
+  computeUserMaxUnlockedTier,
+  TIER_LABELS,
+} from '../lib/tier';
+
 // 2Dlive shell (UI-only)
 import {
   CenteredBackground,
@@ -27,23 +38,10 @@ import {
 // Sanctum background (matches your existing setup)
 const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
-// Display tiers (what the user can *choose to show*)
-// 6 stages: 1★,2★,3★,4★,5★,5★+
-type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
-
-// Resolve tier art from heroData.ascension_images (NO guessing)
-function resolveTierArt(heroData: any, tier: DisplayTier) {
-  const asc = heroData?.ascension_images;
-  const url =
-    asc && typeof asc === 'object'
-      ? (asc[String(tier)] as string | undefined)
-      : undefined;
-
-  if (typeof url === 'string' && url.length > 0) return { uri: url };
-
-  const base = heroData?.image_url;
-  if (typeof base === 'string' && base.length > 0) return { uri: base };
-
+// Helper to convert tier art to Image source
+function tierArtToSource(heroData: any, tier: DisplayTier) {
+  const url = resolveTierArt(heroData, tier);
+  if (url) return { uri: url };
   return null;
 }
 

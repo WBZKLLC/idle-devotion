@@ -309,13 +309,13 @@ export default function HeroProgressionScreen() {
 
     rollbackRef.current = { hero };
 
-    // OPTIMISTIC APPLY
+    // OPTIMISTIC APPLY (local override)
     const optimisticHero = {
       ...hero,
       stars: nextStar,
       duplicates: Math.max(0, shards - shardsNeededForNext),
     };
-    setHero(optimisticHero);
+    setLocalHeroOverride(optimisticHero);
 
     try {
       // Use centralized API wrapper (lib/api.ts) - single source of truth for endpoints
@@ -325,15 +325,19 @@ export default function HeroProgressionScreen() {
       const newStars = clampInt(resp?.new_stars ?? nextStar, 0, 6);
       const remaining = clampInt(resp?.remaining_shards ?? optimisticHero.duplicates, 0, 999999999);
 
-      setHero((prev: any) => ({
+      // Update optimistic hero with server response
+      setLocalHeroOverride((prev: any) => ({
         ...prev,
         stars: newStars,
         duplicates: remaining,
       }));
 
       await fetchUser();
-      // Refresh only this hero (not full roster) to get updated data
+      // Refresh store hero (this will update storeHero via selector)
       await getUserHeroById(String(heroId), { forceRefresh: true });
+      
+      // Clear local override now that store is fresh
+      setLocalHeroOverride(null);
 
       const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars });
       if (newTier > effectiveUnlockedTier) {
@@ -345,7 +349,8 @@ export default function HeroProgressionScreen() {
         Alert.alert('Star Promoted! 🌟', `Now at ${newStars} star(s). Keep collecting shards!`);
       }
     } catch (e: any) {
-      if (rollbackRef.current?.hero) setHero(rollbackRef.current.hero);
+      // Rollback to previous hero state
+      if (rollbackRef.current?.hero) setLocalHeroOverride(rollbackRef.current.hero);
       Alert.alert('Promotion failed', e?.response?.data?.detail || 'Unable to promote this hero right now.');
     } finally {
       rollbackRef.current = null;

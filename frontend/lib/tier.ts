@@ -121,6 +121,25 @@ export const starsToTierArtKey = (stars: number): TierArtKey => {
   return tierIndexToArtKey(t);
 };
 
+/**
+ * Progression helper: compute the next backend star value.
+ * Returns null if already at cap.
+ * 
+ * USE THIS instead of `stars + 1` in UI code.
+ */
+export const nextBackendStar = (currentStars: number): BackendStars | null => {
+  const s = normalizeBackendStars(currentStars);
+  return s >= MAX_STAR_TIER ? null : (s + 1);
+};
+
+/**
+ * Check if hero is at max star tier.
+ * USE THIS instead of `stars >= 6` or `stars >= MAX_STAR_TIER` in UI code.
+ */
+export const isAtMaxStars = (stars: number): boolean => {
+  return normalizeBackendStars(stars) >= MAX_STAR_TIER;
+};
+
 // ─────────────────────────────────────────────────────────────
 // TIER CLAMPING & EFFECTIVE TIER
 // ─────────────────────────────────────────────────────────────

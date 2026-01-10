@@ -122,9 +122,7 @@ export default function HeroDetailScreen() {
   // Tier selection (DEFAULT = 1-star art)
   const [selectedTier, setSelectedTier] = useState<number>(1);
 
-  // ----------------------------
-  // TIER-BASED ART (background + portrait)
-  // ----------------------------
+  // Selected tier art (background + portrait)
   const tierArt = useMemo(() => {
     return resolveTierArt(heroData, selectedTier);
   }, [heroData, selectedTier]);

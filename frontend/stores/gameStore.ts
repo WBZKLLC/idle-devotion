@@ -146,6 +146,15 @@ function indexUserHeroesById(list: UserHero[] | undefined | null): Record<string
   return byId;
 }
 
+// Helper to set userHeroes AND userHeroesById together (enforces sync invariant)
+// Always use this when replacing the entire heroes list
+function setUserHeroesState(set: any, heroes: UserHero[]) {
+  set({
+    userHeroes: heroes,
+    userHeroesById: indexUserHeroesById(heroes),
+  });
+}
+
 // Helper to clear auth data
 const clearAuthData = async () => {
   try {

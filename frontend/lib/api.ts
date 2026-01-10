@@ -380,6 +380,36 @@ export async function enhanceEquipment(
 }
 
 // ─────────────────────────────────────────────────────────────
+// JOURNEY / DAILY TRACK (journey.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getJourneyStatus(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/journey/status/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function claimJourneyDaily(username: string, day: number) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/journey/claim-daily/${encodeURIComponent(u)}`,
+    null,
+    { params: { day } }
+  );
+  return res.data;
+}
+
+export async function claimJourneyMilestone(username: string, milestoneId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/journey/claim-milestone/${encodeURIComponent(u)}`,
+    null,
+    { params: { milestone_id: milestoneId } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // CAMPAIGN / STORY (campaign.tsx)
 // ─────────────────────────────────────────────────────────────
 

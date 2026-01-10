@@ -162,9 +162,8 @@ export default function HeroManagerScreen() {
     if (!user) return;
     
     try {
-      // Load teams for all modes
-      const response = await axios.get(`${API_BASE}/team/${user.username}/by-mode`);
-      const teams = response.data || {};
+      // Use centralized API wrapper
+      const teams = await getTeamsByMode(user.username) || {};
       
       setModeTeams(teams);
       
@@ -176,8 +175,7 @@ export default function HeroManagerScreen() {
       console.error('Error loading mode teams:', error);
       // Try loading generic teams as fallback
       try {
-        const response = await axios.get(`${API_BASE}/team/${user.username}`);
-        const teams = response.data || [];
+        const teams = await getTeamsList(user.username) || [];
         const activeTeam = teams.find((t: any) => t.is_active);
         if (activeTeam) {
           await loadTeamIntoSlots(activeTeam.id);
@@ -192,8 +190,8 @@ export default function HeroManagerScreen() {
     if (!user) return;
     
     try {
-      const response = await axios.get(`${API_BASE}/team/${user.username}/full`);
-      const teams = response.data || [];
+      // Use centralized API wrapper
+      const teams = await getTeamsFull(user.username) || [];
       const team = teams.find((t: any) => t.id === teamId);
       
       if (team) {

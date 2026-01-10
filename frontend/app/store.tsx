@@ -167,28 +167,19 @@ export default function StoreScreen() {
           text: 'Purchase',
           onPress: async () => {
             try {
-              const response = await fetch(
-                `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/store/purchase-divine?username=${user?.username}&package_id=${packageId}`,
-                { method: 'POST' }
+              // Use centralized API wrapper (critical for monetization)
+              const result = await apiPurchaseDivine(user?.username || '', packageId);
+              Alert.alert(
+                'Divine Package Purchased!',
+                `Divine Essence: +${result.divine_essence_received}\n` +
+                `Crystals: +${result.crystals_received}\n` +
+                `New VIP Level: ${result.new_vip_level}\n\n` +
+                `${result.purchases_remaining} purchases remaining this month`
               );
-              
-              if (response.ok) {
-                const result = await response.json();
-                Alert.alert(
-                  'Divine Package Purchased!',
-                  `Divine Essence: +${result.divine_essence_received}\n` +
-                  `Crystals: +${result.crystals_received}\n` +
-                  `New VIP Level: ${result.new_vip_level}\n\n` +
-                  `${result.purchases_remaining} purchases remaining this month`
-                );
-                fetchUser();
-                loadStoreData();
-              } else {
-                const error = await response.json();
-                Alert.alert('Error', error.detail || 'Purchase failed');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to process purchase');
+              fetchUser();
+              loadStoreData();
+            } catch (error: any) {
+              Alert.alert('Error', error?.message || 'Purchase failed');
             }
           }
         }

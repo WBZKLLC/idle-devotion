@@ -157,45 +157,39 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setHydrated: (value: boolean) => set({ isHydrated: value }),
 
-  // Primary auth hydration - called on app boot
+  // Primary auth hydration - called on app boot (idempotent, safe to call multiple times)
   // Loads token from storage, sets axios headers, then fetches user
   hydrateAuth: async () => {
     console.log('[hydrateAuth] Starting...');
     
-    try {
-      const token = await loadAuthToken();
-      
-      if (!token) {
-        console.log('[hydrateAuth] No token found, user needs to login');
-        apiSetAuthToken(null);
-        set({ isHydrated: true });
-        return;
-      }
-      
-      // Set token on API layer BEFORE any requests
-      apiSetAuthToken(token);
-      console.log('[hydrateAuth] Token loaded, fetching user...');
-      
-      // Fetch user to validate token and populate state
-      try {
-        const username = await loadAuthUsername();
-        if (username) {
-          const userData = await apiFetchUser(username);
-          console.log('[hydrateAuth] User restored:', userData.username);
-          set({ user: userData, authToken: token, isHydrated: true });
-          return;
-        }
-      } catch (e) {
-        console.log('[hydrateAuth] User fetch failed, clearing auth:', e);
-        apiSetAuthToken(null);
-        await clearAuthData();
-      }
-      
-      set({ isHydrated: true });
-    } catch (e) {
-      console.error('[hydrateAuth] Error:', e);
+    const token = await loadAuthToken();
+    
+    if (!token) {
+      console.log('[hydrateAuth] No token found, user needs to login');
       apiSetAuthToken(null);
-      set({ isHydrated: true });
+      set({ authToken: null, user: null, isHydrated: true });
+      return;
+    }
+    
+    // Set token on API layer BEFORE any requests
+    apiSetAuthToken(token);
+    set({ authToken: token });
+    console.log('[hydrateAuth] Token loaded, fetching user...');
+    
+    // Fetch user to validate token and populate state
+    try {
+      const username = await loadAuthUsername();
+      if (!username) throw new Error('No username stored');
+      
+      const userData = await apiFetchUser(username);
+      console.log('[hydrateAuth] User restored:', userData.username);
+      set({ user: userData, isHydrated: true });
+    } catch (e) {
+      // Token invalid or server rejected - hard reset
+      console.log('[hydrateAuth] User fetch failed, clearing auth:', e);
+      await clearAuthData();
+      apiSetAuthToken(null);
+      set({ authToken: null, user: null, isHydrated: true });
     }
   },
 

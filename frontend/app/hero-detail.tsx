@@ -28,7 +28,7 @@ import {
   resolveTierArt,
   TIER_LABELS,
   tierLabel,
-} from '../lib/tier';
+} from '../lib/progression';
 
 // Shared animated TierSelector component
 import TierSelector from '../components/TierSelector';

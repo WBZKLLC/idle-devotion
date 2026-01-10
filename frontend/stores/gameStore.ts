@@ -525,58 +525,34 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // Smart post-gacha refresh: targeted if few heroes, full roster if many
+  // Known response shape: result.heroes[].id = user-hero instance UUID
   refreshHeroesAfterGacha: async (result: any) => {
-    // If we can identify specific userHero IDs, refresh them.
-    // Otherwise fall back to full roster refresh.
-    const ids: string[] = [];
-
-    // Common shapes we might see from gacha API:
-    // - result.user_hero_id
-    // - result.userHeroId
-    // - result.heroes: [{ id }, { user_hero_id }, { userHeroId }]
-    // - result.pulls: [...]
-    const pushId = (v: any) => {
-      if (v === null || v === undefined) return;
-      const s = String(v);
-      if (s.length > 0) ids.push(s);
-    };
-
-    pushId(result?.user_hero_id);
-    pushId(result?.userHeroId);
-    pushId(result?.user_hero_instance_id);
-
-    const arrCandidates = [
-      result?.heroes,
-      result?.pulls,
-      result?.results,
-      result?.items,
-    ];
-
-    for (const arr of arrCandidates) {
-      if (!Array.isArray(arr)) continue;
-      for (const it of arr) {
-        pushId(it?.id);
-        pushId(it?.user_hero_id);
-        pushId(it?.userHeroId);
-        pushId(it?.user_hero_instance_id);
-      }
+    const heroes = Array.isArray(result?.heroes) ? result.heroes : [];
+    
+    if (__DEV__ && !Array.isArray(result?.heroes)) {
+      console.warn('[GameStore.refreshHeroesAfterGacha] Expected result.heroes[] array. Falling back to full roster fetch.');
     }
 
-    // Unique IDs only
-    const unique = Array.from(new Set(ids)).filter(Boolean);
+    // Extract user-hero instance IDs (result.heroes[].id)
+    const ids = heroes
+      .map((h: any) => h?.id)
+      .filter((v: any) => v !== null && v !== undefined)
+      .map((v: any) => String(v));
 
-    // Heuristic:
-    // - 1..3 ids → targeted refresh
-    // - otherwise → full roster refresh (multi pull / unknown)
-    if (unique.length > 0 && unique.length <= 3) {
-      if (__DEV__) console.log('[refreshHeroesAfterGacha] Targeted refresh for', unique.length, 'heroes');
-      for (const id of unique) {
+    const uniqueIds = Array.from(new Set(ids));
+
+    // Strategy:
+    // - 1..3 heroes -> targeted refresh (cheap: 1-3 API calls)
+    // - 4+ heroes   -> full roster refresh (cheaper than 4-10 calls)
+    if (uniqueIds.length > 0 && uniqueIds.length <= 3) {
+      if (__DEV__) console.log('[refreshHeroesAfterGacha] Targeted refresh for', uniqueIds.length, 'heroes:', uniqueIds);
+      for (const id of uniqueIds) {
         await get().getUserHeroById(id, { forceRefresh: true });
       }
       return;
     }
 
-    if (__DEV__) console.log('[refreshHeroesAfterGacha] Full roster refresh (found', unique.length, 'hero IDs)');
+    if (__DEV__) console.log('[refreshHeroesAfterGacha] Full roster refresh (', uniqueIds.length, 'heroes)');
     await get().fetchUserHeroes();
   },
 }));

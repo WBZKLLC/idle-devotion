@@ -41,9 +41,7 @@ const COLORS = {
   warning: '#f59e0b',
 };
 
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
-  : '/api';
+// API_BASE removed - using centralized lib/api.ts wrappers
 
 // Game modes with their team configurations
 const GAME_MODES = {

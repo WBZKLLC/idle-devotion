@@ -54,10 +54,14 @@ export default function SummonHubScreen() {
     if (currencyBalance < cost) { Alert.alert('Insufficient Funds', `You need ${cost.toLocaleString()} ${currencyName}`); return; }
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/gacha/pull?username=${user.username}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pull_type: pullType, currency_type: currencyType }) });
-      if (response.ok) { const data = await response.json(); setPullResults(data.heroes || []); setShowResults(true); await fetchUser(); }
-      else { const error = await response.json(); Alert.alert('Error', error.detail || 'Failed to summon'); }
-    } catch (error) { Alert.alert('Error', 'Failed to perform summon'); }
+      // Use centralized API wrapper
+      const data = await pullGacha(user.username, pullType, currencyType);
+      setPullResults(data.heroes || []);
+      setShowResults(true);
+      await fetchUser();
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to perform summon');
+    }
     finally { setIsLoading(false); }
   };
 

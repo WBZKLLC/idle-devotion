@@ -199,13 +199,13 @@ export default function HeroCinematicModal({
                   <Text style={styles.retryButtonText}>Close</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
+            ) : videoUri ? (
               <Video
                 ref={videoRef}
-                source={videoSource}
+                source={{ uri: videoUri }}
                 style={styles.video}
                 resizeMode={ResizeMode.CONTAIN}
-                shouldPlay={visible}
+                shouldPlay={visible && !!videoUri}
                 isLooping={false}
                 useNativeControls={false}
                 onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
@@ -213,7 +213,7 @@ export default function HeroCinematicModal({
                 volume={1.0}
                 isMuted={false}
               />
-            )}
+            ) : null}
           </View>
 
           {/* Close Button */}

@@ -1,93 +1,86 @@
 <analysis>
 <original_problem_statement>
-The user's initial request was to implement a 5+ Star Hero Cinematic feature. After its completion, the user initiated a complete, multi-phase UI/UX overhaul, dubbed 2Dlive, to create a premium, dark, celestial gacha aesthetic.
+The user's initial request was to implement a 5+ Star Hero Cinematic feature. After its completion, the user initiated a complete, multi-phase UI/UX overhaul, dubbed 2Dlive, to create a premium, dark, celestial gacha aesthetic. The current phase is to complete the Display Tier feature, which allows users to view different art for heroes based on their star progression.
 
 **PRODUCT REQUIREMENTS (Current):**
-- **P0: 2Dlive UI Shell Implementation (IN PROGRESS):**
-  - **GOAL:** Refactor all key screens into the new 2Dlive UI shell using a shared component library ().
-  - **COMPLETED SCREENS:**
-    -  (Login & Dashboard)
-    -  (Initial refactor done, pending patch for new feature)
-    -  (Summon Screen): Redesigned with a dedicated Summon Stage background.
-    -  (Campaign Screen): Redesigned with dynamic, act-specific backgrounds.
-    -  (Hero List): Redesigned and includes a new UI-only Display Tier feature to control hero art presentation.
-  - **SHARED COMPONENTS:**
-    - The component library at  now includes , , , , and .
-- **P0: Display Tier Feature (IN PROGRESS):**
-  - A UI-only feature allowing users to select a preferred hero tier (1★, 2★, ... 5★+) to display on the  list.
-  - This feature is gated by hero progression (stars and awakening level).
-  - The  screen was patched to correctly handle  from the backend and maps it to a displayable state.
-  - The feature is incomplete as  does not yet respect the tier selected on the  screen.
+- **P0: Complete Display Tier Feature (IN PROGRESS):**
+  - **GOAL:** Ensure the Display Tier system is consistent across all relevant screens (, , ).
+  - The hero list () must show tier-specific art.
+  - The hero detail page () must respect the tier passed from the list and allow further selection.
+  - A new hero progression screen () must be built using the 2Dlive shell and incorporate the same tier logic, optimistic updates for promotions, and scaffolding for future rarity ascension.
+- **P0: Backend Support for Tiered Art:**
+  - The backend must be modified to provide the frontend with the necessary URLs for all 6 tiers of hero art.
 </original_problem_statement>
-
 **User's preferred language**: English
 
 **what currently exists?**
-The 2Dlive UI shell has been successfully applied across all major screens: , , , , and . The application has a consistent, premium aesthetic. A new Display Tier feature has been implemented on the  screen, allowing users to select which star version of a hero's art to display. This system correctly handles the backend's default of  stars for new heroes.
+The 2Dlive UI shell is applied across all major screens. The Display Tier feature has been fully implemented and synchronized across , , and a completely refactored .
+
+- **Backend:** The  endpoint has been enhanced. It now reads hero-specific manifest files () and includes an  object in the  response, providing URLs for all 6 art tiers.
+- **:** The hero list grid now correctly displays tier-specific art based on a global tier selector. It passes the selected tier to the detail screen via a URL parameter ().
+- **:** This screen now reads the  parameter from the route, displays the corresponding art by default, and includes a tier selector for further previewing.
+- **:** This screen has been completely rewritten. It uses the 2Dlive shell, features optimistic UI for star promotions (calling ), includes a UI-only panel for future Rarity Ascension, and provides a hint linking to the Summon Hub.
+
+All three screens share the exact same helper functions for tier logic, ensuring a consistent user experience.
 
 **Last working item**:
-    - Last item agent was working: The user requested the full code for . The agent provided it. The user's intention is to provide a patch to make this screen aware of the new Display Tier system implemented in . The  screen now passes a  URL parameter when navigating, but  does not yet use it.
-    - Status: NOT STARTED
+    - Last item agent was working: The agent performed a full-file replacement of  with a new version provided by the user. This new version added a UI-only Rarity Ascension section and a How to earn shards hint.
+    - Status: USER VERIFICATION PENDING
     - Agent Testing Done: N
-    - Which testing method agent to use? screenshot tool. After the new  is applied, the agent should navigate to the page and take a screenshot to verify the UI reflects the tier system.
+    - Which testing method agent to use? Frontend testing agent. The  screen is a major feature with multiple user interactions (star promotion, rarity ascension attempt, tier previewing). A full test run is required.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Integrate Display Tier logic into  (P0)
+  - Issue 1: Verify  functionality (P0)
   - Issue 2: Fix authentication state persistence in web preview (P1)
   
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: None. This is the immediate next step.
+     - Attempted fixes: None. The new file was just applied.
      - Next debug checklist: 
-       1. Wait for the user to provide the patched code for .
-       2. Use  to overwrite .
-       3. Restart the frontend: expo: ERROR (not running)
-expo: started.
-       4. Use the  to navigate to a hero's detail page, potentially with a  parameter, to verify the correct art/UI is displayed.
-     - Why fix this issue and what will be achieved with the fix? This will complete the Display Tier feature, creating a seamless visual experience between the hero list and the detail screen.
-     - Status:  NOT STARTED
+       1. Use the frontend testing agent to navigate to the  screen for a hero.
+       2. Verify the UI matches the new design, including the Rarity Ascension and How to earn shards sections.
+       3. Test the Promote Star button's optimistic UI flow (if the user has enough shards).
+       4. Test the Ascend to [Rarity] button and confirm it shows the not available yet alert, as the backend is not wired for it.
+       5. Verify the tier preview selector updates the background and portrait image correctly.
+     - Why fix this issue and what will be achieved with the fix? This will confirm the completion of the entire hero progression feature loop, from summoning to maxing out a hero's stars.
+     - Status:  USER VERIFICATION PENDING
      - Is recurring issue? N
      - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: Blocked on user providing the patched code.
+     - Blocked on other issue: None.
   - Issue 2: 
-     - Attempted fixes: None. The agent observed the issue but the user prioritized moving forward with UI refactoring.
+     - Attempted fixes: The agent observed the issue but correctly prioritized feature completion as per user flow.
      - Next debug checklist:
-       1. Examine  to confirm if  middleware with  from  is being used for the user state.
-       2. If it is, check the configuration. If not, implement it.
-       3. Verify that the  hook is used correctly on all authenticated screens.
-       4. Test the login flow and navigation in the web preview to see if the user state persists.
-     - Why fix this issue and what will be achieved with the fix? Fixes a broken user experience in the web preview where the user appears to be logged out after navigating, which hinders testing and development.
+       1. Examine  to confirm if  middleware with  from  is being used.
+       2. If not, implement it to persist the  and  state.
+       3. Ensure the  hook is correctly implemented to prevent UI flicker on load.
+       4. Test the login flow and navigation in the web preview to confirm the user state persists across page reloads and navigation.
+     - Why fix this issue and what will be achieved with the fix? Fixes a broken developer/testing experience in the web preview where the user appears to be logged out after navigating, which hinders development.
      - Status:  NOT STARTED
      - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: None. This is a lower priority than the P0 task.
+     - Blocked on other issue: None.
 
 **In progress Task List**:
- - There are no multi-step tasks currently in progress. The workflow consists of single-step patch applications directed by the user.
+ - There are no multi-step tasks currently in progress.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P0: Apply user-provided patch to **: The immediate next action.
-*   **Future Tasks (Currently PAUSED):**
+    *   **P0: Test and verify the new  screen.**
+*   **Future Tasks (From PRD):**
     *   **P1: Re-enable RevenueCat Integration**: Follow the guide in .
     *   **P2: Backend Code Cleanup**: Refactor  to remove legacy, duplicated endpoints.
 
 **Completed work in this session**
-- ** 2Dlive Wrap:**
-  - Fully reskinned the Gacha screen using the  components and a new  background.
-  - Created and integrated a new  component for a unique visual effect.
-- ** 2Dlive Wrap and Polish:**
-  - Fully reskinned the Campaign screen, preserving all existing logic for chapters, stages, battles, and dialogue.
-  - Implemented dynamic backgrounds that change from a general environment () on the chapter list to specific act backgrounds (, etc.) on the stage list.
-  - Applied a second pass polish, wrapping elements in  and adding a premium gold-stroke frame to chapter cards for a more refined look.
-- ** 2Dlive Wrap and Display Tier Feature:**
-  - Completely reskinned the Heroes list screen.
-  - Implemented a UI-only Display Tier selector (1★ to 5★+) allowing the user to choose which hero art to view.
-  - Patched the UI to correctly handle and display heroes with  from the backend, including updating tier unlock logic, star rendering, and power calculation display.
-- **Backend Investigation:**
-  - Investigated  and confirmed that new heroes are correctly created with  by default.
-  - Located and presented the star promotion logic ( endpoint) and associated costs ().
+- **Backend Enhancement:**
+  - Modified  to add a  helper function.
+  - Updated the  endpoint to dynamically load and include  in the hero data response, unblocking the entire feature.
+- ** Feature Completion:**
+  - Fully patched the screen to be consistent with the Display Tier system, including reading the  URL parameter and implementing a shared set of helper functions.
+- ** Grid Art Update:**
+  - Patched the hero grid to use the  helper, ensuring grid cards now display tier-specific art.
+- ** Complete Overhaul:**
+  - Replaced the entire file with a new user-provided version that implements the 2Dlive shell, optimistic UI for star promotions, and UI scaffolding for Rarity Ascension and shard hints. The screen is now fully integrated with the rest of the tier system.
 
 **Earlier issues found/mentioned but not fixed**
    - **Issue 1: Authentication state persistence in web preview:**
@@ -103,17 +96,17 @@ expo: started.
 
 **Known issue recurrence from previous fork**
   - **Issue recurrence in previous fork**: Backend code in  contains legacy, duplicated endpoints.
-  - **Recurrence count**: 3+
+  - **Recurrence count**: 4+
   - **Status**: NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Reusable UI Shell Architecture**: Using  to enforce a consistent, premium UI style.
-- **Progressive Refinement**: The user provides an initial implementation, then follows up with second pass polish requests.
-- **Dynamic Backgrounds**: Conditionally changing the screen background based on application state (e.g.,  in ).
-- **UI-side Gating & Logic**: Implementing features like Display Tier purely on the frontend by interpreting backend data (, ) to derive new UI states without backend changes.
+- **Backend Data Hydration:** The backend was enhanced to read from static manifest files and inject dynamic data () into API responses, enabling a rich frontend experience without frontend hacks.
+- **Consistent Cross-Screen Logic:** A shared set of helper functions (, , ) and type definitions () were implemented across , , and  to ensure the Display Tier feature is seamless and predictable.
+- **Optimistic UI Updates:** The new  uses an optimistic UI pattern for star promotions, providing immediate user feedback while handling server reconciliation and rollbacks.
+- **Graceful Degradation / Feature Scaffolding:** The Rarity Ascension panel is a UI-only feature that tries to call several potential backend endpoints. If none exist, it provides a helpful not available message, allowing the UI to be built and tested before the backend is ready.
 
 **key DB schema**
   - No DB schema changes occurred in this session.
@@ -123,43 +116,41 @@ expo: started.
 
 **All files of reference**
 *   **Created/Modified in this session**:
-    *   : HEAVILY MODIFIED. Fully reskinned with the 2Dlive shell, preserving all gacha logic.
-    *   : HEAVILY MODIFIED. Reskinned, polished, and updated with dynamic, act-specific backgrounds.
-    *   : HEAVILY MODIFIED. Reskinned and implemented the Display Tier UI system.
-    *   : MODIFIED. Added the  component.
-    *   : NEW. Background for the gacha screen.
-    *   : NEW. Four new backgrounds for the campaign screen.
+    *   : **MODIFIED**. Added  helper and updated  to include ascension images in the API response.
+    *   : **HEAVILY MODIFIED**. Fully integrated with the tier system, reads URL parameters, and uses shared logic.
+    *   : **MODIFIED**. Grid cards now display tier-specific art.
+    *   : **HEAVILY MODIFIED**. Completely replaced with a new version featuring a new UI, optimistic updates, and Rarity Ascension scaffolding.
 *   **Important files for next steps**:
-    *   : The target of the next user-provided patch.
+    *   : The screen that needs verification.
     *   : Relevant for debugging the auth persistence issue.
 
 **Areas that need refactoring**:
 - The  file has known technical debt (legacy endpoints) and is marked for future cleanup.
 
 **key api endpoints**
-- No new API endpoints were created.
-- The agent investigated  and the gacha pull logic in .
+- ****: Enhanced to return  within the  object for each hero.
+- ****: Used by the new  for optimistic star promotions.
 
 **Critical Info for New Agent**
-- **Your immediate task is to wait for the user to provide a patch for **. This patch will integrate the Display Tier logic. Apply the patch, restart the frontend, and verify with a screenshot.
-- The user directs the entire development flow with specific, copy-pasteable code. Follow their instructions precisely.
-- Be aware of a known issue with authentication state not persisting in the web preview. This may cause screens to incorrectly show a login prompt. This is a known, lower-priority issue.
-- The Display Tier feature is a **UI-only** concept. Do not attempt to modify the backend to support it. The frontend interprets existing backend data (, ) to determine which tier is unlocked.
+- **Your immediate task is to verify the new  screen.** It was just replaced with a large, user-provided patch. Use the frontend testing agent to check its UI and functionality.
+- **The Display Tier feature is now complete across all three hero screens.** The logic is shared and consistent. The key is the  object now being provided by the backend.
+- Be aware of the known authentication state persistence issue in the web preview. It can show a login prompt after navigation. This is a known, lower-priority issue that does not affect Expo Go.
+- The user provides very specific, complete code patches. Your main job is to apply them correctly, restart services, and verify. When a patch rewrites an entire file, use  with .
 
 **documents created in this job**
 - None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Post the hero-detail.tsx (LATEST)
-2.  **User**: Provides a UI-only patch for  to correctly handle  and introduces a new tier unlock mapping. Asks for the promotion/upgrade endpoint.
-3.  **User**: Inquires about the backend logic for initial hero star count, suspecting it's  and requesting it be changed to .
-4.  **User**: Provides the complete, refactored  code with the new 2Dlive shell and Display Tier system.
-5.  **User**: Asks for the  file to provide a converted version.
-6.  **User**: Re-iterates instructions for wrapping  and asks for  next. (This was mostly redundant).
-7.  **User**: Provides new background images for  and a patch to implement dynamic, act-specific backgrounds.
-8.  **User**: Provides a second-pass polished version of  to be applied.
-9.  **User**: Provides a fully merged  file to be applied.
-10. **User**: Asks for the full  code to perform the merge.
+1.  **User**: Provides the final, complete code for , which adds a Rarity Ascension panel and a How to earn shards hint. Asks for a full file replacement. (LATEST)
+2.  **User**: Provides the first complete rewrite of  to use the 2Dlive shell and optimistic UI.
+3.  **User**: Asks for the old  file.
+4.  **User**: Provides the complete code for .
+5.  **User**: Asks for all 681 lines of .
+6.  **User**: Asks for the  file to prepare a patch.
+7.  **User**: Provides a patch to update the styles in .
+8.  **User**: Provides an updated version of the Tier Selector UI for .
+9.  **User**: Provides a patch to update the  logic in .
+10. **User**: Provides a patch to refine state logic in , setting the default tier to 1 on load.
 
 **Project Health Check:**
 *   **Broken**: None.
@@ -170,7 +161,7 @@ expo: started.
 *   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).
 *   **RevenueCat**: Packages installed, but integration is disabled.
 *   **@azesmway/react-native-unity**: Scaffolding code exists but is not integrated.
-*   **expo-av**: Used for video playback.
+*   **expo-av**: Used for video playback in cinematics.
 
 **Testing status**
   - Testing agent used after significant changes: NO
@@ -184,8 +175,8 @@ expo: started.
     ]
 
 **Credentials to test flow:**
-- No hardcoded credentials. Use the standard login flow.
+- Use the standard login flow. The agent created a test user  during the session which may or may not persist. It's safer to create a new user if needed.
 
 **What agent forgot to execute**
-- The agent has meticulously followed the user's highly specific, iterative instructions. No tasks were forgotten. The workflow is entirely user-driven.
+- The agent meticulously followed the user's highly specific, iterative instructions. No tasks were forgotten. The workflow was entirely user-driven, and all provided patches were applied.
 </analysis>

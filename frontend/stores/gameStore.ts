@@ -1,12 +1,23 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { useState, useEffect } from 'react';
 
 // Centralized API wrappers - store actions use these (no direct URL construction)
-import { getUserHeroes, pullGacha as apiPullGacha, upgradeHero as apiUpgradeHero } from '../lib/api';
-
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+import {
+  getUserHeroes,
+  pullGacha as apiPullGacha,
+  upgradeHero as apiUpgradeHero,
+  registerUser as apiRegisterUser,
+  loginAuth,
+  triggerDailyLogin,
+  setPassword as apiSetPassword,
+  verifyAuthToken,
+  fetchUser as apiFetchUser,
+  fetchAllHeroesCatalog,
+  claimIdle,
+  getUserCR,
+  setProfilePicture,
+} from '../lib/api';
 
 // Storage keys
 const STORAGE_KEYS = {

@@ -69,24 +69,15 @@ export default function LoginRewardsScreen() {
   const claimReward = async (day: number) => {
     setIsClaiming(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/login-rewards/${user?.username}/claim/${day}`,
-        { method: 'POST' }
-      );
-      
-      if (response.ok) {
-        const result = await response.json();
-        setClaimedReward(result);
-        setShowClaimModal(true);
-        playClaimAnimation();
-        loadRewards();
-        fetchUser();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to claim');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to claim reward');
+      const result = await claimLoginReward(user?.username || '', day);
+      setClaimedReward(result);
+      setShowClaimModal(true);
+      playClaimAnimation();
+      loadRewards();
+      fetchUser();
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || 'Failed to claim reward';
+      Alert.alert('Error', errorMsg);
     } finally {
       setIsClaiming(false);
     }

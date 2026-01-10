@@ -161,8 +161,9 @@ export default function CampaignScreen() {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}/campaign/chapters?username=${user.username}`);
-      setChapters(response.data.chapters || []);
+      // Use centralized API wrapper
+      const data = await getCampaignChapters(user.username);
+      setChapters(data.chapters || []);
     } catch (error) {
       console.error('Error loading chapters:', error);
       Alert.alert('Error', 'Failed to load campaign data');
@@ -175,8 +176,9 @@ export default function CampaignScreen() {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}/campaign/chapter/${chapter.id}?username=${user.username}`);
-      setStages(response.data.stages || []);
+      // Use centralized API wrapper
+      const data = await getCampaignChapterDetail(user.username, String(chapter.id));
+      setStages(data.stages || []);
       setSelectedChapter(chapter);
       setActiveTab('stages');
     } catch (error) {
@@ -196,16 +198,14 @@ export default function CampaignScreen() {
     setBattleResult(null);
 
     try {
-      const response = await axios.post(
-        `${API_BASE}/campaign/stage/${selectedChapter.id}/${stage.stage}/complete?username=${user.username}`,
-        { stars: 3 } // Auto 3-star for MVP
-      );
+      // Use centralized API wrapper
+      const result = await completeCampaignStage(user.username, selectedChapter.id, stage.stage, 3);
 
-      setBattleResult({ ...response.data, victory: response.data.success });
+      setBattleResult({ ...result, victory: result.success });
 
       // Show dialogue if first clear
-      if (response.data.first_clear && response.data.dialogue) {
-        setDialogueLines(response.data.dialogue);
+      if (result.first_clear && result.dialogue) {
+        setDialogueLines(result.dialogue);
         setCurrentDialogueIndex(0);
         setShowDialogue(true);
       }
@@ -215,7 +215,7 @@ export default function CampaignScreen() {
       await loadChapterStages(selectedChapter);
 
     } catch (error: any) {
-      Alert.alert('Battle Failed', error.response?.data?.detail || 'Unable to complete stage');
+      Alert.alert('Battle Failed', error?.message || 'Unable to complete stage');
       setShowBattleModal(false);
     } finally {
       setIsBattling(false);

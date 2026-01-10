@@ -49,6 +49,21 @@ export async function promoteHeroStar(userHeroId: string, username: string) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// HERO PROGRESSION (read model for hero-progression screen)
+// GET /api/hero/{username}/hero/{heroId}/progression
+// NOTE: Falls back gracefully if endpoint doesn't exist
+// ─────────────────────────────────────────────────────────────
+
+export async function getHeroProgression(username: string, heroId: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/hero/${encodeURIComponent(u)}/hero/${encodeURIComponent(heroId)}/progression`);
+  return res.data;
+}
+
+// RULE: All hero endpoints live here.
+// Screens should not build URLs manually (prevents drift).
+
+// ─────────────────────────────────────────────────────────────
 // USER AUTH / PROFILE
 // ─────────────────────────────────────────────────────────────
 

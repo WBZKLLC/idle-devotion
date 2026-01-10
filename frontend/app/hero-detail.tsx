@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +18,14 @@ import COLORS from '../theme/colors';
 import { router, useLocalSearchParams } from 'expo-router';
 import HeroCinematicModal from '../components/HeroCinematicModal';
 import { getHeroCinematicVideo, heroNameToId, VIDEOS_AVAILABLE } from '../constants/heroCinematics';
+
+// ✅ Shared 2Dlive shell (UI-only)
+import {
+  CenteredBackground,
+  DivineOverlays,
+  SanctumAtmosphere,
+  GlassCard,
+} from '../components/DivineShell';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'N': '#9e9e9e',
@@ -36,6 +46,8 @@ export default function HeroDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, fetchUser } = useGameStore();
   const hydrated = useHydration();
+  const { width: screenW } = useWindowDimensions();
+  
   const [hero, setHero] = useState<any>(null);
   const [heroData, setHeroData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,11 +57,21 @@ export default function HeroDetailScreen() {
   const [showCinematicModal, setShowCinematicModal] = useState(false);
   const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
 
+  // ----------------------------
+  // HERO 5+ BACKGROUND ART
+  // ----------------------------
+  // Use the hero's image_url as background, or fallback to Sanctum
+  const hero5PlusArt = useMemo(() => {
+    if (heroData?.image_url) {
+      return { uri: heroData.image_url };
+    }
+    // Fallback to Sanctum environment if no hero image
+    return require('../assets/backgrounds/sanctum_environment_01.jpg');
+  }, [heroData?.image_url]);
+
   // Check if hero is at 5+ star (final ascension)
   const isFivePlusStar = useCallback(() => {
     if (!hero) return false;
-    // 5+ star is typically star_level >= 6 in most gacha games
-    // Adjust this condition based on your game's progression system
     return (hero.star_level || 0) >= 6;
   }, [hero]);
 
@@ -63,9 +85,8 @@ export default function HeroDetailScreen() {
   const handlePortraitTap = useCallback(() => {
     if (!heroData) return;
     
-    // Only trigger cinematic for 5+ star heroes
     if (!isFivePlusStar()) {
-      return; // Do nothing for non-5+ star heroes
+      return;
     }
     
     const heroId = heroNameToId(heroData.name);
@@ -75,7 +96,6 @@ export default function HeroDetailScreen() {
       setCinematicVideoSource(videoSource);
       setShowCinematicModal(true);
     } else {
-      // Fail safe: do nothing if video doesn't exist
       if (__DEV__) {
         console.log(`[HeroDetail] No cinematic video for ${heroId} at 5+ star`);
       }
@@ -93,7 +113,6 @@ export default function HeroDetailScreen() {
       setCinematicVideoSource(videoSource);
       setShowCinematicModal(true);
     } else {
-      // Fail safe: show message in DEV, do nothing in PROD
       if (__DEV__) {
         console.log(`[HeroDetail] Preview: No cinematic video available for ${heroId}`);
       }
@@ -114,7 +133,6 @@ export default function HeroDetailScreen() {
 
   const loadHeroData = async () => {
     try {
-      // Load user hero data
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user?.username}/heroes`
       );
@@ -138,19 +156,35 @@ export default function HeroDetailScreen() {
     return [color, `${color}88`];
   };
 
+  // Loading state with 2Dlive shell
   if (!hydrated || isLoading) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+      <View style={styles.container}>
+        <CenteredBackground 
+          source={require('../assets/backgrounds/sanctum_environment_01.jpg')} 
+          mode="contain" 
+          zoom={1.04} 
+        />
+        <SanctumAtmosphere />
+        <DivineOverlays vignette grain />
         <SafeAreaView style={styles.centerContainer}>
           <ActivityIndicator size="large" color={COLORS.gold.primary} />
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     );
   }
 
+  // Error state with 2Dlive shell
   if (!hero || !heroData) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+      <View style={styles.container}>
+        <CenteredBackground 
+          source={require('../assets/backgrounds/sanctum_environment_01.jpg')} 
+          mode="contain" 
+          zoom={1.04} 
+        />
+        <SanctumAtmosphere />
+        <DivineOverlays vignette grain />
         <SafeAreaView style={styles.centerContainer}>
           <Ionicons name="alert-circle" size={48} color={COLORS.gold.primary} />
           <Text style={styles.errorText}>Hero not found</Text>
@@ -158,22 +192,40 @@ export default function HeroDetailScreen() {
             <Text style={styles.backBtnText}>Go Back</Text>
           </TouchableOpacity>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     );
   }
 
   const rarityColor = RARITY_COLORS[heroData.rarity] || RARITY_COLORS['N'];
 
   return (
-    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+    <View style={styles.container}>
+      {/* 2Dlive Background: Hero 5+ Art centered */}
+      <CenteredBackground 
+        source={hero5PlusArt} 
+        mode="contain" 
+        zoom={1.06} 
+        opacity={1}
+        waitForSize={false}
+      />
+      
+      {/* Atmosphere + Overlays */}
+      <SanctumAtmosphere />
+      <DivineOverlays vignette grain />
+
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
           </TouchableOpacity>
-          <Text style={styles.title}>Hero Details</Text>
-          <View style={styles.placeholder} />
+          <View style={styles.titleWrap}>
+            <Text style={styles.title} numberOfLines={1}>{heroData.name}</Text>
+            <Text style={styles.rarityLabel}>{heroData.rarity} • {heroData.hero_class}</Text>
+          </View>
+          <View style={[styles.rarityBadgeHeader, { backgroundColor: rarityColor }]}>
+            <Text style={styles.rarityBadgeText}>{heroData.rarity}</Text>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -183,90 +235,75 @@ export default function HeroDetailScreen() {
             onPress={handlePortraitTap}
             activeOpacity={isFivePlusStar() ? 0.8 : 1}
           >
-            <LinearGradient
-              colors={getRarityGradient(heroData.rarity)}
-              style={styles.portraitGradient}
-            >
-              {/* Static glow overlay */}
-              <View 
-                style={[
-                  styles.glowOverlay,
-                  { 
-                    opacity: 0.3,
-                    backgroundColor: rarityColor 
-                  }
-                ]} 
-              />
-              
-              {/* Hero image - Static */}
-              <View style={styles.heroImageContainer}>
-                {heroData.image_url ? (
-                  <Image
-                    source={{ uri: heroData.image_url }}
-                    style={{ width: 200, height: 280 }}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <View style={styles.placeholderImage}>
+            <GlassCard style={styles.portraitCard}>
+              <LinearGradient
+                colors={getRarityGradient(heroData.rarity)}
+                style={styles.portraitGradient}
+              >
+                {/* Static glow overlay */}
+                <View 
+                  style={[
+                    styles.glowOverlay,
+                    { 
+                      opacity: 0.3,
+                      backgroundColor: rarityColor 
+                    }
+                  ]} 
+                />
+                
+                {/* Hero image - Static */}
+                <View style={styles.heroImageContainer}>
+                  {heroData.image_url ? (
                     <Image
-                      source={require('../assets/images/icon.png')}
-                      style={{ width: 120, height: 120 }}
+                      source={{ uri: heroData.image_url }}
+                      style={{ width: 180, height: 250 }}
                       resizeMode="contain"
                     />
+                  ) : (
+                    <View style={styles.placeholderImage}>
+                      <Image
+                        source={require('../assets/images/icon.png')}
+                        style={{ width: 100, height: 100 }}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                </View>
+                
+                {/* 5+ Star Indicator */}
+                {isFivePlusStar() && (
+                  <View style={styles.fivePlusIndicator}>
+                    <Ionicons name="play-circle" size={18} color={COLORS.cream.pure} />
+                    <Text style={styles.fivePlusIndicatorText}>Tap for Cinematic</Text>
                   </View>
                 )}
-              </View>
-              
-              {/* 5+ Star Indicator - shows when hero is at max ascension */}
-              {isFivePlusStar() && (
-                <View style={styles.fivePlusIndicator}>
-                  <Ionicons name="play-circle" size={20} color={COLORS.cream.pure} />
-                  <Text style={styles.fivePlusIndicatorText}>Tap for Cinematic</Text>
+                
+                {/* Star Level */}
+                <View style={styles.starsContainer}>
+                  {Array.from({ length: hero.star_level || 1 }).map((_, i) => (
+                    <Ionicons key={i} name="star" size={14} color={COLORS.gold.primary} />
+                  ))}
                 </View>
-              )}
-              
-              {/* Rarity Badge */}
-              <View style={[styles.rarityBadge, { backgroundColor: rarityColor }]}>
-                <Text style={styles.rarityText}>{heroData.rarity}</Text>
-              </View>
-              
-              {/* Star Level */}
-              <View style={styles.starsContainer}>
-                {Array.from({ length: hero.star_level || 1 }).map((_, i) => (
-                  <Ionicons key={i} name="star" size={16} color={COLORS.gold.primary} />
-                ))}
-              </View>
-            </LinearGradient>
+              </LinearGradient>
+            </GlassCard>
           </TouchableOpacity>
 
-          {/* Hero Name & Class */}
-          <View style={styles.nameContainer}>
-            <Text style={styles.heroName}>{heroData.name}</Text>
-            <View style={styles.classTag}>
-              <Ionicons 
-                name={CLASS_ICONS[heroData.hero_class] as any || 'person'} 
-                size={14} 
-                color={COLORS.cream.soft} 
-              />
-              <Text style={styles.classText}>{heroData.hero_class}</Text>
+          {/* Level & XP - Glass Card */}
+          <GlassCard style={styles.levelCardWrapper}>
+            <View style={styles.levelCard}>
+              <View style={styles.levelInfo}>
+                <Text style={styles.levelLabel}>Level</Text>
+                <Text style={styles.levelValue}>{hero.level || 1}</Text>
+              </View>
+              <View style={styles.xpBar}>
+                <View style={[styles.xpFill, { width: `${((hero.level || 1) % 10) * 10}%` }]} />
+              </View>
+              <View style={styles.levelInfo}>
+                <Text style={styles.levelLabel}>Rank</Text>
+                <Text style={styles.levelValue}>{hero.rank || 1}</Text>
+              </View>
             </View>
-            <Text style={styles.elementText}>Element: {heroData.element}</Text>
-          </View>
-
-          {/* Level & XP */}
-          <View style={styles.levelCard}>
-            <View style={styles.levelInfo}>
-              <Text style={styles.levelLabel}>Level</Text>
-              <Text style={styles.levelValue}>{hero.level || 1}</Text>
-            </View>
-            <View style={styles.xpBar}>
-              <View style={[styles.xpFill, { width: `${((hero.level || 1) % 10) * 10}%` }]} />
-            </View>
-            <View style={styles.levelInfo}>
-              <Text style={styles.levelLabel}>Rank</Text>
-              <Text style={styles.levelValue}>{hero.rank || 1}</Text>
-            </View>
-          </View>
+          </GlassCard>
 
           {/* Tab Navigation */}
           <View style={styles.tabBar}>
@@ -278,7 +315,7 @@ export default function HeroDetailScreen() {
               >
                 <Ionicons 
                   name={tab === 'stats' ? 'stats-chart' : tab === 'skills' ? 'flash' : 'shield'} 
-                  size={18} 
+                  size={16} 
                   color={activeTab === tab ? COLORS.navy.darkest : COLORS.cream.soft} 
                 />
                 <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
@@ -288,111 +325,102 @@ export default function HeroDetailScreen() {
             ))}
           </View>
 
-          {/* Tab Content */}
+          {/* Tab Content - Stats */}
           {activeTab === 'stats' && (
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Ionicons name="heart" size={24} color="#e74c3c" />
-                <Text style={styles.statValue}>{hero.current_hp?.toLocaleString() || heroData.base_hp}</Text>
-                <Text style={styles.statLabel}>HP</Text>
+            <GlassCard>
+              <Text style={styles.sectionTitle}>Combat Stats</Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statRow}>
+                  <Ionicons name="heart" size={18} color="#e74c3c" />
+                  <Text style={styles.statLabel}>HP</Text>
+                  <Text style={styles.statValue}>{hero.current_hp?.toLocaleString() || heroData.base_hp}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Ionicons name="flash" size={18} color="#f39c12" />
+                  <Text style={styles.statLabel}>ATK</Text>
+                  <Text style={styles.statValue}>{hero.current_atk?.toLocaleString() || heroData.base_atk}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Ionicons name="shield" size={18} color="#3498db" />
+                  <Text style={styles.statLabel}>DEF</Text>
+                  <Text style={styles.statValue}>{hero.current_def?.toLocaleString() || heroData.base_def}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Ionicons name="speedometer" size={18} color="#9b59b6" />
+                  <Text style={styles.statLabel}>SPD</Text>
+                  <Text style={styles.statValue}>{heroData.base_speed || 100}</Text>
+                </View>
               </View>
-              <View style={styles.statCard}>
-                <Ionicons name="flash" size={24} color="#f39c12" />
-                <Text style={styles.statValue}>{hero.current_atk?.toLocaleString() || heroData.base_atk}</Text>
-                <Text style={styles.statLabel}>ATK</Text>
+              <View style={styles.elementRow}>
+                <Text style={styles.elementLabel}>Element</Text>
+                <Text style={styles.elementValue}>{heroData.element}</Text>
               </View>
-              <View style={styles.statCard}>
-                <Ionicons name="shield" size={24} color="#3498db" />
-                <Text style={styles.statValue}>{hero.current_def?.toLocaleString() || heroData.base_def}</Text>
-                <Text style={styles.statLabel}>DEF</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Ionicons name="speedometer" size={24} color="#9b59b6" />
-                <Text style={styles.statValue}>{heroData.base_speed || 100}</Text>
-                <Text style={styles.statLabel}>SPD</Text>
-              </View>
-            </View>
+            </GlassCard>
           )}
 
+          {/* Tab Content - Skills */}
           {activeTab === 'skills' && (
-            <View style={styles.skillsList}>
+            <GlassCard>
+              <Text style={styles.sectionTitle}>Divine Arts</Text>
               {(heroData.skills && heroData.skills.length > 0) ? heroData.skills.map((skill: any, idx: number) => (
-                <View key={idx} style={styles.skillCard}>
-                  <View style={[styles.skillIcon, skill.skill_type === 'passive' && styles.skillIconPassive]}>
+                <View key={idx} style={styles.skillPill}>
+                  <View style={styles.skillHeader}>
                     <Ionicons 
                       name={skill.skill_type === 'passive' ? 'sparkles' : 'flash'} 
-                      size={20} 
+                      size={16} 
                       color={skill.skill_type === 'passive' ? '#9b59b6' : COLORS.gold.primary} 
                     />
-                  </View>
-                  <View style={styles.skillInfo}>
-                    <View style={styles.skillHeader}>
-                      <Text style={styles.skillName}>{skill.name}</Text>
-                      <View style={[styles.skillTypeBadge, skill.skill_type === 'passive' && styles.skillTypeBadgePassive]}>
-                        <Text style={styles.skillTypeText}>{skill.skill_type?.toUpperCase()}</Text>
-                      </View>
+                    <Text style={styles.skillName}>{skill.name}</Text>
+                    <View style={[styles.skillTypeBadge, skill.skill_type === 'passive' && styles.skillTypeBadgePassive]}>
+                      <Text style={styles.skillTypeText}>{skill.skill_type?.toUpperCase()}</Text>
                     </View>
-                    <Text style={styles.skillDesc}>{skill.description}</Text>
-                    {skill.damage_multiplier && skill.damage_multiplier > 0 && (
-                      <View style={styles.skillStats}>
-                        <Text style={styles.skillStatText}>DMG: {(skill.damage_multiplier * 100).toFixed(0)}%</Text>
-                        {skill.cooldown > 0 && <Text style={styles.skillStatText}>CD: {skill.cooldown} turns</Text>}
-                      </View>
-                    )}
-                    {skill.buff_type && (
-                      <View style={styles.skillStats}>
-                        <Text style={styles.skillStatText}>Buff: +{(skill.buff_percent * 100).toFixed(0)}% {skill.buff_type.toUpperCase()}</Text>
-                      </View>
-                    )}
-                    {skill.heal_percent > 0 && (
-                      <View style={styles.skillStats}>
-                        <Text style={[styles.skillStatText, { color: '#2ecc71' }]}>Heal: {(skill.heal_percent * 100).toFixed(0)}%</Text>
-                      </View>
-                    )}
-                    <Text style={styles.skillUnlock}>
-                      {skill.unlock_level > 1 ? `Unlock at Lv.${skill.unlock_level}` : 
-                       skill.unlock_stars > 0 ? `Unlock at ${skill.unlock_stars}★` : 'Available'}
-                    </Text>
                   </View>
+                  <Text style={styles.skillDesc}>{skill.description}</Text>
+                  {skill.damage_multiplier && skill.damage_multiplier > 0 && (
+                    <Text style={styles.skillStat}>DMG: {(skill.damage_multiplier * 100).toFixed(0)}%</Text>
+                  )}
                 </View>
               )) : (
                 <View style={styles.noSkillsContainer}>
-                  <Ionicons name="flash-off" size={32} color={COLORS.navy.light} />
+                  <Ionicons name="flash-off" size={24} color={COLORS.navy.light} />
                   <Text style={styles.noSkillsText}>No skills data available</Text>
                 </View>
               )}
-            </View>
+            </GlassCard>
           )}
 
+          {/* Tab Content - Equipment */}
           {activeTab === 'equip' && (
-            <View style={styles.equipGrid}>
-              {['Weapon', 'Armor', 'Helmet', 'Boots', 'Ring', 'Amulet'].map((slot, idx) => (
-                <TouchableOpacity key={idx} style={styles.equipSlot}>
-                  <Ionicons 
-                    name={
-                      slot === 'Weapon' ? 'hammer' :
-                      slot === 'Armor' ? 'shirt' :
-                      slot === 'Helmet' ? 'disc' :
-                      slot === 'Boots' ? 'walk' :
-                      slot === 'Ring' ? 'ellipse' : 'diamond'
-                    } 
-                    size={28} 
-                    color={COLORS.navy.light} 
-                  />
-                  <Text style={styles.equipSlotName}>{slot}</Text>
-                  <Text style={styles.equipEmpty}>Empty</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <GlassCard>
+              <Text style={styles.sectionTitle}>Equipment</Text>
+              <View style={styles.equipGrid}>
+                {['Weapon', 'Armor', 'Helmet', 'Boots', 'Ring', 'Amulet'].map((slot, idx) => (
+                  <TouchableOpacity key={idx} style={styles.equipSlot}>
+                    <Ionicons 
+                      name={
+                        slot === 'Weapon' ? 'hammer' :
+                        slot === 'Armor' ? 'shirt' :
+                        slot === 'Helmet' ? 'disc' :
+                        slot === 'Boots' ? 'walk' :
+                        slot === 'Ring' ? 'ellipse' : 'diamond'
+                      } 
+                      size={24} 
+                      color={COLORS.cream.dark} 
+                    />
+                    <Text style={styles.equipSlotName}>{slot}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </GlassCard>
           )}
 
-          {/* Description */}
-          <View style={styles.descriptionCard}>
-            <Text style={styles.descriptionTitle}>Biography</Text>
+          {/* Biography */}
+          <GlassCard style={styles.descriptionCard}>
+            <Text style={styles.sectionTitle}>Biography</Text>
             <Text style={styles.descriptionText}>
               {heroData.description || `A powerful ${heroData.hero_class} with the element of ${heroData.element}.`}
             </Text>
-          </View>
+          </GlassCard>
 
           {/* Actions */}
           <View style={styles.actionButtons}>
@@ -404,7 +432,7 @@ export default function HeroDetailScreen() {
                 colors={[COLORS.gold.primary, COLORS.gold.dark]}
                 style={styles.upgradeGradient}
               >
-                <Ionicons name="arrow-up" size={20} color={COLORS.navy.darkest} />
+                <Ionicons name="arrow-up" size={18} color={COLORS.navy.darkest} />
                 <Text style={styles.upgradeText}>Level Up</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -412,12 +440,12 @@ export default function HeroDetailScreen() {
               style={styles.promoteButton}
               onPress={() => router.push(`/hero-progression?heroId=${id}`)}
             >
-              <Ionicons name="star" size={20} color={COLORS.gold.primary} />
-              <Text style={styles.promoteText}>⭐ Stars</Text>
+              <Ionicons name="star" size={18} color={COLORS.gold.primary} />
+              <Text style={styles.promoteText}>Stars</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Preview 5+ Cinematic Button - Only for UR/UR+ heroes not yet at 5+ star */}
+          {/* Preview 5+ Cinematic Button */}
           {isHighRarity() && !isFivePlusStar() && VIDEOS_AVAILABLE && (
             <TouchableOpacity 
               style={styles.preview5PlusButton}
@@ -428,7 +456,7 @@ export default function HeroDetailScreen() {
                 colors={['#9c27b0', '#7b1fa2']}
                 style={styles.preview5PlusGradient}
               >
-                <Ionicons name="play-circle" size={20} color={COLORS.cream.pure} />
+                <Ionicons name="play-circle" size={18} color={COLORS.cream.pure} />
                 <Text style={styles.preview5PlusText}>Preview 5+ Cinematic</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -443,28 +471,58 @@ export default function HeroDetailScreen() {
           heroName={heroData?.name || 'Hero'}
         />
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#05060A' },
   centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+  
+  // Header
   header: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: Platform.select({ ios: 8, android: 8, default: 8 }),
     paddingBottom: 12,
+    gap: 12,
   },
-  backButton: { padding: 8 },
-  title: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
-  placeholder: { width: 40 },
+  backButton: { 
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  titleWrap: { flex: 1 },
+  title: { 
+    fontSize: 18, 
+    fontWeight: '900', 
+    color: 'rgba(255,255,255,0.92)',
+    letterSpacing: 0.2,
+  },
+  rarityLabel: {
+    fontSize: 12,
+    color: 'rgba(255, 215, 140, 0.90)',
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  rarityBadgeHeader: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  rarityBadgeText: { fontSize: 12, fontWeight: '900', color: COLORS.cream.pure },
+  
   content: { padding: 16, paddingTop: 0, paddingBottom: 100 },
   
   // Portrait
   portraitContainer: { alignItems: 'center', marginBottom: 16 },
+  portraitCard: { padding: 0 },
   portraitGradient: { 
     borderRadius: 20, 
     padding: 16, 
@@ -481,80 +539,55 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   heroImageContainer: { 
-    width: 200, 
-    height: 280, 
+    width: 180, 
+    height: 250, 
     alignItems: 'center', 
     justifyContent: 'center',
     zIndex: 1,
   },
   placeholderImage: {
-    width: 120,
-    height: 120,
+    width: 100,
+    height: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.navy.medium,
-    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 50,
   },
-  rarityBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  rarityText: { fontSize: 12, fontWeight: 'bold', color: COLORS.cream.pure },
   starsContainer: { 
     flexDirection: 'row', 
     marginTop: 8,
     zIndex: 1,
+    gap: 2,
   },
-  
-  // Name
-  nameContainer: { alignItems: 'center', marginBottom: 16 },
-  heroName: { fontSize: 24, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 4 },
-  classTag: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 4, 
-    backgroundColor: COLORS.navy.medium, 
-    paddingHorizontal: 12, 
-    paddingVertical: 4, 
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  classText: { fontSize: 12, color: COLORS.cream.soft },
-  elementText: { fontSize: 12, color: COLORS.cream.dark },
   
   // Level Card
+  levelCardWrapper: { marginBottom: 16 },
   levelCard: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 12, 
-    padding: 16, 
-    marginBottom: 16 
   },
   levelInfo: { alignItems: 'center', width: 60 },
-  levelLabel: { fontSize: 10, color: COLORS.cream.dark },
-  levelValue: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary },
+  levelLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)' },
+  levelValue: { fontSize: 22, fontWeight: '900', color: 'rgba(255, 215, 140, 0.95)' },
   xpBar: { 
     flex: 1, 
-    height: 8, 
-    backgroundColor: COLORS.navy.darkest, 
-    borderRadius: 4, 
+    height: 6, 
+    backgroundColor: 'rgba(255,255,255,0.1)', 
+    borderRadius: 3, 
     marginHorizontal: 12,
     overflow: 'hidden',
   },
-  xpFill: { height: '100%', backgroundColor: COLORS.gold.primary, borderRadius: 4 },
+  xpFill: { height: '100%', backgroundColor: COLORS.gold.primary, borderRadius: 3 },
   
   // Tabs
   tabBar: { 
     flexDirection: 'row', 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 12, 
+    backgroundColor: 'rgba(255,255,255,0.06)', 
+    borderRadius: 14, 
     padding: 4, 
-    marginBottom: 16 
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   tab: { 
     flex: 1, 
@@ -562,100 +595,100 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'center', 
     paddingVertical: 10, 
-    borderRadius: 8, 
+    borderRadius: 10, 
     gap: 6 
   },
-  tabActive: { backgroundColor: COLORS.gold.primary },
-  tabText: { fontSize: 12, fontWeight: '600', color: COLORS.cream.soft },
-  tabTextActive: { color: COLORS.navy.darkest },
+  tabActive: { backgroundColor: 'rgba(255, 215, 140, 0.92)' },
+  tabText: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.7)' },
+  tabTextActive: { color: '#0A0B10' },
   
-  // Stats Grid
-  statsGrid: { 
+  // Stats
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.92)',
+    marginBottom: 12,
+    letterSpacing: 0.3,
+  },
+  statsGrid: { gap: 8 },
+  statRow: { 
     flexDirection: 'row', 
-    flexWrap: 'wrap', 
-    gap: 12, 
-    marginBottom: 16 
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
-  statCard: { 
+  statLabel: { 
     flex: 1, 
-    minWidth: '45%', 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 12, 
-    padding: 16, 
-    alignItems: 'center' 
+    fontSize: 13, 
+    color: 'rgba(255,255,255,0.7)', 
+    marginLeft: 10,
+    fontWeight: '600',
   },
-  statValue: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure, marginTop: 8 },
-  statLabel: { fontSize: 12, color: COLORS.cream.dark },
+  statValue: { 
+    fontSize: 14, 
+    fontWeight: '900', 
+    color: 'rgba(255,255,255,0.92)',
+  },
+  elementRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    marginTop: 4,
+  },
+  elementLabel: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+  elementValue: { fontSize: 13, color: 'rgba(255, 215, 140, 0.95)', fontWeight: '800' },
   
   // Skills
-  skillsList: { gap: 12, marginBottom: 16 },
-  skillCard: { 
-    flexDirection: 'row', 
-    alignItems: 'flex-start', 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 12, 
-    padding: 12 
-  },
-  skillIcon: { 
-    width: 40, 
-    height: 40, 
-    backgroundColor: COLORS.navy.darkest, 
-    borderRadius: 8, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  skillIconPassive: {
-    backgroundColor: '#9b59b620',
+  skillPill: {
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: '#9b59b6',
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 10,
   },
-  skillInfo: { flex: 1, marginLeft: 12 },
-  skillHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  skillName: { fontSize: 14, fontWeight: '600', color: COLORS.cream.pure },
-  skillTypeBadge: { backgroundColor: COLORS.gold.dark, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  skillTypeBadgePassive: { backgroundColor: '#9b59b6' },
-  skillTypeText: { fontSize: 8, fontWeight: 'bold', color: COLORS.cream.pure },
-  skillDesc: { fontSize: 12, color: COLORS.cream.soft, marginBottom: 4, lineHeight: 16 },
-  skillStats: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  skillStatText: { fontSize: 11, color: COLORS.gold.primary, fontWeight: '600' },
-  skillUnlock: { fontSize: 10, color: COLORS.cream.dark, marginTop: 4 },
-  skillLevel: { fontSize: 12, color: COLORS.gold.primary, fontWeight: '600' },
-  noSkillsContainer: { alignItems: 'center', paddingVertical: 30 },
-  noSkillsText: { fontSize: 14, color: COLORS.cream.dark, marginTop: 8 },
+  skillHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  skillName: { flex: 1, fontSize: 13, fontWeight: '800', color: 'rgba(255,255,255,0.92)' },
+  skillTypeBadge: { 
+    backgroundColor: 'rgba(255, 215, 140, 0.25)', 
+    paddingHorizontal: 8, 
+    paddingVertical: 3, 
+    borderRadius: 6 
+  },
+  skillTypeBadgePassive: { backgroundColor: 'rgba(155, 89, 182, 0.25)' },
+  skillTypeText: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.8)' },
+  skillDesc: { fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 17 },
+  skillStat: { fontSize: 11, color: 'rgba(255, 215, 140, 0.9)', fontWeight: '700', marginTop: 6 },
+  noSkillsContainer: { alignItems: 'center', paddingVertical: 20 },
+  noSkillsText: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 8 },
   
   // Equipment
   equipGrid: { 
     flexDirection: 'row', 
     flexWrap: 'wrap', 
-    gap: 12, 
-    marginBottom: 16 
+    gap: 10,
   },
   equipSlot: { 
-    width: '30%', 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 12, 
-    padding: 12, 
+    width: '30%',
+    aspectRatio: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.navy.light,
+    borderColor: 'rgba(255,255,255,0.1)',
     borderStyle: 'dashed',
   },
-  equipSlotName: { fontSize: 10, color: COLORS.cream.dark, marginTop: 4 },
-  equipEmpty: { fontSize: 10, color: COLORS.navy.light },
+  equipSlotName: { fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 6 },
   
   // Description
-  descriptionCard: { 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 12, 
-    padding: 16, 
-    marginBottom: 16 
-  },
-  descriptionTitle: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 8 },
-  descriptionText: { fontSize: 12, color: COLORS.cream.soft, lineHeight: 18 },
+  descriptionCard: { marginTop: 16, marginBottom: 16 },
+  descriptionText: { fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 18 },
   
   // Actions
   actionButtons: { flexDirection: 'row', gap: 12 },
-  upgradeButton: { flex: 2, borderRadius: 12, overflow: 'hidden' },
+  upgradeButton: { flex: 2, borderRadius: 14, overflow: 'hidden' },
   upgradeGradient: { 
     flexDirection: 'row', 
     alignItems: 'center', 
@@ -663,21 +696,22 @@ const styles = StyleSheet.create({
     paddingVertical: 14, 
     gap: 8 
   },
-  upgradeText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
+  upgradeText: { fontSize: 14, fontWeight: '900', color: COLORS.navy.darkest },
   promoteButton: { 
     flex: 1, 
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'center', 
-    backgroundColor: COLORS.navy.medium, 
-    borderRadius: 12, 
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14, 
     paddingVertical: 14, 
     gap: 6,
     borderWidth: 1,
-    borderColor: COLORS.gold.primary,
+    borderColor: 'rgba(255, 215, 140, 0.4)',
   },
-  promoteText: { fontSize: 14, fontWeight: '600', color: COLORS.gold.primary },
-  // 5+ Star Cinematic Indicator
+  promoteText: { fontSize: 13, fontWeight: '800', color: 'rgba(255, 215, 140, 0.95)' },
+  
+  // 5+ Star Indicators
   fivePlusIndicator: {
     position: 'absolute',
     bottom: 40,
@@ -689,39 +723,41 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 16,
+    borderRadius: 14,
     marginHorizontal: 20,
+    gap: 6,
   },
   fivePlusIndicatorText: {
     color: COLORS.cream.pure,
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 6,
+    fontSize: 11,
+    fontWeight: '700',
   },
-  // Preview 5+ Button
   preview5PlusButton: {
-    marginHorizontal: 16,
     marginTop: 12,
-    marginBottom: 8,
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
   },
   preview5PlusGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 8,
   },
   preview5PlusText: {
     color: COLORS.cream.pure,
-    fontWeight: 'bold',
-    fontSize: 14,
-    marginLeft: 8,
+    fontWeight: '800',
+    fontSize: 13,
   },
   
   // Error
-  errorText: { color: COLORS.cream.pure, fontSize: 18 },
-  backBtn: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
-  backBtnText: { color: COLORS.navy.darkest, fontSize: 16, fontWeight: 'bold' },
+  errorText: { color: COLORS.cream.pure, fontSize: 18, fontWeight: '700' },
+  backBtn: { 
+    backgroundColor: 'rgba(255, 215, 140, 0.92)', 
+    paddingHorizontal: 24, 
+    paddingVertical: 12, 
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  backBtnText: { color: '#0A0B10', fontSize: 14, fontWeight: '900' },
 });

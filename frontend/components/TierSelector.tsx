@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import type { DisplayTier } from '../lib/tier';
+import type { DisplayTier } from '../lib/progression';
 
 const TIER_LABELS: { tier: DisplayTier; label: string }[] = [
   { tier: 1, label: '1★' },

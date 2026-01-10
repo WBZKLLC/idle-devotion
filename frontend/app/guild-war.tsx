@@ -176,10 +176,8 @@ export default function GuildWarScreen() {
     setAttackResult(null);
     
     try {
-      const response = await axios.post(
-        `${API_BASE}/guild-war/attack/${user.username}?target_guild_id=${targetGuildId}`
-      );
-      setAttackResult(response.data);
+      const result = await attackGuildWarApi(user.username, targetGuildId);
+      setAttackResult(result);
       await loadAllData();
       fetchUser();
     } catch (error: any) {

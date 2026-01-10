@@ -108,13 +108,8 @@ export default function GuildScreen() {
 
   const loadDonationHistory = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/donations`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setDonationHistory(data.donations || []);
-      }
+      const data = await getGuildDonations(user?.username || '');
+      setDonationHistory(data.donations || []);
     } catch (error) {
       console.error('Failed to load donations:', error);
     }

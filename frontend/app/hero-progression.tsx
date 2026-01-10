@@ -592,8 +592,10 @@ export default function HeroProgressionScreen() {
             </Text>
 
             <View style={styles.tierRow}>
-              {TIER_LABEL_ARRAY.map(({ tier, label }) => {
-                const locked = tier > effectiveUnlockedTier;
+              {tierOptions.map(({ tier, label, kind }) => {
+                const isAwakening = kind === 'awakening';
+                // Awakening tiers always "preview only" while hard-off; active tiers check unlock
+                const locked = isAwakening ? true : tier > effectiveUnlockedTier;
                 const active = tier === previewTier;
 
                 return (
@@ -601,7 +603,12 @@ export default function HeroProgressionScreen() {
                     key={tier}
                     onPress={() => {
                       if (locked) {
-                        Alert.alert('Locked Tier', `Unlock ${label} by promoting stars.`);
+                        Alert.alert(
+                          isAwakening ? 'Awakening Preview' : 'Locked Tier',
+                          isAwakening
+                            ? 'Awakening is not active yet. This is preview-only.'
+                            : `Unlock ${label} by promoting stars.`
+                        );
                         return;
                       }
                       setPreviewTier(tier);
@@ -610,13 +617,18 @@ export default function HeroProgressionScreen() {
                       styles.tierChip,
                       active && styles.tierChipActive,
                       locked && styles.tierChipLocked,
+                      isAwakening && styles.tierChipAwakening,
                     ]}
                   >
                     <View style={styles.tierThumbWrap}>
                       <Image source={resolveTierArt(tier)} style={styles.tierThumb} resizeMode="cover" />
                       {locked && (
                         <View style={styles.lockOverlay}>
-                          <Ionicons name="lock-closed" size={14} color="rgba(255,255,255,0.9)" />
+                          <Ionicons 
+                            name={isAwakening ? 'sparkles' : 'lock-closed'} 
+                            size={14} 
+                            color="rgba(255,255,255,0.9)" 
+                          />
                         </View>
                       )}
                     </View>

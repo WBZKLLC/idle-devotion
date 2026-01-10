@@ -9,7 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "guard:hero": "node scripts/guard-no-hero-list-fallback.mjs"
+    "guard:hero": "node scripts/guard-no-hero-list-fallback.mjs",
+    "guard:tier": "node scripts/guard-no-direct-tier-imports.mjs",
+    "guard": "npm run guard:hero && npm run guard:tier"
   },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",

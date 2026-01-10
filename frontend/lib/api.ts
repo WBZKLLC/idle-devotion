@@ -380,6 +380,25 @@ export async function enhanceEquipment(
 }
 
 // ─────────────────────────────────────────────────────────────
+// LOGIN REWARDS (login-rewards.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getLoginRewardsStatus(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/login-rewards/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function claimLoginReward(username: string, day: number) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/login-rewards/${encodeURIComponent(u)}/claim/${day}`,
+    null
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // JOURNEY / DAILY TRACK (journey.tsx)
 // ─────────────────────────────────────────────────────────────
 

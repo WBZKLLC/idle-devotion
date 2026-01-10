@@ -75,7 +75,8 @@ function clampTier(n: any): DisplayTier {
 
 export default function HeroDetailScreen() {
   const { id, tier } = useLocalSearchParams<{ id: string; tier?: string }>();
-  const { user, fetchUser } = useGameStore();
+  // Cache-first hero lookup: prefer store userHeroes, fallback to API wrapper
+  const { user, fetchUser, userHeroes, fetchUserHeroes } = useGameStore();
   const hydrated = useHydration();
   const { width: screenW } = useWindowDimensions();
   

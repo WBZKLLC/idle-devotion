@@ -23,11 +23,13 @@ import {
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, router as Router } from 'expo-router';
-import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
+
+// Centralized API calls (SINGLE SOURCE OF TRUTH for endpoints)
+import { promoteHeroStar } from '../lib/api';
 
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {

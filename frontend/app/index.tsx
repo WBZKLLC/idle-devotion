@@ -95,8 +95,9 @@ export default function HomeScreen() {
 
   const loadIdleStatus = async () => {
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/idle/status/${user?.username}`);
-      setIdleStatus(await response.json());
+      // Use centralized API wrapper
+      const data = await getIdleStatus(user?.username || '');
+      setIdleStatus(data);
     } catch (error) { console.error('Failed to load idle status:', error); }
   };
 

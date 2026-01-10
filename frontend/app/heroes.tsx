@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,25 +8,44 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Pressable,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+
+// 2Dlive shell (UI-only)
+import {
+  CenteredBackground,
+  DivineOverlays,
+  SanctumAtmosphere,
+  GlassCard,
+} from '../components/DivineShell';
+
+// Sanctum background (matches your existing setup)
+const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
+
+// Display tiers (what the user can *choose to show*)
+// 6 stages: 1★,2★,3★,4★,5★,5★+
+type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
 
 export default function HeroesScreen() {
   const router = useRouter();
   const { user, userHeroes, fetchUserHeroes, isLoading } = useGameStore();
   const hydrated = useHydration();
+
   const [filterRarity, setFilterRarity] = useState<string | null>(null);
   const [filterClass, setFilterClass] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'level' | 'rarity' | 'power'>('rarity');
 
+  // Global display tier (what art tier we *prefer* to show)
+  // UI-side default is 1★ (this does NOT change backend grant tier)
+  const [displayTier, setDisplayTier] = useState<DisplayTier>(1);
+
   useEffect(() => {
-    if (hydrated && user) {
-      fetchUserHeroes();
-    }
+    if (hydrated && user) fetchUserHeroes();
   }, [hydrated, user?.username]);
 
   const getRarityColor = (rarity: string) => {
@@ -34,7 +53,7 @@ export default function HeroesScreen() {
   };
 
   const getRarityOrder = (rarity: string) => {
-    const order = { 'N': 0, 'R': 1, 'SR': 2, 'SSR': 3, 'SSR+': 4, 'UR': 5, 'UR+': 6 };
+    const order = { N: 0, R: 1, SR: 2, SSR: 3, 'SSR+': 4, UR: 5, 'UR+': 6 };
     return order[rarity as keyof typeof order] || 0;
   };
 
@@ -47,22 +66,70 @@ export default function HeroesScreen() {
     }
   };
 
+  // ⭐ UI-only "default stars = 1"
+  // If backend returns 0/undefined, we treat it as 1 for display + derived power display.
+  const safeStars = (hero: any) => {
+    const s = Number(hero?.stars ?? 0);
+    return Math.max(1, isFinite(s) ? s : 1);
+  };
+
+  // Tier unlock rule (UI-only):
+  // - tiers 1..5 are unlocked by stars (min 1)
+  // - tier 6 (5★+) unlocked if awakening_level > 0 OR stars >= 6 (if your data ever uses 6)
+  const unlockedTierForHero = (hero: any): DisplayTier => {
+    const stars = safeStars(hero);
+    const awaken = Number(hero?.awakening_level ?? 0);
+
+    if (stars >= 6) return 6;
+    if (awaken > 0) return 6;
+    return (Math.min(5, stars) as DisplayTier);
+  };
+
+  // How far the user can set the GLOBAL display tier
+  // (Must not allow them to select tiers they haven't unlocked on ANY hero)
+  // If you'd rather make this per-hero only, tell me — but global is clean UX.
+  const userMaxUnlockedTier: DisplayTier = useMemo(() => {
+    if (!userHeroes || userHeroes.length === 0) return 1;
+    let max: DisplayTier = 1;
+    for (const h of userHeroes) {
+      const t = unlockedTierForHero(h);
+      if (t > max) max = t;
+    }
+    return max;
+  }, [userHeroes]);
+
+  // Clamp display tier if user loses access (edge case)
+  useEffect(() => {
+    if (displayTier > userMaxUnlockedTier) setDisplayTier(userMaxUnlockedTier);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userMaxUnlockedTier]);
+
   const calculatePower = (hero: any) => {
     const heroData = hero.hero_data;
     if (!heroData) return 0;
+
     const levelMult = 1 + (hero.level - 1) * 0.05;
-    const starMult = 1 + (hero.stars || 0) * 0.1;
+
+    // UI-only: use safeStars (min 1) so a "new hero" doesn't look broken
+    const starMult = 1 + (safeStars(hero) - 1) * 0.1;
+
     const awakenMult = 1 + (hero.awakening_level || 0) * 0.2;
-    return Math.floor((heroData.base_hp + heroData.base_atk * 3 + heroData.base_def * 2) * levelMult * starMult * awakenMult);
+
+    return Math.floor(
+      (heroData.base_hp + heroData.base_atk * 3 + heroData.base_def * 2) *
+        levelMult *
+        starMult *
+        awakenMult
+    );
   };
 
   const filteredAndSortedHeroes = userHeroes
-    .filter(hero => {
+    .filter((hero: any) => {
       if (filterRarity && hero.hero_data?.rarity !== filterRarity) return false;
       if (filterClass && hero.hero_data?.hero_class !== filterClass) return false;
       return true;
     })
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
       if (sortBy === 'level') return b.level - a.level;
       if (sortBy === 'power') return calculatePower(b) - calculatePower(a);
       if (sortBy === 'rarity') {
@@ -76,151 +143,239 @@ export default function HeroesScreen() {
   const RARITIES = ['SR', 'SSR', 'SSR+', 'UR', 'UR+'];
   const CLASSES = ['Warrior', 'Mage', 'Archer'];
 
+  // Display tier buttons
+  const TIER_LABELS: { tier: DisplayTier; label: string }[] = [
+    { tier: 1, label: '1★' },
+    { tier: 2, label: '2★' },
+    { tier: 3, label: '3★' },
+    { tier: 4, label: '4★' },
+    { tier: 5, label: '5★' },
+    { tier: 6, label: '5★+' },
+  ];
+
   if (!user) {
     return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+      <View style={styles.root}>
+        <CenteredBackground source={SANCTUM_BG} mode="contain" zoom={1.03} opacity={1} />
+        <SanctumAtmosphere />
+        <DivineOverlays vignette rays={false} grain />
+
         <SafeAreaView style={styles.centerContainer}>
-          <Text style={styles.errorText}>Please log in first</Text>
+          <GlassCard style={{ width: '100%', maxWidth: 420 }}>
+            <Text style={styles.errorTitle}>Please log in first</Text>
+            <Text style={styles.errorSub}>The Sanctum only opens to the sworn.</Text>
+            <Pressable style={styles.primaryBtn} onPress={() => router.push('/')}>
+              <Text style={styles.primaryBtnText}>Go to Login</Text>
+            </Pressable>
+          </GlassCard>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-      <SafeAreaView style={styles.container}>
+    <View style={styles.root}>
+      <CenteredBackground source={SANCTUM_BG} mode="contain" zoom={1.03} opacity={1} />
+      <SanctumAtmosphere />
+      <DivineOverlays vignette rays={false} grain />
+
+      <SafeAreaView style={styles.safe}>
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Heroes</Text>
-          <Text style={styles.subtitle}>{userHeroes.length} Heroes Collected</Text>
+          <View style={styles.headerTitles}>
+            <Text style={styles.title}>Heroes</Text>
+            <Text style={styles.subtitle}>{userHeroes.length} Collected</Text>
+          </View>
+
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backBtnText}>‹</Text>
+          </Pressable>
+        </View>
+
+        {/* Display Tier Selector (gated by unlock) */}
+        <View style={styles.tierRowWrap}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tierRow}>
+            <Text style={styles.tierLabel}>Display Tier</Text>
+
+            {TIER_LABELS.map(({ tier, label }) => {
+              const locked = tier > userMaxUnlockedTier;
+              const active = displayTier === tier;
+
+              return (
+                <Pressable
+                  key={tier}
+                  onPress={() => !locked && setDisplayTier(tier)}
+                  style={[
+                    styles.tierChip,
+                    active && styles.tierChipActive,
+                    locked && styles.tierChipLocked,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tierChipText,
+                      active && styles.tierChipTextActive,
+                      locked && styles.tierChipTextLocked,
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <Text style={styles.tierHint}>
+            Unlocked up to: {TIER_LABELS.find(t => t.tier === userMaxUnlockedTier)?.label}
+          </Text>
         </View>
 
         {/* Filter Bar */}
-        <View style={styles.filterContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            <TouchableOpacity
+        <View style={styles.blockPad}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <Pressable
               style={[styles.filterChip, !filterRarity && styles.filterChipActive]}
               onPress={() => setFilterRarity(null)}
             >
               <Text style={[styles.filterText, !filterRarity && styles.filterTextActive]}>All</Text>
-            </TouchableOpacity>
+            </Pressable>
+
             {RARITIES.map(rarity => (
-              <TouchableOpacity
+              <Pressable
                 key={rarity}
                 style={[
                   styles.filterChip,
                   filterRarity === rarity && styles.filterChipActive,
-                  { borderColor: getRarityColor(rarity) }
+                  { borderColor: getRarityColor(rarity) },
                 ]}
                 onPress={() => setFilterRarity(filterRarity === rarity ? null : rarity)}
               >
-                <Text style={[
-                  styles.filterText,
-                  filterRarity === rarity && styles.filterTextActive,
-                  { color: filterRarity === rarity ? COLORS.navy.darkest : getRarityColor(rarity) }
-                ]}>
+                <Text
+                  style={[
+                    styles.filterText,
+                    filterRarity === rarity && styles.filterTextActive,
+                    { color: filterRarity === rarity ? '#0A0B10' : getRarityColor(rarity) },
+                  ]}
+                >
                   {rarity}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </ScrollView>
         </View>
 
         {/* Class Filter */}
-        <View style={styles.classFilterContainer}>
-          {CLASSES.map(cls => (
-            <TouchableOpacity
-              key={cls}
-              style={[styles.classChip, filterClass === cls && styles.classChipActive]}
-              onPress={() => setFilterClass(filterClass === cls ? null : cls)}
-            >
-              <Ionicons 
-                name={getClassIcon(cls) as any} 
-                size={16} 
-                color={filterClass === cls ? COLORS.navy.darkest : COLORS.gold.light} 
-              />
-              <Text style={[styles.classText, filterClass === cls && styles.classTextActive]}>
-                {cls}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.blockPad}>
+          <View style={styles.classRow}>
+            {CLASSES.map(cls => {
+              const active = filterClass === cls;
+              return (
+                <Pressable
+                  key={cls}
+                  style={[styles.classChip, active && styles.classChipActive]}
+                  onPress={() => setFilterClass(active ? null : cls)}
+                >
+                  <Ionicons
+                    name={getClassIcon(cls) as any}
+                    size={16}
+                    color={active ? '#0A0B10' : 'rgba(255, 215, 140, 0.9)'}
+                  />
+                  <Text style={[styles.classText, active && styles.classTextActive]}>{cls}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Sort Options */}
-        <View style={styles.sortContainer}>
-          <Text style={styles.sortLabel}>Sort by:</Text>
-          {(['rarity', 'level', 'power'] as const).map(option => (
-            <TouchableOpacity
-              key={option}
-              style={[styles.sortChip, sortBy === option && styles.sortChipActive]}
-              onPress={() => setSortBy(option)}
-            >
-              <Text style={[styles.sortText, sortBy === option && styles.sortTextActive]}>
-                {option.charAt(0).toUpperCase() + option.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.blockPad}>
+          <View style={styles.sortRow}>
+            <Text style={styles.sortLabel}>Sort</Text>
+            {(['rarity', 'level', 'power'] as const).map(option => {
+              const active = sortBy === option;
+              return (
+                <Pressable
+                  key={option}
+                  style={[styles.sortChip, active && styles.sortChipActive]}
+                  onPress={() => setSortBy(option)}
+                >
+                  <Text style={[styles.sortText, active && styles.sortTextActive]}>
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
+        {/* Grid */}
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.gold.primary} />
+            <ActivityIndicator size="large" color="rgba(255, 215, 140, 0.92)" />
             <Text style={styles.loadingText}>Loading heroes...</Text>
           </View>
         ) : (
-          <ScrollView 
-            style={styles.heroesGrid}
-            contentContainerStyle={styles.heroesGridContent}
-          >
-            <View style={styles.gridContainer}>
-              {filteredAndSortedHeroes.map((hero) => {
+          <ScrollView style={styles.gridScroll} contentContainerStyle={styles.gridContent}>
+            <View style={styles.grid}>
+              {filteredAndSortedHeroes.map((hero: any) => {
                 const heroData = hero.hero_data;
                 const power = calculatePower(hero);
-                
+
+                const unlockedTier = unlockedTierForHero(hero);
+                const effectiveTier: DisplayTier = (displayTier <= unlockedTier ? displayTier : unlockedTier);
+
                 return (
-                  <TouchableOpacity
+                  <Pressable
                     key={hero.id}
-                    style={styles.heroCard}
-                    onPress={() => router.push(`/hero-detail?id=${hero.id}`)}
+                    style={styles.heroCardOuter}
+                    onPress={() => {
+                      // Pass tier to hero-detail (UI-only). Detail screen can choose to respect it.
+                      router.push(`/hero-detail?id=${hero.id}&tier=${effectiveTier}`);
+                    }}
                   >
-                    <LinearGradient
-                      colors={[getRarityColor(heroData?.rarity) + '40', COLORS.navy.dark]}
-                      style={styles.heroCardGradient}
-                    >
-                      <Image
-                        source={{ uri: heroData?.image_url }}
-                        style={styles.heroImage}
-                      />
-                      
-                      {/* Rarity Badge */}
+                    <View style={styles.heroCardInner}>
+                      {/* Premium rarity wash */}
+                      <View style={[styles.heroCardWash, { borderColor: getRarityColor(heroData?.rarity) }]} />
+
+                      <Image source={{ uri: heroData?.image_url }} style={styles.heroImage} />
+
+                      {/* Rarity */}
                       <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(heroData?.rarity) }]}>
                         <Text style={styles.rarityText}>{heroData?.rarity}</Text>
                       </View>
-                      
-                      {/* Class Icon */}
+
+                      {/* Class */}
                       <View style={styles.classIcon}>
-                        <Ionicons 
-                          name={getClassIcon(heroData?.hero_class) as any} 
-                          size={14} 
-                          color={COLORS.gold.light} 
+                        <Ionicons
+                          name={getClassIcon(heroData?.hero_class) as any}
+                          size={14}
+                          color="rgba(255, 215, 140, 0.92)"
                         />
                       </View>
-                      
-                      {/* Stars */}
-                      {(hero.stars || 0) > 0 && (
-                        <View style={styles.starsContainer}>
-                          {Array.from({ length: hero.stars || 0 }).map((_, i) => (
-                            <Ionicons key={i} name="star" size={10} color={COLORS.gold.primary} />
-                          ))}
-                        </View>
-                      )}
-                      
-                      {/* Awakening Badge */}
+
+                      {/* Tier display (shows what tier is being displayed, and whether limited) */}
+                      <View style={styles.tierBadge}>
+                        <Text style={styles.tierBadgeText}>
+                          {effectiveTier === 6 ? '5★+' : `${effectiveTier}★`}
+                          {effectiveTier < displayTier ? ' (LOCKED)' : ''}
+                        </Text>
+                      </View>
+
+                      {/* Stars (always show at least 1) */}
+                      <View style={styles.starsContainer}>
+                        {Array.from({ length: Math.min(5, safeStars(hero)) }).map((_, i) => (
+                          <Ionicons key={i} name="star" size={10} color="rgba(255, 215, 140, 0.92)" />
+                        ))}
+                        {unlockedTier === 6 && <Text style={styles.plusMark}>+</Text>}
+                      </View>
+
+                      {/* Awakening */}
                       {(hero.awakening_level || 0) > 0 && (
                         <View style={styles.awakenBadge}>
                           <Text style={styles.awakenText}>⚡{hero.awakening_level}</Text>
                         </View>
                       )}
-                      
+
                       <View style={styles.heroInfo}>
                         <Text style={[styles.heroName, { color: getRarityColor(heroData?.rarity) }]} numberOfLines={1}>
                           {heroData?.name?.split(' ')[0]}
@@ -230,105 +385,288 @@ export default function HeroesScreen() {
                           <Text style={styles.powerText}>{power.toLocaleString()}</Text>
                         </View>
                       </View>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                    </View>
+                  </Pressable>
                 );
               })}
             </View>
-            
+
             {filteredAndSortedHeroes.length === 0 && (
               <View style={styles.emptyContainer}>
-                <Ionicons name="search" size={48} color={COLORS.navy.light} />
+                <Ionicons name="search" size={48} color="rgba(255,255,255,0.25)" />
                 <Text style={styles.emptyText}>No heroes match your filters</Text>
-                <TouchableOpacity onPress={() => { setFilterRarity(null); setFilterClass(null); }}>
+                <Pressable onPress={() => { setFilterRarity(null); setFilterClass(null); }}>
                   <Text style={styles.clearFilters}>Clear Filters</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             )}
+
+            <View style={{ height: 140 }} />
           </ScrollView>
         )}
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickActionButton}
-            onPress={() => router.push('/team-builder')}
-          >
-            <LinearGradient
-              colors={[COLORS.gold.primary, COLORS.gold.dark]}
-              style={styles.quickActionGradient}
-            >
-              <Ionicons name="people" size={20} color={COLORS.navy.darkest} />
-              <Text style={styles.quickActionText}>Team Builder</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.quickActionButton}
-            onPress={() => router.push('/summon-hub')}
-          >
-            <LinearGradient
-              colors={[COLORS.rarity.UR, COLORS.rarity['UR+']]}
-              style={styles.quickActionGradient}
-            >
-              <Ionicons name="sparkles" size={20} color={COLORS.cream.pure} />
-              <Text style={[styles.quickActionText, { color: COLORS.cream.pure }]}>Summon</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          <Pressable style={styles.quickActionOuter} onPress={() => router.push('/team-builder')}>
+            <View style={styles.quickActionInner}>
+              <Ionicons name="people" size={20} color="#0A0B10" />
+              <Text style={styles.quickActionTextDark}>Team Builder</Text>
+            </View>
+          </Pressable>
+
+          <Pressable style={styles.quickActionOuterAlt} onPress={() => router.push('/summon-hub')}>
+            <View style={styles.quickActionInnerAlt}>
+              <Ionicons name="sparkles" size={20} color="rgba(255,255,255,0.92)" />
+              <Text style={styles.quickActionTextLight}>Summon</Text>
+            </View>
+          </Pressable>
         </View>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12 },
-  title: { fontSize: 32, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
-  subtitle: { fontSize: 14, color: COLORS.cream.dark, textAlign: 'center', marginTop: 4 },
-  filterContainer: { paddingHorizontal: 16, marginBottom: 8 },
-  filterScroll: { flexDirection: 'row' },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: COLORS.navy.light, backgroundColor: COLORS.navy.medium },
-  filterChipActive: { backgroundColor: COLORS.gold.primary, borderColor: COLORS.gold.primary },
-  filterText: { fontSize: 12, fontWeight: 'bold', color: COLORS.cream.soft },
-  filterTextActive: { color: COLORS.navy.darkest },
-  classFilterContainer: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8, gap: 8 },
-  classChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 10, backgroundColor: COLORS.navy.medium, gap: 6, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
-  classChipActive: { backgroundColor: COLORS.gold.primary },
-  classText: { fontSize: 12, fontWeight: 'bold', color: COLORS.cream.soft },
-  classTextActive: { color: COLORS.navy.darkest },
-  sortContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12, gap: 8 },
-  sortLabel: { fontSize: 12, color: COLORS.cream.dark },
-  sortChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: COLORS.navy.medium },
-  sortChipActive: { backgroundColor: COLORS.gold.dark },
-  sortText: { fontSize: 11, color: COLORS.cream.soft },
-  sortTextActive: { color: COLORS.cream.pure, fontWeight: 'bold' },
+  root: { flex: 1, backgroundColor: '#05060A' },
+  safe: { flex: 1 },
+
+  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
+
+  header: {
+    paddingTop: Platform.select({ ios: 54, android: 34, default: 34 }),
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  headerTitles: { alignItems: 'center', flex: 1 },
+  title: { fontSize: 30, fontWeight: '900', color: 'rgba(255,255,255,0.94)' },
+  subtitle: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.60)', marginTop: 4 },
+
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  backBtnText: { color: 'rgba(255,255,255,0.92)', fontSize: 24, fontWeight: '900', marginTop: -2 },
+
+  tierRowWrap: { paddingHorizontal: 16, paddingBottom: 8 },
+  tierRow: { alignItems: 'center', gap: 8, paddingRight: 10 },
+  tierLabel: { color: 'rgba(255,255,255,0.62)', fontSize: 12, fontWeight: '800', marginRight: 4 },
+
+  tierChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  tierChipActive: {
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+    borderColor: 'rgba(255, 215, 140, 0.92)',
+  },
+  tierChipLocked: { opacity: 0.35 },
+  tierChipText: { color: 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: '900' },
+  tierChipTextActive: { color: '#0A0B10' },
+  tierChipTextLocked: { color: 'rgba(255,255,255,0.55)' },
+
+  tierHint: { marginTop: 6, color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: '700' },
+
+  blockPad: { paddingHorizontal: 16, marginTop: 8 },
+
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  filterChipActive: {
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+    borderColor: 'rgba(255, 215, 140, 0.92)',
+  },
+  filterText: { fontSize: 12, fontWeight: '900', color: 'rgba(255,255,255,0.70)' },
+  filterTextActive: { color: '#0A0B10' },
+
+  classRow: { flexDirection: 'row', gap: 10 },
+  classChip: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 140, 0.22)',
+  },
+  classChipActive: { backgroundColor: 'rgba(255, 215, 140, 0.92)' },
+  classText: { fontSize: 12, fontWeight: '900', color: 'rgba(255,255,255,0.72)' },
+  classTextActive: { color: '#0A0B10' },
+
+  sortRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sortLabel: { fontSize: 12, fontWeight: '800', color: 'rgba(255,255,255,0.55)' },
+  sortChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  sortChipActive: {
+    backgroundColor: 'rgba(255, 215, 140, 0.24)',
+    borderColor: 'rgba(255, 215, 140, 0.35)',
+  },
+  sortText: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.70)' },
+  sortTextActive: { color: 'rgba(255, 215, 140, 0.92)' },
+
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: COLORS.cream.soft, marginTop: 12, fontSize: 16 },
-  heroesGrid: { flex: 1 },
-  heroesGridContent: { paddingHorizontal: 12, paddingBottom: 100 },
-  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  heroCard: { width: '31%', aspectRatio: 0.75, marginBottom: 12, borderRadius: 12, overflow: 'hidden' },
-  heroCardGradient: { flex: 1, padding: 6 },
-  heroImage: { width: '100%', aspectRatio: 1, borderRadius: 8, borderWidth: 1, borderColor: COLORS.gold.dark + '40' },
-  rarityBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  rarityText: { fontSize: 8, fontWeight: 'bold', color: COLORS.cream.pure },
-  classIcon: { position: 'absolute', top: 10, right: 10, backgroundColor: COLORS.navy.darkest + '80', padding: 4, borderRadius: 6 },
-  starsContainer: { position: 'absolute', top: 30, left: 10, flexDirection: 'row', gap: 1 },
-  awakenBadge: { position: 'absolute', bottom: 40, right: 10, backgroundColor: COLORS.rarity['UR+'], paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
-  awakenText: { fontSize: 8, fontWeight: 'bold', color: COLORS.cream.pure },
-  heroInfo: { marginTop: 4 },
-  heroName: { fontSize: 11, fontWeight: 'bold', marginBottom: 2 },
+  loadingText: { color: 'rgba(255,255,255,0.70)', marginTop: 12, fontSize: 14, fontWeight: '700' },
+
+  gridScroll: { flex: 1, marginTop: 10 },
+  gridContent: { paddingHorizontal: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+
+  heroCardOuter: {
+    width: '31%',
+    aspectRatio: 0.76,
+    marginBottom: 12,
+    borderRadius: 14,
+    padding: 1.2,
+    backgroundColor: 'rgba(255, 215, 140, 0.18)', // subtle gold stroke
+  },
+  heroCardInner: {
+    flex: 1,
+    borderRadius: 13,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(10, 12, 18, 0.70)',
+    padding: 6,
+  },
+  heroCardWash: {
+    position: 'absolute',
+    inset: 0,
+    borderWidth: 1,
+    borderRadius: 13,
+    opacity: 0.45,
+  },
+
+  heroImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+
+  rarityBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 7 },
+  rarityText: { fontSize: 8, fontWeight: '900', color: 'rgba(255,255,255,0.95)' },
+
+  classIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    padding: 4,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+
+  tierBadge: {
+    position: 'absolute',
+    top: 34,
+    left: 10,
+    backgroundColor: 'rgba(0,0,0,0.48)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  tierBadgeText: { fontSize: 8, fontWeight: '900', color: 'rgba(255,255,255,0.85)' },
+
+  starsContainer: { position: 'absolute', top: 54, left: 10, flexDirection: 'row', gap: 1, alignItems: 'center' },
+  plusMark: { marginLeft: 2, color: 'rgba(255, 215, 140, 0.92)', fontSize: 10, fontWeight: '900' },
+
+  awakenBadge: {
+    position: 'absolute',
+    bottom: 40,
+    right: 10,
+    backgroundColor: 'rgba(255, 90, 140, 0.95)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 7,
+  },
+  awakenText: { fontSize: 8, fontWeight: '900', color: 'rgba(255,255,255,0.95)' },
+
+  heroInfo: { marginTop: 6 },
+  heroName: { fontSize: 11, fontWeight: '900', marginBottom: 2 },
   heroStats: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  levelText: { fontSize: 10, color: COLORS.cream.soft, fontWeight: 'bold' },
-  powerText: { fontSize: 9, color: COLORS.gold.light },
+  levelText: { fontSize: 10, color: 'rgba(255,255,255,0.72)', fontWeight: '900' },
+  powerText: { fontSize: 9, color: 'rgba(255, 215, 140, 0.85)', fontWeight: '900' },
+
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: 16, color: COLORS.cream.dark, marginTop: 12 },
-  clearFilters: { fontSize: 14, color: COLORS.gold.primary, marginTop: 8, fontWeight: 'bold' },
+  emptyText: { fontSize: 15, color: 'rgba(255,255,255,0.60)', marginTop: 12, fontWeight: '800' },
+  clearFilters: { fontSize: 14, color: 'rgba(255, 215, 140, 0.92)', marginTop: 8, fontWeight: '900' },
+
   quickActions: { position: 'absolute', bottom: 80, left: 16, right: 16, flexDirection: 'row', gap: 12 },
-  quickActionButton: { flex: 1, borderRadius: 12, overflow: 'hidden' },
-  quickActionGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 8 },
-  quickActionText: { fontSize: 14, fontWeight: 'bold', color: COLORS.navy.darkest },
-  errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
+
+  quickActionOuter: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 1.2,
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+  },
+  quickActionInner: {
+    borderRadius: 15,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+  },
+  quickActionTextDark: { fontSize: 14, fontWeight: '900', color: '#0A0B10' },
+
+  quickActionOuterAlt: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 1.2,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  quickActionInnerAlt: {
+    borderRadius: 15,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(10, 12, 18, 0.72)',
+  },
+  quickActionTextLight: { fontSize: 14, fontWeight: '900', color: 'rgba(255,255,255,0.92)' },
+
+  errorTitle: { fontSize: 18, fontWeight: '900', color: 'rgba(255,255,255,0.92)', textAlign: 'center' },
+  errorSub: { marginTop: 6, fontSize: 12.5, fontWeight: '700', color: 'rgba(255,255,255,0.62)', textAlign: 'center' },
+  primaryBtn: {
+    marginTop: 14,
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  primaryBtnText: { color: '#0A0B10', fontWeight: '900', fontSize: 14 },
 });

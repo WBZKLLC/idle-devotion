@@ -84,23 +84,13 @@ export default function CombatScreen() {
     setShowingTurns(false);
 
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/combat/detailed?username=${user.username}&enemy_name=${encodeURIComponent(selectedEnemy.name)}&enemy_power=${selectedEnemy.power}`,
-        { method: 'POST' }
-      );
-
-      if (response.ok) {
-        const result: CombatResult = await response.json();
-        setCombatResult(result);
-        setShowingTurns(true);
-        playTurnAnimations(result.turns);
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Battle failed');
-        setIsBattling(false);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to start battle');
+      // Use centralized API wrapper
+      const result: CombatResult = await startDetailedCombat(user.username, selectedEnemy.name, selectedEnemy.power);
+      setCombatResult(result);
+      setShowingTurns(true);
+      playTurnAnimations(result.turns);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to start battle');
       setIsBattling(false);
     } finally {
       setIsLoading(false);

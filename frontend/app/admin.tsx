@@ -81,16 +81,15 @@ export default function AdminPanelScreen() {
     
     setLoading(true);
     try {
-      // Search for exact user
-      const response = await axios.get(`${API_BASE}/user/${searchQuery.trim()}`);
-      if (response.data) {
+      const data = await adminGetUser(searchQuery.trim());
+      if (data) {
         setSearchResults([{
-          username: response.data.username,
-          level: response.data.level || 1,
-          vip_level: response.data.vip_level || 0,
-          is_banned: response.data.is_banned || false,
-          is_muted: response.data.is_muted || false,
-          created_at: response.data.created_at || 'Unknown',
+          username: data.username,
+          level: data.level || 1,
+          vip_level: data.vip_level || 0,
+          is_banned: data.is_banned || false,
+          is_muted: data.is_muted || false,
+          created_at: data.created_at || 'Unknown',
         }]);
       }
     } catch (error: any) {

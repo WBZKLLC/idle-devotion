@@ -362,42 +362,80 @@ export default function GachaScreen() {
               <Text style={styles.modalSubtitle}>Heroes have answered your call</Text>
             </View>
             
-            <ScrollView style={styles.resultScroll} showsVerticalScrollIndicator={false}>
-              {gachaResult?.heroes.map((hero: any, index: number) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.heroResultCard,
-                    { borderColor: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
-                  ]}
-                >
-                  <Image
-                    source={{ uri: hero.hero_data?.image_url }}
-                    style={styles.heroResultImage}
-                  />
-                  <View style={styles.heroResultInfo}>
-                    <Text style={styles.heroResultName}>{hero.hero_data?.name}</Text>
-                    <Text
-                      style={[
-                        styles.heroResultRarity,
-                        { color: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
-                      ]}
-                    >
-                      {hero.hero_data?.rarity}
-                    </Text>
-                    {hero.duplicates > 0 && (
-                      <View style={styles.duplicateBadge}>
-                        <Text style={styles.duplicateText}>+{hero.duplicates} Duplicate</Text>
-                      </View>
-                    )}
-                  </View>
+            {/* NEW TIER UNLOCKED BANNER */}
+            {newTierUnlocked && (
+              <View style={styles.tierUnlockBanner}>
+                <Ionicons name="sparkles" size={20} color="#FFD700" />
+                <View style={styles.tierUnlockText}>
+                  <Text style={styles.tierUnlockTitle}>NEW TIER UNLOCKED!</Text>
+                  <Text style={styles.tierUnlockSubtitle}>
+                    You can now view {TIER_LABELS[newTierUnlocked]} ascension art
+                  </Text>
                 </View>
-              ))}
+                <Ionicons name="sparkles" size={20} color="#FFD700" />
+              </View>
+            )}
+            
+            <ScrollView style={styles.resultScroll} showsVerticalScrollIndicator={false}>
+              {gachaResult?.heroes.map((hero: any, index: number) => {
+                // Show star count and shard info for each pulled hero
+                const heroStars = displayStars(hero);
+                const heroTier = unlockedTierForHero(hero);
+                
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.heroResultCard,
+                      { borderColor: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: hero.hero_data?.image_url }}
+                      style={styles.heroResultImage}
+                    />
+                    <View style={styles.heroResultInfo}>
+                      <Text style={styles.heroResultName}>{hero.hero_data?.name}</Text>
+                      <Text
+                        style={[
+                          styles.heroResultRarity,
+                          { color: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
+                        ]}
+                      >
+                        {hero.hero_data?.rarity}
+                      </Text>
+                      
+                      {/* Tier indicator */}
+                      <View style={styles.tierIndicator}>
+                        <Text style={styles.tierIndicatorText}>
+                          {heroStars > 0 ? `${heroStars}★` : 'NEW'} · Tier {TIER_LABELS[heroTier]}
+                        </Text>
+                      </View>
+                      
+                      {hero.duplicates > 0 && (
+                        <View style={styles.duplicateBadge}>
+                          <Text style={styles.duplicateText}>+{hero.duplicates} Shard</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
             </ScrollView>
 
-            <TouchableOpacity style={styles.closeButton} onPress={closeResult}>
-              <Text style={styles.closeButtonText}>Continue</Text>
-            </TouchableOpacity>
+            {/* Action Buttons */}
+            <View style={styles.modalActions}>
+              {newTierUnlocked && (
+                <TouchableOpacity style={styles.heroesButton} onPress={goToHeroes}>
+                  <Ionicons name="people" size={18} color="#0A0B10" />
+                  <Text style={styles.heroesButtonText}>View in Heroes</Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity style={styles.closeButton} onPress={closeResult}>
+                <Text style={styles.closeButtonText}>Continue</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

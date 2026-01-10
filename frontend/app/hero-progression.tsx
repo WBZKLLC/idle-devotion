@@ -199,6 +199,12 @@ export default function HeroProgressionScreen() {
   const shards = useMemo(() => clampInt(hero?.duplicates ?? 0, 0, 999999999), [hero?.duplicates]);
   const stars = useMemo(() => displayStars(hero), [hero]);
 
+  // Tier selector options (feature-flag aware for awakening tiers)
+  const tierOptions = useMemo(
+    () => tierSelectorOptions(user?.id ?? user?.username),
+    [user?.id, user?.username]
+  );
+
   // Use centralized progression helpers from tier.ts
   const isMaxStars = useMemo(() => isAtMaxStars(stars), [stars]);
   const nextStar = useMemo(() => nextBackendStar(stars), [stars]);

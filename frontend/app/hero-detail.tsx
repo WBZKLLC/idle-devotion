@@ -156,7 +156,8 @@ export default function HeroDetailScreen() {
   }, []);
 
   // Compute unlocked tier from hero stars/awakening (MUST be before early returns)
-  const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero]);
+  // Use hero?.id in deps to avoid reference changes causing hooks mismatch
+  const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero?.id, hero?.stars, hero?.awakening_level]);
 
   // Enforce tier gating reactively - if hero data changes, clamp selectedTier
   useEffect(() => {

@@ -346,12 +346,13 @@ export default function HeroesScreen() {
                 const unlockedTier = unlockedTierForHero(hero);
                 const effectiveTier: DisplayTier = (displayTier <= unlockedTier ? displayTier : unlockedTier);
 
+                const tierSource = resolveTierArt(heroData, effectiveTier);
+
                 return (
                   <Pressable
                     key={hero.id}
                     style={styles.heroCardOuter}
                     onPress={() => {
-                      // Pass tier to hero-detail (UI-only). Detail screen can choose to respect it.
                       router.push(`/hero-detail?id=${hero.id}&tier=${effectiveTier}`);
                     }}
                   >
@@ -359,7 +360,11 @@ export default function HeroesScreen() {
                       {/* Premium rarity wash */}
                       <View style={[styles.heroCardWash, { borderColor: getRarityColor(heroData?.rarity) }]} />
 
-                      <Image source={{ uri: heroData?.image_url }} style={styles.heroImage} />
+                      {tierSource ? (
+                        <Image source={tierSource} style={styles.heroImage} />
+                      ) : (
+                        <View style={styles.heroImageFallback} />
+                      )}
 
                       {/* Rarity */}
                       <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(heroData?.rarity) }]}>

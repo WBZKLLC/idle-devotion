@@ -119,15 +119,8 @@ export default function HeroDetailScreen() {
   const [showCinematicModal, setShowCinematicModal] = useState(false);
   const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
 
-  // Tier selection (1..6), gated by unlocks
+  // Tier selection (DEFAULT = 1-star art)
   const [selectedTier, setSelectedTier] = useState<number>(1);
-
-  // Keep selectedTier valid when hero loads or upgrades
-  useEffect(() => {
-    if (!hero) return;
-    const unlocked = unlockedTierFromHero(hero);
-    setSelectedTier(prev => (prev > unlocked ? unlocked : prev));
-  }, [hero?.stars, hero?.awakening_level]);
 
   // ----------------------------
   // TIER-BASED ART (background + portrait)

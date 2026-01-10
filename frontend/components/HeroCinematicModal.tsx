@@ -49,13 +49,54 @@ export default function HeroCinematicModal({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
 
-  // Reset state when modal opens
+  // Load video asset and get URI
   useEffect(() => {
-    if (visible) {
+    if (visible && videoSource) {
+      setIsLoading(true);
+      setHasError(false);
+      setVideoUri(null);
+      
+      // Load the asset to get the proper URI
+      const loadAsset = async () => {
+        try {
+          const asset = Asset.fromModule(videoSource);
+          await asset.downloadAsync();
+          
+          if (asset.localUri) {
+            setVideoUri(asset.localUri);
+            if (__DEV__) {
+              console.log('[HeroCinematicModal] Video loaded:', asset.localUri);
+            }
+          } else if (asset.uri) {
+            setVideoUri(asset.uri);
+            if (__DEV__) {
+              console.log('[HeroCinematicModal] Video URI:', asset.uri);
+            }
+          } else {
+            throw new Error('No URI available');
+          }
+        } catch (error) {
+          if (__DEV__) {
+            console.warn('[HeroCinematicModal] Asset load error:', error);
+          }
+          setHasError(true);
+          setIsLoading(false);
+        }
+      };
+      
+      loadAsset();
+    }
+  }, [visible, videoSource]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!visible) {
       setIsLoading(true);
       setHasError(false);
       setIsPlaying(false);
+      setVideoUri(null);
     }
   }, [visible]);
 

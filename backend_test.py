@@ -26,7 +26,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://tier-central.preview.emergentagent.com/api"
+BACKEND_URL = "https://frontend-refactor-15.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

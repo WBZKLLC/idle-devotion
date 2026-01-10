@@ -119,6 +119,21 @@ export default function HeroProgressionScreen() {
   // rollback for optimistic
   const rollbackRef = useRef<{ hero: any } | null>(null);
 
+  // Clear override when heroId changes (prevents stale override on navigation)
+  useEffect(() => {
+    setLocalHeroOverride(null);
+  }, [heroId]);
+
+  // Clear override when store catches up (optimistic → canonical)
+  useEffect(() => {
+    if (!localHeroOverride) return;
+    if (!storeHero) return;
+    // If store hero has same or newer data, clear the optimistic override
+    if (String(storeHero.id) === String(localHeroOverride.id)) {
+      setLocalHeroOverride(null);
+    }
+  }, [localHeroOverride, storeHero]);
+
   // Use imported displayStars and unlockedTierForHero from lib/tier.ts
 
   const effectiveUnlockedTier = useMemo<DisplayTier>(() => {

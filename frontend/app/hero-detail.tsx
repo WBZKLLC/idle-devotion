@@ -40,6 +40,71 @@ export default function HeroDetailScreen() {
   const [heroData, setHeroData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stats' | 'skills' | 'equip'>('stats');
+  
+  // 5+ Star Cinematic Modal State
+  const [showCinematicModal, setShowCinematicModal] = useState(false);
+  const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
+
+  // Check if hero is at 5+ star (final ascension)
+  const isFivePlusStar = useCallback(() => {
+    if (!hero) return false;
+    // 5+ star is typically star_level >= 6 in most gacha games
+    // Adjust this condition based on your game's progression system
+    return (hero.star_level || 0) >= 6;
+  }, [hero]);
+
+  // Check if hero is UR or UR+ (for preview button visibility)
+  const isHighRarity = useCallback(() => {
+    if (!heroData) return false;
+    return heroData.rarity === 'UR' || heroData.rarity === 'UR+';
+  }, [heroData]);
+
+  // Handle tap on hero portrait for 5+ cinematic
+  const handlePortraitTap = useCallback(() => {
+    if (!heroData) return;
+    
+    // Only trigger cinematic for 5+ star heroes
+    if (!isFivePlusStar()) {
+      return; // Do nothing for non-5+ star heroes
+    }
+    
+    const heroId = heroNameToId(heroData.name);
+    const videoSource = getHeroCinematicVideo(heroId);
+    
+    if (videoSource) {
+      setCinematicVideoSource(videoSource);
+      setShowCinematicModal(true);
+    } else {
+      // Fail safe: do nothing if video doesn't exist
+      if (__DEV__) {
+        console.log(`[HeroDetail] No cinematic video for ${heroId} at 5+ star`);
+      }
+    }
+  }, [heroData, isFivePlusStar]);
+
+  // Handle preview button tap (for UR/UR+ heroes not yet at 5+)
+  const handlePreview5PlusCinematic = useCallback(() => {
+    if (!heroData) return;
+    
+    const heroId = heroNameToId(heroData.name);
+    const videoSource = getHeroCinematicVideo(heroId);
+    
+    if (videoSource) {
+      setCinematicVideoSource(videoSource);
+      setShowCinematicModal(true);
+    } else {
+      // Fail safe: show message in DEV, do nothing in PROD
+      if (__DEV__) {
+        console.log(`[HeroDetail] Preview: No cinematic video available for ${heroId}`);
+      }
+    }
+  }, [heroData]);
+
+  // Close cinematic modal
+  const handleCloseCinematic = useCallback(() => {
+    setShowCinematicModal(false);
+    setCinematicVideoSource(null);
+  }, []);
 
   useEffect(() => {
     if (hydrated && user && id) {

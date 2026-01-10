@@ -41,6 +41,8 @@ import {
   TIER_LABELS,
   TIER_LABEL_ARRAY,
   MAX_STAR_TIER,
+  nextBackendStar,
+  isAtMaxStars,
 } from '../lib/tier';
 
 // 2Dlive shell (UI-only)

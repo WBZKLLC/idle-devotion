@@ -362,6 +362,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   fetchUserHeroes: async () => {
+    if (__DEV__) {
+      console.warn(
+        "[GameStore.fetchUserHeroes] Full roster fetch called. " +
+        "This should be used only by roster screens (e.g. /heroes), not hero-detail."
+      );
+    }
     const { user } = get();
     if (!user) return;
     

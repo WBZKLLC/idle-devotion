@@ -244,7 +244,7 @@ export default function HeroProgressionScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchUserHeroes, heroId, unlockedTierForHero, user?.username, userHeroes]);
+  }, [fetchUserHeroes, heroId, user?.username, userHeroes]);
 
   useEffect(() => {
     if (hydrated && user && heroId) loadHero();

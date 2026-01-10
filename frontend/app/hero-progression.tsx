@@ -304,8 +304,9 @@ export default function HeroProgressionScreen() {
     setHero(optimisticHero);
 
     try {
-      // Real endpoint:
+      // Canonical star promotion endpoint (backend):
       // POST /api/hero/{user_hero_id}/promote-star?username=...
+      // NOTE: heroId is UserHero.id (instance), NOT hero_id (template)
       const resp = await axios.post(
         `${API_BASE}/hero/${heroId}/promote-star`,
         null,

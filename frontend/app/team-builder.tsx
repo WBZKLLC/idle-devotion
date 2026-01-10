@@ -52,10 +52,8 @@ export default function TeamBuilderScreen() {
 
   const loadTeams = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/team/${user?.username}/full`
-      );
-      const data = await response.json();
+      // Use centralized API wrapper (no raw fetch)
+      const data = await getTeamsFull(user?.username || '');
       setTeams(data);
       
       // Load the active team if exists

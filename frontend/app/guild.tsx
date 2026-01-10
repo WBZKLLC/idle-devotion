@@ -77,18 +77,12 @@ export default function GuildScreen() {
 
   const loadGuildData = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setGuildData(data);
-      } else {
-        setGuildData(null);
-        loadAvailableGuilds();
-      }
+      const data = await getGuild(user?.username || '');
+      setGuildData(data);
     } catch (error) {
-      console.error('Failed to load guild:', error);
+      // User not in a guild
+      setGuildData(null);
+      loadAvailableGuilds();
     } finally {
       setIsLoading(false);
     }

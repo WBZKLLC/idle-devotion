@@ -1066,7 +1066,7 @@ export async function verifyPurchase(payload: {
 // GET /api/v1/features
 // ─────────────────────────────────────────────────────────────
 
-import type { RemoteFeaturesPayload } from './features';
+import type { RemoteFeaturesPayload } from './featureUtils';
 
 export async function fetchRemoteFeatures(): Promise<RemoteFeaturesPayload> {
   const res = await api.get('/v1/features');

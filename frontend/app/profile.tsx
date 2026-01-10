@@ -96,11 +96,11 @@ export default function ProfileScreen() {
     }
   };
 
-  const unequipFrame = async () => {
+  const handleUnequipFrame = async () => {
     if (!user) return;
     try {
       setLoadingFrames(true);
-      await axios.post(`${API_BASE}/user/${user.username}/unequip-frame`);
+      await unequipFrameApi(user.username);
       setEquippedFrame('default');
       await loadUserFrames();
       Alert.alert('Success', 'Frame unequipped');

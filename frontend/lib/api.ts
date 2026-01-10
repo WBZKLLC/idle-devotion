@@ -399,6 +399,81 @@ export async function pullEventBanner(username: string, bannerId: string, multi:
 }
 
 // ─────────────────────────────────────────────────────────────
+// GUILD (guild.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getGuild(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/guild/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function getGuildLevelInfo(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/guild/${encodeURIComponent(u)}/level-info`);
+  return res.data;
+}
+
+export async function getAvailableGuilds(limit: number = 20) {
+  const res = await api.get(`/guilds`, { params: { limit } });
+  return res.data;
+}
+
+export async function createGuildApi(username: string, guildName: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/guild/create`,
+    null,
+    { params: { username: u, guild_name: guildName } }
+  );
+  return res.data;
+}
+
+export async function joinGuildApi(username: string, guildId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/guild/join`,
+    null,
+    { params: { username: u, guild_id: guildId } }
+  );
+  return res.data;
+}
+
+export async function leaveGuildApi(username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/guild/leave`, null, { params: { username: u } });
+  return res.data;
+}
+
+export async function getGuildBoss(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/guild/${encodeURIComponent(u)}/boss`);
+  return res.data;
+}
+
+export async function attackGuildBoss(username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/guild/${encodeURIComponent(u)}/boss/attack`);
+  return res.data;
+}
+
+export async function getGuildDonations(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/guild/${encodeURIComponent(u)}/donations`);
+  return res.data;
+}
+
+export async function donateToGuildApi(username: string, tier: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/guild/${encodeURIComponent(u)}/donate`,
+    null,
+    { params: { tier } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // PROFILE / FRAMES (profile.tsx)
 // ─────────────────────────────────────────────────────────────
 

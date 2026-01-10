@@ -350,7 +350,7 @@ export default function HeroDetailScreen() {
                     Array.from({ length: displayStars(hero) }).map((_, i) => (
                       <Ionicons key={i} name="star" size={14} color={COLORS.gold.primary} />
                     ))}
-                  {unlockedTierFromHero(hero) === 6 && (
+                  {unlockedTier === 6 && (
                     <Text style={styles.plusMark}>+</Text>
                   )}
                 </View>

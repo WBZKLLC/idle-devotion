@@ -626,10 +626,7 @@ export default function HeroProgressionScreen() {
                   <View style={styles.previewRow}>
                     <Text style={styles.previewLabel}>Unlocked tier</Text>
                     <Text style={styles.previewValue}>
-                      {(() => {
-                        const simTier = unlockedTierForHero({ ...hero, stars: nextStar });
-                        return TIER_LABELS[simTier as DisplayTier] || `${simTier}★`;
-                      })()}
+                      {nextTier ? (TIER_LABELS[nextTier as DisplayTier] || `${nextTier}★`) : '—'}
                     </Text>
                   </View>
 

@@ -151,7 +151,7 @@ export default function HeroProgressionScreen() {
   const effectiveUnlockedTier = useMemo<DisplayTier>(() => {
     if (!hero) return 1;
     return unlockedTierForHero(hero);
-  }, [hero?.stars, hero?.awakening_level]);
+  }, [hero?.id, hero?.stars, hero?.awakening_level]);
 
   // Merged tier effect: initialize on hero change, clamp otherwise
   // Prevents effect ping-pong while keeping preview tier user-selectable
@@ -163,14 +163,13 @@ export default function HeroProgressionScreen() {
     // 1) Initialize previewTier when hero changes (or first load)
     if (lastHeroIdRef.current !== heroKey) {
       lastHeroIdRef.current = heroKey;
-      setPreviewTier(unlockedTierForHero(hero));
+      setPreviewTier(effectiveUnlockedTier);
       return;
     }
 
     // 2) Otherwise, only clamp to valid range (don't overwrite user preview choice)
-    const maxTier = effectiveUnlockedTier;
     setPreviewTier(prev => {
-      if (prev > maxTier) return maxTier;
+      if (prev > effectiveUnlockedTier) return effectiveUnlockedTier;
       if (prev < 1) return 1;
       return prev;
     });

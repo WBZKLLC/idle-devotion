@@ -202,6 +202,9 @@ export default function HeroDetailScreen() {
         if (userHero) {
           setHero(userHero);
           setHeroData(userHero.hero_data);
+
+          // Default displayed art to Tier 1 (NOT 3) every time we open a hero
+          setSelectedTier(1);
         }
       }
     } catch (error) {

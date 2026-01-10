@@ -32,7 +32,7 @@ function MaintenanceScreen() {
 
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {
-  const { isHydrated, restoreSession, user } = useGameStore();
+  const { isHydrated, hydrateAuth, user } = useGameStore();
   // Use selector pattern for better performance
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
   // REVENUECAT DISABLED - Uncomment when finalizing:
@@ -46,8 +46,9 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
         console.log('[App] Feature flags hydration error (non-blocking):', e);
       });
       
+      // Hydrate auth from storage (token-based, platform-safe)
       if (!isHydrated) {
-        await restoreSession();
+        await hydrateAuth();
       }
       // REVENUECAT DISABLED - Uncomment when finalizing:
       // try {
@@ -58,7 +59,7 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       setIsRestoring(false);
     };
     restore();
-  }, [hydrateRemoteFeatures]);
+  }, [hydrateRemoteFeatures, hydrateAuth, isHydrated]);
 
   // REVENUECAT DISABLED - Uncomment when finalizing:
   // useEffect(() => {

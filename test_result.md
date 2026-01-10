@@ -354,6 +354,18 @@ backend:
         agent: "testing"
         comment: "🎬 TESTED: 5+ Star Hero Cinematic Video Feature partially functional. ✅ WORKING: Preview 5+ button appears correctly on UR/UR+ heroes (Apollyon the Fallen tested), button visibility rules working (only UR/UR+ show button), modal opens with correct hero name and '5+ Star Ascension' title, graceful error handling implemented (no crashes), modal close functionality working, memory leak test passed (3 open/close cycles). ❌ ISSUE: Video loading fails - modal displays 'Failed to load video' error message. All 22 MP4 files confirmed present in /app/frontend/assets/videos/hero_5plus/. Root cause likely require() path resolution in React Native/Expo environment. T1-T3,T5 tests passed, T4 graceful error handling confirmed. F1-F7 failure conditions all passed (no crashes, proper error handling). RECOMMENDATION: Investigate video loading mechanism - may need expo-video package or different asset loading approach."
 
+  - task: "Hero Progression Screen (hero-progression.tsx)"
+    implemented: true
+    working: false
+    file: "/app/frontend/app/hero-progression.tsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "🎮 TESTED: Hero Progression Screen implementation verified but blocked by React hooks error. ✅ NAVIGATION SUCCESS: Successfully navigated Heroes → Apollyon → Stars button → hero-progression screen using Adam/Adam123! credentials. ✅ CODE REVIEW: hero-progression.tsx properly implemented with all required sections: 2Dlive shell styling, Star Promotion section with optimistic UI, Rarity Ascension scaffolding, Tier Preview Selector (1-6), Shard earning hints with Summon Hub links, Back navigation. ❌ CRITICAL ISSUE: React error 'Rendered more hooks than during the previous render' in hero-detail.tsx at line 248 (useMemo hook) prevents progression screen from loading properly. Error occurs in HeroDetailScreen component blocking navigation to progression. EVIDENCE: Screenshots show successful navigation path and React error screen. RECOMMENDATION: Fix React hooks dependency array issue in hero-detail.tsx useMemo at line 248 to resolve navigation blocking."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

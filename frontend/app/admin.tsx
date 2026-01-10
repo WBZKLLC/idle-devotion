@@ -161,9 +161,7 @@ export default function AdminPanelScreen() {
     
     setProcessing(true);
     try {
-      await axios.post(
-        `${API_BASE}/admin/mute-user/${selectedUser.username}?admin_key=${user.username}&duration_hours=${hours}`
-      );
+      await adminMuteUser(selectedUser.username, user.username, hours);
       Alert.alert('Success', `${selectedUser.username} has been muted for ${hours} hours`);
       setShowMuteModal(false);
       searchUsers(); // Refresh

@@ -29,7 +29,7 @@ import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
 
 // Feature flags (SINGLE SOURCE OF TRUTH)
-import { FEATURES } from '../lib/features';
+import { isFeatureEnabled } from '../lib/features';
 
 // Centralized API calls (SINGLE SOURCE OF TRUTH for endpoints)
 // getHeroProgression + promoteHeroStar + getUserHeroById - all hero endpoints live in lib/api.ts

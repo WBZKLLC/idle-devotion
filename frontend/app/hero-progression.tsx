@@ -29,6 +29,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
 
+// Centralized tier logic (SINGLE SOURCE OF TRUTH)
+import {
+  DisplayTier,
+  displayStars,
+  unlockedTierForHero,
+  resolveTierArt,
+  TIER_LABELS,
+  TIER_LABEL_ARRAY,
+} from '../lib/tier';
+
 // 2Dlive shell (UI-only)
 import {
   CenteredBackground,
@@ -47,18 +57,7 @@ const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
 
 const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
-type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
-
 const STAR_SHARD_COSTS: Record<number, number> = { 1: 10, 2: 20, 3: 40, 4: 80, 5: 160, 6: 320 };
-
-const TIER_LABELS: { tier: DisplayTier; label: string }[] = [
-  { tier: 1, label: '1★' },
-  { tier: 2, label: '2★' },
-  { tier: 3, label: '3★' },
-  { tier: 4, label: '4★' },
-  { tier: 5, label: '5★' },
-  { tier: 6, label: '5★+' },
-];
 
 const clampInt = (n: any, min: number, max: number) => {
   const v = Number(n);

@@ -171,49 +171,39 @@ export default function GuildScreen() {
     );
   };
 
-  const attackBoss = async () => {
+  const handleAttackBoss = async () => {
     if (!bossData || bossData.defeated) return;
     
     setIsAttacking(true);
     
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/boss/attack`,
-        { method: 'POST' }
-      );
+      const result = await attackGuildBoss(user?.username || '');
+      setLastAttackResult(result);
       
-      if (response.ok) {
-        const result = await response.json();
-        setLastAttackResult(result);
-        
-        // Update attack count
-        if (result.attacks_remaining !== undefined) {
-          setAttacksRemaining(result.attacks_remaining);
-          setMaxAttacks(result.attacks_max);
-        }
-        
-        // Update boss HP
-        setBossData((prev: any) => ({
-          ...prev,
-          current_hp: result.boss_hp_remaining,
-          defeated: result.defeated
-        }));
-        
-        if (result.defeated) {
-          Alert.alert(
-            '🎉 Boss Defeated!',
-            `Your contribution: ${result.contribution_percent}%\nRewards: ${JSON.stringify(result.rewards)}`
-          );
-          loadBossData();
-        }
-        
-        fetchUser();
-      } else {
-        const error = await response.json();
-        Alert.alert('Attack Failed', error.detail || 'Attack failed');
+      // Update attack count
+      if (result.attacks_remaining !== undefined) {
+        setAttacksRemaining(result.attacks_remaining);
+        setMaxAttacks(result.attacks_max);
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to attack boss');
+      
+      // Update boss HP
+      setBossData((prev: any) => ({
+        ...prev,
+        current_hp: result.boss_hp_remaining,
+        defeated: result.defeated
+      }));
+      
+      if (result.defeated) {
+        Alert.alert(
+          '🎉 Boss Defeated!',
+          `Your contribution: ${result.contribution_percent}%\nRewards: ${JSON.stringify(result.rewards)}`
+        );
+        loadBossData();
+      }
+      
+      fetchUser();
+    } catch (error: any) {
+      Alert.alert('Attack Failed', error.response?.data?.detail || 'Attack failed');
     } finally {
       setIsAttacking(false);
     }

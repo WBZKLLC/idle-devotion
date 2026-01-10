@@ -23,11 +23,6 @@ import Sidebar from '../components/Sidebar';
 // Raphael the Eternal - 5+ Star (6-star) Skin
 const RAPHAEL_5PLUS_IMAGE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
 
-// Background image centering config
-const BG_SCALE = 1.18;
-const BG_OFFSET_X = 0; // Horizontal micro-adjust (0 = perfectly centered)
-const BG_OFFSET_Y = 0; // Vertical micro-adjust (0 = perfectly centered)
-
 // Regal Color Palette - Enhanced for celestial theme
 const COLORS = {
   navy: { darkest: '#050a14', dark: '#0a1222', primary: '#0f1a2e', medium: '#1a2740', light: '#2d4263' },

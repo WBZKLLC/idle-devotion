@@ -66,8 +66,8 @@ export default function EventsScreen() {
     setLoading(true);
     try {
       // Fetch real event banners from backend
-      const response = await axios.get(`${API_BASE}/event-banners`);
-      const banners = response.data.banners || [];
+      const data = await getEventBanners();
+      const banners = data.banners || [];
       setEventBanners(banners);
       
       // Convert banners to event format

@@ -763,11 +763,77 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     fontWeight: '800',
   },
+  
+  // Tier Indicator (in result card)
+  tierIndicator: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  tierIndicatorText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '800',
+  },
+  
+  // Tier Unlock Banner
+  tierUnlockBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 215, 0, 0.5)',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 10,
+  },
+  tierUnlockText: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  tierUnlockTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#FFD700',
+    letterSpacing: 0.8,
+  },
+  tierUnlockSubtitle: {
+    fontSize: 11,
+    color: 'rgba(255, 215, 0, 0.8)',
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  
+  // Modal Actions
+  modalActions: {
+    marginTop: 16,
+    gap: 10,
+  },
+  heroesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFD700',
+    borderRadius: 16,
+    padding: 14,
+    gap: 8,
+  },
+  heroesButtonText: {
+    color: '#0A0B10',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  
   closeButton: {
     backgroundColor: 'rgba(255, 215, 140, 0.92)',
     borderRadius: 16,
     padding: 16,
-    marginTop: 16,
     alignItems: 'center',
   },
   closeButtonText: {

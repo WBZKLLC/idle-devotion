@@ -76,7 +76,7 @@ function clampTier(n: any): DisplayTier {
 export default function HeroDetailScreen() {
   const { id, tier } = useLocalSearchParams<{ id: string; tier?: string }>();
   // Cache-first hero lookup: prefer store userHeroes, fallback to API wrapper
-  const { user, fetchUser, userHeroes, fetchUserHeroes, selectUserHeroById } = useGameStore();
+  const { user, fetchUser, selectUserHeroById, getUserHeroById } = useGameStore();
   const hydrated = useHydration();
   const { width: screenW } = useWindowDimensions();
   
@@ -163,61 +163,53 @@ export default function HeroDetailScreen() {
   // Enforce tier gating reactively - if hero data changes, clamp selectedTier
   useEffect(() => {
     if (!hero) return;
-    const unlocked = unlockedTierForHero(hero);
-    if (selectedTier > unlocked) setSelectedTier(unlocked);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hero?.id, hero?.stars, hero?.awakening_level]);
+    if (selectedTier > unlockedTier) setSelectedTier(unlockedTier);
+  }, [unlockedTier, selectedTier]);
+
+  const applyHero = useCallback(
+    (userHero: any) => {
+      setHero(userHero);
+      setHeroData(userHero.hero_data);
+
+      // Respect tier param from heroes.tsx, but never exceed this hero's unlocked tier
+      const requestedTier = clampTier(tier ?? 1);
+      const unlocked = unlockedTierForHero(userHero);
+      const effective: DisplayTier = (requestedTier <= unlocked ? requestedTier : unlocked);
+      setSelectedTier(effective);
+    },
+    [tier]
+  );
 
   useEffect(() => {
-    if (hydrated && user && id) {
-      loadHeroData();
-    }
-  }, [hydrated, user, id]);
+    if (!hydrated || !user || !id) return;
 
-  // Cache-first hero loading: prefer store selector, fallback to API wrapper
-  const loadHeroData = async () => {
-    try {
-      setIsLoading(true);
+    let cancelled = false;
 
-      // Helper to apply hero data and set tier
-      const applyHero = (userHero: any) => {
-        setHero(userHero);
-        setHeroData(userHero.hero_data);
+    (async () => {
+      try {
+        setIsLoading(true);
 
-        // Respect tier param from heroes.tsx, but never exceed this hero's unlocked tier
-        const requestedTier = clampTier(tier ?? 1);
-        const unlocked = unlockedTierForHero(userHero);
-        const effective: DisplayTier = (requestedTier <= unlocked ? requestedTier : unlocked);
-        setSelectedTier(effective);
-      };
-
-      // 1) Cache-first: use store selector (single source of truth for cache lookup)
-      const cached = selectUserHeroById(id);
-      if (cached) {
-        applyHero(cached);
-        return;
-      }
-
-      // 2) If cache missing, fetch heroes list once into store, then select
-      if (user && (!userHeroes || userHeroes.length === 0)) {
-        await fetchUserHeroes();
-        // Re-check store after fetch using selector
-        const afterFetch = useGameStore.getState().selectUserHeroById(id);
-        if (afterFetch) {
-          applyHero(afterFetch);
+        // 1) Cache-first
+        const cached = selectUserHeroById(id);
+        if (cached) {
+          if (!cancelled) applyHero(cached);
           return;
         }
-      }
 
-      // 3) Final fallback: API wrapper fetch single hero (prevents full list re-fetch)
-      const fresh = await getUserHeroById(String(user?.username), String(id));
-      applyHero(fresh);
-    } catch (error) {
-      console.error('Failed to load hero:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // 2) Single-hero ensure (store handles caching + API fallback)
+        const fresh = await getUserHeroById(String(id));
+        if (!cancelled) applyHero(fresh);
+      } catch (error) {
+        console.error('Failed to load hero:', error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, user, id, selectUserHeroById, getUserHeroById, applyHero]);
 
   const getRarityGradient = (rarity: string): [string, string] => {
     const color = RARITY_COLORS[rarity] || RARITY_COLORS['N'];

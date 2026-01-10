@@ -44,6 +44,7 @@ import {
   nextBackendStar,
   isAtMaxStars,
   starsToTierIndex,
+  tierLabel,
 } from '../lib/tier';
 
 // 2Dlive shell (UI-only)

@@ -97,7 +97,7 @@ The following environment variables are used:
 
 | Variable | Description | Default |
 |----------|-------------|----------|
-| `EXPO_PUBLIC_BACKEND_URL` | Backend API URL | https://tier-preview.preview.emergentagent.com |
+| `EXPO_PUBLIC_BACKEND_URL` | Backend API URL | https://endpoint-shield-1.preview.emergentagent.com |
 | `EXPO_PUBLIC_REVENUECAT_API_KEY` | RevenueCat API Key | test_GHJByEeqdUHXOWbuvIWFFrQFXjB |
 
 ## Architecture

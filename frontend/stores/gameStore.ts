@@ -123,12 +123,25 @@ interface GameState {
 // Helper to save auth data
 const saveAuthData = async (username: string, token: string) => {
   try {
+    // Save to localStorage (web) - primary for web
     if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem(STORAGE_KEYS.USERNAME, username);
-      window.localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+      try {
+        window.localStorage.setItem(STORAGE_KEYS.USERNAME, username);
+        window.localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+        console.log('[saveAuthData] Saved to localStorage:', username);
+      } catch (e) {
+        console.log('[saveAuthData] localStorage save failed:', e);
+      }
     }
-    await AsyncStorage.setItem(STORAGE_KEYS.USERNAME, username);
-    await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    
+    // Also save to AsyncStorage (native)
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.USERNAME, username);
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+      console.log('[saveAuthData] Saved to AsyncStorage:', username);
+    } catch (e) {
+      console.log('[saveAuthData] AsyncStorage save failed:', e);
+    }
   } catch (e) {
     console.error('Failed to save auth data:', e);
   }

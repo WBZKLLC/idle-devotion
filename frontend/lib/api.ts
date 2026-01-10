@@ -270,6 +270,45 @@ export async function saveModeTeam(username: string, mode: string, heroIds: stri
 }
 
 // ─────────────────────────────────────────────────────────────
+// ARENA (arena.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getArenaRecord(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/arena/record/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function getArenaOpponents(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/arena/opponents/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function startArenaBattle(
+  username: string,
+  opponentUsername: string
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/arena/battle/${encodeURIComponent(u)}`,
+    { opponent: opponentUsername }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// LEADERBOARD (leaderboard.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getLeaderboard(type: string, limit: number = 50) {
+  const res = await api.get(`/leaderboard/${encodeURIComponent(type)}`, {
+    params: { limit },
+  });
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // CAMPAIGN / STORY (campaign.tsx)
 // ─────────────────────────────────────────────────────────────
 

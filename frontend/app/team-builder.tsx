@@ -154,37 +154,16 @@ export default function TeamBuilderScreen() {
       };
       
       if (selectedTeamId) {
-        // Update existing team
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/team/${selectedTeamId}/slots?username=${user?.username}`,
-          {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(slotsData),
-          }
-        );
-        
-        if (response.ok) {
-          Alert.alert('Success', 'Team saved successfully!');
-          loadTeams();
-        }
+        // Update existing team - use centralized API wrapper
+        await updateTeamSlots(selectedTeamId, user?.username || '', slotsData);
+        Alert.alert('Success', 'Team saved successfully!');
+        loadTeams();
       } else {
-        // Create new team
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/team/create-full?username=${user?.username}&team_name=Main Team`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(slotsData),
-          }
-        );
-        
-        if (response.ok) {
-          const newTeam = await response.json();
-          setSelectedTeamId(newTeam.id);
-          Alert.alert('Success', 'Team created successfully!');
-          loadTeams();
-        }
+        // Create new team - use centralized API wrapper
+        const newTeam = await createTeamFull(user?.username || '', 'Main Team', slotsData);
+        setSelectedTeamId(newTeam.id);
+        Alert.alert('Success', 'Team created successfully!');
+        loadTeams();
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to save team');

@@ -8,11 +8,10 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  ImageBackground,
   Image,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGameStore, useHydration } from '../stores/gameStore';
@@ -21,10 +20,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Sidebar from '../components/Sidebar';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
 // Raphael the Eternal - 5+ Star (6-star) Skin
 const RAPHAEL_5PLUS_IMAGE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
+
+// Background image centering config
+const BG_SCALE = 1.18;
+const BG_OFFSET_X = 0; // Horizontal micro-adjust (0 = perfectly centered)
+const BG_OFFSET_Y = 0; // Vertical micro-adjust (0 = perfectly centered)
 
 // Regal Color Palette - Enhanced for celestial theme
 const COLORS = {

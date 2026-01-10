@@ -142,9 +142,7 @@ export default function AdminPanelScreen() {
     
     setProcessing(true);
     try {
-      await axios.post(
-        `${API_BASE}/admin/set-vip/${selectedUser.username}?admin_key=${user.username}&vip_level=${level}`
-      );
+      await adminSetVIP(selectedUser.username, user.username, level);
       Alert.alert('Success', `VIP level set to ${level} for ${selectedUser.username}`);
       setShowVIPModal(false);
       setNewVIPLevel('');

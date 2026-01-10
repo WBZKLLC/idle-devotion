@@ -188,9 +188,7 @@ export default function AdminPanelScreen() {
           onPress: async () => {
             setProcessing(true);
             try {
-              await axios.post(
-                `${API_BASE}/admin/ban-user/${selectedUser.username}?admin_key=${user.username}&reason=${encodeURIComponent(reason)}`
-              );
+              await adminBanUser(selectedUser.username, user.username, reason);
               Alert.alert('Success', `${selectedUser.username} has been banned`);
               setShowBanModal(false);
               setBanReason('');

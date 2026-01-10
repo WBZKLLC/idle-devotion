@@ -3515,9 +3515,12 @@ async def get_campaign_leaderboard(limit: int = 100):
     return leaderboard
 
 # ==================== ABYSS MODE ====================
+# NOTE: /abyss/progress/{username} - LEGACY endpoint (basic)
+# Prefer /abyss/{username}/status (line ~5456) which includes boss info, zone progression, etc.
+# Keeping this for backwards compatibility with older UI code.
 @api_router.get("/abyss/progress/{username}")
 async def get_abyss_progress(username: str):
-    """Get user's abyss progress"""
+    """Get user's abyss progress (LEGACY - prefer /abyss/{username}/status)"""
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -3531,6 +3534,8 @@ async def get_abyss_progress(username: str):
     
     return convert_objectid(progress)
 
+# NOTE: /abyss/battle/{username}/{level} - LEGACY battle endpoint (complex multi-team)
+# Prefer /abyss/{username}/attack (line ~5549) which is simpler and used by UI
 @api_router.post("/abyss/battle/{username}/{level}")
 async def battle_abyss(username: str, level: int, request: AbyssBattleRequest):
     """Battle an abyss level - requires multiple teams for higher levels"""

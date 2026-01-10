@@ -31,6 +31,22 @@ const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
 // 6 stages: 1★,2★,3★,4★,5★,5★+
 type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
 
+// Resolve tier art from heroData.ascension_images (NO guessing)
+function resolveTierArt(heroData: any, tier: DisplayTier) {
+  const asc = heroData?.ascension_images;
+  const url =
+    asc && typeof asc === 'object'
+      ? (asc[String(tier)] as string | undefined)
+      : undefined;
+
+  if (typeof url === 'string' && url.length > 0) return { uri: url };
+
+  const base = heroData?.image_url;
+  if (typeof base === 'string' && base.length > 0) return { uri: base };
+
+  return null;
+}
+
 export default function HeroesScreen() {
   const router = useRouter();
   const { user, userHeroes, fetchUserHeroes, isLoading } = useGameStore();

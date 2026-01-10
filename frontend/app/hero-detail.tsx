@@ -346,16 +346,16 @@ export default function HeroDetailScreen() {
             <Text style={styles.sectionTitle}>Ascension Tier</Text>
 
             <View style={styles.tierRow}>
-              {[1,2,3,4,5,6].map((t) => {
+              {([1,2,3,4,5,6] as DisplayTier[]).map((t) => {
                 const locked = t > unlockedTier;
                 const active = t === selectedTier;
 
                 return (
                   <TouchableOpacity
                     key={t}
-                    activeOpacity={0.85}
                     disabled={locked}
-                    onPress={() => setSelectedTier(t)}
+                    activeOpacity={0.85}
+                    onPress={() => !locked && setSelectedTier(t)}
                     style={[
                       styles.tierChip,
                       active && styles.tierChipActive,
@@ -369,7 +369,7 @@ export default function HeroDetailScreen() {
                         locked && styles.tierChipTextLocked,
                       ]}
                     >
-                      {t === 6 ? '6★+' : `${t}★`}
+                      {t === 6 ? '5★+' : `${t}★`}
                     </Text>
 
                     {locked ? (
@@ -381,7 +381,7 @@ export default function HeroDetailScreen() {
             </View>
 
             <Text style={styles.tierHint}>
-              Unlocked: {unlockedTier === 6 ? '6★+' : `${unlockedTier}★`} (Stars: {displayStars(hero)} • Awakening: {hero?.awakening_level ?? 0})
+              Unlocked: {unlockedTier === 6 ? '5★+' : `${unlockedTier}★`} • Stars: {displayStars(hero)} • Awakening: {hero?.awakening_level ?? 0}
             </Text>
           </GlassCard>
 

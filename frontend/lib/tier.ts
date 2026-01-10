@@ -297,3 +297,17 @@ export function labelForTier(tier: number): string {
   assertTierIsActive(t);
   return TIER_LABELS[t as DisplayTier] ?? `${t}★`;
 }
+
+/**
+ * Stars label (distinct from tier labels).
+ * Backend stars are normalized 0..6 where 6 corresponds to 5★+ tier.
+ * For UI: show "NEW" when stars <= 0, otherwise show "<n>★".
+ * 
+ * USE THIS instead of inline ternaries like `heroStars > 0 ? \`${heroStars}★\` : 'NEW'`
+ */
+export function labelForStars(stars: number, opts?: { newLabel?: string }): string {
+  const newLabel = opts?.newLabel ?? 'NEW';
+  const s = normalizeBackendStars(stars);
+  if (s <= 0) return newLabel;
+  return `${s}★`;
+}

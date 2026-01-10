@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { verifyPurchase } from '../lib/api';
 
 // RevenueCat API configuration
 const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_GHJByEeqdUHXOWbuvIWFFrQFXjB';

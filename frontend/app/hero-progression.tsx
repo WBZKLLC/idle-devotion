@@ -689,7 +689,7 @@ export default function HeroProgressionScreen() {
           </GlassCard>
 
           {/* Awakening Preview - Only for 6★ heroes (GATED by feature flag) */}
-          {FEATURES.AWAKENING_PREVIEW_UI && effectiveUnlockedTier === 6 && (
+          {isFeatureEnabled('AWAKENING_PREVIEW_UI') && effectiveUnlockedTier === 6 && (
             <GlassCard style={styles.block}>
               <View style={styles.promoHeader}>
                 <Text style={styles.blockTitle}>Awakening Path</Text>

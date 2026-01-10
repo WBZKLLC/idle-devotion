@@ -65,9 +65,9 @@ export async function getHeroProgression(username: string, heroId: string) {
 // SINGLE HERO FETCH (fallback when hero not in store cache)
 // ─────────────────────────────────────────────────────────────
 
-// Flip this to true the moment backend supports a real single-hero endpoint.
-// When true, getUserHeroById will NEVER fallback to list fetch.
-const SINGLE_HERO_ENDPOINT_AVAILABLE = false as const;
+// SINGLE HERO ENDPOINT SWITCH
+// Flip to true only when backend supports: GET /user/{username}/heroes/{userHeroId}
+export const SINGLE_HERO_ENDPOINT_AVAILABLE = false as const;
 
 // Update this when backend endpoint is known.
 // Expected route: GET /user/{username}/heroes/{userHeroId}

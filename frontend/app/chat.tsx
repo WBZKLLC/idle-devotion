@@ -137,20 +137,18 @@ export default function ChatScreen() {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}/chat/messages`, {
-        params: {
-          channel_type: selectedChannel,
-          limit: 50,
-        }
+      const data = await getChatMessages({
+        channel_type: selectedChannel,
+        limit: 50,
       });
       
       // Fetch bubble info for each unique sender
       const messagesWithBubbles = await Promise.all(
-        (response.data || []).map(async (msg: ChatMessage) => {
+        (data || []).map(async (msg: ChatMessage) => {
           if (!bubbleCache[msg.sender_username]) {
             try {
-              const bubbleRes = await axios.get(`${API_BASE}/chat/user-bubble/${msg.sender_username}`);
-              bubbleCache[msg.sender_username] = bubbleRes.data;
+              const bubbleData = await getUserChatBubble(msg.sender_username);
+              bubbleCache[msg.sender_username] = bubbleData;
             } catch {
               bubbleCache[msg.sender_username] = DEFAULT_BUBBLE;
             }

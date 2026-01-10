@@ -1,0 +1,74 @@
+// /app/frontend/lib/api.ts
+// SINGLE SOURCE OF TRUTH for all backend API calls
+// Screens should import from here to prevent endpoint string drift
+
+import axios from 'axios';
+
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
+  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
+  : '/api';
+
+export const api = axios.create({
+  baseURL: API_BASE,
+  timeout: 20000,
+});
+
+export function requireUsername(username?: string) {
+  if (!username) throw new Error('Missing username');
+  return username;
+}
+
+// ─────────────────────────────────────────────────────────────
+// USER HEROES
+// ─────────────────────────────────────────────────────────────
+
+export async function fetchUserHeroes(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}/heroes`);
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// STAR PROMOTION (canonical endpoint)
+// POST /api/hero/{user_hero_id}/promote-star?username=...
+// ─────────────────────────────────────────────────────────────
+
+export async function promoteHeroStar(userHeroId: string, username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/hero/${encodeURIComponent(userHeroId)}/promote-star`,
+    null,
+    { params: { username: u } }
+  );
+  return res.data as {
+    success: boolean;
+    new_stars: number;
+    shards_used: number;
+    remaining_shards: number;
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// USER AUTH / PROFILE
+// ─────────────────────────────────────────────────────────────
+
+export async function fetchUser(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// GACHA / SUMMON
+// ─────────────────────────────────────────────────────────────
+
+export async function performSummon(username: string, summonType: 'single' | 'multi') {
+  const u = requireUsername(username);
+  const res = await api.post(`/gacha/summon`, null, {
+    params: { username: u, summon_type: summonType },
+  });
+  return res.data;
+}
+
+// Add more hero endpoints here ONLY.
+// Screens should import from lib/api.ts so route strings never drift again.

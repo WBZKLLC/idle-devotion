@@ -23,6 +23,7 @@ import {
   unlockedTierForHero,
   computeUserMaxUnlockedTier,
   TIER_LABELS,
+  labelForStars,
 } from '../lib/tier';
 
 // ✅ Shared 2Dlive shell (UI-only)

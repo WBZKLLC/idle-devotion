@@ -225,63 +225,42 @@ export default function HeroProgressionScreen() {
   }, [calcPower, hero, heroData, nextStar]);
 
   const loadHero = useCallback(async () => {
-    if (!user?.username || !heroId) return;
+    if (!heroId) return;
 
     setIsLoading(true);
     try {
-      // Try the progression endpoint first (via centralized api.ts)
-      // This may return richer data if backend supports it
-      let found: any = null;
-      
-      try {
-        const progressionData = await getHeroProgression(user.username, heroId);
-        if (progressionData) {
-          // If backend has a dedicated progression endpoint, use that data
-          found = progressionData;
-        }
-      } catch {
-        // Progression endpoint doesn't exist or failed - fall back to userHeroes
-      }
+      // ✅ Ensure pattern (cache-first, correct signature)
+      await getUserHeroById(String(heroId));
 
-      // Fallback: use store data
-      if (!found) {
-        // Ensure store heroes are loaded
-        if (!userHeroes || userHeroes.length === 0) {
-          await fetchUserHeroes();
-        }
-
-        // Prefer store data
-        found = (userHeroes || []).find((h: any) => h?.id === heroId);
-
-        // Last resort: use centralized API wrapper (no raw fetch)
-        if (!found) {
-          try {
-            found = await getUserHeroById(user.username, String(heroId));
-          } catch {
-            // getUserHeroById throws if not found - that's okay, found stays null
+      // Optional: progression metadata (never determines hero existence)
+      if (user?.username) {
+        try {
+          const progressionData = await getHeroProgression(user.username, String(heroId));
+          if (progressionData) {
+            // If you have progression-specific state, set it here.
+            // For now, progression endpoint just ensures data is fresh.
           }
+        } catch {
+          // ignore progression errors; do not destabilize hero rendering
         }
       }
 
-      if (!found) {
-        setHero(null);
-        setHeroData(null);
-        return;
+      // Set preview tier from ensured hero
+      const ensuredHero = selectUserHeroById(String(heroId));
+      if (ensuredHero) {
+        setPreviewTier(unlockedTierForHero(ensuredHero));
       }
-
-      setHero(found);
-      setHeroData(found.hero_data);
-
-      // default preview tier = currently unlocked max tier
-      setPreviewTier(unlockedTierForHero(found));
+      
+      // Clear any local override since store is now fresh
+      setLocalHeroOverride(null);
     } catch (e) {
       console.error('hero-progression load error', e);
-      setHero(null);
-      setHeroData(null);
+      // IMPORTANT: do not set hero to null here.
+      // Keep rendering stable based on selector + existing store state.
     } finally {
       setIsLoading(false);
     }
-  }, [fetchUserHeroes, heroId, user?.username, userHeroes]);
+  }, [heroId, user?.username, getUserHeroById, selectUserHeroById]);
 
   useEffect(() => {
     if (hydrated && user && heroId) loadHero();

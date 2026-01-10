@@ -129,27 +129,18 @@ export default function StoreScreen() {
           text: 'Purchase',
           onPress: async () => {
             try {
-              const response = await fetch(
-                `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/store/purchase-crystals?username=${user?.username}&package_id=${packageId}`,
-                { method: 'POST' }
+              // Use centralized API wrapper (critical for monetization)
+              const result = await apiPurchaseCrystals(user?.username || '', packageId);
+              Alert.alert(
+                'Purchase Successful!',
+                `You received ${result.crystals_received} crystals!\n` +
+                (result.first_purchase_bonus ? `First Purchase Bonus: +${result.first_purchase_bonus}!\n` : '') +
+                `\nTotal Crystals: ${result.new_crystal_total}`
               );
-              
-              if (response.ok) {
-                const result = await response.json();
-                Alert.alert(
-                  'Purchase Successful!',
-                  `You received ${result.crystals_received} crystals!\n` +
-                  (result.first_purchase_bonus ? `First Purchase Bonus: +${result.first_purchase_bonus}!\n` : '') +
-                  `\nTotal Crystals: ${result.new_crystal_total}`
-                );
-                fetchUser();
-                loadStoreData();
-              } else {
-                const error = await response.json();
-                Alert.alert('Error', error.detail || 'Purchase failed');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to process purchase');
+              fetchUser();
+              loadStoreData();
+            } catch (error: any) {
+              Alert.alert('Error', error?.message || 'Purchase failed');
             }
           }
         }

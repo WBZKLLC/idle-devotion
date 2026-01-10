@@ -287,15 +287,13 @@ export default function DungeonsScreen() {
         enhance: 'enhancement',
       };
 
-      const response = await axios.post(
-        `${API_BASE}/stages/${user.username}/sweep/${stageTypeMap[selectedType]}/${stageId}`,
-        { stage_id: stageId, count: sweepCount }
-      );
+      // Use centralized API wrapper
+      const result = await sweepDungeonStageByType(user.username, stageTypeMap[selectedType], stageId, sweepCount);
       
       Alert.alert(
         '✨ Sweep Complete!',
-        `Completed ${response.data.sweeps}x runs!\n\n` +
-        Object.entries(response.data.total_rewards || {})
+        `Completed ${result.sweeps}x runs!\n\n` +
+        Object.entries(result.total_rewards || {})
           .map(([key, val]) => `+${(val as number).toLocaleString()} ${key.replace(/_/g, ' ')}`)
           .join('\n')
       );
@@ -306,7 +304,7 @@ export default function DungeonsScreen() {
         fetchUser(),
       ]);
     } catch (error: any) {
-      Alert.alert('Sweep Failed', error.response?.data?.detail || 'Something went wrong');
+      Alert.alert('Sweep Failed', error?.message || 'Something went wrong');
     } finally {
       setIsBattling(false);
     }

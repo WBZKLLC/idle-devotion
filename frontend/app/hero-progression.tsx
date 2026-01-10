@@ -636,7 +636,7 @@ export default function HeroProgressionScreen() {
                     </Text>
                   </View>
 
-                  {unlockedTierForHero({ ...hero, stars: nextStar }) === 6 && (
+                  {nextTier === 6 && (
                     <View style={styles.unlockCallout}>
                       <Ionicons name="film" size={16} color="rgba(255,255,255,0.92)" />
                       <Text style={styles.unlockCalloutText}>Unlocks 5★+ final form (and cinematic, if available)</Text>

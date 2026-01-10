@@ -137,3 +137,23 @@ export async function upgradeHero(username: string, heroInstanceId: string) {
 
 // Add more hero endpoints here ONLY.
 // Screens should import from lib/api.ts so route strings never drift again.
+
+// ─────────────────────────────────────────────────────────────
+// SELENE BANNER (limited-time gacha)
+// ─────────────────────────────────────────────────────────────
+
+export async function getSeleneBannerStatus(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/selene-banner/status/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function pullSeleneBanner(username: string, multi: boolean) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/selene-banner/pull/${encodeURIComponent(u)}`,
+    null,
+    { params: { multi } }
+  );
+  return res.data;
+}

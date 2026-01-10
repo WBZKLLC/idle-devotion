@@ -149,6 +149,8 @@ export default function HeroProgressionScreen() {
   // Use centralized progression helpers from tier.ts
   const isMaxStars = useMemo(() => isAtMaxStars(stars), [stars]);
   const nextStar = useMemo(() => nextBackendStar(stars), [stars]);
+  // Compute next tier WITHOUT constructing a fake hero object
+  const nextTier = useMemo(() => nextStar === null ? null : starsToTierIndex(nextStar), [nextStar]);
   const shardsNeededForNext = useMemo(() => {
     if (!nextStar) return null;
     return STAR_SHARD_COSTS[nextStar] ?? 999;

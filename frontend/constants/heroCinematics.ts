@@ -81,32 +81,31 @@ export function hasCinematicVideo(heroId: string): boolean {
 /**
  * Hero cinematic video mappings
  * 
- * When videos are added, uncomment the require statements and set VIDEOS_AVAILABLE = true
+ * All 22 hero videos are now available
  */
 export const HERO_5PLUS_CINEMATICS: Partial<Record<HeroId, any>> = {
-  // Uncomment these when video files are added to /assets/videos/hero_5plus/
-  // azrael_the_fallen: require('../assets/videos/hero_5plus/azrael_the_fallen_5plus.mp4'),
-  // marcus_the_shield: require('../assets/videos/hero_5plus/marcus_the_shield_5plus.mp4'),
-  // kane_the_berserker: require('../assets/videos/hero_5plus/kane_the_berserker_5plus.mp4'),
-  // soren_the_flame: require('../assets/videos/hero_5plus/soren_the_flame_5plus.mp4'),
-  // lysander_the_frost: require('../assets/videos/hero_5plus/lysander_the_frost_5plus.mp4'),
-  // theron_the_storm: require('../assets/videos/hero_5plus/theron_the_storm_5plus.mp4'),
-  // kai_the_tempest: require('../assets/videos/hero_5plus/kai_the_tempest_5plus.mp4'),
-  // robin_the_hunter: require('../assets/videos/hero_5plus/robin_the_hunter_5plus.mp4'),
-  // darius_the_void: require('../assets/videos/hero_5plus/darius_the_void_5plus.mp4'),
-  // leon_the_paladin: require('../assets/videos/hero_5plus/leon_the_paladin_5plus.mp4'),
-  // lucian_the_divine: require('../assets/videos/hero_5plus/lucian_the_divine_5plus.mp4'),
-  // morgana_the_shadow: require('../assets/videos/hero_5plus/morgana_the_shadow_5plus.mp4'),
-  // artemis_the_swift: require('../assets/videos/hero_5plus/artemis_the_swift_5plus.mp4'),
-  // orion_the_mystic: require('../assets/videos/hero_5plus/orion_the_mystic_5plus.mp4'),
-  // phoenix_the_reborn: require('../assets/videos/hero_5plus/phoenix_the_reborn_5plus.mp4'),
-  // gale_the_windwalker: require('../assets/videos/hero_5plus/gale_the_windwalker_5plus.mp4'),
-  // seraphiel_the_radiant: require('../assets/videos/hero_5plus/seraphiel_the_radiant_5plus.mp4'),
-  // malachi_the_destroyer: require('../assets/videos/hero_5plus/malachi_the_destroyer_5plus.mp4'),
-  // selene_the_moonbow: require('../assets/videos/hero_5plus/selene_the_moonbow_5plus.mp4'),
-  // raphael_the_eternal: require('../assets/videos/hero_5plus/raphael_the_eternal_5plus.mp4'),
-  // michael_the_archangel: require('../assets/videos/hero_5plus/michael_the_archangel_5plus.mp4'),
-  // apollyon_the_fallen: require('../assets/videos/hero_5plus/apollyon_the_fallen_5plus.mp4'),
+  azrael_the_fallen: require('../assets/videos/hero_5plus/azrael_the_fallen_5plus.mp4'),
+  marcus_the_shield: require('../assets/videos/hero_5plus/marcus_the_shield_5plus.mp4'),
+  kane_the_berserker: require('../assets/videos/hero_5plus/kane_the_berserker_5plus.mp4'),
+  soren_the_flame: require('../assets/videos/hero_5plus/soren_the_flame_5plus.mp4'),
+  lysander_the_frost: require('../assets/videos/hero_5plus/lysander_the_frost_5plus.mp4'),
+  theron_the_storm: require('../assets/videos/hero_5plus/theron_the_storm_5plus.mp4'),
+  kai_the_tempest: require('../assets/videos/hero_5plus/kai_the_tempest_5plus.mp4'),
+  robin_the_hunter: require('../assets/videos/hero_5plus/robin_the_hunter_5plus.mp4'),
+  darius_the_void: require('../assets/videos/hero_5plus/darius_the_void_5plus.mp4'),
+  leon_the_paladin: require('../assets/videos/hero_5plus/leon_the_paladin_5plus.mp4'),
+  lucian_the_divine: require('../assets/videos/hero_5plus/lucian_the_divine_5plus.mp4'),
+  morgana_the_shadow: require('../assets/videos/hero_5plus/morgana_the_shadow_5plus.mp4'),
+  artemis_the_swift: require('../assets/videos/hero_5plus/artemis_the_swift_5plus.mp4'),
+  orion_the_mystic: require('../assets/videos/hero_5plus/orion_the_mystic_5plus.mp4'),
+  phoenix_the_reborn: require('../assets/videos/hero_5plus/phoenix_the_reborn_5plus.mp4'),
+  gale_the_windwalker: require('../assets/videos/hero_5plus/gale_the_windwalker_5plus.mp4'),
+  seraphiel_the_radiant: require('../assets/videos/hero_5plus/seraphiel_the_radiant_5plus.mp4'),
+  malachi_the_destroyer: require('../assets/videos/hero_5plus/malachi_the_destroyer_5plus.mp4'),
+  selene_the_moonbow: require('../assets/videos/hero_5plus/selene_the_moonbow_5plus.mp4'),
+  raphael_the_eternal: require('../assets/videos/hero_5plus/raphael_the_eternal_5plus.mp4'),
+  michael_the_archangel: require('../assets/videos/hero_5plus/michael_the_archangel_5plus.mp4'),
+  apollyon_the_fallen: require('../assets/videos/hero_5plus/apollyon_the_fallen_5plus.mp4'),
 };
 
 /**

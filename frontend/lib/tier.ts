@@ -173,6 +173,17 @@ export const tierLabel = (tier: number): string => {
 // ─────────────────────────────────────────────────────────────
 
 /**
+ * Clamp any tier value to the active range (1..MAX_ACTIVE_TIER).
+ * Prevents awakening tiers from leaking into active UI.
+ */
+export function clampTier(tier: any): DisplayTier {
+  const n = Number(tier);
+  if (!Number.isFinite(n)) return 1;
+  const t = Math.max(1, Math.min(MAX_ACTIVE_TIER, Math.floor(n)));
+  return t as DisplayTier;
+}
+
+/**
  * Clamp a requested tier (global or local) to what the hero has unlocked.
  */
 export const effectiveTierForHero = (

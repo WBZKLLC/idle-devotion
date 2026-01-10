@@ -213,3 +213,31 @@ export async function instantCollectIdle(username: string) {
   const res = await api.post(`/idle/instant-collect/${encodeURIComponent(u)}`);
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// HERO UPGRADE (hero-upgrade.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getHeroDetails(heroId: string, username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/hero/${encodeURIComponent(heroId)}/details`, {
+    params: { username: u }
+  });
+  return res.data;
+}
+
+export async function levelUpHero(heroId: string, username: string, levels: number = 1) {
+  const u = requireUsername(username);
+  const res = await api.post(`/hero/${encodeURIComponent(heroId)}/level-up`, null, {
+    params: { username: u, levels }
+  });
+  return res.data;
+}
+
+export async function awakenHero(heroId: string, username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/hero/${encodeURIComponent(heroId)}/awaken`, null, {
+    params: { username: u }
+  });
+  return res.data;
+}

@@ -337,49 +337,21 @@ export default function HeroDetailScreen() {
             </GlassCard>
           </TouchableOpacity>
 
-          {/* Tier Selector (gated) */}
-          <GlassCard style={{ marginBottom: 16 }}>
-            <Text style={styles.sectionTitle}>Ascension Tier</Text>
-
-            <View style={styles.tierRow}>
-              {([1,2,3,4,5,6] as DisplayTier[]).map((t) => {
-                const locked = t > unlockedTier;
-                const active = t === selectedTier;
-
-                return (
-                  <TouchableOpacity
-                    key={t}
-                    disabled={locked}
-                    activeOpacity={0.85}
-                    onPress={() => !locked && setSelectedTier(t)}
-                    style={[
-                      styles.tierChip,
-                      active && styles.tierChipActive,
-                      locked && styles.tierChipLocked,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.tierChipText,
-                        active && styles.tierChipTextActive,
-                        locked && styles.tierChipTextLocked,
-                      ]}
-                    >
-                      {t === 6 ? '5★+' : `${t}★`}
-                    </Text>
-
-                    {locked ? (
-                      <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.55)" />
-                    ) : null}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <Text style={styles.tierHint}>
-              Unlocked: {unlockedTier === 6 ? '5★+' : `${unlockedTier}★`} • Stars: {displayStars(hero)} • Awakening: {hero?.awakening_level ?? 0}
-            </Text>
-          </GlassCard>
+          {/* Tier Selector (animated, gated per-hero) */}
+          {hero && heroData && (
+            <GlassCard style={{ marginBottom: 16 }}>
+              <TierSelector
+                value={selectedTier}
+                maxUnlocked={unlockedTier}
+                onChange={setSelectedTier}
+                hint={false}
+                compact
+              />
+              <Text style={styles.tierHint}>
+                Unlocked: {unlockedTier === 6 ? '5★+' : `${unlockedTier}★`} • Stars: {displayStars(hero)} • Awakening: {hero?.awakening_level ?? 0}
+              </Text>
+            </GlassCard>
+          )}
 
           {/* Level & XP - Glass Card */}
           <GlassCard style={styles.levelCardWrapper}>

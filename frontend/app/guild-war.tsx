@@ -159,8 +159,8 @@ export default function GuildWarScreen() {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await axios.post(`${API_BASE}/guild-war/register/${user.username}`);
-      Alert.alert('⚔️ Registered!', response.data.message);
+      const result = await registerGuildWar(user.username);
+      Alert.alert('⚔️ Registered!', result.message);
       setIsRegistered(true);
       await loadAllData();
     } catch (error: any) {

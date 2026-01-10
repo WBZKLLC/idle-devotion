@@ -281,9 +281,6 @@ export default function HomeScreen() {
     );
   }
 
-  // Get dynamic screen dimensions using useWindowDimensions
-  const { width: screenW, height: screenH } = useWindowDimensions();
-  
   // Calculate centered background image dimensions
   const bgW = screenW * BG_SCALE;
   const bgH = screenH * BG_SCALE;

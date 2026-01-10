@@ -85,8 +85,12 @@ export const unlockedTierForHero = (hero: any): DisplayTier => {
   const stars = getHeroBackendStars(hero);
   const awaken = Number(hero?.awakening_level ?? 0);
 
-  // For now, cap at tier 6 (5★+). Awakening tiers will be added later.
-  if (awaken > 0 || stars >= 5) return 6;
+  // ⚠️ AWAKENING SYSTEM IS NOT ACTIVE YET.
+  // We intentionally do NOT return tiers 7–10 until the backend + UI are ready.
+  // When awakening is enabled, this will map awakening_level 1-4 to tiers 7-10.
+  if (awaken > 0) return 6;  // Cap awakened heroes at tier 6 for now
+  if (stars >= 5) return 6;  // 5+ stars = tier 6 (5★+)
+  
   return (Math.max(1, Math.min(5, stars + 1)) as DisplayTier);
 };
 

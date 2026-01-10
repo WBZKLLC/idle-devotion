@@ -24,9 +24,8 @@ import Sidebar from '../components/Sidebar';
 const RAPHAEL_5PLUS_IMAGE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
 
 // Dashboard background (Sanctum environment art) - NOT Raphael
-// Using a dark celestial sanctum/temple environment
-const SANCTUM_BG_IMAGE = 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=1200&q=80';
-// Dark purple/blue galaxy nebula - serves as Sanctum environment placeholder
+// Celestial sanctum/temple environment from CDN
+const SANCTUM_BG_IMAGE = 'https://customer-assets.emergentagent.com/job_epicvids/artifacts/f8lo3ejw_Sanctum.jpg';
 
 // Regal Color Palette - Enhanced for celestial theme
 const COLORS = {

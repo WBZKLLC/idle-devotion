@@ -56,18 +56,14 @@ export default function SeleneBannerScreen() {
   const loadBannerData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `${API_BASE}/selene-banner/status/${user?.username}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setBannerData(data);
-        
-        // Check if first time viewing (unlock cinematic)
-        if (!data.user_progress?.total_pulls && data.is_unlocked) {
-          // Show unlock cinematic
-          // setShowUnlockCinematic(true);
-        }
+      // Use centralized API wrapper (no raw fetch)
+      const data = await getSeleneBannerStatus(user?.username || '');
+      setBannerData(data);
+      
+      // Check if first time viewing (unlock cinematic)
+      if (!data.user_progress?.total_pulls && data.is_unlocked) {
+        // Show unlock cinematic
+        // setShowUnlockCinematic(true);
       }
     } catch (error) {
       console.error('Error loading Selene banner:', error);

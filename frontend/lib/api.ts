@@ -92,10 +92,17 @@ export async function getUserHeroById(username: string, userHeroId: string) {
     }
   }
 
+  // DEV warning: make "flag not flipped" obvious during testing
+  if (__DEV__) {
+    console.warn(
+      `[api.getUserHeroById] Using list fallback. If the backend now supports single-hero fetch, ` +
+      `flip SINGLE_HERO_ENDPOINT_AVAILABLE to true to enforce no-list behavior.`
+    );
+  }
+
   // TEMP (pre-endpoint): fallback to list and find.
   // This is allowed ONLY while SINGLE_HERO_ENDPOINT_AVAILABLE === false.
-  const res = await api.get(`/user/${encodeURIComponent(u)}/heroes`);
-  const list = Array.isArray(res.data) ? res.data : (res.data?.heroes ?? res.data ?? []);
+  const list = await getUserHeroes(u);
   const found = list.find((h: any) => String(h?.id) === String(userHeroId));
   if (!found) throw new Error(`Hero not found: ${userHeroId}`);
   return found;

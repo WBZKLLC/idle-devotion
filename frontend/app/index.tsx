@@ -723,7 +723,7 @@ export default function HomeScreen() {
 
         <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} user={user} cr={cr} />
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 

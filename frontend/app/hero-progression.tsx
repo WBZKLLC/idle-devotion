@@ -628,7 +628,7 @@ export default function HeroProgressionScreen() {
                   <View style={styles.previewRow}>
                     <Text style={styles.previewLabel}>Unlocked tier</Text>
                     <Text style={styles.previewValue}>
-                      {nextTier ? (TIER_LABELS[nextTier as DisplayTier] || `${nextTier}★`) : '—'}
+                      {nextTier ? labelForTier(nextTier) : '—'}
                     </Text>
                   </View>
 

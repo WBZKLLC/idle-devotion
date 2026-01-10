@@ -244,7 +244,7 @@ export default function HeroDetailScreen() {
     <View style={styles.container}>
       {/* 2Dlive Background: Tier-based Art centered */}
       <CenteredBackground 
-        source={tierArt} 
+        source={tierArtSource} 
         mode="contain" 
         zoom={1.06} 
         opacity={1}

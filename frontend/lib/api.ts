@@ -106,10 +106,14 @@ export async function getUserHeroById(username: string, userHeroId: string) {
 // Rule: screens import getUserHeroes()/getUserHeroById() — never hit /user/:username/heroes directly.
 // ─────────────────────────────────────────────────────────────
 
+function coerceHeroList(data: any) {
+  return Array.isArray(data) ? data : (data?.heroes ?? data ?? []);
+}
+
 export async function getUserHeroes(username: string) {
   const u = requireUsername(username);
   const res = await api.get(`/user/${encodeURIComponent(u)}/heroes`);
-  return Array.isArray(res.data) ? res.data : (res.data?.heroes ?? res.data ?? []);
+  return coerceHeroList(res.data);
 }
 
 // RULE: All hero endpoints live here.

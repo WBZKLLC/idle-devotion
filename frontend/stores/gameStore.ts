@@ -422,13 +422,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!user) throw new Error('No user found');
     
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/idle/claim?username=${user.username}`
-      );
+      const data = await claimIdle(user.username);
       
       // Refresh user data
       await get().fetchUser();
-      return response.data;
+      return data;
     } catch (error) {
       console.error('Failed to claim idle rewards:', error);
       throw error;
@@ -440,10 +438,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!user) throw new Error('No user found');
     
     try {
-      const response = await axios.get(
-        `${BACKEND_URL}/api/user/${user.username}/cr`
-      );
-      return response.data;
+      const data = await getUserCR(user.username);
+      return data;
     } catch (error) {
       console.error('Failed to fetch CR:', error);
       return { cr: 0, hero_count: 0 };
@@ -456,9 +452,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     set({ isLoading: true });
     try {
-      await axios.post(
-        `${BACKEND_URL}/api/user/${user.username}/profile-picture?hero_id=${heroId}`
-      );
+      await setProfilePicture(user.username, heroId);
       
       // Refresh user data
       await get().fetchUser();

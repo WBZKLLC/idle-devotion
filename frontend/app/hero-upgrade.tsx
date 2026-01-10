@@ -19,6 +19,9 @@ import COLORS from '../theme/colors';
 // Centralized API wrappers (no raw fetch in screens)
 import { getHeroDetails, levelUpHero as apiLevelUpHero, promoteHeroStar, awakenHero as apiAwakenHero } from '../lib/api';
 
+// Centralized tier logic (single source of truth for star/tier calculations)
+import { MAX_STAR_TIER, displayStars } from '../lib/tier';
+
 export default function HeroUpgradeScreen() {
   const { heroId } = useLocalSearchParams<{ heroId: string }>();
   const router = useRouter();

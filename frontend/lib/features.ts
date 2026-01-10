@@ -18,6 +18,7 @@ export const DEFAULT_FLAGS = {
   MAINTENANCE_MODE: false,
   CAMPAIGN_SWEEP: true,
   HERO_CINEMATICS: true,
+  HERO_PROGRESSION_ENABLED: true,
 } as const;
 
 export type FeatureKey = keyof typeof DEFAULT_FLAGS;

@@ -177,8 +177,12 @@ export default function HeroDetailScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Hero Portrait - Static (No animations) */}
-          <View style={styles.portraitContainer}>
+          {/* Hero Portrait - Tappable for 5+ Star Cinematic */}
+          <TouchableOpacity 
+            style={styles.portraitContainer}
+            onPress={handlePortraitTap}
+            activeOpacity={isFivePlusStar() ? 0.8 : 1}
+          >
             <LinearGradient
               colors={getRarityGradient(heroData.rarity)}
               style={styles.portraitGradient}
@@ -213,6 +217,14 @@ export default function HeroDetailScreen() {
                 )}
               </View>
               
+              {/* 5+ Star Indicator - shows when hero is at max ascension */}
+              {isFivePlusStar() && (
+                <View style={styles.fivePlusIndicator}>
+                  <Ionicons name="play-circle" size={20} color={COLORS.cream.pure} />
+                  <Text style={styles.fivePlusIndicatorText}>Tap for Cinematic</Text>
+                </View>
+              )}
+              
               {/* Rarity Badge */}
               <View style={[styles.rarityBadge, { backgroundColor: rarityColor }]}>
                 <Text style={styles.rarityText}>{heroData.rarity}</Text>
@@ -225,7 +237,7 @@ export default function HeroDetailScreen() {
                 ))}
               </View>
             </LinearGradient>
-          </View>
+          </TouchableOpacity>
 
           {/* Hero Name & Class */}
           <View style={styles.nameContainer}>

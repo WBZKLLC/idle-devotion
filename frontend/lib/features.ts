@@ -17,7 +17,7 @@ export const DEFAULT_FLAGS = {
   NEW_LOGIN_FLOW: false,
   MAINTENANCE_MODE: false,
   CAMPAIGN_SWEEP: true,
-  HERO_CINEMATICS: true,
+  HERO_CINEMATICS: false,  // safe-off locally, enabled via remote
   HERO_PROGRESSION_ENABLED: true,
 } as const;
 

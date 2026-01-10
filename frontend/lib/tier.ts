@@ -24,6 +24,26 @@ export const MAX_STAR_TIER = 6;
 export const MAX_AWAKENING_TIER = 10;
 
 // ─────────────────────────────────────────────────────────────
+// AWAKENING GUARDRAILS (tiers 7-10 are NOT ACTIVE)
+// ─────────────────────────────────────────────────────────────
+
+export const MAX_ACTIVE_TIER = 6 as const; // 1..6 only (5★+ is 6)
+export const AWAKENING_MIN_TIER = 7 as const;
+export const AWAKENING_MAX_TIER = 10 as const;
+
+/**
+ * Hard gate: throws if tier is in awakening range (7-10).
+ * Use this to prevent awakening code from leaking into active UI.
+ */
+export function assertTierIsActive(tier: number): void {
+  if (tier > MAX_ACTIVE_TIER) {
+    throw new Error(
+      `[tier] Awakening tiers are not active. Got tier=${tier} (max active=${MAX_ACTIVE_TIER}).`
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // CORE NORMALIZATION (prevents drift)
 // ─────────────────────────────────────────────────────────────
 

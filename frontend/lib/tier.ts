@@ -2,7 +2,13 @@
 // SINGLE SOURCE OF TRUTH for stars → tiers → art → gating
 // DO NOT reimplement this logic elsewhere
 
-export type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
+// 1–6 = Star tiers (currently active)
+// 7–10 = Future Awakening tiers (NOT ACTIVE YET)
+export type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+// UI should clamp to MAX_STAR_TIER for now
+export const MAX_STAR_TIER = 6;
+export const MAX_AWAKENING_TIER = 10;
 
 /**
  * Raw backend stars (0–6). UI shows EXACT value.
@@ -23,11 +29,18 @@ export const displayStars = (hero: any): number => {
  * stars = 3  → tier 4
  * stars = 4  → tier 5
  * stars ≥ 5 OR awakening > 0 → tier 6 (5★+)
+ * 
+ * FUTURE (Awakening system, NOT YET ACTIVE):
+ * awakening_level = 1 → tier 7 (7★)
+ * awakening_level = 2 → tier 8 (8★)
+ * awakening_level = 3 → tier 9 (9★)
+ * awakening_level = 4 → tier 10 (10★)
  */
 export const unlockedTierForHero = (hero: any): DisplayTier => {
   const stars = displayStars(hero);
   const awaken = Number(hero?.awakening_level ?? 0);
 
+  // For now, cap at tier 6 (5★+). Awakening tiers will be added later.
   if (awaken > 0 || stars >= 5) return 6;
   return (Math.max(1, Math.min(5, stars + 1)) as DisplayTier);
 };

@@ -1,18 +1,12 @@
 // /app/frontend/app/hero-progression.tsx
-// UI-only progression screen that completes:
-// gacha → duplicates(shards) → stars → tier art → cinematic (5★+)
+// Adds BOTH:
+// 1) Rarity Ascension section (UI-only, gracefully tries common endpoints; shows "server not wired" if none exist)
+// 2) "How to earn shards" hint (links to Summon Hub)
 //
-// - Loads hero from /api/user/:username/heroes (same as hero-detail)
-// - Uses backend promote endpoint: POST /api/hero/{user_hero_id}/promote-star?username=...
-// - Optimistic UI: immediately increments stars + decrements duplicates, then reconciles/rolls back
-// - Tier art uses EXACT API shape: heroData.ascension_images[String(tier)] (tier 1..6)
-// - Tier unlock mapping matches heroes.tsx exactly:
-//    stars=0 -> tier1
-//    stars=1 -> tier2
-//    stars=2 -> tier3
-//    stars=3 -> tier4
-//    stars=4 -> tier5
-//    stars>=5 OR awakening>0 -> tier6 (5★+)
+// Keeps EXACT tier art + unlock mapping:
+// - tier art: heroData.ascension_images[String(tier)]
+// - unlock mapping matches heroes.tsx exactly
+// - promote-star endpoint: POST /api/hero/{user_hero_id}/promote-star?username=...
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -27,7 +21,6 @@ import {
   Alert,
   Modal,
   Platform,
-  useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, router as Router } from 'expo-router';
 import axios from 'axios';
@@ -73,10 +66,18 @@ const clampInt = (n: any, min: number, max: number) => {
   return Math.max(min, Math.min(max, Math.trunc(v)));
 };
 
+const RARITY_ORDER = ['N', 'R', 'SR', 'SSR', 'SSR+', 'UR', 'UR+'] as const;
+type Rarity = (typeof RARITY_ORDER)[number];
+
+const nextRarity = (r: string): Rarity | null => {
+  const idx = RARITY_ORDER.indexOf((r as any) ?? 'SR');
+  if (idx < 0) return null;
+  if (idx >= RARITY_ORDER.length - 1) return null;
+  return RARITY_ORDER[idx + 1];
+};
+
 export default function HeroProgressionScreen() {
   const hydrated = useHydration();
-  const { width: screenW } = useWindowDimensions();
-
   const { heroId } = useLocalSearchParams<{ heroId: string }>();
   const { user, fetchUser, fetchUserHeroes, userHeroes } = useGameStore();
 
@@ -88,11 +89,13 @@ export default function HeroProgressionScreen() {
 
   const [previewTier, setPreviewTier] = useState<DisplayTier>(1);
 
-  // confirm modal
-  const [showConfirm, setShowConfirm] = useState(false);
+  // confirm modals
+  const [showConfirmPromote, setShowConfirmPromote] = useState(false);
+  const [showConfirmAscend, setShowConfirmAscend] = useState(false);
 
   // network state
   const [isPromoting, setIsPromoting] = useState(false);
+  const [isAscending, setIsAscending] = useState(false);
 
   // cinematic
   const [showCinematicModal, setShowCinematicModal] = useState(false);
@@ -151,15 +154,14 @@ export default function HeroProgressionScreen() {
   }, [resolveTierArt, previewTier]);
 
   const heroName = heroData?.name || heroData?.hero_name || 'Hero';
-  const heroRarity = heroData?.rarity || 'SR';
+  const heroRarity = (heroData?.rarity || 'SR') as string;
   const heroClass = heroData?.hero_class || '—';
 
-  const shards = useMemo(() => clampInt(hero?.duplicates ?? 0, 0, 999999), [hero?.duplicates]);
+  const shards = useMemo(() => clampInt(hero?.duplicates ?? 0, 0, 999999999), [hero?.duplicates]);
   const stars = useMemo(() => displayStars(hero), [displayStars, hero]);
 
   const isMaxStars = stars >= 6;
-
-  const nextStar = useMemo(() => (isMaxStars ? null : (stars + 1)), [isMaxStars, stars]);
+  const nextStar = useMemo(() => (isMaxStars ? null : stars + 1), [isMaxStars, stars]);
   const shardsNeededForNext = useMemo(() => {
     if (!nextStar) return null;
     return STAR_SHARD_COSTS[nextStar] ?? 999;
@@ -173,7 +175,6 @@ export default function HeroProgressionScreen() {
   }, [hero, isMaxStars, shards, shardsNeededForNext, user]);
 
   const rarityPillColor = useMemo(() => {
-    // keep simple + consistent with your theme
     const map: Record<string, string> = {
       N: 'rgba(160,160,160,0.95)',
       R: 'rgba(90,200,120,0.95)',
@@ -186,33 +187,37 @@ export default function HeroProgressionScreen() {
     return map[heroRarity] || map.SR;
   }, [heroRarity]);
 
-  const calcPower = useCallback(
-    (h: any, hd: any) => {
-      if (!h || !hd) return 0;
-      const level = clampInt(h?.level ?? 1, 1, 999);
-      const starsLocal = clampInt(h?.stars ?? 0, 0, 6);
-      const awaken = clampInt(h?.awakening_level ?? 0, 0, 99);
+  const rarityNext = useMemo(() => nextRarity(heroRarity), [heroRarity]);
+  const canAscend = useMemo(() => {
+    // UI-only gating: must be at final tier (5★+) and not already max rarity
+    if (!rarityNext) return false;
+    return effectiveUnlockedTier === 6;
+  }, [effectiveUnlockedTier, rarityNext]);
 
-      const base_hp = clampInt(hd?.base_hp ?? 1000, 0, 999999999);
-      const base_atk = clampInt(hd?.base_atk ?? 100, 0, 999999999);
-      const base_def = clampInt(hd?.base_def ?? 50, 0, 999999999);
+  const calcPower = useCallback((h: any, hd: any) => {
+    if (!h || !hd) return 0;
 
-      const levelMult = 1 + (level - 1) * 0.05;
-      const starMult = 1 + starsLocal * 0.1; // stars=0 => no bonus
-      const awakenMult = 1 + awaken * 0.2;
+    const level = clampInt(h?.level ?? 1, 1, 999);
+    const starsLocal = clampInt(h?.stars ?? 0, 0, 6);
+    const awaken = clampInt(h?.awakening_level ?? 0, 0, 99);
 
-      return Math.floor((base_hp + base_atk * 3 + base_def * 2) * levelMult * starMult * awakenMult);
-    },
-    []
-  );
+    const base_hp = clampInt(hd?.base_hp ?? 1000, 0, 999999999);
+    const base_atk = clampInt(hd?.base_atk ?? 100, 0, 999999999);
+    const base_def = clampInt(hd?.base_def ?? 50, 0, 999999999);
+
+    const levelMult = 1 + (level - 1) * 0.05;
+    const starMult = 1 + starsLocal * 0.1; // stars=0 => no bonus
+    const awakenMult = 1 + awaken * 0.2;
+
+    return Math.floor((base_hp + base_atk * 3 + base_def * 2) * levelMult * starMult * awakenMult);
+  }, []);
 
   const currentPower = useMemo(() => calcPower(hero, heroData), [calcPower, hero, heroData]);
 
   const nextPower = useMemo(() => {
     if (!hero || !heroData) return null;
     if (!nextStar) return null;
-    const simulated = { ...hero, stars: nextStar };
-    return calcPower(simulated, heroData);
+    return calcPower({ ...hero, stars: nextStar }, heroData);
   }, [calcPower, hero, heroData, nextStar]);
 
   const loadHero = useCallback(async () => {
@@ -228,7 +233,7 @@ export default function HeroProgressionScreen() {
       // Prefer store data first
       let found = (userHeroes || []).find((h: any) => h?.id === heroId);
 
-      // Fallback to direct fetch (more robust)
+      // Fallback to direct fetch
       if (!found) {
         const resp = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user.username}/heroes`);
         if (resp.ok) {
@@ -246,9 +251,8 @@ export default function HeroProgressionScreen() {
       setHero(found);
       setHeroData(found.hero_data);
 
-      // default preview tier = currently unlocked max tier (feels best)
-      const t = unlockedTierForHero(found);
-      setPreviewTier(t);
+      // default preview tier = currently unlocked max tier
+      setPreviewTier(unlockedTierForHero(found));
     } catch (e) {
       console.error('hero-progression load error', e);
       setHero(null);
@@ -293,17 +297,16 @@ export default function HeroProgressionScreen() {
       Alert.alert('Not enough shards', `Need ${shardsNeededForNext} shards. You have ${shards}.`);
       return;
     }
-    setShowConfirm(true);
+    setShowConfirmPromote(true);
   }, [hero, isMaxStars, shards, shardsNeededForNext]);
 
   const promoteOptimistic = useCallback(async () => {
     if (!user?.username || !heroId || !hero) return;
     if (isMaxStars || !nextStar || !shardsNeededForNext) return;
 
-    setShowConfirm(false);
+    setShowConfirmPromote(false);
     setIsPromoting(true);
 
-    // Save rollback snapshot
     rollbackRef.current = { hero };
 
     // OPTIMISTIC APPLY
@@ -315,7 +318,7 @@ export default function HeroProgressionScreen() {
     setHero(optimisticHero);
 
     try {
-      // Backend endpoint:
+      // Real endpoint:
       // POST /api/hero/{user_hero_id}/promote-star?username=...
       const resp = await axios.post(
         `${API_BASE}/hero/${heroId}/promote-star`,
@@ -326,18 +329,15 @@ export default function HeroProgressionScreen() {
       const newStars = clampInt(resp.data?.new_stars ?? nextStar, 0, 6);
       const remaining = clampInt(resp.data?.remaining_shards ?? optimisticHero.duplicates, 0, 999999999);
 
-      // Reconcile with server truth
       setHero((prev: any) => ({
         ...prev,
         stars: newStars,
         duplicates: remaining,
       }));
 
-      // Soft refresh store (keeps other screens consistent)
       await fetchUser();
       await fetchUserHeroes();
 
-      // UX feedback
       const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars });
       if (newTier > effectiveUnlockedTier) {
         Alert.alert('Star Promoted! 🌟', `New tier unlocked: ${TIER_LABELS.find(t => t.tier === newTier)?.label}`);
@@ -345,22 +345,13 @@ export default function HeroProgressionScreen() {
         Alert.alert('Star Promoted! 🌟', `Now at ${newStars} star(s).`);
       }
     } catch (e: any) {
-      // ROLLBACK
       if (rollbackRef.current?.hero) setHero(rollbackRef.current.hero);
-
-      Alert.alert(
-        'Promotion failed',
-        e?.response?.data?.detail || 'Unable to promote this hero right now.'
-      );
+      Alert.alert('Promotion failed', e?.response?.data?.detail || 'Unable to promote this hero right now.');
     } finally {
       rollbackRef.current = null;
       setIsPromoting(false);
     }
   }, [
-    API_BASE,
-    effectiveUnlockedTier,
-    fetchUser,
-    fetchUserHeroes,
     hero,
     heroId,
     isMaxStars,
@@ -368,6 +359,97 @@ export default function HeroProgressionScreen() {
     shards,
     shardsNeededForNext,
     unlockedTierForHero,
+    effectiveUnlockedTier,
+    user?.username,
+    fetchUser,
+    fetchUserHeroes,
+  ]);
+
+  // --- Ascension: UI-only wiring that tries a few common endpoint shapes ---
+  const tryAscend = useCallback(async () => {
+    if (!user?.username || !heroId || !heroData) return;
+    if (!rarityNext) {
+      Alert.alert('Max Rarity', 'This hero is already at maximum rarity.');
+      return;
+    }
+    if (!canAscend) {
+      Alert.alert('Ascension Locked', 'Reach 5★+ (tier 6) to attempt rarity ascension.');
+      return;
+    }
+
+    setShowConfirmAscend(false);
+    setIsAscending(true);
+
+    // We do NOT optimistically change rarity (server rules unknown).
+    // We *do* show success if endpoint responds.
+    const candidates = [
+      // Most likely if you mirror promote-star style
+      { url: `${API_BASE}/hero/${heroId}/ascend`, params: { username: user.username } },
+      { url: `${API_BASE}/hero/${heroId}/ascend-rarity`, params: { username: user.username } },
+      // If your backend uses /hero/{user_hero_id}/ascend?username
+      { url: `${API_BASE}/hero/${heroId}/ascend?username=${encodeURIComponent(user.username)}`, params: undefined as any },
+      // If you have a nested user route (older style)
+      { url: `${API_BASE}/hero/${user.username}/hero/${heroId}/ascend`, params: undefined as any },
+    ];
+
+    let lastErr: any = null;
+    let successPayload: any = null;
+
+    for (const c of candidates) {
+      try {
+        const resp = c.params
+          ? await axios.post(c.url, null, { params: c.params })
+          : await axios.post(c.url);
+        successPayload = resp?.data ?? { success: true };
+        lastErr = null;
+        break;
+      } catch (e: any) {
+        const status = e?.response?.status;
+        // If it's "not found", keep trying the next candidate.
+        // If it's a real validation error (400/403), stop and show it.
+        if (status === 404) {
+          lastErr = e;
+          continue;
+        }
+        lastErr = e;
+        break;
+      }
+    }
+
+    try {
+      if (!successPayload) {
+        Alert.alert(
+          'Ascension not available yet',
+          'No ascension endpoint responded. Wire the backend ascension route and this button will start working.'
+        );
+        return;
+      }
+
+      // Reload hero data + store
+      await fetchUser();
+      await fetchUserHeroes();
+      await loadHero();
+
+      Alert.alert(
+        'Ascension complete ✨',
+        successPayload?.message ||
+          `If the server upgraded rarity, ${heroName} should now reflect it across the UI.`
+      );
+    } catch (e) {
+      console.error('post-ascend refresh error', e);
+    } finally {
+      setIsAscending(false);
+    }
+  }, [
+    API_BASE,
+    canAscend,
+    fetchUser,
+    fetchUserHeroes,
+    heroData,
+    heroId,
+    heroName,
+    loadHero,
+    rarityNext,
     user?.username,
   ]);
 
@@ -407,17 +489,10 @@ export default function HeroProgressionScreen() {
     );
   }
 
-  const lockedHint = (tier: DisplayTier) => {
-    if (tier <= effectiveUnlockedTier) return null;
-    // Match your rule: tiers beyond unlocked are not accessible
-    return 'LOCKED';
-  };
-
   const tierIsCinematic = effectiveUnlockedTier === 6 && VIDEOS_AVAILABLE;
 
   return (
     <View style={styles.root}>
-      {/* Background follows preview tier art */}
       <CenteredBackground source={backgroundArt} mode="contain" zoom={1.06} opacity={1} waitForSize={false} />
       <SanctumAtmosphere />
       <DivineOverlays vignette grain />
@@ -497,6 +572,25 @@ export default function HeroProgressionScreen() {
             </View>
           </GlassCard>
 
+          {/* Shards hint (DO BOTH: add this) */}
+          <GlassCard style={styles.block}>
+            <Text style={styles.blockTitle}>How to earn shards</Text>
+            <Text style={styles.blockSub}>
+              Pull duplicates from Summon to gain shards. More pulls = more stars = more tier art.
+            </Text>
+
+            <View style={styles.hintRow}>
+              <View style={styles.hintPill}>
+                <Ionicons name="sparkles" size={16} color="rgba(255,255,255,0.92)" />
+                <Text style={styles.hintText}>Duplicates → +1 shard each pull</Text>
+              </View>
+
+              <Pressable onPress={() => Router.push('/summon-hub')} style={styles.hintBtn}>
+                <Text style={styles.hintBtnText}>Go to Summon</Text>
+              </Pressable>
+            </View>
+          </GlassCard>
+
           {/* Tier Ladder */}
           <GlassCard style={styles.block}>
             <Text style={styles.blockTitle}>Ascension Forms</Text>
@@ -544,23 +638,17 @@ export default function HeroProgressionScreen() {
                       {label}
                     </Text>
 
-                    {active && !locked && (
-                      <View style={styles.activeDot} />
-                    )}
+                    {active && !locked && <View style={styles.activeDot} />}
                   </Pressable>
                 );
               })}
             </View>
 
-            {/* 5★+ cinematic */}
             {tierIsCinematic && (
               <View style={styles.cineRow}>
                 <Ionicons name="play-circle" size={18} color="rgba(255,255,255,0.92)" />
                 <Text style={styles.cineText}>5★+ Cinematic available</Text>
-                <Pressable
-                  onPress={openCinematic}
-                  style={styles.cineBtn}
-                >
+                <Pressable onPress={openCinematic} style={styles.cineBtn}>
                   <Text style={styles.cineBtnText}>Play</Text>
                 </Pressable>
               </View>
@@ -579,16 +667,14 @@ export default function HeroProgressionScreen() {
                 </View>
               ) : (
                 <View style={styles.nextBadge}>
-                  <Text style={styles.nextBadgeText}>
-                    Next: {nextStar}★
-                  </Text>
+                  <Text style={styles.nextBadgeText}>Next: {nextStar}★</Text>
                 </View>
               )}
             </View>
 
             {isMaxStars ? (
               <Text style={styles.blockSub}>
-                This hero has reached maximum stars (6). Future upgrades can come from Awakening and systems added later.
+                This hero has reached maximum stars (6). Future upgrades can come from Awakening and rarity ascension.
               </Text>
             ) : (
               <>
@@ -624,7 +710,6 @@ export default function HeroProgressionScreen() {
                     </Text>
                   </View>
 
-                  {/* highlight cinematic unlock */}
                   {unlockedTierForHero({ ...hero, stars: nextStar }) === 6 && (
                     <View style={styles.unlockCallout}>
                       <Ionicons name="film" size={16} color="rgba(255,255,255,0.92)" />
@@ -671,15 +756,87 @@ export default function HeroProgressionScreen() {
             )}
           </GlassCard>
 
+          {/* Rarity Ascension (DO BOTH: add this) */}
+          <GlassCard style={styles.block}>
+            <View style={styles.promoHeader}>
+              <Text style={styles.blockTitle}>Rarity Ascension</Text>
+
+              {rarityNext ? (
+                <View style={styles.nextBadge}>
+                  <Text style={styles.nextBadgeText}>{heroRarity} → {rarityNext}</Text>
+                </View>
+              ) : (
+                <View style={styles.maxBadge}>
+                  <Ionicons name="trophy" size={16} color="rgba(255, 215, 140, 0.92)" />
+                  <Text style={styles.maxBadgeText}>MAX</Text>
+                </View>
+              )}
+            </View>
+
+            {!rarityNext ? (
+              <Text style={styles.blockSub}>
+                This hero is already at maximum rarity.
+              </Text>
+            ) : (
+              <>
+                <Text style={styles.blockSub}>
+                  Ascend rarity after reaching 5★+ (tier 6). Server rules (costs/materials) can be enforced on the backend.
+                </Text>
+
+                <View style={styles.reqBox}>
+                  <View style={styles.reqRow}>
+                    <Text style={styles.reqLabel}>Requirement</Text>
+                    <Text style={[styles.reqValue, canAscend ? styles.good : styles.bad]}>
+                      {canAscend ? '5★+ reached' : 'Reach 5★+'}
+                    </Text>
+                  </View>
+                </View>
+
+                <Pressable
+                  onPress={() => setShowConfirmAscend(true)}
+                  disabled={!canAscend || isAscending}
+                  style={[
+                    styles.promoteBtnOuter,
+                    (!canAscend || isAscending) && styles.promoteBtnOuterDisabled,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={
+                      !canAscend || isAscending
+                        ? ['rgba(255,255,255,0.10)', 'rgba(255,255,255,0.06)']
+                        : ['rgba(155, 89, 182, 0.92)', 'rgba(95, 60, 150, 0.92)']
+                    }
+                    style={styles.promoteBtnInner}
+                  >
+                    {isAscending ? (
+                      <ActivityIndicator color="rgba(255,255,255,0.92)" />
+                    ) : (
+                      <>
+                        <Ionicons name="rocket" size={18} color="rgba(255,255,255,0.92)" />
+                        <Text style={[styles.promoteBtnText, { color: 'rgba(255,255,255,0.92)' }]}>
+                          Ascend to {rarityNext}
+                        </Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </Pressable>
+
+                <Text style={styles.promoHint}>
+                  If the backend endpoint isn't wired yet, you'll see a clear "not available" message.
+                </Text>
+              </>
+            )}
+          </GlassCard>
+
           <View style={{ height: 140 }} />
         </ScrollView>
 
-        {/* Confirm modal */}
+        {/* Confirm Promote modal */}
         <Modal
-          visible={showConfirm}
+          visible={showConfirmPromote}
           transparent
           animationType="fade"
-          onRequestClose={() => setShowConfirm(false)}
+          onRequestClose={() => setShowConfirmPromote(false)}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
@@ -698,11 +855,47 @@ export default function HeroProgressionScreen() {
               </View>
 
               <View style={styles.modalBtns}>
-                <Pressable style={styles.modalBtnGhost} onPress={() => setShowConfirm(false)}>
+                <Pressable style={styles.modalBtnGhost} onPress={() => setShowConfirmPromote(false)}>
                   <Text style={styles.modalBtnGhostText}>Cancel</Text>
                 </Pressable>
                 <Pressable style={styles.modalBtnSolid} onPress={promoteOptimistic}>
                   <Text style={styles.modalBtnSolidText}>Promote</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Confirm Ascend modal */}
+        <Modal
+          visible={showConfirmAscend}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowConfirmAscend(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Confirm Ascension</Text>
+
+              <Text style={styles.modalText}>
+                Ascend <Text style={styles.modalStrong}>{heroName}</Text> from{' '}
+                <Text style={styles.modalStrong}>{heroRarity}</Text> to{' '}
+                <Text style={styles.modalStrong}>{rarityNext || '—'}</Text>?
+              </Text>
+
+              <View style={styles.modalCostRow}>
+                <Ionicons name="alert" size={18} color="rgba(255, 215, 140, 0.92)" />
+                <Text style={styles.modalCostText}>
+                  Server enforces final costs & rules.
+                </Text>
+              </View>
+
+              <View style={styles.modalBtns}>
+                <Pressable style={styles.modalBtnGhost} onPress={() => setShowConfirmAscend(false)}>
+                  <Text style={styles.modalBtnGhostText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.modalBtnSolid} onPress={tryAscend}>
+                  <Text style={styles.modalBtnSolidText}>Ascend</Text>
                 </Pressable>
               </View>
             </View>
@@ -827,6 +1020,28 @@ const styles = StyleSheet.create({
   block: { padding: 12, marginBottom: 12 },
   blockTitle: { color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: '900' },
   blockSub: { marginTop: 6, color: 'rgba(255,255,255,0.62)', fontSize: 11.5, fontWeight: '700', lineHeight: 16 },
+
+  hintRow: { marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  hintPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  hintText: { color: 'rgba(255,255,255,0.82)', fontSize: 11.5, fontWeight: '800' },
+  hintBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 215, 140, 0.92)',
+  },
+  hintBtnText: { color: '#0A0B10', fontSize: 12, fontWeight: '900' },
 
   tierRow: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tierChip: {

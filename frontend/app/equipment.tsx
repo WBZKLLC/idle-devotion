@@ -75,14 +75,15 @@ export default function EquipmentScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      const [equipRes, runeRes, heroRes] = await Promise.all([
-        axios.get(`${API_BASE}/equipment/${user.username}`),
-        axios.get(`${API_BASE}/equipment/${user.username}/runes`),
-        axios.get(`${API_BASE}/user/${user.username}/heroes`),
+      // Use centralized API wrappers (parallel loads)
+      const [equipmentData, runesData, heroesData] = await Promise.all([
+        getUserEquipment(user.username),
+        getUserRunes(user.username),
+        getEquipmentHeroes(user.username),
       ]);
-      setEquipment(equipRes.data || []);
-      setRunes(runeRes.data || []);
-      setUserHeroes(heroRes.data || []);
+      setEquipment(equipmentData || []);
+      setRunes(runesData || []);
+      setUserHeroes(heroesData || []);
     } catch (error) {
       console.error('Error loading equipment:', error);
     } finally {

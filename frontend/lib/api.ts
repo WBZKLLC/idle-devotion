@@ -4,8 +4,9 @@
 
 import axios from 'axios';
 
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
+const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_BASE = RAW
+  ? `${RAW.replace(/\/$/, '')}/api`
   : '/api';
 
 export const api = axios.create({

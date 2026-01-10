@@ -387,22 +387,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     set({ isLoading: true });
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/gacha/pull?username=${user.username}`,
-        {
-          pull_type: pullType,
-          currency_type: currencyType,
-        }
-      );
+      // Uses centralized API wrapper from lib/api.ts
+      const result = await apiPullGacha(user.username, pullType, currencyType);
       
       // Refresh user and heroes data
       await get().fetchUser();
       await get().fetchUserHeroes();
       
       set({ isLoading: false });
-      return response.data;
+      return result;
     } catch (error: any) {
-      set({ error: error.response?.data?.detail || 'Failed to pull gacha', isLoading: false });
+      set({ error: error.response?.data?.detail || error?.message || 'Failed to pull gacha', isLoading: false });
       throw error;
     }
   },

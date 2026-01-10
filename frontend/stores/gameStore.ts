@@ -122,30 +122,14 @@ interface GameState {
   refreshHeroesAfterGacha: (result: any) => Promise<void>;
 }
 
-// Helper to save auth data
+// Helper to save auth data using platform-safe storage
 const saveAuthData = async (username: string, token: string) => {
   try {
-    // Save to localStorage (web) - primary for web
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        window.localStorage.setItem(STORAGE_KEYS.USERNAME, username);
-        window.localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
-        console.log('[saveAuthData] Saved to localStorage:', username);
-      } catch (e) {
-        console.log('[saveAuthData] localStorage save failed:', e);
-      }
-    }
-    
-    // Also save to AsyncStorage (native)
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.USERNAME, username);
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
-      console.log('[saveAuthData] Saved to AsyncStorage:', username);
-    } catch (e) {
-      console.log('[saveAuthData] AsyncStorage save failed:', e);
-    }
+    await storageSet(STORAGE_KEYS.USERNAME, username);
+    await storageSet(STORAGE_KEYS.AUTH_TOKEN, token);
+    console.log('[saveAuthData] Auth data saved for:', username);
   } catch (e) {
-    console.error('Failed to save auth data:', e);
+    console.error('[saveAuthData] Failed to save auth data:', e);
   }
 };
 

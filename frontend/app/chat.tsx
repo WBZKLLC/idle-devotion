@@ -117,13 +117,13 @@ export default function ChatScreen() {
   const loadUserBubble = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/user/${user.username}/chat-bubbles`);
+      const data = await getChatBubbles(user.username);
       setUserBubbles({
-        available: response.data.available_bubbles || [],
-        locked: response.data.locked_bubbles || [],
+        available: data.available_bubbles || [],
+        locked: data.locked_bubbles || [],
       });
       
-      const equipped = response.data.available_bubbles?.find((b: any) => b.is_equipped);
+      const equipped = data.available_bubbles?.find((b: any) => b.is_equipped);
       if (equipped) {
         setEquippedBubble(equipped);
         bubbleCache[user.username] = equipped;

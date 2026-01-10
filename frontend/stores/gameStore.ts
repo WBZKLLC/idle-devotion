@@ -312,8 +312,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     // Legacy flow for backwards compatibility (will be phased out)
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/user/${username}`);
-      set({ user: response.data, isLoading: false });
+      const userData = await apiFetchUser(username);
+      set({ user: userData, isLoading: false });
       await saveAuthData(username, '');  // Save username without token for legacy
     } catch (error: any) {
       set({ error: 'Failed to initialize user', isLoading: false });
@@ -327,12 +327,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     set({ isLoading: true });
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/user/${user.username}/login`
-      );
+      const data = await triggerDailyLogin(user.username);
       await get().fetchUser();
       set({ isLoading: false });
-      return response.data;
+      return data;
     } catch (error) {
       set({ error: 'Failed to login', isLoading: false });
       throw error;
@@ -349,10 +347,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!user) return;
     
     try {
-      const response = await axios.get(
-        `${BACKEND_URL}/api/user/${user.username}`
-      );
-      set({ user: response.data });
+      const userData = await apiFetchUser(user.username);
+      set({ user: userData });
     } catch (error) {
       console.error('Failed to fetch user:', error);
     }
@@ -375,8 +371,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   fetchAllHeroes: async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/heroes`);
-      set({ allHeroes: response.data });
+      const data = await fetchAllHeroesCatalog();
+      set({ allHeroes: data });
     } catch (error) {
       console.error('Failed to fetch all heroes:', error);
     }

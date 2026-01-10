@@ -1,88 +1,105 @@
 <analysis>
 <original_problem_statement>
-The user's initial request was to implement a feature where tapping a 5+ star hero would play a hero-specific cinematic video. This involved creating a video asset directory, a mapping file, a reusable modal component, and modifying the hero detail screen.
-
-After the successful implementation and verification of the video feature, the user initiated a complete, multi-phase UI/UX overhaul, starting with the login and dashboard screens, and then moving to the hero detail screen.
+The user's initial request was to implement a 5+ Star Hero Cinematic feature. After its completion, the user initiated a complete, multi-phase UI/UX overhaul, dubbed 2Dlive, to create a premium, dark, celestial gacha aesthetic.
 
 **PRODUCT REQUIREMENTS (Current):**
 - **P0: 2Dlive UI Shell Implementation (IN PROGRESS):**
-  - **GOAL:** Refactor key screens into a new, premium 2Dlive UI shell to create a dark, celestial gacha aesthetic. The shell consists of reusable components for backgrounds, overlays, and cards.
+  - **GOAL:** Refactor all key screens into the new 2Dlive UI shell using a shared component library ().
   - **COMPLETED SCREENS:**
-    -  (Login & Dashboard): Redesigned with a Character Fantasy (Raphael) background for login and an Environment Fantasy (Sanctum) background for the dashboard.
-    - : Redesigned with the hero's 5-star art as a centered background and UI panels floating on the left.
+    -  (Login & Dashboard)
+    -  (Initial refactor done, pending patch for new feature)
+    -  (Summon Screen): Redesigned with a dedicated Summon Stage background.
+    -  (Campaign Screen): Redesigned with dynamic, act-specific backgrounds.
+    -  (Hero List): Redesigned and includes a new UI-only Display Tier feature to control hero art presentation.
   - **SHARED COMPONENTS:**
-    - A new reusable component library has been created at , containing , , , and .
-  - **DESIGN SYSTEM:**
-    - **Login Screen:** Features a wow moment with a full-opacity character splash art.
-    - **Dashboard/In-Game Screens:** Feature a more subtle environment background to support UI readability.
-- **P0: 5+ Star Hero Cinematic Feature (COMPLETED & VERIFIED):**
-  - Tapping a Preview 5+ button on UR/UR+ hero detail pages opens a modal and plays the hero's unique video.
-  - All 22 videos are correctly placed in  and mapped in .
-  - **Known Limitation:** Video playback does not work in the web preview due to  limitations, but works correctly on native devices. This has been accepted by the user.
-- **PAUSED TASKS:**
-  - Live2D/Unity Integration
-  - Re-enabling RevenueCat (P1)
-  - Backend Code Cleanup in  (P2)
+    - The component library at  now includes , , , , and .
+- **P0: Display Tier Feature (IN PROGRESS):**
+  - A UI-only feature allowing users to select a preferred hero tier (1★, 2★, ... 5★+) to display on the  list.
+  - This feature is gated by hero progression (stars and awakening level).
+  - The  screen was patched to correctly handle  from the backend and maps it to a displayable state.
+  - The feature is incomplete as  does not yet respect the tier selected on the  screen.
 </original_problem_statement>
 
 **User's preferred language**: English
 
 **what currently exists?**
-The 5+ Star Hero Cinematic feature is fully implemented and verified. The main focus has shifted to a major UI overhaul.
-
-The new 2Dlive UI shell is established in . This shell has been successfully applied to:
-1.  ****: Contains both the redesigned Login screen (using Raphael's 5+ star art) and the redesigned Dashboard screen (using a new local Sanctum environment background).
-2.  ****: Has been completely refactored into a new layout using the  components, with the hero's 5+ star art as the centered background. All original logic and data bindings have been preserved.
+The 2Dlive UI shell has been successfully applied across all major screens: , , , , and . The application has a consistent, premium aesthetic. A new Display Tier feature has been implemented on the  screen, allowing users to select which star version of a hero's art to display. This system correctly handles the backend's default of  stars for new heroes.
 
 **Last working item**:
-    - Last item agent was working: The agent just completed a full refactor of , integrating all existing logic into a new, user-specified 2Dlive UI shell template. This involved replacing the entire file's content with a new structure that uses the shared  components.
-    - Status: USER VERIFICATION PENDING
-    - Agent Testing Done: Y
-    - Which testing method agent to use? screenshot tool. The agent should take a screenshot of the newly redesigned hero detail screen to show the user for final verification.
+    - Last item agent was working: The user requested the full code for . The agent provided it. The user's intention is to provide a patch to make this screen aware of the new Display Tier system implemented in . The  screen now passes a  URL parameter when navigating, but  does not yet use it.
+    - Status: NOT STARTED
+    - Agent Testing Done: N
+    - Which testing method agent to use? screenshot tool. After the new  is applied, the agent should navigate to the page and take a screenshot to verify the UI reflects the tier system.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - There are no known bugs or blocking issues. The work is proceeding as requested by the user.
+  - Issue 1: Integrate Display Tier logic into  (P0)
+  - Issue 2: Fix authentication state persistence in web preview (P1)
+  
+  Issues Detail:
+  - Issue 1: 
+     - Attempted fixes: None. This is the immediate next step.
+     - Next debug checklist: 
+       1. Wait for the user to provide the patched code for .
+       2. Use  to overwrite .
+       3. Restart the frontend: expo: ERROR (not running)
+expo: started.
+       4. Use the  to navigate to a hero's detail page, potentially with a  parameter, to verify the correct art/UI is displayed.
+     - Why fix this issue and what will be achieved with the fix? This will complete the Display Tier feature, creating a seamless visual experience between the hero list and the detail screen.
+     - Status:  NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: Blocked on user providing the patched code.
+  - Issue 2: 
+     - Attempted fixes: None. The agent observed the issue but the user prioritized moving forward with UI refactoring.
+     - Next debug checklist:
+       1. Examine  to confirm if  middleware with  from  is being used for the user state.
+       2. If it is, check the configuration. If not, implement it.
+       3. Verify that the  hook is used correctly on all authenticated screens.
+       4. Test the login flow and navigation in the web preview to see if the user state persists.
+     - Why fix this issue and what will be achieved with the fix? Fixes a broken user experience in the web preview where the user appears to be logged out after navigating, which hinders testing and development.
+     - Status:  NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: None. This is a lower priority than the P0 task.
 
 **In progress Task List**:
-  - Task 1: Verify the  redesign with the user. (P0)
-
- Task Detail:
-  - Task 1: 
-     - Where to resume: The code for the  redesign is complete and the frontend has been restarted. The next step is to use the  to capture the new UI and present it to the user for approval.
-     - What will be achieved with this? This will confirm that the  screen has been successfully refactored to the user's exact visual specifications.
-     - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? Frontend (visual verification)
-     - Blocked on something: User approval.
+ - There are no multi-step tasks currently in progress. The workflow consists of single-step patch applications directed by the user.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P0: 2Dlive Wrap for :** Apply the  components and design system to the Gacha/Summon screen.
-    *   **P1: 2Dlive Wrap for :** Apply the  components to the campaign screen, likely using chapter-specific environment backgrounds.
+    *   **P0: Apply user-provided patch to **: The immediate next action.
 *   **Future Tasks (Currently PAUSED):**
     *   **P1: Re-enable RevenueCat Integration**: Follow the guide in .
     *   **P2: Backend Code Cleanup**: Refactor  to remove legacy, duplicated endpoints.
 
 **Completed work in this session**
-- **5+ Star Hero Cinematic Feature:**
-  - Fully tested and validated the feature against user's strict T1-T5 and F1-F7 criteria.
-  - Corrected  to include  assets.
-  - Implemented a safer  function in .
-  - Verified all 22 video files are present and correctly named.
-- **Login/Dashboard UI Overhaul ():**
-  - Redesigned the login screen with a pixel-perfect layout featuring Raphael's 5+ star art.
-  - Implemented a robust, mathematically-centered background component.
-  - Refactored the dashboard to use a distinct Sanctum environment background.
-- **Creation of  UI Library:**
-  - Created  containing reusable components: , , , and .
-  - Refactored  to use these shared components.
-- **Hero Detail UI Overhaul ():**
-  - Completely refactored the hero detail screen to use the new  layout, preserving all existing state and logic while implementing a new visual design.
-- **Asset Management:**
-  - Downloaded the  background and stored it locally at .
+- ** 2Dlive Wrap:**
+  - Fully reskinned the Gacha screen using the  components and a new  background.
+  - Created and integrated a new  component for a unique visual effect.
+- ** 2Dlive Wrap and Polish:**
+  - Fully reskinned the Campaign screen, preserving all existing logic for chapters, stages, battles, and dialogue.
+  - Implemented dynamic backgrounds that change from a general environment () on the chapter list to specific act backgrounds (, etc.) on the stage list.
+  - Applied a second pass polish, wrapping elements in  and adding a premium gold-stroke frame to chapter cards for a more refined look.
+- ** 2Dlive Wrap and Display Tier Feature:**
+  - Completely reskinned the Heroes list screen.
+  - Implemented a UI-only Display Tier selector (1★ to 5★+) allowing the user to choose which hero art to view.
+  - Patched the UI to correctly handle and display heroes with  from the backend, including updating tier unlock logic, star rendering, and power calculation display.
+- **Backend Investigation:**
+  - Investigated  and confirmed that new heroes are correctly created with  by default.
+  - Located and presented the star promotion logic ( endpoint) and associated costs ().
 
 **Earlier issues found/mentioned but not fixed**
-   - **Refactor **: The task to remove legacy, duplicate endpoints from  remains outstanding. This is a source of technical debt.
+   - **Issue 1: Authentication state persistence in web preview:**
+     - Debug checklist: Check  for Zustand  middleware and review  hook usage.
+     - Why to solve this issue and what will be achieved with this? Fixes a broken user experience in the web preview, which currently requires re-logging in frequently.
+     - Should Test frontend/backend/both after fix: Frontend
+     - Is recurring issue? Y
+   - **Issue 2:  Technical Debt:**
+     - Debug checklist: Identify and consolidate duplicate or legacy API endpoints in .
+     - Why to solve this issue and what will be achieved with this? To reduce technical debt and improve backend maintainability.
+     - Should Test frontend/backend/both after fix: Backend
+     - Is recurring issue? Y
 
 **Known issue recurrence from previous fork**
   - **Issue recurrence in previous fork**: Backend code in  contains legacy, duplicated endpoints.
@@ -93,52 +110,56 @@ The new 2Dlive UI shell is established in . This shell has been successfully app
 
 
 **Key Technical Concepts**
-- **Reusable UI Shell Architecture**: Creating a set of shared components () to enforce a consistent, premium UI style across different screens.
-- **Mathematical Centering**: Using  and arithmetic () to perfectly center background images, ensuring responsiveness and avoiding CSS transform hacks.
-- **Design System Mental Model**: A clear separation of background art purpose: Character Fantasy for high-impact screens (Login) and Environment Fantasy for functional screens (Dashboard).
-- **Component Abstraction**: Moving UI logic from individual screen files into a shared component library for maintainability and scalability.
-- **Progressive Refactoring**: Applying the new UI shell to one screen at a time (, then ) while preserving all underlying application logic.
+- **Reusable UI Shell Architecture**: Using  to enforce a consistent, premium UI style.
+- **Progressive Refinement**: The user provides an initial implementation, then follows up with second pass polish requests.
+- **Dynamic Backgrounds**: Conditionally changing the screen background based on application state (e.g.,  in ).
+- **UI-side Gating & Logic**: Implementing features like Display Tier purely on the frontend by interpreting backend data (, ) to derive new UI states without backend changes.
 
 **key DB schema**
-- No DB schema changes.
+  - No DB schema changes occurred in this session.
 
 **changes in tech stack**
-- No new packages were added, but a significant internal UI architecture () was created.
+  - No new packages or technologies were added.
 
 **All files of reference**
 *   **Created/Modified in this session**:
-    *   : NEW. Contains the core reusable UI components (, , etc.).
-    *   : HEAVILY MODIFIED. Fully redesigned login and dashboard screens using the .
-    *   : HEAVILY MODIFIED. Fully refactored to use the  layout, preserving all old logic.
-    *   : NEW. The local background image for the dashboard.
-    *   : MODIFIED. Added 'mp4' to asset extensions.
-    *   : MODIFIED. Updated  helper function.
-    *   : MODIFIED. Improved video loading logic.
+    *   : HEAVILY MODIFIED. Fully reskinned with the 2Dlive shell, preserving all gacha logic.
+    *   : HEAVILY MODIFIED. Reskinned, polished, and updated with dynamic, act-specific backgrounds.
+    *   : HEAVILY MODIFIED. Reskinned and implemented the Display Tier UI system.
+    *   : MODIFIED. Added the  component.
+    *   : NEW. Background for the gacha screen.
+    *   : NEW. Four new backgrounds for the campaign screen.
+*   **Important files for next steps**:
+    *   : The target of the next user-provided patch.
+    *   : Relevant for debugging the auth persistence issue.
+
+**Areas that need refactoring**:
+- The  file has known technical debt (legacy endpoints) and is marked for future cleanup.
+
+**key api endpoints**
+- No new API endpoints were created.
+- The agent investigated  and the gacha pull logic in .
 
 **Critical Info for New Agent**
-- **Your immediate task is to verify the  redesign.** Use the  to capture the screen and show it to the user. Do not proceed to other tasks until the user confirms this one.
-- **Adhere to the Design System Mental Model**:
-    - **Login**: High-impact character fantasy background (Raphael).
-    - **Dashboard/In-Game**: Subtle environment fantasy background (Sanctum).
-    - **Hero Detail**: Character focus background (the specific hero's 5+ art).
-- **Use the  components for all future UI work.** The user has established this as the new standard. Do not write one-off styles if a shell component can be used.
-- The user is extremely detail-oriented and provides pixel-perfect specifications. Follow them exactly.
-- All application logic (auth, navigation, data fetching) must remain untouched unless explicitly requested. This entire session was a UI-only refactor.
+- **Your immediate task is to wait for the user to provide a patch for **. This patch will integrate the Display Tier logic. Apply the patch, restart the frontend, and verify with a screenshot.
+- The user directs the entire development flow with specific, copy-pasteable code. Follow their instructions precisely.
+- Be aware of a known issue with authentication state not persisting in the web preview. This may cause screens to incorrectly show a login prompt. This is a known, lower-priority issue.
+- The Display Tier feature is a **UI-only** concept. Do not attempt to modify the backend to support it. The frontend interprets existing backend data (, ) to determine which tier is unlocked.
 
 **documents created in this job**
 - None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Provides the final spec for the  screen as a copy-pasteable shell. (LATEST)
-2.  **User**: Instructs agent to make the Sanctum background a local asset and provides a final locked-in config for the dashboard background.
-3.  **User**: Uploads the  artifact to be used as a local asset.
-4.  **User**: Provides feedback on the  background, instructing the agent to separate it from the  login background and providing a better  component.
-5.  **User**: Asks which screen is the home route after login.
-6.  **User**: Requests a fix for the background image not being perfectly centered, providing the exact mathematical formula to use.
-7.  **User**: Provides a highly detailed, pixel-perfect specification for the login screen redesign.
-8.  **User**: Initiates the login page redesign task with a high-level design direction.
-9.  **User**: Confirms the video feature is complete and provides final instructions for its implementation.
-10. **User**: Confirms the agent's verification that all 22 video files are present and correctly named.
+1.  **User**: Post the hero-detail.tsx (LATEST)
+2.  **User**: Provides a UI-only patch for  to correctly handle  and introduces a new tier unlock mapping. Asks for the promotion/upgrade endpoint.
+3.  **User**: Inquires about the backend logic for initial hero star count, suspecting it's  and requesting it be changed to .
+4.  **User**: Provides the complete, refactored  code with the new 2Dlive shell and Display Tier system.
+5.  **User**: Asks for the  file to provide a converted version.
+6.  **User**: Re-iterates instructions for wrapping  and asks for  next. (This was mostly redundant).
+7.  **User**: Provides new background images for  and a patch to implement dynamic, act-specific backgrounds.
+8.  **User**: Provides a second-pass polished version of  to be applied.
+9.  **User**: Provides a fully merged  file to be applied.
+10. **User**: Asks for the full  code to perform the merge.
 
 **Project Health Check:**
 *   **Broken**: None.
@@ -152,15 +173,19 @@ The new 2Dlive UI shell is established in . This shell has been successfully app
 *   **expo-av**: Used for video playback.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (for the initial video feature).
+  - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: None.
+  - Known regressions: [
+      {
+        description: Authentication state is not persisting correctly in the web preview, causing some screens to revert to a Please log in state after navigation.,
+        status: Not fixed
+      }
+    ]
 
 **Credentials to test flow:**
-- Credentials are not to be hardcoded. The agent was corrected on this. Use the existing login flow with user-provided credentials if needed for testing.
+- No hardcoded credentials. Use the standard login flow.
 
 **What agent forgot to execute**
-- The agent has meticulously followed all user instructions and has not forgotten to execute any requested tasks. The work has progressed from feature implementation to a large-scale, user-directed UI refactor.
-
+- The agent has meticulously followed the user's highly specific, iterative instructions. No tasks were forgotten. The workflow is entirely user-driven.
 </analysis>

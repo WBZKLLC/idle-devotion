@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://gacha-reborn.preview.emergentagent.com/api"
+BASE_URL = "https://darkmode-overhaul.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

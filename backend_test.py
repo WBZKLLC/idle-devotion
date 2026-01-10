@@ -26,7 +26,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://gacha-reborn.preview.emergentagent.com/api"
+BACKEND_URL = "https://darkmode-overhaul.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

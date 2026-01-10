@@ -174,25 +174,50 @@ export default function HeroDetailScreen() {
     }
   }, [hydrated, user, id]);
 
+  // Cache-first hero loading: prefer store, fallback to API wrapper
   const loadHeroData = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user?.username}/heroes`
-      );
-      if (response.ok) {
-        const heroes = await response.json();
-        const userHero = heroes.find((h: any) => h.id === id);
-        if (userHero) {
-          setHero(userHero);
-          setHeroData(userHero.hero_data);
+      setIsLoading(true);
 
-          // Respect tier param from heroes.tsx, but never exceed this hero's unlocked tier
-          const requestedTier = clampTier(tier ?? 1);
-          const unlocked = unlockedTierForHero(userHero);
-          const effective: DisplayTier = (requestedTier <= unlocked ? requestedTier : unlocked);
-          setSelectedTier(effective);
+      // Helper to apply hero data and set tier
+      const applyHero = (userHero: any) => {
+        setHero(userHero);
+        setHeroData(userHero.hero_data);
+
+        // Respect tier param from heroes.tsx, but never exceed this hero's unlocked tier
+        const requestedTier = clampTier(tier ?? 1);
+        const unlocked = unlockedTierForHero(userHero);
+        const effective: DisplayTier = (requestedTier <= unlocked ? requestedTier : unlocked);
+        setSelectedTier(effective);
+      };
+
+      // 1) Cache-first: if heroes already in store, pull directly
+      const cached = Array.isArray(userHeroes)
+        ? userHeroes.find((h: any) => String(h?.id) === String(id))
+        : null;
+
+      if (cached) {
+        applyHero(cached);
+        return;
+      }
+
+      // 2) If cache missing, fetch heroes list once into store, then select
+      if (user && (!userHeroes || userHeroes.length === 0)) {
+        await fetchUserHeroes();
+        // Re-check store after fetch (note: this relies on store being updated synchronously)
+        const storeHeroes = useGameStore.getState().userHeroes;
+        const afterFetch = Array.isArray(storeHeroes)
+          ? storeHeroes.find((h: any) => String(h?.id) === String(id))
+          : null;
+        if (afterFetch) {
+          applyHero(afterFetch);
+          return;
         }
       }
+
+      // 3) Final fallback: API wrapper fetch + filter (never builds URLs directly)
+      const fresh = await getUserHeroById(String(user?.username), String(id));
+      applyHero(fresh);
     } catch (error) {
       console.error('Failed to load hero:', error);
     } finally {

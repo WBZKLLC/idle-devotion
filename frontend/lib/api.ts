@@ -69,6 +69,13 @@ export async function getHeroProgression(username: string, heroId: string) {
 // Flip to true only when backend supports: GET /user/{username}/heroes/{userHeroId}
 export const SINGLE_HERO_ENDPOINT_AVAILABLE = false as const;
 
+// Feature flags accessor (for debug screens / logging)
+export function apiFeatureFlags() {
+  return {
+    SINGLE_HERO_ENDPOINT_AVAILABLE,
+  };
+}
+
 // Update this when backend endpoint is known.
 // Expected route: GET /user/{username}/heroes/{userHeroId}
 function singleHeroPath(username: string, userHeroId: string) {

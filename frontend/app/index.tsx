@@ -277,27 +277,29 @@ export default function HomeScreen() {
     );
   }
 
+  // Get dynamic screen dimensions using useWindowDimensions
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  
+  // Calculate centered background image dimensions
+  const bgW = screenW * BG_SCALE;
+  const bgH = screenH * BG_SCALE;
+  const bgLeft = (screenW - bgW) / 2 + BG_OFFSET_X;
+  const bgTop = (screenH - bgH) / 2 + BG_OFFSET_Y;
+
   if (!user) {
-    // Responsive scaling based on screen height
-    const imageScale = SCREEN_HEIGHT < 760 ? 1.18 : 1.12;
-    const imageTranslateY = SCREEN_HEIGHT < 760 ? 34 : 24;
-    
     return (
       <View style={loginStyles.screenContainer}>
-        {/* Background: Raphael 5+ Star Skin with positioning */}
+        {/* Background: Raphael 5+ Star Skin - PERFECTLY CENTERED */}
         <Image
           source={{ uri: RAPHAEL_5PLUS_IMAGE }}
-          style={[
-            loginStyles.backgroundImage,
-            {
-              transform: [
-                { scale: imageScale },
-                { translateY: imageTranslateY },
-                { translateX: 0 },
-              ],
-            },
-          ]}
           resizeMode="cover"
+          style={{
+            position: 'absolute',
+            width: bgW,
+            height: bgH,
+            left: bgLeft,
+            top: bgTop,
+          }}
         />
         
         {/* OVERLAY 1: Vignette (edges) */}

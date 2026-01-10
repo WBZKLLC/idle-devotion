@@ -119,8 +119,8 @@ export default function GuildWarScreen() {
 
   const loadLeaderboard = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/guild-war/leaderboard?limit=50`);
-      setLeaderboard(response.data.leaderboard || []);
+      const data = await getGuildWarLeaderboard(50);
+      setLeaderboard(data.leaderboard || []);
     } catch (error) {
       console.error('Error loading leaderboard:', error);
     }

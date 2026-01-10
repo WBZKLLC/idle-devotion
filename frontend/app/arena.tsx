@@ -130,16 +130,15 @@ export default function ArenaScreen() {
     setBattling(true);
 
     try {
-      const response = await axios.post(`${API_BASE}/arena/battle/${user.username}`, {
-        opponent_username: opponent.username,
-      });
+      // Use centralized API wrapper
+      const result = await startArenaBattle(user.username, opponent.username);
       
-      setBattleResult(response.data);
+      setBattleResult(result);
       setShowResultModal(true);
       await loadArenaData();
       await fetchUser();
     } catch (error: any) {
-      // Simulate battle for MVP
+      // Simulate battle for MVP (fallback)
       const userPower = user.total_power || 50000;
       const victory = userPower > opponent.power * (0.8 + Math.random() * 0.4);
       const ratingChange = victory ? Math.floor(15 + Math.random() * 10) : -Math.floor(10 + Math.random() * 8);

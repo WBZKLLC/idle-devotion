@@ -151,15 +151,30 @@ export default function HeroProgressionScreen() {
   const effectiveUnlockedTier = useMemo<DisplayTier>(() => {
     if (!hero) return 1;
     return unlockedTierForHero(hero);
-  }, [hero]);
+  }, [hero?.stars, hero?.awakening_level]);
 
-  // Keep preview tier sane if hero updates
+  // Merged tier effect: initialize on hero change, clamp otherwise
+  // Prevents effect ping-pong while keeping preview tier user-selectable
   useEffect(() => {
     if (!hero) return;
-    if (previewTier > effectiveUnlockedTier) setPreviewTier(effectiveUnlockedTier);
-    if (previewTier < 1) setPreviewTier(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveUnlockedTier, hero?.stars, hero?.awakening_level]);
+
+    const heroKey = String(hero.id);
+
+    // 1) Initialize previewTier when hero changes (or first load)
+    if (lastHeroIdRef.current !== heroKey) {
+      lastHeroIdRef.current = heroKey;
+      setPreviewTier(unlockedTierForHero(hero));
+      return;
+    }
+
+    // 2) Otherwise, only clamp to valid range (don't overwrite user preview choice)
+    const maxTier = effectiveUnlockedTier;
+    setPreviewTier(prev => {
+      if (prev > maxTier) return maxTier;
+      if (prev < 1) return 1;
+      return prev;
+    });
+  }, [hero?.id, effectiveUnlockedTier]);
 
   // Use centralized tier art resolution from lib/tier.ts
   const getTierArtSource = useCallback(

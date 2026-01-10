@@ -311,3 +311,16 @@ export function labelForStars(stars: number, opts?: { newLabel?: string }): stri
   if (s <= 0) return newLabel;
   return `${s}★`;
 }
+
+/**
+ * Optional suffix for requirements / metadata.
+ * Example: " • 3★" when stars > 0, otherwise "".
+ * 
+ * USE THIS instead of inline ternaries like `unlock_stars > 0 ? \` • ${unlock_stars}★\` : ''`
+ */
+export function starsSuffix(stars: number, opts?: { prefix?: string }): string {
+  const prefix = opts?.prefix ?? ' • ';
+  const s = normalizeBackendStars(stars);
+  if (s <= 0) return '';
+  return `${prefix}${s}★`;
+}

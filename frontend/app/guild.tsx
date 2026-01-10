@@ -115,7 +115,7 @@ export default function GuildScreen() {
     }
   };
 
-  const createGuild = async () => {
+  const handleCreateGuild = async () => {
     if (!guildName.trim()) {
       Alert.alert('Error', 'Please enter a guild name');
       return;
@@ -123,23 +123,14 @@ export default function GuildScreen() {
     
     setIsCreating(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/create?username=${user?.username}&guild_name=${encodeURIComponent(guildName.trim())}`,
-        { method: 'POST' }
-      );
-      
-      if (response.ok) {
-        Alert.alert('Success!', 'Guild created successfully!');
-        setShowCreateModal(false);
-        setGuildName('');
-        setGuildDescription('');
-        loadGuildData();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to create guild');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create guild');
+      await createGuildApi(user?.username || '', guildName.trim());
+      Alert.alert('Success!', 'Guild created successfully!');
+      setShowCreateModal(false);
+      setGuildName('');
+      setGuildDescription('');
+      loadGuildData();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to create guild');
     } finally {
       setIsCreating(false);
     }

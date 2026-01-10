@@ -467,6 +467,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setUser: (user: User | null) => set({ user }),
+  
+  // Selector: find hero by ID from cache (O(n) lookup, but userHeroes is typically small)
+  selectUserHeroById: (id: string | undefined) => {
+    if (!id) return undefined;
+    const { userHeroes } = get();
+    return userHeroes?.find((h: any) => String(h?.id) === String(id));
+  },
 }));
 
 // Hook to handle session restoration

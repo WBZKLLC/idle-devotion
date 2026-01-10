@@ -302,17 +302,12 @@ export default function HeroProgressionScreen() {
     setHero(optimisticHero);
 
     try {
-      // Canonical star promotion endpoint (backend):
-      // POST /api/hero/{user_hero_id}/promote-star?username=...
-      // NOTE: heroId is UserHero.id (instance), NOT hero_id (template)
-      const resp = await axios.post(
-        `${API_BASE}/hero/${heroId}/promote-star`,
-        null,
-        { params: { username: user.username } }
-      );
+      // Use centralized API wrapper (lib/api.ts) - single source of truth for endpoints
+      // Response: { success, new_stars, shards_used, remaining_shards }
+      const resp = await promoteHeroStar(String(heroId), user.username);
 
-      const newStars = clampInt(resp.data?.new_stars ?? nextStar, 0, 6);
-      const remaining = clampInt(resp.data?.remaining_shards ?? optimisticHero.duplicates, 0, 999999999);
+      const newStars = clampInt(resp?.new_stars ?? nextStar, 0, 6);
+      const remaining = clampInt(resp?.remaining_shards ?? optimisticHero.duplicates, 0, 999999999);
 
       setHero((prev: any) => ({
         ...prev,

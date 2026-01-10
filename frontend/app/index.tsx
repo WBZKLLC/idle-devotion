@@ -147,10 +147,8 @@ export default function HomeScreen() {
     if (isClaiming) return;
     setIsClaiming(true);
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/idle/instant-collect/${user.username}`, {
-        method: 'POST'
-      });
-      const data = await response.json();
+      // Use centralized API wrapper
+      const data = await instantCollectIdle(user.username);
       if (data.success) {
         // Build detailed rewards message
         const resources = data.resources_earned || {};
@@ -175,7 +173,7 @@ export default function HomeScreen() {
         loadInstantCooldown();
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.response?.data?.detail || 'Failed to instant collect');
+      Alert.alert('Error', error?.message || 'Failed to instant collect');
     } finally {
       setIsClaiming(false);
     }

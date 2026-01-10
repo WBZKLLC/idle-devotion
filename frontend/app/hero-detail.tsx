@@ -123,6 +123,15 @@ export default function HeroDetailScreen() {
       return;
     }
     
+    // Feature flag gate
+    const cinematicsEnabled = isFeatureEnabled('HERO_CINEMATICS', { 
+      stableId: user?.id ?? user?.username 
+    });
+    if (!cinematicsEnabled) {
+      Alert.alert('Coming Soon', 'Hero cinematics are not yet available.');
+      return;
+    }
+    
     const heroId = heroNameToId(heroData.name);
     const videoSource = getHeroCinematicVideo(heroId);
     
@@ -134,11 +143,20 @@ export default function HeroDetailScreen() {
         console.log(`[HeroDetail] No cinematic video for ${heroId} at 5+ star`);
       }
     }
-  }, [heroData, isFivePlusStar]);
+  }, [heroData, isFivePlusStar, user?.id, user?.username]);
 
   // Handle preview button tap (for UR/UR+ heroes not yet at 5+)
   const handlePreview5PlusCinematic = useCallback(() => {
     if (!heroData) return;
+    
+    // Feature flag gate
+    const cinematicsEnabled = isFeatureEnabled('HERO_CINEMATICS', { 
+      stableId: user?.id ?? user?.username 
+    });
+    if (!cinematicsEnabled) {
+      Alert.alert('Coming Soon', 'Hero cinematics are not yet available.');
+      return;
+    }
     
     const heroId = heroNameToId(heroData.name);
     const videoSource = getHeroCinematicVideo(heroId);
@@ -151,7 +169,7 @@ export default function HeroDetailScreen() {
         console.log(`[HeroDetail] Preview: No cinematic video available for ${heroId}`);
       }
     }
-  }, [heroData]);
+  }, [heroData, user?.id, user?.username]);
 
   // Close cinematic modal
   const handleCloseCinematic = useCallback(() => {

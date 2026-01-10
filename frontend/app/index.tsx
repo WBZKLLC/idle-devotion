@@ -23,9 +23,9 @@ import Sidebar from '../components/Sidebar';
 // Raphael the Eternal - 5+ Star (6-star) Skin (Login screen ONLY)
 const RAPHAEL_5PLUS_IMAGE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
 
-// Dashboard background (Sanctum environment art) - NOT Raphael
-// Celestial sanctum/temple environment from CDN
-const SANCTUM_BG_IMAGE = 'https://customer-assets.emergentagent.com/job_epicvids/artifacts/f8lo3ejw_Sanctum.jpg';
+// Dashboard background (Sanctum environment art) - LOCAL ASSET
+// Celestial sanctum/temple environment - instant render, no flicker
+const SANCTUM_BG_IMAGE = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
 // Regal Color Palette - Enhanced for celestial theme
 const COLORS = {

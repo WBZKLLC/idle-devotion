@@ -45,6 +45,7 @@ import {
   isAtMaxStars,
   starsToTierIndex,
   tierLabel,
+  labelForTier,
 } from '../lib/tier';
 
 // 2Dlive shell (UI-only)

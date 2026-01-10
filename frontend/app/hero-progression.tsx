@@ -77,6 +77,8 @@ const nextRarity = (r: string): Rarity | null => {
 
 export default function HeroProgressionScreen() {
   const hydrated = useHydration();
+  // IMPORTANT: heroId must be UserHero.id (the instance primary key), NOT hero_id (base hero template).
+  // The promote-star endpoint expects user_hero_id.
   const { heroId } = useLocalSearchParams<{ heroId: string }>();
   const { user, fetchUser, fetchUserHeroes, userHeroes } = useGameStore();
 

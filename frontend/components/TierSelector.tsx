@@ -43,7 +43,7 @@ export default function TierSelector({ value, maxUnlocked, onChange, hint = true
         <Text style={[styles.label, compact && styles.labelCompact]}>Display Tier</Text>
         {hint && (
           <Text style={[styles.hint, compact && styles.hintCompact]}>
-            Unlocked up to: {TIER_LABELS.find(t => t.tier === maxUnlocked)?.label}
+            Unlocked: {TIER_LABELS.find(t => t.tier === maxUnlocked)?.label}
           </Text>
         )}
       </View>

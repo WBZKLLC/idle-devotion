@@ -3,9 +3,9 @@
 // 1) Rarity Ascension section (UI-only, gracefully tries common endpoints; shows "server not wired" if none exist)
 // 2) "How to earn shards" hint (links to Summon Hub)
 //
-// Keeps EXACT tier art + unlock mapping:
-// - tier art: heroData.ascension_images[String(tier)]
-// - unlock mapping matches heroes.tsx exactly
+// Tier art + unlock mapping uses CENTRALIZED lib/tier.ts:
+// - resolveTierArt(heroData, tier) for art resolution
+// - unlockedTierForHero(hero) for tier gating
 // - promote-star endpoint: POST /api/hero/{user_hero_id}/promote-star?username=...
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';

@@ -71,8 +71,9 @@ export default function AbyssScreen() {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}/abyss/${user.username}/status`);
-      setAbyssData(response.data);
+      // Use centralized API wrapper
+      const data = await getAbyssStatus(user.username);
+      setAbyssData(data);
     } catch (error) {
       console.error('Error loading abyss:', error);
     } finally {
@@ -82,8 +83,9 @@ export default function AbyssScreen() {
 
   const loadLeaderboard = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/abyss/leaderboard/${user?.server_id || 'server_1'}`);
-      setLeaderboard(response.data);
+      // Use centralized API wrapper
+      const data = await getAbyssLeaderboard(user?.server_id || 'server_1');
+      setLeaderboard(data);
     } catch (error) {
       console.error('Error loading leaderboard:', error);
     }
@@ -92,8 +94,9 @@ export default function AbyssScreen() {
   const loadLevelRecords = async (level: number) => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/abyss/${user.username}/records?level=${level}`);
-      setLevelRecords(response.data);
+      // Use centralized API wrapper
+      const data = await getAbyssRecords(user.username, level);
+      setLevelRecords(data);
       setShowRecordsModal(true);
     } catch (error) {
       console.error('Error loading records:', error);
@@ -107,16 +110,17 @@ export default function AbyssScreen() {
     setAttackResult(null);
     
     try {
-      const response = await axios.post(`${API_BASE}/abyss/${user.username}/attack`);
-      setAttackResult(response.data);
+      // Use centralized API wrapper
+      const result = await attackAbyss(user.username);
+      setAttackResult(result);
       
-      if (response.data.boss_defeated) {
+      if (result.boss_defeated) {
         // Show victory
         setTimeout(() => {
-          if (response.data.milestone_reward) {
+          if (result.milestone_reward) {
             Alert.alert(
               '🎉 MILESTONE FIRST CLEAR!',
-              `${response.data.milestone_reward.message}\n\nDepth ${response.data.level}m conquered!`
+              `${result.milestone_reward.message}\n\nDepth ${result.level}m conquered!`
             );
           }
           loadAbyssData();
@@ -124,7 +128,7 @@ export default function AbyssScreen() {
         }, 1500);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Attack failed');
+      Alert.alert('Error', error?.message || 'Attack failed');
     } finally {
       setIsAttacking(false);
     }

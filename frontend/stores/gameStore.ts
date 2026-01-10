@@ -1,16 +1,15 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
 
-// Platform-safe storage utilities
+// Auth storage helpers (canonical source for token persistence)
 import { 
-  storageGet, 
-  storageSet, 
-  storageRemove, 
-  clearAuthStorage,
-  STORAGE_KEYS 
-} from '../lib/storage';
+  saveAuthData, 
+  loadAuthToken, 
+  loadAuthUsername,
+  clearAuthData 
+} from '../lib/authStorage';
 
-// Centralized API wrappers - store actions use these (no direct URL construction)
+// API layer with token setter
 import {
   getUserHeroes,
   getUserHeroById as apiGetUserHeroById,
@@ -26,6 +25,7 @@ import {
   claimIdle,
   getUserCR,
   setProfilePicture,
+  apiSetAuthToken,
 } from '../lib/api';
 
 interface User {

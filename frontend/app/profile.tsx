@@ -81,11 +81,11 @@ export default function ProfileScreen() {
     }
   };
 
-  const equipFrame = async (frameId: string) => {
+  const handleEquipFrame = async (frameId: string) => {
     if (!user) return;
     try {
       setLoadingFrames(true);
-      await axios.post(`${API_BASE}/user/${user.username}/equip-frame?frame_id=${frameId}`);
+      await equipFrameApi(user.username, frameId);
       setEquippedFrame(frameId);
       await loadUserFrames();
       Alert.alert('Success', 'Frame equipped successfully!');

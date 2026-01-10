@@ -174,12 +174,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
-      const response = await axios.post(`${BACKEND_URL}/api/user/register`, {
-        username,
-        password
-      });
+      const data = await apiRegisterUser({ username, password });
       
-      const { user, token } = response.data;
+      const { user, token } = data;
       
       // Save auth data
       await saveAuthData(username, token);
@@ -199,12 +196,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       set({ isLoading: true, error: null, needsPassword: false });
       
-      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
-        username,
-        password
-      });
+      const data = await loginAuth({ username, password });
       
-      const { user, token } = response.data;
+      const { user, token } = data;
       
       // Save auth data
       await saveAuthData(username, token);
@@ -213,7 +207,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       // Trigger daily login
       try {
-        await axios.post(`${BACKEND_URL}/api/user/${username}/login`);
+        await triggerDailyLogin(username);
       } catch (e) {
         console.log('Daily login call failed:', e);
       }

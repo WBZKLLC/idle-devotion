@@ -537,14 +537,22 @@ export const useGameStore = create<GameState>((set, get) => ({
       );
     }
 
-    // 3) Cache the result (merge into store)
-    set((s) => ({
-      userHeroes: s.userHeroes
-        ? (s.userHeroes.some((h: any) => String(h?.id) === String(fresh?.id))
-            ? s.userHeroes.map((h: any) => (String(h?.id) === String(fresh?.id) ? fresh : h))
+    // 3) Cache the result (merge into both list + map)
+    set((s) => {
+      const idKey = String((fresh as any)?.id);
+      const nextById = { ...(s.userHeroesById ?? {}), [idKey]: fresh };
+
+      const nextList = s.userHeroes
+        ? (s.userHeroes.some((h: any) => String(h?.id) === idKey)
+            ? s.userHeroes.map((h: any) => (String(h?.id) === idKey ? fresh : h))
             : [fresh, ...s.userHeroes])
-        : [fresh],
-    }));
+        : [fresh];
+
+      return {
+        userHeroes: nextList,
+        userHeroesById: nextById,
+      };
+    });
 
     return fresh;
   },

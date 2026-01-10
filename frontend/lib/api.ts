@@ -345,6 +345,41 @@ export async function attackAbyss(username: string, level?: number) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// EQUIPMENT / RUNES (equipment.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getUserEquipment(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/equipment/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function getUserRunes(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/equipment/${encodeURIComponent(u)}/runes`);
+  return res.data;
+}
+
+export async function getEquipmentHeroes(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}/heroes`);
+  return Array.isArray(res.data) ? res.data : (res.data?.heroes ?? res.data ?? []);
+}
+
+export async function enhanceEquipment(
+  username: string,
+  equipmentId: string,
+  materials: Array<{ id: string; qty: number }>
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/equipment/${encodeURIComponent(u)}/enhance`,
+    { equipment_id: equipmentId, materials }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // CAMPAIGN / STORY (campaign.tsx)
 // ─────────────────────────────────────────────────────────────
 

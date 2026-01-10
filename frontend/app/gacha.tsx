@@ -24,7 +24,7 @@ import {
   computeUserMaxUnlockedTier,
   TIER_LABELS,
   labelForStars,
-} from '../lib/tier';
+} from '../lib/progression';
 
 // ✅ Shared 2Dlive shell (UI-only)
 import {

@@ -245,7 +245,7 @@ export default function HeroDetailScreen() {
   const rarityColor = RARITY_COLORS[heroData.rarity] || RARITY_COLORS['N'];
 
   // Compute unlocked tier from hero stars/awakening
-  const unlockedTier = useMemo(() => unlockedTierFromHero(hero), [hero]);
+  const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero]);
 
   return (
     <View style={styles.container}>

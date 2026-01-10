@@ -43,63 +43,47 @@ const CLASS_ICONS: { [key: string]: string } = {
 };
 
 // ----------------------------
-// Tier / Stars utilities (EXACT to backend + your mapping)
+// Tier / Stars utilities (EXACT match to heroes.tsx)
 // ----------------------------
+
+type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
+
+function clampTier(n: any): DisplayTier {
+  const t = Number(n);
+  if (!Number.isFinite(t)) return 1;
+  const v = Math.max(1, Math.min(6, Math.floor(t)));
+  return v as DisplayTier;
+}
 
 function displayStars(hero: any): number {
   const s = Number(hero?.stars ?? 0);
   if (!Number.isFinite(s)) return 0;
-  return Math.max(0, Math.min(6, Math.floor(s)));
+  return Math.max(0, Math.min(6, s));
 }
 
-/**
- * EXACT unlock mapping (as per your spec):
- * stars=0 → unlock tier 1
- * stars=1 → unlock tier 2
- * stars=2 → unlock tier 3
- * stars=3 → unlock tier 4
- * stars=4 → unlock tier 5
- * stars>=5 OR awakening>0 → unlock tier 6 (5★+)
- */
-function unlockedTierFromHero(hero: any): number {
+function unlockedTierForHero(hero: any): DisplayTier {
   const stars = displayStars(hero);
-  const awakening = Number(hero?.awakening_level ?? 0);
-  const hasAwaken = Number.isFinite(awakening) && awakening > 0;
+  const awaken = Number(hero?.awakening_level ?? 0);
 
-  if (stars >= 5 || hasAwaken) return 6;
-  // stars 0..4 map to tiers 1..5
-  return Math.max(1, Math.min(5, stars + 1));
+  if (awaken > 0 || stars >= 5) return 6;
+
+  // 0..4 -> 1..5
+  const tier = stars + 1;
+  return clampTier(Math.max(1, Math.min(5, tier)));
 }
 
-function clampTier(tier: number): number {
-  const t = Number(tier);
-  if (!Number.isFinite(t)) return 1;
-  return Math.max(1, Math.min(6, Math.floor(t)));
-}
-
-/**
- * resolveTierArt (NO GUESSING):
- * - Uses heroData.ascension_images[String(tier)] exactly (API format "1".."6")
- * - If missing, falls back to heroData.image_url
- * - If missing, falls back to Sanctum environment
- */
-function resolveTierArt(heroData: any, tier: number) {
-  const t = clampTier(tier);
-
+// IMPORTANT: NO GUESSING — exact API format: hero_data.ascension_images["1".."6"]
+function resolveTierArt(heroData: any, tier: DisplayTier) {
   const asc = heroData?.ascension_images;
-  const tierUrl =
+  const url =
     asc && typeof asc === 'object'
-      ? (asc[String(t)] as string | undefined)
+      ? (asc[String(tier)] as string | undefined)
       : undefined;
 
-  if (typeof tierUrl === 'string' && tierUrl.length > 0) {
-    return { uri: tierUrl };
-  }
+  if (typeof url === 'string' && url.length > 0) return { uri: url };
 
-  const baseUrl = heroData?.image_url;
-  if (typeof baseUrl === 'string' && baseUrl.length > 0) {
-    return { uri: baseUrl };
-  }
+  const base = heroData?.image_url;
+  if (typeof base === 'string' && base.length > 0) return { uri: base };
 
   return require('../assets/backgrounds/sanctum_environment_01.jpg');
 }

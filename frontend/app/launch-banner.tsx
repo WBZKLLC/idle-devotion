@@ -83,11 +83,12 @@ export default function LaunchBannerScreen() {
   }, []);
 
   const loadBannerData = async () => {
+    if (!user?.username) return;
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/launch-banner/status/${user?.username}`).catch(() => ({ data: null }));
+      const data = await getLaunchBannerStatus(user.username);
       
-      setBannerData(response.data || {
+      setBannerData(data || {
         featured_hero: {
           name: 'Aethon, the Eternal Flame',
           rarity: 'UR+',
@@ -106,6 +107,24 @@ export default function LaunchBannerScreen() {
       });
     } catch (error) {
       console.error('Error loading banner:', error);
+      // Use default fallback data on error
+      setBannerData({
+        featured_hero: {
+          name: 'Aethon, the Eternal Flame',
+          rarity: 'UR+',
+          element: 'Fire',
+          base_atk: 680,
+          base_hp: 18500,
+          skill: 'Phoenix Rebirth - Deals 600% ATK damage and revives with 50% HP upon death (once per battle)',
+        },
+        pity_count: 0,
+        hard_pity: 100,
+        soft_pity_start: 75,
+        base_rate: 0.5,
+        current_rate: 0.5,
+        gems_cost_single: 300,
+        gems_cost_multi: 2700,
+      });
     } finally {
       setLoading(false);
     }

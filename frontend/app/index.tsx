@@ -281,12 +281,6 @@ export default function HomeScreen() {
     );
   }
 
-  // Calculate centered background image dimensions
-  const bgW = screenW * BG_SCALE;
-  const bgH = screenH * BG_SCALE;
-  const bgLeft = (screenW - bgW) / 2 + BG_OFFSET_X;
-  const bgTop = (screenH - bgH) / 2 + BG_OFFSET_Y;
-
   if (!user) {
     return (
       <View style={loginStyles.screenContainer}>

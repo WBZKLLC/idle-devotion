@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,14 +20,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 
 // ✅ 2Dlive shell (UI-only)
-import { CenteredBackground, DivineOverlays, SanctumAtmosphere } from '../components/DivineShell';
+import {
+  CenteredBackground,
+  DivineOverlays,
+  SanctumAtmosphere,
+  GlassCard,
+} from '../components/DivineShell';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL
   ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`
   : '/api';
 
-// ✅ Campaign environment background (local recommended)
+// ✅ Campaign environment background (confirmed path)
 const CAMPAIGN_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
 // Dark Fantasy Color Palette
@@ -259,7 +264,7 @@ export default function CampaignScreen() {
     );
   }
 
-  // Render chapter card
+  // Render chapter card (premium gold stroke wrapper)
   const renderChapterCard = ({ item: chapter }: { item: Chapter }) => {
     const actColor = getActColor(chapter.act);
     const visuals = CHAPTER_VISUALS[chapter.id] || CHAPTER_VISUALS[1];
@@ -267,88 +272,100 @@ export default function CampaignScreen() {
       ? (chapter.progress.cleared / chapter.progress.total) * 100
       : 0;
 
+    const unlocked = chapter.is_unlocked;
+
     return (
       <TouchableOpacity
-        style={[styles.chapterCard, !chapter.is_unlocked && styles.chapterLocked]}
-        onPress={() => chapter.is_unlocked && loadChapterStages(chapter)}
-        disabled={!chapter.is_unlocked}
-        activeOpacity={0.8}
+        style={styles.chapterCardOuter}
+        onPress={() => unlocked && loadChapterStages(chapter)}
+        disabled={!unlocked}
+        activeOpacity={0.85}
       >
-        <LinearGradient
-          colors={chapter.is_unlocked ? visuals.bg : ['#1a1a1a', '#0a0a0a']}
-          style={styles.chapterGradient}
-        >
-          {/* Lock overlay */}
-          {!chapter.is_unlocked && (
-            <View style={styles.lockOverlay}>
-              <Ionicons name="lock-closed" size={32} color={COLORS.cream.dark} />
-              <Text style={styles.lockText}>Complete Chapter {chapter.id - 1}</Text>
-            </View>
-          )}
-
-          {/* Chapter header */}
-          <View style={styles.chapterHeader}>
-            <View style={styles.chapterIconContainer}>
-              <Text style={styles.chapterIcon}>{visuals.icon}</Text>
-            </View>
-            <View style={styles.chapterInfo}>
-              <Text style={styles.chapterNumber}>Chapter {chapter.id}</Text>
-              <Text style={styles.chapterTitle}>{chapter.title}</Text>
-              <Text style={styles.chapterSubtitle}>{chapter.subtitle}</Text>
-            </View>
-            {chapter.is_completed && (
-              <View style={styles.completedBadge}>
-                <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
-              </View>
-            )}
-          </View>
-
-          {/* Act badge */}
-          <View style={[styles.actBadge, { backgroundColor: actColor.primary + '40' }]}>
-            <Text style={[styles.actText, { color: actColor.primary }]}>
-              Act {chapter.act}: {actColor.name}
-            </Text>
-          </View>
-
-          {/* Summary */}
-          <Text style={styles.chapterSummary} numberOfLines={2}>
-            {chapter.summary}
-          </Text>
-
-          {/* Progress bar */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
+        {/* Premium gold stroke frame */}
+        <View style={[styles.goldStrokeFrame, !unlocked && styles.goldStrokeFrameLocked]}>
+          <View style={[styles.goldStrokeInner, !unlocked && styles.goldStrokeInnerLocked]}>
+            <View style={[styles.chapterCard, !unlocked && styles.chapterLocked]}>
               <LinearGradient
-                colors={[actColor.primary, actColor.secondary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[styles.progressFill, { width: `${progressPercent}%` }]}
-              />
-            </View>
-            <Text style={styles.progressText}>
-              {chapter.progress.cleared}/{chapter.progress.total} Stages
-            </Text>
-          </View>
+                colors={unlocked ? visuals.bg : ['#1a1a1a', '#0a0a0a']}
+                style={styles.chapterGradient}
+              >
+                {/* Lock overlay */}
+                {!unlocked && (
+                  <View style={styles.lockOverlay}>
+                    <Ionicons name="lock-closed" size={32} color={COLORS.cream.dark} />
+                    <Text style={styles.lockText}>Complete Chapter {chapter.id - 1}</Text>
+                  </View>
+                )}
 
-          {/* Footer info */}
-          <View style={styles.chapterFooter}>
-            <View style={styles.powerReq}>
-              <Ionicons name="flash" size={14} color={COLORS.gold.light} />
-              <Text style={styles.powerText}>{formatNumber(chapter.recommended_power)} PWR</Text>
+                {/* Chapter header */}
+                <View style={styles.chapterHeader}>
+                  <View style={styles.chapterIconContainer}>
+                    <Text style={styles.chapterIcon}>{visuals.icon}</Text>
+                  </View>
+                  <View style={styles.chapterInfo}>
+                    <Text style={styles.chapterNumber}>Chapter {chapter.id}</Text>
+                    <Text style={styles.chapterTitle}>{chapter.title}</Text>
+                    <Text style={styles.chapterSubtitle}>{chapter.subtitle}</Text>
+                  </View>
+                  {chapter.is_completed && (
+                    <View style={styles.completedBadge}>
+                      <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
+                    </View>
+                  )}
+                </View>
+
+                {/* Act badge */}
+                <View style={[styles.actBadge, { backgroundColor: actColor.primary + '40' }]}>
+                  <Text style={[styles.actText, { color: actColor.primary }]}>
+                    Act {chapter.act}: {actColor.name}
+                  </Text>
+                </View>
+
+                {/* Summary */}
+                <Text style={styles.chapterSummary} numberOfLines={2}>
+                  {chapter.summary}
+                </Text>
+
+                {/* Progress bar */}
+                <View style={styles.progressContainer}>
+                  <View style={styles.progressBar}>
+                    <LinearGradient
+                      colors={[actColor.primary, actColor.secondary]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[styles.progressFill, { width: `${progressPercent}%` }]}
+                    />
+                  </View>
+                  <Text style={styles.progressText}>
+                    {chapter.progress.cleared}/{chapter.progress.total} Stages
+                  </Text>
+                </View>
+
+                {/* Footer info */}
+                <View style={styles.chapterFooter}>
+                  <View style={styles.powerReq}>
+                    <Ionicons name="flash" size={14} color={COLORS.gold.light} />
+                    <Text style={styles.powerText}>{formatNumber(chapter.recommended_power)} PWR</Text>
+                  </View>
+                  {chapter.completion_unlock && (
+                    <View style={styles.unlockPreview}>
+                      <Ionicons name="gift" size={14} color="#22c55e" />
+                      <Text style={styles.unlockText}>Unlocks: {chapter.completion_unlock}</Text>
+                    </View>
+                  )}
+                </View>
+              </LinearGradient>
+
+              {/* Soft premium sheen */}
+              <View pointerEvents="none" style={styles.chapterSheen} />
             </View>
-            {chapter.completion_unlock && (
-              <View style={styles.unlockPreview}>
-                <Ionicons name="gift" size={14} color="#22c55e" />
-                <Text style={styles.unlockText}>Unlocks: {chapter.completion_unlock}</Text>
-              </View>
-            )}
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   };
 
-  // Render stage button
+  // Render stage button (unchanged)
   const renderStageButton = (stage: Stage, index: number) => {
     const isBoss = stage.is_boss;
     const isMini = stage.is_mini_boss;
@@ -395,16 +412,12 @@ export default function CampaignScreen() {
     );
   };
 
-  // ----------------------------
-  // Main screen (2Dlive wrapped)
-  // ----------------------------
   return (
     <View style={styles.root}>
       <CenteredBackground source={CAMPAIGN_BG} mode="contain" zoom={1.03} opacity={1} />
       <SanctumAtmosphere />
       <DivineOverlays vignette={true} rays={false} grain={true} />
 
-      {/* Your original content starts here (unchanged) */}
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -444,30 +457,34 @@ export default function CampaignScreen() {
         {/* Stages Grid */}
         {activeTab === 'stages' && selectedChapter && (
           <ScrollView style={styles.stagesContainer} showsVerticalScrollIndicator={false}>
-            {/* Chapter story banner */}
-            <LinearGradient
-              colors={CHAPTER_VISUALS[selectedChapter.id]?.bg || ['#1a1a1a', '#0a0a0a']}
-              style={styles.storyBanner}
-            >
-              <Text style={styles.storyBannerIcon}>{CHAPTER_VISUALS[selectedChapter.id]?.icon}</Text>
-              <Text style={styles.storyBannerTitle}>{selectedChapter.title}</Text>
-              <Text style={styles.storyBannerSub}>{selectedChapter.subtitle}</Text>
-              <Text style={styles.storyBannerSummary}>{selectedChapter.summary}</Text>
-            </LinearGradient>
+            {/* ✅ story banner wrapped in GlassCard */}
+            <GlassCard style={styles.glassWrap}>
+              <LinearGradient
+                colors={CHAPTER_VISUALS[selectedChapter.id]?.bg || ['#1a1a1a', '#0a0a0a']}
+                style={styles.storyBanner}
+              >
+                <Text style={styles.storyBannerIcon}>{CHAPTER_VISUALS[selectedChapter.id]?.icon}</Text>
+                <Text style={styles.storyBannerTitle}>{selectedChapter.title}</Text>
+                <Text style={styles.storyBannerSub}>{selectedChapter.subtitle}</Text>
+                <Text style={styles.storyBannerSummary}>{selectedChapter.summary}</Text>
+              </LinearGradient>
+            </GlassCard>
 
             {/* Stage grid */}
             <View style={styles.stagesGrid}>
               {stages.map((stage, idx) => renderStageButton(stage, idx))}
             </View>
 
-            {/* Boss preview */}
+            {/* ✅ boss preview wrapped in GlassCard */}
             {stages.find(s => s.is_boss) && (
-              <View style={styles.bossPreview}>
-                <Text style={styles.bossPreviewTitle}>👹 Chapter Boss</Text>
-                <Text style={styles.bossPreviewText}>
-                  Defeat all stages to unlock the chapter boss!
-                </Text>
-              </View>
+              <GlassCard style={styles.glassWrap}>
+                <View style={styles.bossPreview}>
+                  <Text style={styles.bossPreviewTitle}>👹 Chapter Boss</Text>
+                  <Text style={styles.bossPreviewText}>
+                    Defeat all stages to unlock the chapter boss!
+                  </Text>
+                </View>
+              </GlassCard>
             )}
           </ScrollView>
         )}
@@ -728,10 +745,11 @@ export default function CampaignScreen() {
 }
 
 const styles = StyleSheet.create({
-  // ✅ New root wrapper for 2Dlive background layers
   root: { flex: 1, backgroundColor: '#05060A' },
-
   container: { flex: 1 },
+
+  // GlassCard wrapper spacing helper
+  glassWrap: { marginBottom: 20 },
 
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16 },
@@ -767,9 +785,40 @@ const styles = StyleSheet.create({
   // Chapters
   chaptersContainer: { flex: 1 },
   chaptersList: { padding: 16, paddingBottom: 100 },
-  chapterCard: { marginBottom: 16, borderRadius: 16, overflow: 'hidden' },
-  chapterLocked: { opacity: 0.6 },
+
+  // ✅ Premium chapter frame
+  chapterCardOuter: { marginBottom: 16 },
+  goldStrokeFrame: {
+    borderRadius: 18,
+    padding: 1.2,
+    backgroundColor: 'rgba(255, 215, 140, 0.22)',
+  },
+  goldStrokeFrameLocked: {
+    backgroundColor: 'rgba(255,255,255,0.10)',
+  },
+  goldStrokeInner: {
+    borderRadius: 17,
+    backgroundColor: 'rgba(10, 12, 18, 0.55)',
+    overflow: 'hidden',
+  },
+  goldStrokeInnerLocked: {
+    backgroundColor: 'rgba(10, 12, 18, 0.40)',
+  },
+
+  chapterCard: { borderRadius: 17, overflow: 'hidden' },
+  chapterLocked: { opacity: 0.75 },
   chapterGradient: { padding: 16 },
+
+  chapterSheen: {
+    position: 'absolute',
+    left: -40,
+    top: -60,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255, 215, 140, 0.06)',
+  },
+
   lockOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -779,6 +828,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   lockText: { color: COLORS.cream.dark, marginTop: 8, fontSize: 12 },
+
   chapterHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   chapterIconContainer: {
     width: 56,
@@ -795,6 +845,7 @@ const styles = StyleSheet.create({
   chapterTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.cream.pure },
   chapterSubtitle: { fontSize: 12, color: COLORS.cream.dark, fontStyle: 'italic' },
   completedBadge: { marginLeft: 8 },
+
   actBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
@@ -803,7 +854,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   actText: { fontSize: 11, fontWeight: '600' },
+
   chapterSummary: { fontSize: 13, color: COLORS.cream.soft, lineHeight: 18, marginBottom: 12 },
+
   progressContainer: { marginBottom: 12 },
   progressBar: {
     height: 8,
@@ -814,6 +867,7 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: '100%', borderRadius: 4 },
   progressText: { fontSize: 11, color: COLORS.cream.dark, textAlign: 'right' },
+
   chapterFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   powerReq: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   powerText: { fontSize: 12, color: COLORS.gold.light },
@@ -822,11 +876,13 @@ const styles = StyleSheet.create({
 
   // Stages
   stagesContainer: { flex: 1, padding: 16 },
-  storyBanner: { borderRadius: 16, padding: 20, marginBottom: 20, alignItems: 'center' },
+
+  storyBanner: { borderRadius: 16, padding: 20, alignItems: 'center' },
   storyBannerIcon: { fontSize: 40, marginBottom: 8 },
   storyBannerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center' },
   storyBannerSub: { fontSize: 14, color: COLORS.gold.light, fontStyle: 'italic', marginBottom: 8 },
   storyBannerSummary: { fontSize: 13, color: COLORS.cream.soft, textAlign: 'center', lineHeight: 18 },
+
   stagesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -867,14 +923,14 @@ const styles = StyleSheet.create({
   stageStars: { flexDirection: 'row', marginBottom: 2 },
   stageNumber: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure },
   bossIcon: { fontSize: 24 },
+
   bossPreview: {
-    backgroundColor: COLORS.navy.medium,
+    alignItems: 'center',
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
-    marginBottom: 100,
     borderWidth: 1,
     borderColor: '#ef4444' + '50',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   bossPreviewTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 4 },
   bossPreviewText: { fontSize: 13, color: COLORS.cream.dark, textAlign: 'center' },

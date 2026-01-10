@@ -117,6 +117,10 @@ export const starsToTierArtKey = (stars: number): TierArtKey => {
   return tierIndexToArtKey(t);
 };
 
+// ─────────────────────────────────────────────────────────────
+// TIER CLAMPING & EFFECTIVE TIER
+// ─────────────────────────────────────────────────────────────
+
 /**
  * Clamp a requested tier (global or local) to what the hero has unlocked.
  */
@@ -128,6 +132,10 @@ export const effectiveTierForHero = (
   return requestedTier <= unlocked ? requestedTier : unlocked;
 };
 
+// ─────────────────────────────────────────────────────────────
+// ART RESOLUTION (tier → image URL)
+// ─────────────────────────────────────────────────────────────
+
 /**
  * Resolve ascension art EXACTLY from API response.
  * IMPORTANT: Returns a STRING url (or undefined), NOT an { uri: ... } object.
@@ -137,7 +145,7 @@ export const resolveTierArt = (
   heroData: any,
   tier: number
 ): string | undefined => {
-  const t = String(Math.max(1, Math.min(6, Number(tier) || 1)));
+  const t = tierIndexToArtKey(tier);
 
   const asc = heroData?.ascension_images;
   if (asc && typeof asc === 'object') {
@@ -153,6 +161,20 @@ export const resolveTierArt = (
 };
 
 /**
+ * Convenience: get tier art directly from hero + stars.
+ * Combines getHeroBackendStars + starsToTierArtKey + resolveTierArt.
+ */
+export const getHeroTierArt = (heroData: any): string | undefined => {
+  const stars = getHeroBackendStars(heroData);
+  const tier = starsToTierIndex(stars);
+  return resolveTierArt(heroData, tier);
+};
+
+// ─────────────────────────────────────────────────────────────
+// COLLECTION HELPERS
+// ─────────────────────────────────────────────────────────────
+
+/**
  * Compute max unlocked tier across all heroes (for global tier selector)
  */
 export const computeUserMaxUnlockedTier = (heroes: any[]): DisplayTier => {
@@ -164,6 +186,10 @@ export const computeUserMaxUnlockedTier = (heroes: any[]): DisplayTier => {
   return max;
 };
 
+// ─────────────────────────────────────────────────────────────
+// UI LABELS & DISPLAY
+// ─────────────────────────────────────────────────────────────
+
 /**
  * Tier labels for UI (object format for lookup)
  */
@@ -174,10 +200,14 @@ export const TIER_LABELS: Record<DisplayTier, string> = {
   4: '4★',
   5: '5★',
   6: '5★+',
+  7: '7★',
+  8: '8★',
+  9: '9★',
+  10: '10★',
 };
 
 /**
- * Tier labels array for mapping in UI selectors
+ * Tier labels array for mapping in UI selectors (active tiers only)
  */
 export const TIER_LABEL_ARRAY: { tier: DisplayTier; label: string }[] = [
   { tier: 1, label: '1★' },
@@ -187,3 +217,10 @@ export const TIER_LABEL_ARRAY: { tier: DisplayTier; label: string }[] = [
   { tier: 5, label: '5★' },
   { tier: 6, label: '5★+' },
 ];
+
+/**
+ * Get display label for a tier.
+ */
+export const getTierLabel = (tier: DisplayTier): string => {
+  return TIER_LABELS[tier] || `${tier}★`;
+};

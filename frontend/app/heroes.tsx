@@ -25,8 +25,10 @@ import {
   resolveTierArt,
   computeUserMaxUnlockedTier,
   TIER_LABELS,
-  TIER_LABEL_ARRAY,
 } from '../lib/tier';
+
+// Shared animated TierSelector component
+import TierSelector from '../components/TierSelector';
 
 // 2Dlive shell (UI-only)
 import {

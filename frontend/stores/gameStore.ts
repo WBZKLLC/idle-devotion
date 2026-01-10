@@ -408,15 +408,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     set({ isLoading: true });
     try {
-      await axios.post(
-        `${BACKEND_URL}/api/user/${user.username}/heroes/${heroInstanceId}/upgrade`
-      );
+      // Uses centralized API wrapper from lib/api.ts
+      await apiUpgradeHero(user.username, heroInstanceId);
       
       // Refresh heroes data
       await get().fetchUserHeroes();
       set({ isLoading: false });
     } catch (error: any) {
-      set({ error: error.response?.data?.detail || 'Failed to upgrade hero', isLoading: false });
+      set({ error: error.response?.data?.detail || error?.message || 'Failed to upgrade hero', isLoading: false });
       throw error;
     }
   },

@@ -423,7 +423,19 @@ export default function CampaignScreen() {
 
   return (
     <View style={styles.root}>
-      <CenteredBackground source={CAMPAIGN_BG} mode="contain" zoom={1.03} opacity={1} />
+      {/* Background logic:
+          - Chapters tab: Sanctum environment
+          - Stages tab: Act-specific background (Option B) */}
+      <CenteredBackground
+        source={
+          activeTab === 'stages' && selectedChapter
+            ? (ACT_BACKGROUNDS[selectedChapter.act] ?? CAMPAIGN_BG)
+            : CAMPAIGN_BG
+        }
+        mode="contain"
+        zoom={1.03}
+        opacity={1}
+      />
       <SanctumAtmosphere />
       <DivineOverlays vignette={true} rays={false} grain={true} />
 

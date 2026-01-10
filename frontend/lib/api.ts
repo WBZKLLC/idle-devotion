@@ -197,3 +197,19 @@ export async function setActiveTeam(teamId: string, username: string) {
   );
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// IDLE REWARDS (index.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getIdleStatus(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/idle/status/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function instantCollectIdle(username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/idle/instant-collect/${encodeURIComponent(u)}`);
+  return res.data;
+}

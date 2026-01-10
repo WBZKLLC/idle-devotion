@@ -154,54 +154,11 @@ function setUserHeroesState(set: any, heroes: UserHero[]) {
   });
 }
 
-// Helper to clear auth data
-const clearAuthData = async () => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.removeItem(STORAGE_KEYS.USERNAME);
-      window.localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    }
-    await AsyncStorage.removeItem(STORAGE_KEYS.USERNAME);
-    await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-  } catch (e) {
-    console.error('Failed to clear auth data:', e);
-  }
-};
-
-// Helper to get stored auth data
+// Helper to get stored auth data using platform-safe storage
 const getStoredAuthData = async (): Promise<{username: string | null; token: string | null}> => {
-  let username = null;
-  let token = null;
-  
-  try {
-    // Try localStorage first (web)
-    if (typeof window !== 'undefined' && window.localStorage) {
-      try {
-        username = window.localStorage.getItem(STORAGE_KEYS.USERNAME);
-        token = window.localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        if (username) {
-          console.log('[getStoredAuthData] Found in localStorage:', username);
-          return { username, token };
-        }
-      } catch (e) {
-        console.log('[getStoredAuthData] localStorage access failed:', e);
-      }
-    }
-    
-    // Fallback to AsyncStorage (native)
-    try {
-      username = await AsyncStorage.getItem(STORAGE_KEYS.USERNAME);
-      token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-      if (username) {
-        console.log('[getStoredAuthData] Found in AsyncStorage:', username);
-      }
-    } catch (e) {
-      console.log('[getStoredAuthData] AsyncStorage access failed:', e);
-    }
-  } catch (e) {
-    console.error('Failed to get stored auth data:', e);
-  }
-  
+  const username = await storageGet(STORAGE_KEYS.USERNAME);
+  const token = await storageGet(STORAGE_KEYS.AUTH_TOKEN);
+  if (__DEV__) console.log('[getStoredAuthData] username:', username ? '(exists)' : '(null)', 'token:', token ? '(exists)' : '(null)');
   return { username, token };
 };
 

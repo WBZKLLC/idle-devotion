@@ -99,13 +99,8 @@ export default function GuildScreen() {
 
   const loadBossData = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/boss`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setBossData(data);
-      }
+      const data = await getGuildBoss(user?.username || '');
+      setBossData(data);
     } catch (error) {
       console.error('Failed to load boss:', error);
     }

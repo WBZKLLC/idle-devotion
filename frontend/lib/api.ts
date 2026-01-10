@@ -270,6 +270,44 @@ export async function saveModeTeam(username: string, mode: string, heroIds: stri
 }
 
 // ─────────────────────────────────────────────────────────────
+// CAMPAIGN / STORY (campaign.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getCampaignChapters(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/campaign/chapters`, {
+    params: { username: u },
+  });
+  return res.data;
+}
+
+export async function getCampaignChapterDetail(
+  username: string,
+  chapterId: string
+) {
+  const u = requireUsername(username);
+  const res = await api.get(
+    `/campaign/chapter/${encodeURIComponent(chapterId)}`,
+    { params: { username: u } }
+  );
+  return res.data;
+}
+
+export async function startCampaignBattle(
+  username: string,
+  stageId: string,
+  teamId?: string
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/campaign/battle`,
+    { stage_id: stageId, team_id: teamId },
+    { params: { username: u } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // DUNGEONS / STAGES (dungeons.tsx)
 // ─────────────────────────────────────────────────────────────
 

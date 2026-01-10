@@ -183,8 +183,11 @@ export default function HeroDetailScreen() {
           setHero(userHero);
           setHeroData(userHero.hero_data);
 
-          // Default displayed art to Tier 1 (NOT 3) every time we open a hero
-          setSelectedTier(1);
+          // Respect tier param from heroes.tsx, but never exceed this hero's unlocked tier
+          const requestedTier = clampTier(tier ?? 1);
+          const unlocked = unlockedTierForHero(userHero);
+          const effective: DisplayTier = (requestedTier <= unlocked ? requestedTier : unlocked);
+          setSelectedTier(effective);
         }
       }
     } catch (error) {

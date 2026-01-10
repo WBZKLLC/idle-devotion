@@ -127,6 +127,9 @@ export default function HeroProgressionScreen() {
 
   // rollback for optimistic
   const rollbackRef = useRef<{ hero: any } | null>(null);
+  
+  // Track last hero id for tier initialization vs clamping
+  const lastHeroIdRef = useRef<string | null>(null);
 
   // Clear override when heroId changes (prevents stale override on navigation)
   useEffect(() => {

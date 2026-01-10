@@ -19,6 +19,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import HeroCinematicModal from '../components/HeroCinematicModal';
 import { getHeroCinematicVideo, heroNameToId, VIDEOS_AVAILABLE } from '../constants/heroCinematics';
 
+// Centralized API wrappers (cache-first hero lookup)
+import { getUserHeroById } from '../lib/api';
+
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {
   DisplayTier,

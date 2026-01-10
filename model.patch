@@ -1,40 +1,98 @@
-diff --git a/frontend/services/unityBridge.ts b/frontend/services/unityBridge.ts
-index 5184d26..a048851 100644
---- a/frontend/services/unityBridge.ts
-+++ b/frontend/services/unityBridge.ts
-@@ -321,3 +321,5 @@ export const UnityBridge = {
-       }
-     : undefined, // F17: Not available in production builds
- };
-+
-+export default UnityBridge;
+diff --git a/frontend/app/hero-detail.tsx b/frontend/app/hero-detail.tsx
+index fb6d197..316e8eb 100644
+--- a/frontend/app/hero-detail.tsx
++++ b/frontend/app/hero-detail.tsx
+@@ -677,6 +677,48 @@ const styles = StyleSheet.create({
+     borderColor: COLORS.gold.primary,
+   },
+   promoteText: { fontSize: 14, fontWeight: '600', color: COLORS.gold.primary },
++  // 5+ Star Cinematic Indicator
++  fivePlusIndicator: {
++    position: 'absolute',
++    bottom: 40,
++    left: 0,
++    right: 0,
++    flexDirection: 'row',
++    justifyContent: 'center',
++    alignItems: 'center',
++    backgroundColor: 'rgba(0,0,0,0.6)',
++    paddingVertical: 6,
++    paddingHorizontal: 12,
++    borderRadius: 16,
++    marginHorizontal: 20,
++  },
++  fivePlusIndicatorText: {
++    color: COLORS.cream.pure,
++    fontSize: 12,
++    fontWeight: '600',
++    marginLeft: 6,
++  },
++  // Preview 5+ Button
++  preview5PlusButton: {
++    marginHorizontal: 16,
++    marginTop: 12,
++    marginBottom: 8,
++    borderRadius: 12,
++    overflow: 'hidden',
++  },
++  preview5PlusGradient: {
++    flexDirection: 'row',
++    alignItems: 'center',
++    justifyContent: 'center',
++    paddingVertical: 12,
++    paddingHorizontal: 16,
++  },
++  preview5PlusText: {
++    color: COLORS.cream.pure,
++    fontWeight: 'bold',
++    fontSize: 14,
++    marginLeft: 8,
++  },
+   
+   // Error
+   errorText: { color: COLORS.cream.pure, fontSize: 18 },
 diff --git a/model.patch b/model.patch
-index 221e251..e69de29 100644
+index d82fde3..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,25 +0,0 @@
+@@ -1,40 +0,0 @@
+-diff --git a/frontend/services/unityBridge.ts b/frontend/services/unityBridge.ts
+-index 5184d26..a048851 100644
+---- a/frontend/services/unityBridge.ts
+-+++ b/frontend/services/unityBridge.ts
+-@@ -321,3 +321,5 @@ export const UnityBridge = {
+-       }
+-     : undefined, // F17: Not available in production builds
+- };
+-+
+-+export default UnityBridge;
 -diff --git a/model.patch b/model.patch
--index 1812db8..e69de29 100644
+-index 221e251..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,20 +0,0 @@
---diff --git a/frontend/app/guild.tsx b/frontend/app/guild.tsx
---index 9141fd3..86c79a0 100644
------ a/frontend/app/guild.tsx
---+++ b/frontend/app/guild.tsx
---@@ -54,6 +54,7 @@ export default function GuildScreen() {
---   useEffect(() => {
---     if (hydrated && user) {
---       loadGuildData();
---+      loadGuildLevelInfo();
---     } else if (hydrated && !user) {
---       setIsLoading(false);
---     }
---@@ -65,6 +66,7 @@ export default function GuildScreen() {
---     }
---     if (guildData && activeTab === 'donate') {
---       loadDonationHistory();
---+      loadGuildLevelInfo();
---     }
---   }, [guildData, activeTab]);
--- 
+-@@ -1,25 +0,0 @@
+--diff --git a/model.patch b/model.patch
+--index 1812db8..e69de29 100644
+----- a/model.patch
+--+++ b/model.patch
+--@@ -1,20 +0,0 @@
+---diff --git a/frontend/app/guild.tsx b/frontend/app/guild.tsx
+---index 9141fd3..86c79a0 100644
+------ a/frontend/app/guild.tsx
+---+++ b/frontend/app/guild.tsx
+---@@ -54,6 +54,7 @@ export default function GuildScreen() {
+---   useEffect(() => {
+---     if (hydrated && user) {
+---       loadGuildData();
+---+      loadGuildLevelInfo();
+---     } else if (hydrated && !user) {
+---       setIsLoading(false);
+---     }
+---@@ -65,6 +66,7 @@ export default function GuildScreen() {
+---     }
+---     if (guildData && activeTab === 'donate') {
+---       loadDonationHistory();
+---+      loadGuildLevelInfo();
+---     }
+---   }, [guildData, activeTab]);
+--- 

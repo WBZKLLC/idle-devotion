@@ -234,12 +234,12 @@ export default function HeroProgressionScreen() {
         // Prefer store data
         found = (userHeroes || []).find((h: any) => h?.id === heroId);
 
-        // Last resort: direct fetch from user heroes endpoint
+        // Last resort: use centralized API wrapper (no raw fetch)
         if (!found) {
-          const resp = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/${user.username}/heroes`);
-          if (resp.ok) {
-            const list = await resp.json();
-            found = (list || []).find((h: any) => h?.id === heroId);
+          try {
+            found = await getUserHeroById(user.username, String(heroId));
+          } catch {
+            // getUserHeroById throws if not found - that's okay, found stays null
           }
         }
       }

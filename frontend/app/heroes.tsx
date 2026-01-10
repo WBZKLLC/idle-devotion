@@ -173,43 +173,13 @@ export default function HeroesScreen() {
           </Pressable>
         </View>
 
-        {/* Display Tier Selector (gated by unlock) */}
-        <View style={styles.tierRowWrap}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tierRow}>
-            <Text style={styles.tierLabel}>Display Tier</Text>
-
-            {TIER_LABEL_ARRAY.map(({ tier, label }) => {
-              const locked = tier > userMaxUnlockedTier;
-              const active = displayTier === tier;
-
-              return (
-                <Pressable
-                  key={tier}
-                  onPress={() => !locked && setDisplayTier(tier)}
-                  style={[
-                    styles.tierChip,
-                    active && styles.tierChipActive,
-                    locked && styles.tierChipLocked,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.tierChipText,
-                      active && styles.tierChipTextActive,
-                      locked && styles.tierChipTextLocked,
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          <Text style={styles.tierHint}>
-            Unlocked up to: {TIER_LABELS[userMaxUnlockedTier]}
-          </Text>
-        </View>
+        {/* Display Tier Selector (animated, gated by unlock) */}
+        <TierSelector
+          value={displayTier}
+          maxUnlocked={userMaxUnlockedTier}
+          onChange={setDisplayTier}
+          hint
+        />
 
         {/* Filter Bar */}
         <View style={styles.blockPad}>

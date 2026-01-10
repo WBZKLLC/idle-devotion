@@ -72,10 +72,10 @@ export default function ProfileScreen() {
   const loadUserFrames = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/user/${user.username}/frames`);
-      setAvailableFrames(response.data.available_frames || []);
-      setLockedFrames(response.data.locked_frames || []);
-      setEquippedFrame(response.data.equipped_frame || 'default');
+      const data = await getUserFrames(user.username);
+      setAvailableFrames(data.available_frames || []);
+      setLockedFrames(data.locked_frames || []);
+      setEquippedFrame(data.equipped_frame || 'default');
     } catch (error) {
       console.error('Error loading frames:', error);
     }

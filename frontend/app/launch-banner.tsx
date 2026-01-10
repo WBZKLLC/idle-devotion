@@ -16,12 +16,7 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 import { getLaunchBannerStatus, pullLaunchBanner } from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
 import COLORS from '../theme/colors';
-
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
-  : '/api';
 
 // Aethon Launch Banner - 72 Hour Limited
 export default function LaunchBannerScreen() {

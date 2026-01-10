@@ -176,6 +176,60 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setHydrated: (value: boolean) => set({ isHydrated: value }),
 
+  // Primary auth hydration - called on app boot
+  // Reads token from storage, verifies with backend, and restores user state
+  hydrateAuth: async () => {
+    console.log('[hydrateAuth] Starting auth hydration...');
+    
+    try {
+      const { token, username } = await getStoredAuthData();
+      
+      if (!token) {
+        console.log('[hydrateAuth] No token found, user needs to login');
+        set({ isHydrated: true });
+        return;
+      }
+      
+      console.log('[hydrateAuth] Token found, verifying with backend...');
+      
+      // Verify token with backend
+      try {
+        const verifyResult = await verifyAuthToken(token);
+        
+        if (verifyResult.valid && verifyResult.user) {
+          console.log('[hydrateAuth] Token valid, user restored:', verifyResult.user.username);
+          set({ 
+            user: verifyResult.user, 
+            authToken: token, 
+            isHydrated: true 
+          });
+          return;
+        }
+      } catch (verifyError) {
+        console.log('[hydrateAuth] Token verification failed, trying legacy restore:', verifyError);
+      }
+      
+      // Fallback: if we have username but token verification failed, try fetching user directly
+      if (username) {
+        try {
+          console.log('[hydrateAuth] Trying legacy username-based restore for:', username);
+          const userData = await apiFetchUser(username);
+          set({ user: userData, authToken: token, isHydrated: true });
+          console.log('[hydrateAuth] Legacy restore successful');
+          return;
+        } catch (e) {
+          console.log('[hydrateAuth] Legacy restore failed, clearing storage');
+          await clearAuthStorage();
+        }
+      }
+      
+      set({ isHydrated: true });
+    } catch (e) {
+      console.error('[hydrateAuth] Error:', e);
+      set({ isHydrated: true });
+    }
+  },
+
   // Register new user with password
   registerUser: async (username: string, password: string) => {
     try {

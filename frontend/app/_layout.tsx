@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStore } from '../stores/gameStore';
 import { useFeatureStore } from '../stores/featureStore';
+import { isFeatureEnabled } from '../lib/features';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 
@@ -14,6 +15,20 @@ const COLORS = {
   gold: { primary: '#c9a227', light: '#e6c666' },
   cream: { soft: '#f8f6f0' },
 };
+
+// Maintenance Mode Screen
+function MaintenanceScreen() {
+  return (
+    <View style={styles.maintenanceContainer}>
+      <Ionicons name="construct" size={64} color={COLORS.gold.primary} />
+      <Text style={styles.maintenanceTitle}>Under Maintenance</Text>
+      <Text style={styles.maintenanceText}>
+        We're performing scheduled maintenance.{'\n'}
+        Please check back soon!
+      </Text>
+    </View>
+  );
+}
 
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {

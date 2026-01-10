@@ -1005,6 +1005,23 @@ export async function fetchAllHeroesCatalog() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// PURCHASE VERIFY (RevenueCatService.ts)
+// ─────────────────────────────────────────────────────────────
+
+export async function verifyPurchase(payload: {
+  username: string;
+  productId: string;
+  transactionId: string;
+  platform?: 'ios' | 'android' | 'web';
+  receipt?: string;
+  [k: string]: any;
+}) {
+  // Keep wire shape flexible for RevenueCat payload evolution
+  const res = await api.post(`/purchase/verify`, payload);
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // IDLE CLAIM (gameStore.ts)
 // ─────────────────────────────────────────────────────────────
 

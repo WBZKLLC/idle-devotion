@@ -183,11 +183,14 @@ export default function HeroProgressionScreen() {
     return effectiveUnlockedTier === 6;
   }, [effectiveUnlockedTier, rarityNext]);
 
-  const calcPower = useCallback((h: any, hd: any) => {
+  const calcPower = useCallback((h: any, hd: any, overrideStars?: number) => {
     if (!h || !hd) return 0;
 
     const level = clampInt(h?.level ?? 1, 1, 999);
-    const starsLocal = clampInt(h?.stars ?? 0, 0, 6);
+    // Use override stars if provided (for simulating next star power), otherwise extract from hero
+    const starsLocal = overrideStars !== undefined 
+      ? clampInt(overrideStars, 0, MAX_STAR_TIER)
+      : clampInt(h?.stars ?? 0, 0, MAX_STAR_TIER);
     const awaken = clampInt(h?.awakening_level ?? 0, 0, 99);
 
     const base_hp = clampInt(hd?.base_hp ?? 1000, 0, 999999999);
@@ -206,7 +209,8 @@ export default function HeroProgressionScreen() {
   const nextPower = useMemo(() => {
     if (!hero || !heroData) return null;
     if (!nextStar) return null;
-    return calcPower({ ...hero, stars: nextStar }, heroData);
+    // Pass nextStar as override instead of constructing fake hero
+    return calcPower(hero, heroData, nextStar);
   }, [calcPower, hero, heroData, nextStar]);
 
   const loadHero = useCallback(async () => {

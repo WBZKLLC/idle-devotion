@@ -158,55 +158,43 @@ export const useGameStore = create<GameState>((set, get) => ({
   setHydrated: (value: boolean) => set({ isHydrated: value }),
 
   // Primary auth hydration - called on app boot
-  // Reads token from storage, verifies with backend, and restores user state
+  // Loads token from storage, sets axios headers, then fetches user
   hydrateAuth: async () => {
-    console.log('[hydrateAuth] Starting auth hydration...');
+    console.log('[hydrateAuth] Starting...');
     
     try {
-      const { token, username } = await getStoredAuthData();
+      const token = await loadAuthToken();
       
       if (!token) {
         console.log('[hydrateAuth] No token found, user needs to login');
+        apiSetAuthToken(null);
         set({ isHydrated: true });
         return;
       }
       
-      console.log('[hydrateAuth] Token found, verifying with backend...');
+      // Set token on API layer BEFORE any requests
+      apiSetAuthToken(token);
+      console.log('[hydrateAuth] Token loaded, fetching user...');
       
-      // Verify token with backend
+      // Fetch user to validate token and populate state
       try {
-        const verifyResult = await verifyAuthToken(token);
-        
-        if (verifyResult.valid && verifyResult.user) {
-          console.log('[hydrateAuth] Token valid, user restored:', verifyResult.user.username);
-          set({ 
-            user: verifyResult.user, 
-            authToken: token, 
-            isHydrated: true 
-          });
-          return;
-        }
-      } catch (verifyError) {
-        console.log('[hydrateAuth] Token verification failed, trying legacy restore:', verifyError);
-      }
-      
-      // Fallback: if we have username but token verification failed, try fetching user directly
-      if (username) {
-        try {
-          console.log('[hydrateAuth] Trying legacy username-based restore for:', username);
+        const username = await loadAuthUsername();
+        if (username) {
           const userData = await apiFetchUser(username);
+          console.log('[hydrateAuth] User restored:', userData.username);
           set({ user: userData, authToken: token, isHydrated: true });
-          console.log('[hydrateAuth] Legacy restore successful');
           return;
-        } catch (e) {
-          console.log('[hydrateAuth] Legacy restore failed, clearing storage');
-          await clearAuthStorage();
         }
+      } catch (e) {
+        console.log('[hydrateAuth] User fetch failed, clearing auth:', e);
+        apiSetAuthToken(null);
+        await clearAuthData();
       }
       
       set({ isHydrated: true });
     } catch (e) {
       console.error('[hydrateAuth] Error:', e);
+      apiSetAuthToken(null);
       set({ isHydrated: true });
     }
   },
@@ -220,8 +208,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       const { user, token } = data;
       
-      // Save auth data
+      // Save auth data AND set on API layer
       await saveAuthData(username, token);
+      apiSetAuthToken(token);
       
       set({ user, authToken: token, isLoading: false, needsPassword: false });
       

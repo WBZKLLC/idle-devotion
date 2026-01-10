@@ -280,7 +280,7 @@ export default function ChatScreen() {
         bubble.is_equipped && styles.bubbleOptionEquipped,
         isLocked && styles.bubbleOptionLocked,
       ]}
-      onPress={() => !isLocked && equipBubble(bubble.id)}
+      onPress={() => !isLocked && handleEquipBubble(bubble.id)}
       disabled={isLocked}
     >
       <LinearGradient

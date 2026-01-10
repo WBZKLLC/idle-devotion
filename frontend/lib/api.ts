@@ -3,7 +3,6 @@
 // Screens should import from here to prevent endpoint string drift
 
 import axios from 'axios';
-import { storageGet, STORAGE_KEYS } from './storage';
 
 const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
 const API_BASE = RAW
@@ -15,18 +14,36 @@ export const api = axios.create({
   timeout: 20000,
 });
 
-// Request interceptor to attach Authorization header
+// ─────────────────────────────────────────────────────────────
+// AUTH TOKEN MANAGEMENT
+// Synchronous token setter - avoids race conditions on boot
+// ─────────────────────────────────────────────────────────────
+
+let AUTH_TOKEN: string | null = null;
+
+/**
+ * Set the auth token for all API requests.
+ * Call this immediately after loading token from storage (boot)
+ * or after login (before any API calls).
+ */
+export function apiSetAuthToken(token: string | null) {
+  AUTH_TOKEN = token;
+
+  if (token) {
+    api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    if (__DEV__) console.log('[api] Auth token set on defaults');
+  } else {
+    delete api.defaults.headers.common.Authorization;
+    if (__DEV__) console.log('[api] Auth token cleared from defaults');
+  }
+}
+
+// Interceptor as backup - uses in-memory AUTH_TOKEN (synchronous)
 api.interceptors.request.use(
-  async (config) => {
-    try {
-      const token = await storageGet(STORAGE_KEYS.AUTH_TOKEN);
-      if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
-        if (__DEV__) console.log('[api] Authorization header attached');
-      }
-    } catch (e) {
-      console.warn('[api] Failed to get auth token for request:', e);
+  (config) => {
+    if (AUTH_TOKEN && !config.headers?.Authorization) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${AUTH_TOKEN}`;
     }
     return config;
   },

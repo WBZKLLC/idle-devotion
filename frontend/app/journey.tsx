@@ -118,11 +118,13 @@ export default function JourneyScreen() {
   };
 
   const claimDailyReward = async (day: number) => {
+    if (!user?.username) return;
     const dayData = journeyDays.find(d => d.day === day);
     if (!dayData || dayData.claimed || !dayData.unlocked) return;
 
     try {
-      await axios.post(`${API_BASE}/journey/claim-daily/${user?.username}?day=${day}`).catch(() => {});
+      // Use centralized API wrapper
+      await claimJourneyDaily(user.username, day);
       
       setJourneyDays(prev => prev.map(d => d.day === day ? { ...d, claimed: true } : d));
       
@@ -135,11 +137,13 @@ export default function JourneyScreen() {
   };
 
   const claimMilestone = async (milestoneId: string) => {
+    if (!user?.username) return;
     const milestone = milestones.find(m => m.id === milestoneId);
     if (!milestone || milestone.claimed || milestone.progress < milestone.target) return;
 
     try {
-      await axios.post(`${API_BASE}/journey/claim-milestone/${user?.username}?milestone_id=${milestoneId}`).catch(() => {});
+      // Use centralized API wrapper
+      await claimJourneyMilestone(user.username, milestoneId);
       
       setMilestones(prev => prev.map(m => m.id === milestoneId ? { ...m, claimed: true } : m));
       

@@ -921,3 +921,95 @@ export async function purchaseDivine(username: string, packageId: string) {
   });
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// AUTH / REGISTER / LOGIN (gameStore.ts)
+// ─────────────────────────────────────────────────────────────
+
+export async function registerUser(payload: {
+  username: string;
+  password: string;
+  server_id?: string;
+  [k: string]: any;
+}) {
+  const res = await api.post(`/user/register`, payload);
+  return res.data;
+}
+
+export async function loginAuth(payload: {
+  username: string;
+  password: string;
+  [k: string]: any;
+}) {
+  const res = await api.post(`/auth/login`, payload);
+  return res.data;
+}
+
+/** Daily login trigger */
+export async function triggerDailyLogin(username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/user/${encodeURIComponent(u)}/login`);
+  return res.data;
+}
+
+export async function setPassword(username: string, newPassword: string) {
+  const u = requireUsername(username);
+  if (!newPassword) throw new Error('Missing new password');
+  const res = await api.post(`/auth/set-password`, null, {
+    params: { username: u, new_password: newPassword },
+  });
+  return res.data;
+}
+
+export async function verifyAuthToken(token: string) {
+  if (!token) throw new Error('Missing token');
+  const res = await api.get(`/auth/verify`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// USER (gameStore.ts helpers)
+// ─────────────────────────────────────────────────────────────
+
+export async function fetchUser(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}`);
+  return res.data;
+}
+
+export async function getUserCR(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/user/${encodeURIComponent(u)}/cr`);
+  return res.data;
+}
+
+export async function setProfilePicture(username: string, heroId: string) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/user/${encodeURIComponent(u)}/profile-picture`,
+    null,
+    { params: { hero_id: heroId } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// HERO CATALOG (gameStore.ts)
+// ─────────────────────────────────────────────────────────────
+
+export async function fetchAllHeroesCatalog() {
+  const res = await api.get(`/heroes`);
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// IDLE CLAIM (gameStore.ts)
+// ─────────────────────────────────────────────────────────────
+
+export async function claimIdle(username: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/idle/claim`, null, { params: { username: u } });
+  return res.data;
+}

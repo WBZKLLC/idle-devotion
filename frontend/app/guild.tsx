@@ -711,7 +711,7 @@ export default function GuildScreen() {
                     <TouchableOpacity
                       key={idx}
                       style={styles.guildListItem}
-                      onPress={() => joinGuild(guild.id)}
+                      onPress={() => handleJoinGuild(guild.id)}
                     >
                       <Ionicons name="shield" size={24} color={COLORS.gold.primary} />
                       <View style={styles.guildListInfo}>

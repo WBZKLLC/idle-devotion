@@ -5,15 +5,13 @@
  * Used exclusively for 5+ star (final ascension) hero cinematics.
  * 
  * Features:
- * - Autoplay on open
- * - Plays once (no loop)
- * - Close button
- * - Proper cleanup on close (stops playback, unloads video, releases memory)
- * - Fail-safe: never crashes if video is missing
- * - Platform-specific handling for web vs native
+ * - Module-first video source (bulletproof)
+ * - Proper logging for failure signature capture
+ * - Hard UI fallbacks (never blank modal)
+ * - Gated by HERO_CINEMATICS feature flag at entry point
  */
 
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import {
   Modal,
   View,
@@ -28,15 +26,46 @@ import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
-import { Asset } from 'expo-asset';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// ─────────────────────────────────────────────────────────────
+// Logging helper for failure signature capture
+// ─────────────────────────────────────────────────────────────
+const logCine = (...args: any[]) => {
+  if (__DEV__) console.log('[cinematics]', ...args);
+};
 
 interface HeroCinematicModalProps {
   visible: boolean;
   onClose: () => void;
-  videoSource: any; // require() source or null
+  videoSource: number | null; // require() module ID or null
   heroName?: string;
+  heroKey?: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Fallback component for error/unavailable states
+// ─────────────────────────────────────────────────────────────
+function CinematicFallback({ 
+  title, 
+  subtitle, 
+  onClose 
+}: { 
+  title: string; 
+  subtitle?: string; 
+  onClose: () => void;
+}) {
+  return (
+    <View style={styles.fallbackContainer}>
+      <Ionicons name="videocam-off" size={64} color={COLORS.gold.primary} />
+      <Text style={styles.fallbackTitle}>{title}</Text>
+      {subtitle && <Text style={styles.fallbackSubtitle}>{subtitle}</Text>}
+      <TouchableOpacity style={styles.fallbackButton} onPress={onClose}>
+        <Text style={styles.fallbackButtonText}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 export default function HeroCinematicModal({
@@ -44,61 +73,20 @@ export default function HeroCinematicModal({
   onClose,
   videoSource,
   heroName = 'Hero',
+  heroKey = 'unknown',
 }: HeroCinematicModalProps) {
   const videoRef = useRef<Video>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load video asset and get URI
-  useEffect(() => {
-    if (visible && videoSource) {
+  // Log on open
+  React.useEffect(() => {
+    if (visible) {
+      logCine('open', { heroKey, heroName, moduleId: videoSource });
       setIsLoading(true);
-      setHasError(false);
-      setVideoUri(null);
-      
-      // Load the asset to get the proper URI
-      const loadAsset = async () => {
-        try {
-          const asset = Asset.fromModule(videoSource);
-          await asset.downloadAsync();
-          
-          if (asset.localUri) {
-            setVideoUri(asset.localUri);
-            if (__DEV__) {
-              console.log('[HeroCinematicModal] Video loaded:', asset.localUri);
-            }
-          } else if (asset.uri) {
-            setVideoUri(asset.uri);
-            if (__DEV__) {
-              console.log('[HeroCinematicModal] Video URI:', asset.uri);
-            }
-          } else {
-            throw new Error('No URI available');
-          }
-        } catch (error) {
-          if (__DEV__) {
-            console.warn('[HeroCinematicModal] Asset load error:', error);
-          }
-          setHasError(true);
-          setIsLoading(false);
-        }
-      };
-      
-      loadAsset();
+      setError(null);
     }
-  }, [visible, videoSource]);
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!visible) {
-      setIsLoading(true);
-      setHasError(false);
-      setIsPlaying(false);
-      setVideoUri(null);
-    }
-  }, [visible]);
+  }, [visible, heroKey, heroName, videoSource]);
 
   // Cleanup function - stops and unloads video
   const cleanupVideo = useCallback(async () => {
@@ -107,60 +95,94 @@ export default function HeroCinematicModal({
         await videoRef.current.stopAsync();
         await videoRef.current.unloadAsync();
       }
-    } catch (error) {
+    } catch (e) {
       // Fail silently - video might already be unloaded
-      if (__DEV__) {
-        console.log('[HeroCinematicModal] Cleanup error (safe to ignore):', error);
-      }
+      logCine('cleanup:error', e);
     }
   }, []);
 
   // Handle close button press
   const handleClose = useCallback(async () => {
+    logCine('close', { heroKey });
     await cleanupVideo();
     onClose();
-  }, [cleanupVideo, onClose]);
+  }, [cleanupVideo, onClose, heroKey]);
+
+  // Handle video load start
+  const handleLoadStart = useCallback(() => {
+    logCine('loadStart', { heroKey });
+    setIsLoading(true);
+  }, [heroKey]);
+
+  // Handle video loaded
+  const handleLoad = useCallback((status: AVPlaybackStatus) => {
+    if (status.isLoaded) {
+      logCine('load', { 
+        heroKey,
+        durationMillis: status.durationMillis,
+        // naturalSize not directly available in expo-av status
+      });
+      setIsLoading(false);
+    }
+  }, [heroKey]);
 
   // Handle playback status updates
   const handlePlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
     if (!status.isLoaded) {
-      // Video is not loaded
-      if (status.error) {
-        if (__DEV__) {
-          console.warn('[HeroCinematicModal] Playback error:', status.error);
-        }
-        setHasError(true);
+      // Video is not loaded - check for error
+      if ((status as any).error) {
+        logCine('status:error', (status as any).error);
+        setError(String((status as any).error));
         setIsLoading(false);
       }
       return;
     }
 
-    // Video is loaded
-    setIsLoading(false);
-    setIsPlaying(status.isPlaying);
-
     // Video finished playing (played once)
     if (status.didJustFinish && !status.isLooping) {
-      // Auto-close after video finishes (optional - uncomment if desired)
-      // handleClose();
+      logCine('finished', { heroKey });
     }
-  }, []);
+  }, [heroKey]);
 
   // Handle video load error
-  const handleLoadError = useCallback((error: string) => {
-    if (__DEV__) {
-      console.warn('[HeroCinematicModal] Load error:', error);
-    }
-    setHasError(true);
+  const handleError = useCallback((errorMessage: string) => {
+    logCine('error', { heroKey, error: errorMessage });
+    setError(errorMessage);
     setIsLoading(false);
-  }, []);
+  }, [heroKey]);
 
-  // If no video source, don't render modal
+  // ─────────────────────────────────────────────────────────────
+  // Render guards - hard UI fallbacks (no blank modal)
+  // ─────────────────────────────────────────────────────────────
+
+  // Don't render if not visible
+  if (!visible) return null;
+
+  // No video source provided
   if (!videoSource) {
-    if (__DEV__ && visible) {
-      console.warn(`[HeroCinematicModal] No video source provided for ${heroName}`);
-    }
-    return null;
+    logCine('noSource', { heroKey });
+    return (
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleClose}
+        statusBarTranslucent
+      >
+        <View style={styles.overlay}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.95)', 'rgba(10,10,30,0.98)', 'rgba(0,0,0,0.95)']}
+            style={styles.gradientBackground}
+          >
+            <CinematicFallback 
+              title="Cinematic Unavailable" 
+              subtitle={`No video found for ${heroName}`}
+              onClose={handleClose} 
+            />
+          </LinearGradient>
+        </View>
+      </Modal>
+    );
   }
 
   return (
@@ -184,6 +206,7 @@ export default function HeroCinematicModal({
 
           {/* Video Container */}
           <View style={styles.videoContainer}>
+            {/* Loading overlay */}
             {isLoading && (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={COLORS.gold.primary} />
@@ -191,29 +214,31 @@ export default function HeroCinematicModal({
               </View>
             )}
 
-            {hasError ? (
-              <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={48} color={COLORS.gold.primary} />
-                <Text style={styles.errorText}>Failed to load video</Text>
-                <TouchableOpacity style={styles.retryButton} onPress={handleClose}>
-                  <Text style={styles.retryButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            ) : videoUri ? (
+            {/* Error state */}
+            {error ? (
+              <CinematicFallback 
+                title="Failed to Load Video" 
+                subtitle={error}
+                onClose={handleClose} 
+              />
+            ) : (
+              /* Video player - MODULE-FIRST approach */
               <Video
                 ref={videoRef}
-                source={{ uri: videoUri }}
+                source={videoSource}
                 style={styles.video}
                 resizeMode={ResizeMode.CONTAIN}
-                shouldPlay={visible && !!videoUri}
+                shouldPlay={visible && !error}
                 isLooping={false}
                 useNativeControls={false}
+                onLoadStart={handleLoadStart}
+                onLoad={handleLoad}
                 onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-                onError={handleLoadError}
+                onError={handleError}
                 volume={1.0}
                 isMuted={false}
               />
-            ) : null}
+            )}
           </View>
 
           {/* Close Button */}
@@ -290,27 +315,36 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
   },
-  errorContainer: {
+  fallbackContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 32,
   },
-  errorText: {
+  fallbackTitle: {
+    color: COLORS.gold.primary,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  fallbackSubtitle: {
     color: COLORS.cream.soft,
-    marginTop: 12,
-    fontSize: 16,
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+    maxWidth: 280,
   },
-  retryButton: {
-    marginTop: 20,
-    paddingHorizontal: 24,
+  fallbackButton: {
+    marginTop: 24,
+    paddingHorizontal: 32,
     paddingVertical: 12,
     backgroundColor: COLORS.gold.primary,
     borderRadius: 8,
   },
-  retryButtonText: {
+  fallbackButtonText: {
     color: COLORS.navy.darkest,
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 16,
   },
   closeButton: {
     position: 'absolute',

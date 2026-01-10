@@ -77,24 +77,19 @@ export default function SeleneBannerScreen() {
     
     setIsPulling(true);
     try {
-      const response = await fetch(
-        `${API_BASE}/selene-banner/pull/${user.username}?multi=${multi}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
-      );
+      // Use centralized API wrapper (no raw fetch)
+      const data = await pullSeleneBanner(user.username, multi);
+      setPullResults(data.results);
+      setShowResults(true);
       
-      if (response.ok) {
-        const data = await response.json();
-        setPullResults(data.results);
-        setShowResults(true);
-        
-        // Check if got Selene
-        if (data.has_selene && data.results.some((r: any) => r.is_featured)) {
-          // Celebration! Maybe show special animation
-        }
-        
-        // Show bundles if triggered
-        if (data.triggered_bundles?.length > 0 && !data.has_selene) {
-          // Will show after results modal closes
+      // Check if got Selene
+      if (data.has_selene && data.results.some((r: any) => r.is_featured)) {
+        // Celebration! Maybe show special animation
+      }
+      
+      // Show bundles if triggered
+      if (data.triggered_bundles?.length > 0 && !data.has_selene) {
+        // Will show after results modal closes
         }
         
         await fetchUser();

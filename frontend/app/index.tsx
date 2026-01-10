@@ -435,13 +435,14 @@ export default function HomeScreen() {
   // AUTHENTICATED DASHBOARD
   return (
     <View style={styles.container}>
-      {/* Background: Raphael 5+ Star Skin for dashboard */}
+      {/* Background: Sanctum environment art for dashboard */}
       <CenteredBackground 
-        source={{ uri: RAPHAEL_5PLUS_IMAGE }} 
+        source={{ uri: SANCTUM_BG_IMAGE }} 
         mode="contain" 
         zoom={1.02}
         opacity={0.25}
       />
+      <SanctumAtmosphere />
       <DivineOverlays vignette={true} rays={false} grain={true} />
       
       {/* Dark gradient overlay for better readability */}

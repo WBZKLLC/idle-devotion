@@ -382,18 +382,25 @@ export default function HeroManagerScreen() {
         mode: selectedMode,
       };
       
-      const response = await axios.post(
-        `${API_BASE}/team/save-mode-team?username=${user.username}&mode=${selectedMode}`,
-        slotsData
-      );
+      // Use centralized API wrapper
+      const heroIds = [
+        slots[0]?.heroId,
+        slots[1]?.heroId,
+        slots[2]?.heroId,
+        slots[3]?.heroId,
+        slots[4]?.heroId,
+        slots[5]?.heroId,
+      ].filter(Boolean) as string[];
       
-      if (response.data) {
+      const result = await saveModeTeam(user.username, selectedMode, heroIds);
+      
+      if (result) {
         setHasChanges(false);
         
         // Update mode teams
         setModeTeams(prev => ({
           ...prev,
-          [selectedMode]: response.data.id,
+          [selectedMode]: result.id,
         }));
         
         // Log save
@@ -407,7 +414,7 @@ export default function HeroManagerScreen() {
       }
     } catch (error: any) {
       console.error('Error saving team:', error);
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to save team');
+      Alert.alert('Error', error?.message || 'Failed to save team');
     } finally {
       setSaving(false);
     }

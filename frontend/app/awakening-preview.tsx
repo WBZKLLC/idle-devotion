@@ -72,6 +72,27 @@ const AWAKENING_TIERS = [
 ];
 
 export default function AwakeningPreviewScreen() {
+  // Gate the entire screen behind the feature flag
+  if (!FEATURES.AWAKENING_PREVIEW_UI) {
+    return (
+      <View style={styles.container}>
+        <CenteredBackground source={SANCTUM_BG} mode="cover" zoom={1.15} opacity={0.35} />
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
+            </Pressable>
+            <View style={styles.titleWrap}>
+              <Text style={styles.title}>Not Available</Text>
+              <Text style={styles.subtitle}>Feature coming soon</Text>
+            </View>
+            <View style={styles.placeholder} />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* Background */}

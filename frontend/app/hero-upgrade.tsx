@@ -37,10 +37,8 @@ export default function HeroUpgradeScreen() {
   const loadHeroDetails = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/hero/${heroId}/details?username=${user?.username}`
-      );
-      const data = await response.json();
+      // Use centralized API wrapper
+      const data = await getHeroDetails(heroId || '', user?.username || '');
       setHeroDetails(data);
     } catch (error) {
       console.error('Failed to load hero details:', error);
@@ -52,51 +50,33 @@ export default function HeroUpgradeScreen() {
   const levelUpHero = async (levels: number = 1) => {
     setIsUpgrading(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/hero/${heroId}/level-up?username=${user?.username}&levels=${levels}`,
-        { method: 'POST' }
+      // Use centralized API wrapper
+      const result = await apiLevelUpHero(heroId || '', user?.username || '', levels);
+      Alert.alert(
+        'Level Up!',
+        `Hero leveled up to Lv.${result.new_level}\nGold spent: ${result.gold_spent.toLocaleString()}`
       );
-      
-      if (response.ok) {
-        const result = await response.json();
-        Alert.alert(
-          'Level Up!',
-          `Hero leveled up to Lv.${result.new_level}\nGold spent: ${result.gold_spent.toLocaleString()}`
-        );
-        loadHeroDetails();
-        fetchUser();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to level up');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to level up hero');
+      loadHeroDetails();
+      fetchUser();
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to level up');
     } finally {
       setIsUpgrading(false);
     }
   };
 
-  const promoteHeroStar = async () => {
+  const promoteHeroStarLocal = async () => {
     setIsUpgrading(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/hero/${heroId}/promote-star?username=${user?.username}`,
-        { method: 'POST' }
+      // Use centralized API wrapper
+      const result = await promoteHeroStar(heroId || '', user?.username || '');
+      Alert.alert(
+        'Star Promotion!',
+        `Hero promoted to ${result.new_stars}★\nShards used: ${result.shards_used}`
       );
-      
-      if (response.ok) {
-        const result = await response.json();
-        Alert.alert(
-          'Star Promotion!',
-          `Hero promoted to ${result.new_stars}★\nShards used: ${result.shards_used}`
-        );
-        loadHeroDetails();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to promote');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to promote hero');
+      loadHeroDetails();
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to promote');
     } finally {
       setIsUpgrading(false);
     }
@@ -105,25 +85,16 @@ export default function HeroUpgradeScreen() {
   const awakenHero = async () => {
     setIsUpgrading(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/hero/${heroId}/awaken?username=${user?.username}`,
-        { method: 'POST' }
+      // Use centralized API wrapper
+      const result = await apiAwakenHero(heroId || '', user?.username || '');
+      Alert.alert(
+        'Awakening Complete!',
+        `Hero awakened to level ${result.new_awakening_level}!\nShards used: ${result.shards_used}\nGold used: ${result.gold_used.toLocaleString()}`
       );
-      
-      if (response.ok) {
-        const result = await response.json();
-        Alert.alert(
-          'Awakening Complete!',
-          `Hero awakened to level ${result.new_awakening_level}!\nShards used: ${result.shards_used}\nGold used: ${result.gold_used.toLocaleString()}`
-        );
-        loadHeroDetails();
-        fetchUser();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Failed to awaken');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to awaken hero');
+      loadHeroDetails();
+      fetchUser();
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to awaken');
     } finally {
       setIsUpgrading(false);
     }

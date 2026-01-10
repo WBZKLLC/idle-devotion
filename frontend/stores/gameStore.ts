@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 // Centralized API wrappers - store actions use these (no direct URL construction)
 import {
   getUserHeroes,
+  getUserHeroById as apiGetUserHeroById,
   pullGacha as apiPullGacha,
   upgradeHero as apiUpgradeHero,
   registerUser as apiRegisterUser,

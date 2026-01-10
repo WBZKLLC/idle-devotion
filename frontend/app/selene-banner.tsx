@@ -31,9 +31,7 @@ const COLORS = {
   success: '#22c55e',
 };
 
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
-  : '/api';
+// API_BASE removed - using centralized lib/api.ts wrappers
 
 export default function SeleneBannerScreen() {
   const router = useRouter();

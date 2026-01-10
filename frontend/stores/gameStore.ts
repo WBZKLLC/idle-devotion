@@ -487,10 +487,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // Single-hero ensure: cache-first lookup + API fallback (keeps logic out of screens)
-  getUserHeroById: async (id: string) => {
-    // 1) Check cache first
+  // Use forceRefresh: true after upgrade/promotion to bypass cache
+  getUserHeroById: async (id: string, opts?: { forceRefresh?: boolean }) => {
+    const forceRefresh = opts?.forceRefresh === true;
+
+    // 1) Check cache first (unless forced)
     const existing = get().selectUserHeroById(id);
-    if (existing) return existing;
+    if (existing && !forceRefresh) return existing;
 
     const { user } = get();
     if (!user) throw new Error('No user found');

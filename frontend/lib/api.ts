@@ -63,17 +63,41 @@ export async function getHeroProgression(username: string, heroId: string) {
 
 // ─────────────────────────────────────────────────────────────
 // SINGLE HERO FETCH (fallback when hero not in store cache)
-// NOTE: Temporary implementation - fetches full list and filters.
-// Replace with GET /user/{username}/heroes/{userHeroId} once backend exists.
-// Screens call getUserHeroById() and never hit list endpoints directly.
 // ─────────────────────────────────────────────────────────────
+
+// Flip this to true the moment backend supports a real single-hero endpoint.
+// When true, getUserHeroById will NEVER fallback to list fetch.
+const SINGLE_HERO_ENDPOINT_AVAILABLE = false as const;
+
+// Update this when backend endpoint is known.
+// Expected route: GET /user/{username}/heroes/{userHeroId}
+function singleHeroPath(username: string, userHeroId: string) {
+  return `/user/${encodeURIComponent(username)}/heroes/${encodeURIComponent(userHeroId)}`;
+}
 
 export async function getUserHeroById(username: string, userHeroId: string) {
   const u = requireUsername(username);
+
+  if (SINGLE_HERO_ENDPOINT_AVAILABLE) {
+    // Hard guardrail: no list fallback permitted once endpoint exists.
+    try {
+      const res = await api.get(singleHeroPath(u, userHeroId));
+      return res.data;
+    } catch (e: any) {
+      // No fallback by design.
+      throw new Error(
+        `[api.getUserHeroById] Single-hero endpoint is enabled but request failed. ` +
+        `Do NOT fallback to list fetch. Original error: ${e?.message ?? String(e)}`
+      );
+    }
+  }
+
+  // TEMP (pre-endpoint): fallback to list and find.
+  // This is allowed ONLY while SINGLE_HERO_ENDPOINT_AVAILABLE === false.
   const res = await api.get(`/user/${encodeURIComponent(u)}/heroes`);
   const list = Array.isArray(res.data) ? res.data : (res.data?.heroes ?? res.data ?? []);
   const found = list.find((h: any) => String(h?.id) === String(userHeroId));
-  if (!found) throw new Error('Hero not found');
+  if (!found) throw new Error(`Hero not found: ${userHeroId}`);
   return found;
 }
 

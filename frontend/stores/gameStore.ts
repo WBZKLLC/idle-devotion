@@ -225,15 +225,15 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       const { user, token } = data;
       
-      // Save auth data AND set on API layer immediately
-      await saveAuthData(username, token);
+      // Save auth data using canonical username from response (not input)
+      await saveAuthData(user.username, token);
       apiSetAuthToken(token);
       
       set({ user, authToken: token, isLoading: false });
       
       // Trigger daily login
       try {
-        await triggerDailyLogin(username);
+        await triggerDailyLogin(user.username);
       } catch (e) {
         console.log('Daily login call failed:', e);
       }

@@ -954,3 +954,257 @@ const styles = StyleSheet.create({
   pityBarOuter: { flex: 1, height: 8, backgroundColor: COLORS.navy.dark, borderRadius: 4, overflow: 'hidden', marginLeft: 12 },
   pityBarFill: { height: '100%', borderRadius: 4 },
 });
+
+// ============ PIXEL-SPECIFIC LOGIN STYLES ============
+const loginStyles = StyleSheet.create({
+  // Screen container
+  screenContainer: {
+    flex: 1,
+    backgroundColor: '#080614',
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 18,
+  },
+  
+  // Background image
+  backgroundImage: {
+    position: 'absolute',
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    top: 0,
+    left: 0,
+  },
+  
+  // OVERLAY 1: Vignette
+  vignetteOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+  },
+  
+  // OVERLAY 2: Top gradient (faked with stacked Views)
+  topGradientA: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    backgroundColor: 'rgba(8,6,20,0.65)',
+  },
+  topGradientB: {
+    position: 'absolute',
+    top: 120,
+    left: 0,
+    right: 0,
+    height: 100,
+    backgroundColor: 'rgba(8,6,20,0.25)',
+  },
+  
+  // OVERLAY 3: Bottom gradient
+  bottomGradientA: {
+    position: 'absolute',
+    bottom: 160,
+    left: 0,
+    right: 0,
+    height: 160,
+    backgroundColor: 'rgba(8,6,20,0.20)',
+  },
+  bottomGradientB: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    backgroundColor: 'rgba(8,6,20,0.70)',
+  },
+  
+  // Layout
+  keyboardAvoid: { flex: 1 },
+  safeArea: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    paddingBottom: 26,
+  },
+  
+  // Brand container
+  brandContainer: {
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  
+  // Brand circle
+  brandCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    marginBottom: 10,
+    backgroundColor: 'rgba(124,58,237,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 10,
+    shadowColor: '#a855f7',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  brandText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#E9D5FF',
+  },
+  
+  // Title
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: 3.2,
+    marginTop: 6,
+    color: '#F5F3FF',
+    textShadowColor: 'rgba(168,85,247,0.55)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
+  },
+  
+  // Subtitle
+  subtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 2.0,
+    marginTop: 6,
+    marginBottom: 18,
+    color: 'rgba(253,230,138,0.92)',
+  },
+  
+  // Login card
+  card: {
+    width: '92%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    marginTop: 6,
+    marginBottom: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderRadius: 18,
+    backgroundColor: 'rgba(12,10,30,0.62)',
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.35)',
+    elevation: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  
+  // Card header
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 16,
+    color: 'rgba(255,255,255,0.65)',
+    textAlign: 'center',
+  },
+  
+  // Input container
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderRadius: 14,
+    marginTop: 12,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(8,6,20,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  inputIcon: {
+    marginRight: 10,
+    opacity: 0.7,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+  },
+  eyeButton: {
+    padding: 8,
+  },
+  
+  // Primary button
+  primaryButton: {
+    height: 52,
+    borderRadius: 14,
+    marginTop: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(124,58,237,0.95)',
+    overflow: 'hidden',
+  },
+  buttonHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 26,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    opacity: 0.45,
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    color: '#F5F3FF',
+  },
+  
+  // Secondary link
+  secondaryLink: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  secondaryText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.70)',
+  },
+  secondaryHighlight: {
+    color: 'rgba(253,230,138,0.95)',
+    fontWeight: '700',
+  },
+  
+  // Error box
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(120,20,30,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,120,140,0.35)',
+    gap: 8,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 12,
+    color: 'rgba(255,210,215,0.95)',
+  },
+  
+  // Footer
+  footer: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 11,
+    letterSpacing: 0.8,
+    color: 'rgba(255,255,255,0.55)',
+  },
+});

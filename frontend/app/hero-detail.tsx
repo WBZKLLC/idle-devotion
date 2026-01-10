@@ -364,8 +364,7 @@ export default function HeroDetailScreen() {
 
             <View style={styles.tierRow}>
               {([1, 2, 3, 4, 5, 6] as number[]).map((tier) => {
-                const unlocked = unlockedTierFromHero(hero);
-                const locked = tier > unlocked;
+                const locked = tier > unlockedTier;
                 const active = tier === selectedTier;
 
                 return (
@@ -400,7 +399,7 @@ export default function HeroDetailScreen() {
             </View>
 
             <Text style={styles.tierHint}>
-              Unlocked: {unlockedTierFromHero(hero) === 6 ? '5★+' : `${unlockedTierFromHero(hero)}★`} •
+              Unlocked: {unlockedTier === 6 ? '5★+' : `${unlockedTier}★`} •
               Current Stars: {displayStars(hero)}
               {Number(hero?.awakening_level ?? 0) > 0 ? ` • Awakening: ${hero.awakening_level}` : ''}
             </Text>

@@ -56,10 +56,7 @@ export default function LoginRewardsScreen() {
 
   const loadRewards = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/login-rewards/${user?.username}`
-      );
-      const data = await response.json();
+      const data = await getLoginRewardsStatus(user?.username || '');
       setRewards(data.rewards || []);
       setLoginDays(data.login_days || 0);
     } catch (error) {

@@ -1205,3 +1205,147 @@ const loginStyles = StyleSheet.create({
     color: 'rgba(255,255,255,0.55)',
   },
 });
+
+// ============ 2DLIVE SHELL COMPONENTS (UI-only) ============
+
+type CenterFitMode = "contain" | "native";
+
+/**
+ * CenteredBackground - Math-based perfect centering for background art
+ * Works with both local require() and remote { uri } sources
+ */
+function CenteredBackground(props: {
+  source: any;           // works for {uri} or require()
+  mode?: CenterFitMode;  // default: contain
+  zoom?: number;         // default: 1
+  opacity?: number;      // default: 1
+}) {
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const mode = props.mode ?? "contain";
+  const zoom = props.zoom ?? 1;
+  const opacity = props.opacity ?? 1;
+
+  // If local require(), resolve size synchronously.
+  const resolvedLocal = React.useMemo(() => {
+    try {
+      return Image.resolveAssetSource(props.source);
+    } catch {
+      return undefined;
+    }
+  }, [props.source]);
+
+  // If remote uri, fetch intrinsic size.
+  const [remoteSize, setRemoteSize] = React.useState<{ w: number; h: number } | null>(null);
+
+  const uri = props.source?.uri as string | undefined;
+
+  React.useEffect(() => {
+    let alive = true;
+
+    if (!uri) {
+      setRemoteSize(null);
+      return;
+    }
+
+    Image.getSize(
+      uri,
+      (w, h) => {
+        if (alive) setRemoteSize({ w, h });
+      },
+      () => {
+        // If remote size fails, we fall back to screen size (still centered, but not "true art center")
+        if (alive) setRemoteSize(null);
+      }
+    );
+
+    return () => {
+      alive = false;
+    };
+  }, [uri]);
+
+  const imgW = resolvedLocal?.width ?? remoteSize?.w ?? 1;
+  const imgH = resolvedLocal?.height ?? remoteSize?.h ?? 1;
+
+  // Deterministic scaling (no cover hacks)
+  let scale = 1;
+  if (mode === "contain") {
+    const sx = screenW / imgW;
+    const sy = screenH / imgH;
+    scale = Math.min(sx, sy) * zoom;
+  } else {
+    scale = zoom;
+  }
+
+  const scaledW = imgW * scale;
+  const scaledH = imgH * scale;
+  const left = (screenW - scaledW) / 2;
+  const top = (screenH - scaledH) / 2;
+
+  return (
+    <Image
+      source={props.source}
+      style={{
+        position: "absolute",
+        width: scaledW,
+        height: scaledH,
+        left,
+        top,
+        opacity,
+      }}
+      // We control size ourselves -> use stretch so RN doesn't "fit" it again.
+      resizeMode="stretch"
+    />
+  );
+}
+
+/**
+ * DivineOverlays - Premium overlay effects for celestial gacha aesthetic
+ */
+function DivineOverlays(props: { vignette?: boolean; rays?: boolean; grain?: boolean }) {
+  return (
+    <>
+      {props.rays ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: -120,
+            top: -120,
+            right: -120,
+            bottom: -120,
+            transform: [{ rotate: "-12deg" }],
+            backgroundColor: "rgba(255,255,255,0.04)",
+          }}
+        />
+      ) : null}
+
+      {props.vignette ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.28)",
+          }}
+        />
+      ) : null}
+
+      {props.grain ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(255,255,255,0.02)",
+          }}
+        />
+      ) : null}
+    </>
+  );
+}

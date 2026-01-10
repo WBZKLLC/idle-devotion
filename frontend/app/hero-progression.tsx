@@ -120,15 +120,12 @@ export default function HeroProgressionScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveUnlockedTier, hero?.stars, hero?.awakening_level]);
 
-  const resolveTierArt = useCallback(
+  // Use centralized tier art resolution from lib/tier.ts
+  const getTierArtSource = useCallback(
     (tier: DisplayTier) => {
-      // EXACT API response shape:
-      // heroData.ascension_images[String(tier)] is the tier art URL
-      const url = heroData?.ascension_images?.[String(tier)];
-      if (typeof url === 'string' && url.length > 4) return { uri: url };
-
-      // fallback: base image_url, then sanctum background
-      if (heroData?.image_url) return { uri: heroData.image_url };
+      // Use canonical resolveTierArt from tier.ts (returns string | undefined)
+      const url = resolveTierArt(heroData, tier);
+      if (url) return { uri: url };
       return SANCTUM_BG;
     },
     [heroData]
@@ -136,8 +133,8 @@ export default function HeroProgressionScreen() {
 
   const backgroundArt = useMemo(() => {
     // background follows preview tier (so you *feel* the tier change)
-    return resolveTierArt(previewTier);
-  }, [resolveTierArt, previewTier]);
+    return getTierArtSource(previewTier);
+  }, [getTierArtSource, previewTier]);
 
   const heroName = heroData?.name || heroData?.hero_name || 'Hero';
   const heroRarity = (heroData?.rarity || 'SR') as string;

@@ -17,7 +17,9 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import axios from 'axios';
+
+// Centralized API wrappers (no raw axios in screens)
+import { getTeamsByMode, getTeamsList, getTeamsFull, saveModeTeam } from '../lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

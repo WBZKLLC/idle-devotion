@@ -309,6 +309,42 @@ export async function getLeaderboard(type: string, limit: number = 50) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// ABYSS (abyss.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getAbyssStatus(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/abyss/${encodeURIComponent(u)}/status`);
+  return res.data;
+}
+
+export async function getAbyssLeaderboard(serverId: string, limit: number = 50) {
+  const res = await api.get(`/abyss/leaderboard/${encodeURIComponent(serverId)}`, {
+    params: { limit },
+  });
+  return res.data;
+}
+
+export async function getAbyssRecords(username: string, level: number) {
+  const u = requireUsername(username);
+  const res = await api.get(
+    `/abyss/${encodeURIComponent(u)}/records`,
+    { params: { level } }
+  );
+  return res.data;
+}
+
+export async function attackAbyss(username: string, level?: number) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/abyss/${encodeURIComponent(u)}/attack`,
+    null,
+    { params: level ? { level } : {} }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // CAMPAIGN / STORY (campaign.tsx)
 // ─────────────────────────────────────────────────────────────
 

@@ -106,6 +106,9 @@ interface GameState {
   updateProfilePicture: (heroId: string) => Promise<void>;
   setUser: (user: User | null) => void;
   setHydrated: (value: boolean) => void;
+  
+  // Selectors (computed from state)
+  selectUserHeroById: (id: string | undefined) => UserHero | undefined;
 }
 
 // Helper to save auth data

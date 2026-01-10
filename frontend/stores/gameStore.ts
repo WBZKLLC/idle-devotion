@@ -110,6 +110,9 @@ interface GameState {
   
   // Selectors (computed from state)
   selectUserHeroById: (id: string | undefined) => UserHero | undefined;
+  
+  // Single-hero ensure: cache-first + API fallback (keeps fetch logic out of screens)
+  getUserHeroById: (id: string) => Promise<UserHero>;
 }
 
 // Helper to save auth data

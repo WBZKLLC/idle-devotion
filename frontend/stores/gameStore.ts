@@ -231,8 +231,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       const { user, token } = data;
       
-      // Save auth data
+      // Save auth data AND set on API layer immediately
       await saveAuthData(username, token);
+      apiSetAuthToken(token);
       
       set({ user, authToken: token, isLoading: false });
       
@@ -270,8 +271,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Now login to get user data
       const userData = await apiFetchUser(username);
       
-      // Save auth data
+      // Save auth data AND set on API layer
       await saveAuthData(username, token);
+      apiSetAuthToken(token);
       
       set({ user: userData, authToken: token, isLoading: false, needsPassword: false });
       
@@ -283,16 +285,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  // Legacy restoreSession - kept for compatibility, delegates to hydrateAuth
   restoreSession: async () => {
-    try {
-      if (typeof window === 'undefined') {
-        set({ isHydrated: true });
-        return;
-      }
-      
-      console.log('restoreSession: starting');
-      
-      const { username, token } = await getStoredAuthData();
+    await get().hydrateAuth();
+  },
       console.log('restoreSession: stored username=', username, 'has token=', !!token);
       
       if (username && token) {

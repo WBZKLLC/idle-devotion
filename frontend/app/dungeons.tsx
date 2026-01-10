@@ -241,12 +241,10 @@ export default function DungeonsScreen() {
     setBattleResult(null);
 
     try {
-      const response = await axios.post(
-        `${API_BASE}/stages/${user.username}/${stageConfig.path}/${stageId}`,
-        { stage_id: stageId }
-      );
+      // Use centralized API wrapper
+      const result = await battleDungeonStage(user.username, stageConfig.path, stageId);
       
-      setBattleResult(response.data);
+      setBattleResult(result);
       setShowResultModal(true);
       
       // Refresh data
@@ -256,7 +254,7 @@ export default function DungeonsScreen() {
         fetchUser(),
       ]);
     } catch (error: any) {
-      Alert.alert('Battle Failed', error.response?.data?.detail || 'Something went wrong');
+      Alert.alert('Battle Failed', error?.message || 'Something went wrong');
     } finally {
       setIsBattling(false);
     }

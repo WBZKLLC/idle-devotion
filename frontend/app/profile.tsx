@@ -24,13 +24,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import COLORS from '../theme/colors';
 import ProfileFrame, { FRAME_DEFINITIONS, getAvailableFrames } from '../components/ProfileFrame';
-
-const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL 
-  ? `${process.env.EXPO_PUBLIC_BACKEND_URL}/api` 
-  : '/api';
 
 export default function ProfileScreen() {
   const router = useRouter();

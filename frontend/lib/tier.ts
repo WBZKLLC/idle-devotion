@@ -288,11 +288,12 @@ export const getTierLabel = (tier: DisplayTier): string => {
 };
 
 /**
- * Canonical tier label resolver with clamping.
+ * Canonical tier label resolver with clamping + awakening guard.
  * USE THIS in UI instead of inline `TIER_LABELS[tier] || \`${tier}★\`` patterns.
- * Handles out-of-range values safely.
+ * Throws if tier > MAX_ACTIVE_TIER (awakening not active).
  */
 export function labelForTier(tier: number): string {
   const t = clampTier(tier);
+  assertTierIsActive(t);
   return TIER_LABELS[t as DisplayTier] ?? `${t}★`;
 }

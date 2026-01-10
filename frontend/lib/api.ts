@@ -270,6 +270,55 @@ export async function saveModeTeam(username: string, mode: string, heroIds: stri
 }
 
 // ─────────────────────────────────────────────────────────────
+// DUNGEONS / STAGES (dungeons.tsx)
+// ─────────────────────────────────────────────────────────────
+
+export async function getStagesInfo() {
+  const res = await api.get(`/stages/info`);
+  return res.data;
+}
+
+export async function getDungeonProgress(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/stages/${encodeURIComponent(u)}/progress`);
+  return res.data;
+}
+
+export async function getStamina(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/economy/${encodeURIComponent(u)}/stamina`);
+  return res.data;
+}
+
+export async function startDungeonStage(
+  username: string,
+  stageId: string,
+  teamId?: string
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/stages/${encodeURIComponent(stageId)}/start`,
+    { team_id: teamId },
+    { params: { username: u } }
+  );
+  return res.data;
+}
+
+export async function sweepDungeonStage(
+  username: string,
+  stageId: string,
+  times: number = 1
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/stages/${encodeURIComponent(stageId)}/sweep`,
+    null,
+    { params: { username: u, times } }
+  );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
 // COMBAT (combat.tsx)
 // ─────────────────────────────────────────────────────────────
 

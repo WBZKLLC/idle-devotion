@@ -40,6 +40,10 @@ const COLORS = {
 export default function HomeScreen() {
   const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();
   const hydrated = useHydration();
+  
+  // Get dynamic screen dimensions for centered background (must be called unconditionally)
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  
   const [username, setUsername] = useState('');
   const [idleStatus, setIdleStatus] = useState<any>(null);
   const [isClaiming, setIsClaiming] = useState(false);

@@ -478,6 +478,30 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { userHeroes } = get();
     return userHeroes?.find((h: any) => String(h?.id) === String(id));
   },
+
+  // Single-hero ensure: cache-first lookup + API fallback (keeps logic out of screens)
+  getUserHeroById: async (id: string) => {
+    // 1) Check cache first
+    const existing = get().selectUserHeroById(id);
+    if (existing) return existing;
+
+    const { user } = get();
+    if (!user) throw new Error('No user found');
+
+    // 2) Fetch single hero via API wrapper
+    const fresh = await apiGetUserHeroById(String(user.username), String(id));
+
+    // 3) Cache the result (merge into store)
+    set((s) => ({
+      userHeroes: s.userHeroes
+        ? (s.userHeroes.some((h: any) => String(h?.id) === String(fresh?.id))
+            ? s.userHeroes.map((h: any) => (String(h?.id) === String(fresh?.id) ? fresh : h))
+            : [fresh, ...s.userHeroes])
+        : [fresh],
+    }));
+
+    return fresh;
+  },
 }));
 
 // Hook to handle session restoration

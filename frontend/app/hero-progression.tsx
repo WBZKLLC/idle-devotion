@@ -29,7 +29,8 @@ import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
 
 // Centralized API calls (SINGLE SOURCE OF TRUTH for endpoints)
-import { promoteHeroStar } from '../lib/api';
+// getHeroProgression + promoteHeroStar - all hero endpoints live in lib/api.ts
+import { getHeroProgression, promoteHeroStar } from '../lib/api';
 
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {

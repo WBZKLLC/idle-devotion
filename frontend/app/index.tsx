@@ -290,27 +290,19 @@ export default function HomeScreen() {
   if (!user) {
     return (
       <View style={loginStyles.screenContainer}>
-        {/* Background: Raphael 5+ Star Skin - PERFECTLY CENTERED */}
-        <Image
+        {/* Background: Raphael 5+ Star Skin - MATH-CENTERED using CenteredBackground */}
+        <CenteredBackground
           source={{ uri: RAPHAEL_5PLUS_IMAGE }}
-          resizeMode="cover"
-          style={{
-            position: 'absolute',
-            width: bgW,
-            height: bgH,
-            left: bgLeft,
-            top: bgTop,
-          }}
+          mode="contain"
+          zoom={1.06}
         />
         
-        {/* OVERLAY 1: Vignette (edges) */}
-        <View style={loginStyles.vignetteOverlay} />
+        {/* Divine Overlays - premium celestial aesthetic */}
+        <DivineOverlays vignette rays grain />
         
-        {/* OVERLAY 2: Top gradient (protect logo/title) */}
+        {/* Additional gradient overlays for text readability */}
         <View style={loginStyles.topGradientA} />
         <View style={loginStyles.topGradientB} />
-        
-        {/* OVERLAY 3: Bottom gradient (protect card + footer) */}
         <View style={loginStyles.bottomGradientA} />
         <View style={loginStyles.bottomGradientB} />
 

@@ -598,6 +598,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.10)',
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
+  heroImageFallback: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
 
   rarityBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 7 },
   rarityText: { fontSize: 8, fontWeight: '900', color: 'rgba(255,255,255,0.95)' },

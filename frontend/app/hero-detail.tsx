@@ -27,6 +27,7 @@ import {
   effectiveTierForHero,
   resolveTierArt,
   TIER_LABELS,
+  tierLabel,
 } from '../lib/tier';
 
 // Shared animated TierSelector component

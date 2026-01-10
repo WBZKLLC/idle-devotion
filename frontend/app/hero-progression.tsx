@@ -142,7 +142,7 @@ export default function HeroProgressionScreen() {
   const heroClass = heroData?.hero_class || '—';
 
   const shards = useMemo(() => clampInt(hero?.duplicates ?? 0, 0, 999999999), [hero?.duplicates]);
-  const stars = useMemo(() => displayStars(hero), [displayStars, hero]);
+  const stars = useMemo(() => displayStars(hero), [hero]);
 
   const isMaxStars = stars >= 6;
   const nextStar = useMemo(() => (isMaxStars ? null : stars + 1), [isMaxStars, stars]);

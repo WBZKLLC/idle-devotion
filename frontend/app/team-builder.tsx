@@ -176,10 +176,8 @@ export default function TeamBuilderScreen() {
     if (!selectedTeamId) return;
     
     try {
-      await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/team/${selectedTeamId}/set-active?username=${user?.username}`,
-        { method: 'PUT' }
-      );
+      // Use centralized API wrapper (no raw fetch)
+      await setActiveTeam(selectedTeamId, user?.username || '');
       Alert.alert('Success', 'Team set as active!');
       loadTeams();
     } catch (error) {

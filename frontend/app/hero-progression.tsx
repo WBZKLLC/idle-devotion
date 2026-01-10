@@ -1119,6 +1119,30 @@ const styles = StyleSheet.create({
   promoteBtnText: { color: '#0A0B10', fontSize: 13, fontWeight: '900' },
   promoHint: { marginTop: 8, color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: '700' },
 
+  // Awakening Preview
+  comingSoonBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.25)',
+  },
+  comingSoonText: { color: '#FFD700', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+  awakeningPreviewBtn: { marginTop: 12, borderRadius: 14, overflow: 'hidden' },
+  awakeningPreviewBtnInner: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  awakeningPreviewBtnText: { color: 'rgba(255,255,255,0.95)', fontSize: 13, fontWeight: '900' },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.78)',

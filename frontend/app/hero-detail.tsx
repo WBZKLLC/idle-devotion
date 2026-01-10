@@ -29,6 +29,9 @@ import {
   TIER_LABELS,
 } from '../lib/tier';
 
+// Shared animated TierSelector component
+import TierSelector from '../components/TierSelector';
+
 // ✅ Shared 2Dlive shell (UI-only)
 import {
   CenteredBackground,

@@ -318,6 +318,33 @@ export async function sweepDungeonStage(
   return res.data;
 }
 
+export async function battleDungeonStage(
+  username: string,
+  stageType: string,
+  stageId: number
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/stages/${encodeURIComponent(u)}/${stageType}/${stageId}`,
+    { stage_id: stageId }
+  );
+  return res.data;
+}
+
+export async function sweepDungeonStageByType(
+  username: string,
+  stageType: string,
+  stageId: number,
+  count: number = 1
+) {
+  const u = requireUsername(username);
+  const res = await api.post(
+    `/stages/${encodeURIComponent(u)}/sweep/${stageType}/${stageId}`,
+    { stage_id: stageId, count }
+  );
+  return res.data;
+}
+
 // ─────────────────────────────────────────────────────────────
 // COMBAT (combat.tsx)
 // ─────────────────────────────────────────────────────────────

@@ -19,6 +19,16 @@ import { router, useLocalSearchParams } from 'expo-router';
 import HeroCinematicModal from '../components/HeroCinematicModal';
 import { getHeroCinematicVideo, heroNameToId, VIDEOS_AVAILABLE } from '../constants/heroCinematics';
 
+// Centralized tier logic (SINGLE SOURCE OF TRUTH)
+import {
+  DisplayTier,
+  displayStars,
+  unlockedTierForHero,
+  effectiveTierForHero,
+  resolveTierArt,
+  TIER_LABELS,
+} from '../lib/tier';
+
 // ✅ Shared 2Dlive shell (UI-only)
 import {
   CenteredBackground,
@@ -42,50 +52,19 @@ const CLASS_ICONS: { [key: string]: string } = {
   'Archer': 'locate',
 };
 
-// ----------------------------
-// Tier / Stars utilities (EXACT match to heroes.tsx)
-// ----------------------------
+// Helper to convert tier art URL to Image source
+function tierArtToSource(heroData: any, tier: DisplayTier) {
+  const url = resolveTierArt(heroData, tier);
+  if (url) return { uri: url };
+  return require('../assets/backgrounds/sanctum_environment_01.jpg');
+}
 
-type DisplayTier = 1 | 2 | 3 | 4 | 5 | 6;
-
+// Clamp tier param to valid range
 function clampTier(n: any): DisplayTier {
   const t = Number(n);
   if (!Number.isFinite(t)) return 1;
   const v = Math.max(1, Math.min(6, Math.floor(t)));
   return v as DisplayTier;
-}
-
-function displayStars(hero: any): number {
-  const s = Number(hero?.stars ?? 0);
-  if (!Number.isFinite(s)) return 0;
-  return Math.max(0, Math.min(6, s));
-}
-
-function unlockedTierForHero(hero: any): DisplayTier {
-  const stars = displayStars(hero);
-  const awaken = Number(hero?.awakening_level ?? 0);
-
-  if (awaken > 0 || stars >= 5) return 6;
-
-  // 0..4 -> 1..5
-  const tier = stars + 1;
-  return clampTier(Math.max(1, Math.min(5, tier)));
-}
-
-// IMPORTANT: NO GUESSING — exact API format: hero_data.ascension_images["1".."6"]
-function resolveTierArt(heroData: any, tier: DisplayTier) {
-  const asc = heroData?.ascension_images;
-  const url =
-    asc && typeof asc === 'object'
-      ? (asc[String(tier)] as string | undefined)
-      : undefined;
-
-  if (typeof url === 'string' && url.length > 0) return { uri: url };
-
-  const base = heroData?.image_url;
-  if (typeof base === 'string' && base.length > 0) return { uri: base };
-
-  return require('../assets/backgrounds/sanctum_environment_01.jpg');
 }
 
 export default function HeroDetailScreen() {

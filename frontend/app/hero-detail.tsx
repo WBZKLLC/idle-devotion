@@ -295,7 +295,7 @@ export default function HeroDetailScreen() {
                 
                 {/* Hero image - Uses selected tier art */}
                 <View style={styles.heroImageContainer}>
-                  {tierArt ? (
+                  {tierArtUrl ? (
                     <Image
                       source={tierArtSource}
                       style={{ width: 180, height: 250 }}

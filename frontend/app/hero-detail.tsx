@@ -503,6 +503,7 @@ export default function HeroDetailScreen() {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.promoteButton}
+              // id is UserHero.id (instance primary key) - correct for promote-star endpoint
               onPress={() => router.push(`/hero-progression?heroId=${id}`)}
             >
               <Ionicons name="star" size={18} color={COLORS.gold.primary} />

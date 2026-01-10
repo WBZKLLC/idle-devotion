@@ -80,43 +80,9 @@ export default function HeroesScreen() {
     }
   };
 
-  // UI display stars: show EXACT backend value (0..6)
-  const displayStars = (hero: any) => {
-    const s = Number(hero?.stars ?? 0);
-    if (!isFinite(s)) return 0;
-    return Math.max(0, Math.min(6, s));
-  };
-
-  // Tier unlock mapping (UI-only):
-  // - Tier 1 is ALWAYS available (even if stars=0)
-  // - stars=0 -> unlock tier 1
-  // - stars=1 -> unlock tier 2
-  // - stars=2 -> unlock tier 3
-  // - stars=3 -> unlock tier 4
-  // - stars=4 -> unlock tier 5
-  // - stars>=5 OR awakening>0 -> unlock tier 6 (5★+)
-  const unlockedTierForHero = (hero: any): DisplayTier => {
-    const stars = displayStars(hero);
-    const awaken = Number(hero?.awakening_level ?? 0);
-
-    if (awaken > 0 || stars >= 5) return 6;
-
-    // Map 0..4 stars -> tier 1..5
-    const tier = (stars + 1) as DisplayTier;
-    return (Math.max(1, Math.min(5, tier)) as DisplayTier);
-  };
-
-  // How far the user can set the GLOBAL display tier
-  // (Must not allow them to select tiers they haven't unlocked on ANY hero)
-  // If you'd rather make this per-hero only, tell me — but global is clean UX.
+  // How far the user can set the GLOBAL display tier (from tier.ts)
   const userMaxUnlockedTier: DisplayTier = useMemo(() => {
-    if (!userHeroes || userHeroes.length === 0) return 1;
-    let max: DisplayTier = 1;
-    for (const h of userHeroes) {
-      const t = unlockedTierForHero(h);
-      if (t > max) max = t;
-    }
-    return max;
+    return computeUserMaxUnlockedTier(userHeroes);
   }, [userHeroes]);
 
   // Clamp display tier if user loses access (edge case)

@@ -66,8 +66,8 @@ export async function getHeroProgression(username: string, heroId: string) {
 // ─────────────────────────────────────────────────────────────
 
 // SINGLE HERO ENDPOINT SWITCH
-// Flip to true only when backend supports: GET /user/{username}/heroes/{userHeroId}
-export const SINGLE_HERO_ENDPOINT_AVAILABLE = false as const;
+// Backend now supports: GET /user/{username}/heroes/{userHeroId}
+export const SINGLE_HERO_ENDPOINT_AVAILABLE = true as const;
 
 // Feature flags accessor (for debug screens / logging)
 export function apiFeatureFlags() {

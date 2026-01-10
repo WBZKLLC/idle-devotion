@@ -90,13 +90,8 @@ export default function GuildScreen() {
 
   const loadAvailableGuilds = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guilds?limit=20`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableGuilds(data);
-      }
+      const data = await getAvailableGuilds(20);
+      setAvailableGuilds(data);
     } catch (error) {
       console.error('Failed to load guilds:', error);
     }

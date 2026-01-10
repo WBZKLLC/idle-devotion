@@ -212,28 +212,18 @@ export default function GuildScreen() {
   const makeDonation = async () => {
     setIsDonating(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/guild/${user?.username}/donate?tier=${selectedDonationTier}`,
-        { method: 'POST' }
+      const result = await donateToGuildApi(user?.username || '', selectedDonationTier);
+      Alert.alert(
+        '💎 Donation Successful!',
+        `Earned ${result.guild_coins_earned} Guild Coins\nGuild gained ${result.guild_exp_earned} EXP!`
       );
-      
-      if (response.ok) {
-        const result = await response.json();
-        Alert.alert(
-          '💎 Donation Successful!',
-          `Earned ${result.guild_coins_earned} Guild Coins\nGuild gained ${result.guild_exp_earned} EXP!`
-        );
-        setShowDonateModal(false);
-        fetchUser();
-        loadDonationHistory();
-        loadGuildData();
-        loadGuildLevelInfo();
-      } else {
-        const error = await response.json();
-        Alert.alert('Error', error.detail || 'Donation failed');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to donate');
+      setShowDonateModal(false);
+      fetchUser();
+      loadDonationHistory();
+      loadGuildData();
+      loadGuildLevelInfo();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Donation failed');
     } finally {
       setIsDonating(false);
     }

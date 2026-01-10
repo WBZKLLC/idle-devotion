@@ -324,7 +324,7 @@ export default function HeroUpgradeScreen() {
                 <TouchableOpacity
                   style={styles.promoteButton}
                   onPress={promoteHeroStarLocal}
-                  disabled={isUpgrading || (heroDetails.duplicates || 0) < heroDetails.shards_for_next_star || heroDetails.stars >= 6}
+                  disabled={isUpgrading || (heroDetails.duplicates || 0) < heroDetails.shards_for_next_star || displayStars(heroDetails) >= MAX_STAR_TIER}
                 >
                   <LinearGradient
                     colors={[COLORS.gold.primary, COLORS.gold.dark]}
@@ -335,7 +335,7 @@ export default function HeroUpgradeScreen() {
                     ) : (
                       <>
                         <Ionicons name="star" size={20} color={COLORS.navy.darkest} />
-                        <Text style={styles.promoteButtonText}>Promote to {(heroDetails.stars || 0) + 1}★</Text>
+                        <Text style={styles.promoteButtonText}>Promote to {displayStars(heroDetails) + 1}★</Text>
                       </>
                     )}
                   </LinearGradient>

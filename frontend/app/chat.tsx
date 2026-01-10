@@ -417,7 +417,7 @@ export default function ChatScreen() {
                 maxLength={500}
                 multiline
                 returnKeyType="send"
-                onSubmitEditing={sendMessage}
+                onSubmitEditing={handleSendMessage}
                 blurOnSubmit={false}
               />
               <TouchableOpacity 

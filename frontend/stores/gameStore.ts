@@ -289,40 +289,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   restoreSession: async () => {
     await get().hydrateAuth();
   },
-      console.log('restoreSession: stored username=', username, 'has token=', !!token);
-      
-      if (username && token) {
-        // Verify token is still valid
-        try {
-          const verifyData = await verifyAuthToken(token);
-          
-          if (verifyData.valid) {
-            console.log('restoreSession: token valid, user restored');
-            set({ user: verifyData.user, authToken: token, isHydrated: true });
-            return;
-          }
-        } catch (e) {
-          console.log('restoreSession: token invalid, trying legacy restore');
-        }
-        
-        // Fall back to legacy username-based restore for old accounts
-        try {
-          const userData = await apiFetchUser(username);
-          console.log('restoreSession: legacy user found', userData.username);
-          set({ user: userData, isHydrated: true });
-          return;
-        } catch (error) {
-          console.log('restoreSession: user not found, clearing storage');
-          await clearAuthData();
-        }
-      }
-      
-      set({ isHydrated: true });
-    } catch (error) {
-      console.error('restoreSession error:', error);
-      set({ isHydrated: true });
-    }
-  },
 
   // Legacy initUser - now redirects to proper auth flow
   initUser: async (username: string, password?: string) => {

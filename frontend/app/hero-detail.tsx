@@ -104,18 +104,6 @@ function resolveTierArt(heroData: any, tier: number) {
   return require('../assets/backgrounds/sanctum_environment_01.jpg');
 }
 
-  const fromImagesArray =
-    heroData?.images?.find?.((x: any) => Number(x?.tier) === tier)?.url ||
-    heroData?.images?.find?.((x: any) => String(x?.tier) === tKey)?.url;
-
-  if (typeof fromImagesArray === 'string' && fromImagesArray.length > 0) return { uri: fromImagesArray };
-
-  // Final fallback: single image_url
-  if (typeof heroData?.image_url === 'string' && heroData.image_url.length > 0) return { uri: heroData.image_url };
-
-  return null;
-};
-
 export default function HeroDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, fetchUser } = useGameStore();

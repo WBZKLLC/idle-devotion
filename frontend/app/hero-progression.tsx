@@ -88,7 +88,7 @@ export default function HeroProgressionScreen() {
   // IMPORTANT: heroId must be UserHero.id (the instance primary key), NOT hero_id (base hero template).
   // The promote-star endpoint expects user_hero_id.
   const { heroId } = useLocalSearchParams<{ heroId: string }>();
-  const { user, fetchUser, fetchUserHeroes, userHeroes } = useGameStore();
+  const { user, fetchUser, fetchUserHeroes, userHeroes, getUserHeroById } = useGameStore();
 
   const [isLoading, setIsLoading] = useState(true);
 

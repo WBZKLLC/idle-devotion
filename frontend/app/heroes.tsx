@@ -213,7 +213,7 @@ export default function HeroesScreen() {
           </ScrollView>
 
           <Text style={styles.tierHint}>
-            Unlocked up to: {TIER_LABELS.find(t => t.tier === userMaxUnlockedTier)?.label}
+            Unlocked up to: {TIER_LABELS[userMaxUnlockedTier]}
           </Text>
         </View>
 

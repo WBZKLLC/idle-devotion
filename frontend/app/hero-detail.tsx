@@ -278,7 +278,7 @@ export default function HeroDetailScreen() {
           </TouchableOpacity>
           <View style={styles.titleWrap}>
             <Text style={styles.title} numberOfLines={1}>{heroData.name}</Text>
-            <Text style={styles.rarityLabel}>{heroData.rarity} • {heroData.hero_class}</Text>
+            <Text style={styles.rarityLabel}>{heroData.rarity} • {heroData.hero_class} • Idle Devotion</Text>
           </View>
           <View style={[styles.rarityBadgeHeader, { backgroundColor: rarityColor }]}>
             <Text style={styles.rarityBadgeText}>{heroData.rarity}</Text>

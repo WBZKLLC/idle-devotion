@@ -94,9 +94,8 @@ export async function safeMutation<T>(
     onError,
     refreshUser = true,
     fetchUserFn,
-    showErrorAlert = false,
+    showErrorAlert = true,
     errorMessage,
-    rethrow = false,
   } = opts;
 
   try {
@@ -138,11 +137,6 @@ export async function safeMutation<T>(
     // 2. Error was NOT already handled by global interceptor
     if (showErrorAlert && !isErrorHandledGlobally(error)) {
       Alert.alert('Error', errorMessage || detail);
-    }
-    
-    // Optionally rethrow for callers that need to handle further
-    if (rethrow) {
-      throw error;
     }
     
     return { ok: false, error, detail };

@@ -1860,8 +1860,8 @@ async def register_user(request: RegisterRequest):
     
     SECURITY:
     - Creates canonical username (lowercase) for reliable lookups
-    - Reserves 'adam' as a protected username (super admin)
-    - JWT 'sub' is the immutable user_id (not username)
+    - Rejects any username in RESERVED_USERNAMES_CANON (always includes "adam")
+    - JWT 'sub' is the immutable UUID "id" field (not username)
     """
     username = request.username.strip()
     password = request.password
@@ -1877,9 +1877,8 @@ async def register_user(request: RegisterRequest):
     if not re.match(r'^[a-zA-Z0-9_]+$', username):
         raise HTTPException(status_code=400, detail="Username can only contain letters, numbers, and underscores")
     
-    # SECURITY: Reserve 'adam' as protected username
-    admin_canon = canonicalize_username(SUPER_ADMIN_USERNAME)
-    if username_canon == admin_canon:
+    # SECURITY: Check reserved usernames (always includes "adam")
+    if username_canon in RESERVED_USERNAMES_CANON:
         raise HTTPException(status_code=400, detail="This username is reserved")
     
     # Validate password
@@ -1899,7 +1898,7 @@ async def register_user(request: RegisterRequest):
     )
     await db.users.insert_one(user.dict())
     
-    # Create JWT token with immutable user_id as subject (NOT username)
+    # Create JWT token with UUID "id" as subject (NEVER username)
     token = create_access_token(data={"sub": user.id})
     
     user_dict = user.dict()

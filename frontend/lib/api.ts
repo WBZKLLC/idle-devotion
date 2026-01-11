@@ -160,7 +160,7 @@ api.interceptors.response.use(
         const retryMsg = retryAfter 
           ? `Please wait ${retryAfter} seconds and try again.`
           : 'Please slow down and try again.';
-        _showErrorAlert('Too Many Requests', retryMsg);
+        _showErrorAlertOnce('Too Many Requests', retryMsg, error);
         break;
         
       case 400:

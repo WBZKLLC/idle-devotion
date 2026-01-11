@@ -720,6 +720,21 @@ const styles = StyleSheet.create({
   submitButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 14, gap: 8 },
   submitButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
   
+  // Privacy Policy Button
+  privacyButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)', 
+    borderRadius: 12, 
+    padding: 14, 
+    marginTop: 16, 
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  privacyText: { color: COLORS.cream.soft, fontSize: 14, flex: 1 },
+  
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.error, borderRadius: 12, padding: 16, marginTop: 16, gap: 8 },
   logoutText: { color: COLORS.cream.pure, fontSize: 16, fontWeight: 'bold' },
   

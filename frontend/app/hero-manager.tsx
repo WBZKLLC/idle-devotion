@@ -806,7 +806,10 @@ export default function HeroManagerScreen() {
                           <View style={styles.heroListPower}>
                             <Ionicons name="flash" size={12} color={COLORS.gold.primary} />
                             <Text style={styles.heroListPowerText}>
-                              {((heroInfo?.base_hp || 0) + (heroInfo?.base_atk || 0) * 3 + (heroInfo?.base_def || 0) * 2).toLocaleString()}
+                              {(() => {
+                                const stats = computeCombatStats(hero, heroInfo);
+                                return computePower(stats).toLocaleString();
+                              })()}
                             </Text>
                           </View>
                         </View>

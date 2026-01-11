@@ -18,6 +18,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { router, useLocalSearchParams } from 'expo-router';
 
+// CANONICAL combat stats helper (SINGLE SOURCE OF TRUTH for bonuses)
+import { computeCombatStats } from '../lib/combatStats';
+
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {
   DisplayTier,

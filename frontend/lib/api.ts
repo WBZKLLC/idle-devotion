@@ -166,7 +166,7 @@ api.interceptors.response.use(
       case 400:
       case 422:
         // Validation / bad request - show server detail
-        _showErrorAlert('Request Error', detail);
+        _showErrorAlertOnce('Request Error', detail, error);
         break;
         
       case 404:

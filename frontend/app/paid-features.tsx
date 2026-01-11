@@ -38,21 +38,22 @@ export default function PaidFeaturesScreen() {
   
   // Get user's actual heroes from game store
   const user = useGameStore(s => s.user);
+  const userHeroes = useGameStore(s => s.userHeroes);
   const fetchUserHeroes = useGameStore(s => s.fetchUserHeroes);
   
   // Fetch heroes if not already loaded (for DEV tools)
   useEffect(() => {
-    if (__DEV__ && user?.username && (!user?.heroes || user.heroes.length === 0)) {
+    if (__DEV__ && user?.username && (!userHeroes || userHeroes.length === 0)) {
       fetchUserHeroes();
     }
-  }, [user?.username, user?.heroes?.length, fetchUserHeroes]);
+  }, [user?.username, userHeroes?.length, fetchUserHeroes]);
   
-  const userHeroes = useMemo(() => {
-    return (user?.heroes || []).map((h: any) => ({
+  const heroList = useMemo(() => {
+    return (userHeroes || []).map((h: any) => ({
       id: h.hero_id || h.id || '',
       name: h.hero_data?.name || h.name || 'Unknown',
     })).filter((h: any) => h.id);
-  }, [user?.heroes]);
+  }, [userHeroes]);
 
   // DEV: text input for custom hero ID
   const [customHeroId, setCustomHeroId] = useState('');

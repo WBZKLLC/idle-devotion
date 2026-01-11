@@ -43,16 +43,24 @@ export default function PaidFeaturesScreen() {
   
   // Fetch heroes if not already loaded (for DEV tools)
   useEffect(() => {
+    if (__DEV__) {
+      console.log('[PaidFeatures] user:', user?.username, 'userHeroes.length:', userHeroes?.length);
+    }
     if (__DEV__ && user?.username && (!userHeroes || userHeroes.length === 0)) {
+      console.log('[PaidFeatures] Fetching heroes...');
       fetchUserHeroes();
     }
   }, [user?.username, userHeroes?.length, fetchUserHeroes]);
   
   const heroList = useMemo(() => {
-    return (userHeroes || []).map((h: any) => ({
+    const list = (userHeroes || []).map((h: any) => ({
       id: h.hero_id || h.id || '',
       name: h.hero_data?.name || h.name || 'Unknown',
     })).filter((h: any) => h.id);
+    if (__DEV__) {
+      console.log('[PaidFeatures] heroList:', list.length, 'heroes');
+    }
+    return list;
   }, [userHeroes]);
 
   // DEV: text input for custom hero ID

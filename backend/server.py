@@ -6119,7 +6119,7 @@ async def admin_freeze_account(
     GOD MODE: Freeze/unfreeze a user account.
     
     Frozen accounts cannot:
-    - Login (existing JWTs are invalidated)
+    - Login (existing JWTs are invalidated via tokens_valid_after)
     - Perform any game actions
     """
     # SECURITY: Cannot freeze the super admin
@@ -6133,33 +6133,39 @@ async def admin_freeze_account(
     target_id = get_user_id(target)
     old_frozen = target.get("account_frozen", False)
     
-    # Update freeze status and invalidate tokens
+    # Update freeze status and revoke all tokens
     update_data = {
         "account_frozen": payload.freeze,
         "frozen_at": datetime.utcnow() if payload.freeze else None,
         "frozen_reason": payload.reason if payload.freeze else None,
     }
     
+    # When freezing, also revoke all existing tokens
     if payload.freeze:
-        update_data["token_invalidated_at"] = datetime.utcnow()
+        update_data["tokens_valid_after"] = datetime.utcnow()
     
     await db.users.update_one(
         {"username_canon": canonicalize_username(payload.target_username)},
         {"$set": update_data}
     )
     
-    await log_god_action(
+    audit_entry = await log_god_action(
         admin_user=admin_user,
         action_type="freeze_account" if payload.freeze else "unfreeze_account",
         target_username=payload.target_username,
         target_user_id=target_id,
-        fields_changed={"account_frozen": {"old": old_frozen, "new": payload.freeze}},
+        fields_changed={
+            "account_frozen": {"old": old_frozen, "new": payload.freeze},
+            "tokens_revoked": payload.freeze,
+        },
         reason=payload.reason,
         request=request,
+        auth_jti=admin_user.get("_auth_jti"),
     )
     
     return {
         "success": True,
+        "request_id": audit_entry.request_id,
         "message": f"{'Froze' if payload.freeze else 'Unfroze'} account {payload.target_username}"
     }
 

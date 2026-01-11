@@ -753,12 +753,104 @@ def detect_url(message: str) -> bool:
     return bool(URL_PATTERN.search(message))
 
 def contains_severe_slur(message: str) -> bool:
-    """Check if message contains severe slurs"""
+    """Check if message contains severe slurs (DEPRECATED - use check_prohibited_tokens)"""
     msg_lower = message.lower()
     for slur in SEVERE_SLURS:
         if slur in msg_lower:
             return True
     return False
+
+# ============================================================================
+# ROBUST SLUR DETECTION (Leetspeak/Unicode resistant)
+# ============================================================================
+import unicodedata
+
+LEET_MAP = str.maketrans({
+    "0": "o",
+    "1": "i",
+    "!": "i",
+    "3": "e",
+    "@": "a",
+    "$": "s",
+    "5": "s",
+    "7": "t",
+    "4": "a",
+    "8": "b",
+    "9": "g",
+    "|": "i",
+    "+": "t",
+})
+
+_non_alnum = re.compile(r"[^a-z0-9]+")
+
+def canonicalize_for_filter(text: str) -> str:
+    """
+    Normalize text for slur detection:
+    - Unicode NFKC normalization
+    - Lowercase
+    - Leetspeak substitution
+    - Strip non-alphanumerics
+    """
+    # Normalize unicode (e.g., fullwidth chars, accents)
+    t = unicodedata.normalize("NFKC", text)
+    t = t.lower()
+    t = t.translate(LEET_MAP)
+    # Remove anything that isn't a-z/0-9
+    t = _non_alnum.sub("", t)
+    return t
+
+# Prohibited tokens - use internal keys to avoid logging slurs
+# These result in PERMANENT BAN
+PROHIBITED_TOKENS = {
+    "slur_racial_1": "nigger",
+    "slur_racial_2": "nigga",
+    "slur_ethnic_1": "spic",
+    "slur_ethnic_2": "kike",
+    "slur_ethnic_3": "chink",
+    "slur_homophobic_1": "faggot",
+}
+
+def check_prohibited_tokens(text: str) -> Optional[str]:
+    """
+    Check if text contains prohibited tokens after canonicalization.
+    Returns the token key if found, None otherwise.
+    """
+    canonicalized = canonicalize_for_filter(text)
+    for key, token in PROHIBITED_TOKENS.items():
+        if token in canonicalized:
+            return key
+    return None
+
+async def issue_permanent_ban(user_id: str, username: str, reason_key: str):
+    """
+    Issue a permanent chat ban for prohibited content.
+    Does NOT log the original message content.
+    """
+    now = datetime.utcnow()
+    
+    # Upsert ban status
+    await db.chat_user_status.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "user_id": user_id,
+            "username": username,
+            "is_banned": True,
+            "ban_expires_at": None,  # Permanent
+        }},
+        upsert=True
+    )
+    
+    # Log moderation action (without message content)
+    action = ChatModerationAction(
+        user_id=user_id,
+        username=username,
+        action_type="ban",
+        reason=f"Auto-ban: prohibited content ({reason_key})",
+        duration_minutes=None,  # Permanent
+        issued_by="system",
+        notes="Permanent ban for prohibited slur token. Original message not logged."
+    )
+    await db.chat_moderation_log.insert_one(action.dict())
 
 def censor_message(message: str) -> str:
     """Censor profanity in message"""

@@ -349,9 +349,7 @@ async def get_user_for_mutation(username: str) -> dict:
         HTTPException: 404 if user not found
         HTTPException: 403 if account is frozen
     """
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     assert_account_active(user)
     return user
 
@@ -2504,17 +2502,13 @@ async def bootstrap_super_admin(
 @api_router.get("/user/{username}")
 async def get_user(username: str):
     """Get user data"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     return convert_objectid(user)
 
 @api_router.post("/user/{username}/login")
 async def user_login(username: str):
     """Handle daily login tracking - NO rewards given here"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     now = datetime.utcnow()
     last_login = user_data.get("last_login")
@@ -2589,9 +2583,7 @@ FRAME_DEFINITIONS = {
 @api_router.get("/user/{username}/frames")
 async def get_user_frames(username: str):
     """Get all frames available to a user based on VIP level and achievements"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = user_data.get("vip_level", 0)
     unlocked_special = user_data.get("unlocked_frames", [])
@@ -2747,9 +2739,7 @@ CHAT_BUBBLE_DEFINITIONS = {
 @api_router.get("/user/{username}/chat-bubbles")
 async def get_user_chat_bubbles(username: str):
     """Get all chat bubbles available to a user"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = user_data.get("vip_level", 0)
     equipped_bubble = user_data.get("equipped_chat_bubble", "default")
@@ -3149,9 +3139,7 @@ async def get_all_heroes():
 @api_router.get("/user/{username}/heroes")
 async def get_user_heroes(username: str):
     """Get all heroes owned by user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
     
@@ -3179,9 +3167,7 @@ async def get_user_hero_by_id(username: str, user_hero_id: str):
     This is the canonical single-hero fetch endpoint.
     Returns the enriched hero with hero_data and ascension images.
     """
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Find the user's hero instance by id
     user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
@@ -3207,9 +3193,7 @@ async def get_user_hero_by_id(username: str, user_hero_id: str):
 @api_router.post("/user/{username}/heroes/{hero_instance_id}/upgrade")
 async def upgrade_hero(username: str, hero_instance_id: str):
     """Upgrade hero rank using duplicates"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     hero = await db.user_heroes.find_one({"id": hero_instance_id, "user_id": user["id"]})
     if not hero:
@@ -3248,9 +3232,7 @@ async def upgrade_hero(username: str, hero_instance_id: str):
 @api_router.post("/team/create")
 async def create_team(username: str, team_name: str):
     """Create a new team"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     team = Team(user_id=user["id"], name=team_name)
     await db.teams.insert_one(team.dict())
@@ -3259,9 +3241,7 @@ async def create_team(username: str, team_name: str):
 @api_router.get("/team/{username}")
 async def get_user_teams(username: str):
     """Get all teams for a user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
     return [convert_objectid(team) for team in teams]
@@ -3283,9 +3263,7 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
 @api_router.get("/team/{username}/by-mode")
 async def get_teams_by_mode(username: str):
     """Get all mode-specific teams for a user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get mode teams from user document
     mode_teams = user.get("mode_teams", {})
@@ -3295,9 +3273,7 @@ async def get_teams_by_mode(username: str):
 async def save_mode_team(username: str, mode: str, slot_1: str = None, slot_2: str = None, 
                          slot_3: str = None, slot_4: str = None, slot_5: str = None, slot_6: str = None):
     """Save a team for a specific game mode with full audit logging"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     valid_modes = ["campaign", "arena", "abyss", "guild_war", "dungeons"]
     if mode not in valid_modes:
@@ -3383,9 +3359,7 @@ async def save_mode_team(username: str, mode: str, slot_1: str = None, slot_2: s
 @api_router.get("/team/{username}/change-logs")
 async def get_team_change_logs(username: str, limit: int = 50):
     """Get team change audit logs for a user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     logs = await db.team_change_logs.find(
         {"user_id": user["id"]}
@@ -3396,9 +3370,7 @@ async def get_team_change_logs(username: str, limit: int = 50):
 @api_router.get("/hero/{username}/change-logs")
 async def get_hero_change_logs(username: str, hero_id: str = None, limit: int = 50):
     """Get hero modification audit logs"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     query = {"user_id": user["id"]}
     if hero_id:
@@ -3420,9 +3392,7 @@ async def claim_idle_rewards(username: str):
     Resources: Gold, Coins, Enhancement Stones, Skill Essence, Stamina, Rune Stones
     Caps based on: Abyss floor, Dungeon tier, Campaign chapter
     """
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Calculate VIP level
     vip_level = calculate_vip_level(user.get("total_spent", 0))
@@ -3517,9 +3487,7 @@ async def claim_idle_rewards(username: str):
 @api_router.get("/idle/status/{username}")
 async def get_idle_status(username: str):
     """Get current idle collection status with VIP rates and progression caps"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))
     idle_max_hours = get_vip_idle_hours(vip_level)
@@ -3608,9 +3576,7 @@ async def instant_collect_idle(username: str):
     VIP 1+ Instant Collect: Claim 2 hours of idle rewards instantly.
     Has a 4-hour cooldown between uses.
     """
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))
     
@@ -3686,9 +3652,7 @@ async def instant_collect_idle(username: str):
 @api_router.get("/vip/info/{username}")
 async def get_vip_info(username: str):
     """Get VIP information and benefits - monetary thresholds hidden from users"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     total_spent = user.get("total_spent", 0)
     current_vip = calculate_vip_level(total_spent)
@@ -3723,9 +3687,7 @@ async def get_vip_info(username: str):
 @api_router.get("/vip/comparison/{username}")
 async def get_vip_comparison(username: str):
     """Get VIP tier comparison for store display - monetary thresholds hidden"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     total_spent = user.get("total_spent", 0)
     current_vip = calculate_vip_level(total_spent)
@@ -3830,9 +3792,7 @@ async def vip_purchase(username: str, amount_usd: float):
 @api_router.get("/vip/packages/{username}")
 async def get_vip_packages(username: str):
     """Get available VIP packages for user's current VIP level"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))
     
@@ -3906,9 +3866,7 @@ async def get_crystal_packages():
 @api_router.post("/store/purchase-crystals")
 async def purchase_crystals(username: str, package_id: str):
     """Purchase crystal package with real money (simulated)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     if package_id not in CRYSTAL_PACKAGES:
         raise HTTPException(status_code=404, detail="Package not found")
@@ -3955,9 +3913,7 @@ async def purchase_crystals(username: str, package_id: str):
 @api_router.get("/store/divine-packages")
 async def get_divine_packages(username: str):
     """Get Divine Package availability for a user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Check if monthly reset is needed
     now = datetime.utcnow()
@@ -4012,9 +3968,7 @@ async def get_divine_packages(username: str):
 @api_router.post("/store/purchase-divine")
 async def purchase_divine_package(username: str, package_id: str):
     """Purchase Divine Package (limited 3 per month per tier)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     if package_id not in DIVINE_PACKAGES:
         raise HTTPException(status_code=404, detail="Package not found")
@@ -4061,9 +4015,7 @@ async def purchase_divine_package(username: str, package_id: str):
 @api_router.get("/user/{username}/cr")
 async def get_character_rating(username: str):
     """Calculate and return user's Character Rating (CR)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get all user heroes
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
@@ -4113,9 +4065,7 @@ async def get_all_chapters():
 @api_router.post("/story/battle/{username}/{chapter_number}")
 async def battle_chapter(username: str, chapter_number: int):
     """Battle a story chapter - server-side combat simulation"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get user progress
     progress = await db.user_progress.find_one({"user_id": user["id"]})
@@ -4283,9 +4233,7 @@ async def get_feature_flags():
 @api_router.post("/support/ticket")
 async def create_support_ticket(username: str, subject: str, message: str):
     """Create a support ticket"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     ticket = SupportTicket(
         user_id=user["id"],
@@ -4300,9 +4248,7 @@ async def create_support_ticket(username: str, subject: str, message: str):
 @api_router.get("/support/tickets/{username}")
 async def get_user_tickets(username: str):
     """Get all support tickets for a user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     tickets = await db.support_tickets.find({"user_id": user["id"]}).sort("created_at", -1).to_list(100)
     return [convert_objectid(ticket) for ticket in tickets]
@@ -4352,9 +4298,7 @@ async def send_friend_request(from_username: str, to_username: str):
 @api_router.get("/friends/requests/{username}")
 async def get_friend_requests(username: str):
     """Get pending friend requests for a user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     requests = await db.friend_requests.find({
         "to_user_id": user["id"],
@@ -4376,9 +4320,7 @@ async def get_friend_requests(username: str):
 @api_router.post("/friends/accept/{request_id}")
 async def accept_friend_request(request_id: str, username: str):
     """Accept a friend request"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     friend_request = await db.friend_requests.find_one({"id": request_id})
     if not friend_request:
@@ -4406,9 +4348,7 @@ async def accept_friend_request(request_id: str, username: str):
 @api_router.get("/friends/list/{username}")
 async def get_friends_list(username: str):
     """Get list of friends with collection status"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get all friendships
     friendships = await db.friendships.find({
@@ -4443,9 +4383,7 @@ async def get_friends_list(username: str):
 @api_router.post("/friends/collect/{friendship_id}")
 async def collect_friend_currency(friendship_id: str, username: str):
     """Collect friendship points from a friend (24hr cooldown)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     friendship = await db.friendships.find_one({"id": friendship_id})
     if not friendship:
@@ -4481,9 +4419,7 @@ async def collect_friend_currency(friendship_id: str, username: str):
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):
     """Get or create player character"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     player_char = await db.player_characters.find_one({"user_id": user["id"]})
     
@@ -4498,9 +4434,7 @@ async def get_player_character(username: str):
 @api_router.post("/player-character/upgrade/{username}")
 async def upgrade_player_character(username: str, upgrade_type: str):
     """Upgrade player character (costs crystals, takes time or instant with crystals)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     player_char = await db.player_characters.find_one({"user_id": user["id"]})
     if not player_char:
@@ -4663,9 +4597,7 @@ async def get_campaign_leaderboard(limit: int = 100):
 @api_router.get("/abyss/progress/{username}")
 async def get_abyss_progress(username: str):
     """Get user's abyss progress (LEGACY - prefer /abyss/{username}/status)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     progress = await db.abyss_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -4682,9 +4614,7 @@ async def get_abyss_progress(username: str):
 async def battle_abyss(username: str, level: int, request: AbyssBattleRequest):
     """Battle an abyss level - requires multiple teams for higher levels"""
     team_ids = request.team_ids
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get abyss progress
     progress = await db.abyss_progress.find_one({"user_id": user["id"]})
@@ -4819,9 +4749,7 @@ async def battle_abyss(username: str, level: int, request: AbyssBattleRequest):
 @api_router.get("/arena/record/{username}")
 async def get_arena_record(username: str):
     """Get user's arena record"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     record = await db.arena_records.find_one({"user_id": user["id"]})
     if not record:
@@ -4836,9 +4764,7 @@ async def get_arena_record(username: str):
 async def arena_battle(username: str, request: ArenaBattleRequest):
     """Battle in arena against another player"""
     team_id = request.team_id
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get user's arena record
     user_record = await db.arena_records.find_one({"user_id": user["id"]})
@@ -7041,9 +6967,7 @@ async def translate_message(message: str, from_lang: str, to_lang: str):
 @api_router.post("/guild/create")
 async def create_guild(username: str, guild_name: str):
     """Create a new guild"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Check if user already in a guild
     existing_guild = await db.guilds.find_one({"member_ids": user["id"]})
@@ -7069,9 +6993,7 @@ async def create_guild(username: str, guild_name: str):
 @api_router.post("/guild/join")
 async def join_guild(username: str, guild_id: str):
     """Join a guild"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"id": guild_id})
     if not guild:
@@ -7090,9 +7012,7 @@ async def join_guild(username: str, guild_id: str):
 @api_router.get("/guild/{username}")
 async def get_user_guild(username: str):
     """Get user's guild"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     
@@ -7132,9 +7052,7 @@ async def list_guilds(limit: int = 20, skip: int = 0):
 @api_router.post("/guild/leave")
 async def leave_guild(username: str):
     """Leave current guild"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Find user's guild
     guild = await db.guilds.find_one({"member_ids": user["id"]})
@@ -7168,9 +7086,7 @@ class HeroUpgradeRequest(BaseModel):
 @api_router.get("/hero/{user_hero_id}/details")
 async def get_hero_details(user_hero_id: str, username: str):
     """Get detailed hero info including skills and equipment"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
     if not user_hero:
@@ -7246,9 +7162,7 @@ async def level_up_hero(user_hero_id: str, username: str, levels: int = 1):
 @api_router.post("/hero/{user_hero_id}/promote-star")
 async def promote_hero_star(user_hero_id: str, username: str):
     """Promote hero to next star using shards (duplicates)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
     if not user_hero:
@@ -7283,9 +7197,7 @@ async def promote_hero_star(user_hero_id: str, username: str):
 @api_router.post("/hero/{user_hero_id}/awaken")
 async def awaken_hero(user_hero_id: str, username: str):
     """Awaken hero to unlock max potential"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
     if not user_hero:
@@ -7341,9 +7253,7 @@ class TeamSlotUpdate(BaseModel):
 @api_router.post("/team/create-full")
 async def create_team_full(username: str, team_name: str, slots: TeamSlotUpdate):
     """Create a new team with positioned heroes"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Calculate team power
     slot_heroes = [slots.slot_1, slots.slot_2, slots.slot_3, slots.slot_4, slots.slot_5, slots.slot_6]
@@ -7379,9 +7289,7 @@ async def create_team_full(username: str, team_name: str, slots: TeamSlotUpdate)
 @api_router.put("/team/{team_id}/slots")
 async def update_team_slots(team_id: str, username: str, slots: TeamSlotUpdate):
     """Update team hero positions"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     team = await db.teams.find_one({"id": team_id, "user_id": user["id"]})
     if not team:
@@ -7422,9 +7330,7 @@ async def update_team_slots(team_id: str, username: str, slots: TeamSlotUpdate):
 @api_router.get("/team/{username}/full")
 async def get_user_teams_full(username: str):
     """Get all teams with full hero data"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
     
@@ -7451,9 +7357,7 @@ async def get_user_teams_full(username: str):
 @api_router.put("/team/{team_id}/set-active")
 async def set_active_team(team_id: str, username: str):
     """Set a team as the active team"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Deactivate all teams first
     await db.teams.update_many(
@@ -7492,9 +7396,7 @@ def calculate_element_advantage(attacker_element: str, defender_element: str) ->
 @api_router.post("/combat/simulate")
 async def simulate_combat(username: str, enemy_power: int = 1000):
     """Simulate a combat encounter and return detailed results"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get active team or top heroes
     team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
@@ -7643,9 +7545,7 @@ async def generate_battle_narration(heroes: List[Dict], enemy_name: str, victory
 @api_router.post("/combat/detailed")
 async def detailed_combat(username: str, enemy_name: str = "Dark Lord", enemy_power: int = 1500):
     """Enhanced combat simulation with turn-by-turn details and AI narration"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get heroes for battle
     team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
@@ -7887,9 +7787,7 @@ def get_boss_for_guild_level(guild_level: int):
 @api_router.get("/guild/{username}/boss")
 async def get_guild_boss(username: str):
     """Get current guild boss status"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Find user's guild
     guild = await db.guilds.find_one({"member_ids": user["id"]})
@@ -7930,9 +7828,7 @@ async def get_guild_boss(username: str):
 @api_router.post("/guild/{username}/boss/attack")
 async def attack_guild_boss(username: str):
     """Attack the guild boss (limited daily attacks based on VIP level)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
@@ -8065,9 +7961,7 @@ async def attack_guild_boss(username: str):
 @api_router.post("/guild/{username}/donate")
 async def donate_to_guild(username: str, currency_type: str = "coins", amount: int = 1000):
     """Donate currency to guild"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
@@ -8129,9 +8023,7 @@ async def donate_to_guild(username: str, currency_type: str = "coins", amount: i
 @api_router.get("/guild/{username}/donations")
 async def get_guild_donations(username: str, limit: int = 20):
     """Get recent guild donations"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
@@ -8155,9 +8047,7 @@ async def get_guild_donations(username: str, limit: int = 20):
 @api_router.get("/resource-bag/{username}")
 async def get_resource_bag(username: str):
     """Get user's resource bag (farming tracker)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get or initialize resource bag
     resource_bag = user.get("resource_bag", {
@@ -8198,9 +8088,7 @@ async def get_resource_bag(username: str):
 @api_router.post("/resource-bag/{username}/collect")
 async def collect_resources(username: str, resource_type: str, amount: int):
     """Add collected resources to bag and update totals"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     valid_types = ["coins", "gold", "crystals", "exp", "materials"]
     if resource_type not in valid_types:
@@ -8239,9 +8127,7 @@ async def collect_resources(username: str, resource_type: str, amount: int):
 @api_router.post("/resource-bag/{username}/reset")
 async def reset_resource_bag(username: str):
     """Reset resource bag counters (typically called at daily reset)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Reset bag counters
     new_bag = {
@@ -8426,9 +8312,7 @@ async def redeem_code(username: str, code: str):
 @api_router.get("/codes/history/{username}")
 async def get_redemption_history(username: str):
     """Get user's code redemption history"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     history = await db.code_redemptions.find({"username": username}).sort("redeemed_at", -1).to_list(50)
     
@@ -8531,9 +8415,7 @@ def calculate_abyss_rewards(level: int, is_first_clear: bool = False) -> dict:
 @api_router.get("/abyss/{username}/status")
 async def get_abyss_status(username: str):
     """Get user's abyss progress"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get user's abyss progress
     abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
@@ -8583,9 +8465,7 @@ async def get_abyss_status(username: str):
 @api_router.get("/abyss/{username}/records")
 async def get_abyss_records(username: str, level: int = None):
     """Get clear records for abyss levels"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     server_id = user.get("server_id", "server_1")
     
@@ -8624,9 +8504,7 @@ async def get_abyss_records(username: str, level: int = None):
 @api_router.post("/abyss/{username}/attack")
 async def attack_abyss_boss(username: str):
     """Attack the current abyss boss"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get user's abyss progress
     abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
@@ -8844,9 +8722,7 @@ async def get_guild_war_status():
 @api_router.post("/guild-war/register/{username}")
 async def register_guild_for_war(username: str):
     """Register guild for current war season"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
@@ -8915,9 +8791,7 @@ async def get_guild_war_leaderboard(limit: int = 50):
 @api_router.post("/guild-war/attack/{username}")
 async def guild_war_attack(username: str, target_guild_id: str):
     """Attack another guild in the war"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
@@ -8992,9 +8866,7 @@ async def guild_war_attack(username: str, target_guild_id: str):
 @api_router.get("/guild-war/history/{username}")
 async def get_guild_war_history(username: str, limit: int = 20):
     """Get user's guild war attack history"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     attacks = await db.guild_war_attacks.find(
         {"attacker_user_id": user["id"]}
@@ -9099,9 +8971,7 @@ async def verify_purchase(purchase: PurchaseVerification):
 @api_router.get("/purchase/history/{username}")
 async def get_purchase_history(username: str, limit: int = 20):
     """Get user's purchase history"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     purchases = await db.purchases.find(
         {"user_id": user["id"]}
@@ -9123,9 +8993,7 @@ DAILY_QUESTS = [
 @api_router.get("/daily-quests/{username}")
 async def get_daily_quests(username: str):
     """Get daily quest progress for user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get or create daily quest progress
     today = datetime.utcnow().date().isoformat()
@@ -9155,9 +9023,7 @@ async def get_daily_quests(username: str):
 @api_router.post("/daily-quests/{username}/claim/{quest_id}")
 async def claim_daily_quest(username: str, quest_id: str):
     """Claim reward for completed daily quest"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     today = datetime.utcnow().date().isoformat()
     progress = await db.daily_quest_progress.find_one({"user_id": user["id"], "date": today})
@@ -9268,9 +9134,7 @@ DAILY_LOGIN_REWARDS = generate_daily_login_rewards()
 @api_router.get("/login-rewards/{username}")
 async def get_login_rewards(username: str):
     """Get daily login reward status for user (6-month / 180-day system)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     login_days = user.get("login_days", 0)
     today = datetime.utcnow().date().isoformat()
@@ -9315,9 +9179,7 @@ async def get_login_rewards(username: str):
 @api_router.post("/login-rewards/{username}/claim/{day}")
 async def claim_login_reward(username: str, day: int):
     """Claim a specific day's login reward"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     login_days = user.get("login_days", 0)
     
@@ -9411,9 +9273,7 @@ BATTLE_PASS_PREMIUM_PLUS_PRICE = 19.99  # Includes 10 level skips
 @api_router.get("/battle-pass/{username}")
 async def get_battle_pass(username: str):
     """Get battle pass progress for user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
     if not bp_data:
@@ -9470,9 +9330,7 @@ async def claim_battle_pass_reward(username: str, track: str, level: int):
     if track not in ["free", "premium"]:
         raise HTTPException(status_code=400, detail="Invalid track")
     
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
     if not bp_data:
@@ -9518,9 +9376,7 @@ async def claim_battle_pass_reward(username: str, track: str, level: int):
 @api_router.post("/battle-pass/{username}/purchase")
 async def purchase_battle_pass(username: str, tier: str = "premium"):
     """Purchase battle pass (simulated)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
     if not bp_data:
@@ -9562,9 +9418,7 @@ async def purchase_battle_pass(username: str, tier: str = "premium"):
 @api_router.post("/battle-pass/{username}/add-xp")
 async def add_battle_pass_xp(username: str, xp: int = 100):
     """Add XP to battle pass (called by various game actions)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     await db.battle_pass.update_one(
         {"user_id": user["id"]},
@@ -9636,9 +9490,7 @@ async def get_event_banners():
 @api_router.get("/event-banners/{banner_id}")
 async def get_event_banner_details(banner_id: str, username: str):
     """Get detailed info for a specific event banner"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     banner = next((b for b in EVENT_BANNERS if b["id"] == banner_id), None)
     if not banner:
@@ -9657,9 +9509,7 @@ async def get_event_banner_details(banner_id: str, username: str):
 @api_router.post("/event-banners/{banner_id}/pull")
 async def pull_event_banner(banner_id: str, username: str, multi: bool = False):
     """Pull on an event banner"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     banner = next((b for b in EVENT_BANNERS if b["id"] == banner_id), None)
     if not banner:
@@ -9813,9 +9663,7 @@ STORY_CHAPTERS = [
 @api_router.get("/story/progress/{username}")
 async def get_story_progress(username: str):
     """Get user's story/campaign progress"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     progress = await db.story_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -9863,9 +9711,7 @@ async def get_story_progress(username: str):
 @api_router.post("/story/battle/{username}/{chapter}/{stage}")
 async def story_battle(username: str, chapter: int, stage: int):
     """Battle a story stage"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Find stage data
     chapter_data = next((c for c in STORY_CHAPTERS if c["chapter"] == chapter), None)
@@ -9979,9 +9825,7 @@ async def get_crimson_eclipse_banner():
 @api_router.get("/event/crimson-eclipse/shop")
 async def get_event_shop(username: str):
     """Get event shop items with user's purchase history"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get user's event purchases
     purchases = await db.event_purchases.find_one({"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"})
@@ -9998,9 +9842,7 @@ async def get_event_shop(username: str):
 @api_router.post("/event/crimson-eclipse/pull")
 async def pull_crimson_eclipse(username: str, multi: bool = False):
     """Pull on the Crimson Eclipse banner (SERVER-AUTHORITATIVE)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Check if banner is active
     banner = get_active_event_banner()
@@ -10112,9 +9954,7 @@ async def pull_crimson_eclipse(username: str, multi: bool = False):
 @api_router.post("/event/crimson-eclipse/claim-milestone")
 async def claim_event_milestone(username: str, milestone_pulls: int):
     """Claim a milestone reward"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     pity_data = await db.event_pity.find_one({"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"})
     if not pity_data:
@@ -10159,9 +9999,7 @@ async def claim_event_milestone(username: str, milestone_pulls: int):
 @api_router.get("/journey/{username}")
 async def get_player_journey(username: str):
     """Get player's first 7-day journey progress"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Calculate account age
     created_at = user.get("created_at")
@@ -10201,9 +10039,7 @@ async def get_player_journey(username: str):
 @api_router.post("/journey/{username}/claim-login")
 async def claim_login_reward(username: str, day: int):
     """Claim daily login reward for first 7 days"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Validate day
     if day < 1 or day > 7:
@@ -10282,9 +10118,7 @@ async def claim_login_reward(username: str, day: int):
 @api_router.get("/journey/{username}/beginner-missions")
 async def get_beginner_missions(username: str):
     """Get beginner missions progress"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get claimed missions
     progress = await db.journey_progress.find_one({"user_id": user["id"]})
@@ -10315,9 +10149,7 @@ async def get_beginner_missions(username: str):
 @api_router.get("/starter-packs")
 async def get_starter_packs(username: str):
     """Get available starter packs for user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Calculate account age
     created_at = user.get("created_at")
@@ -10366,9 +10198,7 @@ from core.launch_banner import (
 @api_router.get("/launch-banner/status/{username}")
 async def get_launch_banner_status(username: str):
     """Get launch exclusive banner status for a user"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get or create launch banner progress
     progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
@@ -10446,9 +10276,7 @@ async def get_launch_banner_status(username: str):
 @api_router.post("/launch-banner/pull/{username}")
 async def pull_launch_banner(username: str, multi: bool = False):
     """Pull on the launch exclusive banner"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get progress
     progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
@@ -10556,9 +10384,7 @@ async def pull_launch_banner(username: str, multi: bool = False):
 @api_router.get("/launch-banner/bundles/{username}")
 async def get_launch_bundles(username: str):
     """Get available bundles for the launch banner"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -10577,9 +10403,7 @@ async def get_launch_bundles(username: str):
 @api_router.post("/launch-banner/purchase-bundle/{username}")
 async def purchase_launch_bundle(username: str, bundle_id: str):
     """Purchase a bundle (simulated - in production would use RevenueCat)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get bundle info
     bundle = LAUNCH_BUNDLES.get(bundle_id)
@@ -10662,9 +10486,7 @@ from core.selene_monetization import (
 @api_router.get("/selene-banner/status/{username}")
 async def get_selene_banner_status(username: str):
     """Get Selene banner status - triggers after Stage 2-10"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get or create banner progress
     progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
@@ -10760,9 +10582,7 @@ async def get_selene_banner_status(username: str):
 @api_router.post("/selene-banner/pull/{username}")
 async def pull_selene_banner(username: str, multi: bool = False):
     """Pull on the Selene banner with soft/hard pity"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get progress
     progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
@@ -10870,9 +10690,7 @@ async def pull_selene_banner(username: str, multi: bool = False):
 @api_router.get("/selene-banner/bundles/{username}")
 async def get_selene_bundles_endpoint(username: str):
     """Get available bundles based on player state"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -10898,9 +10716,7 @@ async def get_selene_bundles_endpoint(username: str):
 @api_router.post("/selene-banner/purchase-bundle/{username}")
 async def purchase_selene_bundle(username: str, bundle_id: str):
     """Purchase a bundle (simulated - integrates with RevenueCat in production)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     bundle = DYNAMIC_BUNDLES.get(bundle_id)
     if not bundle:
@@ -11042,9 +10858,7 @@ from core.campaign import (
 @api_router.get("/campaign/chapters")
 async def get_campaign_chapters(username: str):
     """Get all campaign chapters with unlock status"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     progress = await db.campaign_progress.find_one({"user_id": user["id"]})
     completed_chapters = progress.get("completed_chapters", []) if progress else []
@@ -11099,9 +10913,7 @@ async def get_campaign_chapters(username: str):
 @api_router.get("/campaign/chapter/{chapter_id}")
 async def get_campaign_chapter(chapter_id: int, username: str):
     """Get detailed chapter data with all stages"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     if chapter_id not in CHAPTER_DATA:
         raise HTTPException(status_code=404, detail="Chapter not found")
@@ -11161,9 +10973,7 @@ async def get_campaign_chapter(chapter_id: int, username: str):
 @api_router.get("/campaign/stage/{chapter_id}/{stage_num}")
 async def get_campaign_stage(chapter_id: int, stage_num: int, username: str):
     """Get specific stage data with enemies and rewards"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     stage_data = generate_stage_data(chapter_id, stage_num)
     if not stage_data:
@@ -11195,9 +11005,7 @@ async def complete_campaign_stage(
     time_seconds: int = 60
 ):
     """Mark a stage as completed and grant rewards"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     stage_data = generate_stage_data(chapter_id, stage_num)
     if not stage_data:
@@ -11291,9 +11099,7 @@ async def complete_campaign_stage(
 @api_router.post("/campaign/stage/{chapter_id}/{stage_num}/sweep")
 async def sweep_campaign_stage(chapter_id: int, stage_num: int, username: str, count: int = 1):
     """Sweep (auto-complete) a previously 3-starred stage"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     progress = await db.campaign_progress.find_one({"user_id": user["id"]})
     if not progress:

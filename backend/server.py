@@ -1948,9 +1948,10 @@ async def startup_event():
         print(f"⚠️ Index on username_canon may already exist: {e}")
     
     # 2. Create unique index on user.id for fast JWT lookups
+    # NOT sparse - migration guarantees all users have UUID id
     try:
-        await db.users.create_index([("id", 1)], unique=True, sparse=True)
-        print("✅ Created unique index on user.id")
+        await db.users.create_index([("id", 1)], unique=True)
+        print("✅ Created unique index on user.id (non-sparse)")
     except Exception as e:
         print(f"⚠️ Index on user.id may already exist: {e}")
     

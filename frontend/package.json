@@ -15,7 +15,9 @@
     "guard:user-heroes-map": "node scripts/guard-user-heroes-map-sync.mjs",
     "guard:feature-flags": "node scripts/guard-feature-flags.mjs",
     "guard:hero-signature": "node scripts/guard-get-user-hero-signature.mjs",
-    "guard": "npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature"
+    "guard": "npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature",
+    "reencode:cinematics": "bash scripts/reencode-cinematics.sh",
+    "verify:cinematics": "bash scripts/verify-cinematics-codecs.sh"
   },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",

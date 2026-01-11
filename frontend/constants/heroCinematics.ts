@@ -22,15 +22,15 @@ export type HeroId =
 // Video availability flag - set to true when actual videos are added
 export const VIDEOS_AVAILABLE = true;
 
-// require() returns a module id (number)
-export type CinematicModule = number;
+// require() returns number on native, string URL on web
+export type CinematicSource = number | string;
 
 /**
  * Get the cinematic video source for a hero at 5+ star
  * @param heroId - The hero's unique identifier (must match exactly)
- * @returns Video module id or null if not available
+ * @returns Video source (number on native, string on web) or null if not available
  */
-export function getHeroCinematicVideo(heroId: string): CinematicModule | null {
+export function getHeroCinematicVideo(heroId: string): CinematicSource | null {
   if (!VIDEOS_AVAILABLE) {
     if (__DEV__) {
       console.log(`[HeroCinematics] Videos not yet available. Hero: ${heroId}`);
@@ -38,7 +38,7 @@ export function getHeroCinematicVideo(heroId: string): CinematicModule | null {
     return null;
   }
   
-  return HERO_5PLUS_CINEMATICS[heroId as HeroId] ?? null;
+  return (HERO_5PLUS_CINEMATICS[heroId as HeroId] ?? null) as CinematicSource | null;
 }
 
 /**

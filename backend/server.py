@@ -2635,9 +2635,7 @@ async def get_user_frames(username: str):
 @api_router.post("/user/{username}/equip-frame")
 async def equip_frame(username: str, frame_id: str):
     """Equip a profile frame"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = user_data.get("vip_level", 0)
     unlocked_special = user_data.get("unlocked_frames", [])

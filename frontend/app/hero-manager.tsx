@@ -11,6 +11,7 @@ import {
   Alert,
   Modal,
   RefreshControl,
+  Animated,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { useEntitlementStore } from '../stores/entitlementStore';

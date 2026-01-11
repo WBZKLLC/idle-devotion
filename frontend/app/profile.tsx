@@ -799,4 +799,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
   },
+  paidFeaturesButton: {
+    marginTop: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  paidFeaturesGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  paidFeaturesText: {
+    flex: 1,
+    color: COLORS.cream.pure,
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });

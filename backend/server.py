@@ -1712,22 +1712,24 @@ async def startup_event():
     await init_islands_and_chapters()
     
     # =============================================================================
-    # IDENTITY HARDENING: Create unique index on username_canon
+    # IDENTITY HARDENING: Database indexes and migrations
     # =============================================================================
+    
+    # 1. Create unique index on username_canon
     try:
         await db.users.create_index([("username_canon", 1)], unique=True, sparse=True)
         print("✅ Created unique index on username_canon")
     except Exception as e:
         print(f"⚠️ Index on username_canon may already exist: {e}")
     
-    # Also create index on user.id for fast JWT lookups
+    # 2. Create unique index on user.id for fast JWT lookups
     try:
         await db.users.create_index([("id", 1)], unique=True, sparse=True)
         print("✅ Created unique index on user.id")
     except Exception as e:
         print(f"⚠️ Index on user.id may already exist: {e}")
     
-    # Migrate existing users: populate username_canon if missing
+    # 3. Migrate existing users: populate username_canon if missing
     users_without_canon = await db.users.find({"username_canon": {"$exists": False}}).to_list(None)
     if users_without_canon:
         print(f"🔄 Migrating {len(users_without_canon)} users to have username_canon...")
@@ -1739,7 +1741,19 @@ async def startup_event():
                     {"_id": user["_id"]},
                     {"$set": {"username_canon": canon}}
                 )
-        print(f"✅ Migration complete: {len(users_without_canon)} users updated")
+        print(f"✅ Migration complete: {len(users_without_canon)} users updated with username_canon")
+    
+    # 4. Migrate legacy users: ensure all have UUID "id" field
+    users_without_uuid = await db.users.find({"id": {"$exists": False}}).to_list(None)
+    if users_without_uuid:
+        print(f"🔄 Migrating {len(users_without_uuid)} users to have UUID id...")
+        for user in users_without_uuid:
+            new_id = str(uuid.uuid4())
+            await db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"id": new_id}}
+            )
+        print(f"✅ Migration complete: {len(users_without_uuid)} users updated with UUID id")
     
     # SECURITY: Enforce single admin (only ADAM)
     await enforce_single_admin()

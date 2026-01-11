@@ -1,207 +1,176 @@
 <analysis>
 **original_problem_statement**:
-The user provided a series of detailed specifications to evolve a basic Paid Features paywall into a complete Premium Cinematic system. The core requirements were:
-1.  **Rename Paid to Premium**: System-wide rename of the feature, including a data migration path for entitlement keys ( -> ).
-2.  **Canonical Stats & Power**: Create a single, canonical source of truth for hero combat stats () and power calculations (). This was a critical correction to prevent inconsistent UI.
-3.  **Implement Stat Perk**: The canonical stats helper must apply a +10% HP and +5% ATK bonus if a hero's Premium Cinematic is owned.
-4.  **Refactor All Screens**: Update all screens that display hero stats or power (, , , , , , ) to use the new canonical helpers.
-5.  **Enhance UI/UX**:
-    *   Fix the  page to be fully scrollable.
-    *   Add detailed, multi-state ownership badges on the  page to clearly indicate to the user if they don't own the pack, own the pack but not the hero's cinematic, or own the hero's cinematic.
-6.  **Add Guardrails**: Implement CI guards to prevent regressions, specifically blocking the re-introduction of free cinematics UI and any new inline power calculation formulas.
+The user's initial goal for this session was a multi-faceted hardening and security overhaul of the application. This involved:
+1.  **Finalizing the Premium Cinematic Feature**: A final verification and hardening pass to ensure consistency, correct scrolling, and proper entitlement checks.
+2.  **UI Copy Standardization**: Systematically replacing all user-facing paid or paid purchase text with premium and adding a CI guard to prevent regressions.
+3.  **Adding Legal Links**: Integrating links to the Privacy Policy, Terms of Service, Data Deletion Policy, and Community Guidelines on the user profile screen.
+4.  **Chat System Security Audit & Hardening**: A comprehensive, production-grade overhaul of the existing chat feature. This included making it server-authoritative, adding moderation tools (profanity/slur filters, PII detection, rate limiting), implementing report/block functionality, and ensuring proper data retention and performance.
+5.  **Admin System Security & GOD MODE Implementation**: Securing all administrative functions, removing a legacy insecure admin system, and creating a new, audited, ADAM-only super-admin system with GOD MODE capabilities to manage users and the game state. This also included securely changing the admin credentials.
+6.  **Identity Hardening**: A critical security task to prevent user identity confusion by introducing canonical usernames and making JWTs based on immutable user IDs.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The Premium Cinematic feature is fully implemented from a data, state management, and UI consistency perspective.
-- The  manages  and  entitlements and includes migration logic to handle old  keys.
-- A canonical stat computation layer (, ) is the single source of truth for hero stats and power, correctly applying the +10% HP / +5% ATK perk.
-- All relevant UI screens (, , , , , , ) have been refactored to use these helpers, ensuring consistent data display.
-- The  page is fully scrollable and features a detailed three-state badge indicating the user's ownership status for the cinematic.
-- The  screen has been updated with the Premium naming and features robust DEV tools for granting/revoking pack and per-hero entitlements.
-- CI guards are in place and passing, preventing both inline power formulas and the re-introduction of free cinematics UI.
-- Video playback remains intentionally disabled, pending future work.
+The application's chat and admin systems have undergone a massive security transformation.
+- The chat system is now server-authoritative, deriving the sender's identity from their JWT token, not client input. It includes robust moderation features: rate limiting, PII/URL/slur filtering (with auto-ban for severe offenses), message reporting, and user blocking. Data retention is managed via a 90-day TTL index on chat messages.
+- A secure, GOD MODE admin system is in place, with all endpoints protected by a  function that ensures only the user ADAM can access them. All admin actions are logged to an  collection.
+- The legacy, insecure admin system, which used a separate authentication mechanism, has been identified and the code for it has been removed.
+- The Premium Cinematic feature is fully hardened, and all UI copy has been updated from Paid to Premium.
+- Legal document links are present on the profile screen.
 
 **Last working item**:
-    - Last item agent was working: A full hardening and consistency pass. This involved: 1) Fixing the last remaining inline power calculation in . 2) Implementing a more descriptive three-state ownership badge on the  page. 3) Verifying all CI guards. This task is complete and was thoroughly tested by the agent.
-    - Status: USER VERIFICATION PENDING
-    - Agent Testing Done: Y
-    - Which testing method agent to use? The agent has already used the screenshot tool extensively to verify all UI states. Manual verification by the user is the next step.
+    - Last item agent was working: The agent was in the middle of a critical security task: **Identity Hardening**. It had just successfully removed the old, dangerously insecure admin system from . The next step was to begin implementing username canonicalization to prevent identity confusion vulnerabilities.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? backend testing agent (This is a significant backend refactor. After the changes are implemented, the  agent should be used to verify that registration, login, JWT generation, and all authenticated endpoints (especially admin and chat) function correctly with the new identity system.)
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Address remaining  technical debt (P2)
-  - Issue 2: Video assets are not web-compatible (P2)
+  - Issue 1: Complete Identity Hardening Refactor (P0)
+  - Issue 2: Consolidate and Refactor  (P2)
 
   Issues Detail:
   - Issue 1:
-     - **Description**: The backend file  contains legacy, duplicated, and unorganized endpoints. This is a recurring issue.
-     - **Attempted fixes**: None in this session.
-     - **Next debug checklist**: Review, group, and consolidate redundant endpoints in .
-     - **Why fix this issue and what will be achieved with the fix?** Reduces backend complexity and improves maintainability.
+     - **Description**: The application is vulnerable to identity confusion because it relies on case-insensitive username lookups without a canonical source of truth, and JWTs are based on the mutable username. As per the user's detailed instructions, this needs to be fixed.
+     - **Attempted fixes**: The agent was just starting this task by cleaning up related insecure code. No fixes for the core issue have been attempted yet.
+     - **Next debug checklist**:
+        1. Modify the  model in  to include .
+        2. Create a unique index on  in the  collection.
+        3. Update the  endpoint to populate , reject duplicate canonical usernames, and specifically reserve .
+        4. Update the  endpoint to look up users via .
+        5. Change the JWT creation logic to use the immutable  as the  (subject) claim, not the username.
+        6. Update  to load the user from the database using the  from the JWT .
+        7. Ensure  checks against .
+     - **Why fix this issue and what will be achieved with the fix?** This is a critical security fix to prevent account takeovers or privilege escalation through username ambiguity. It establishes an immutable, server-authoritative identity for each user.
+     - **Status**:  IN PROGRESS
+     - **Is recurring issue?** N
+     - **Should Test frontend/backend/both after fix?** backend
+     - **Blocked on other issue**: None
+
+  - Issue 2:
+     - **Description**: The main backend file, , is extremely large and contains logic for many different features, making it hard to maintain. This is a recurring piece of technical debt.
+     - **Attempted fixes**: The agent has refactored specific sections (chat, admin), but a full file-level refactor has not been done.
+     - **Next debug checklist**: Systematically move related groups of endpoints and their helper functions into separate files within a  or  directory in the backend.
+     - **Why fix this issue and what will be achieved with the fix?** Improves code organization, maintainability, and reduces the chance of conflicts.
      - **Status**:  NOT STARTED
      - **Is recurring issue?** Y
      - **Should Test frontend/backend/both after fix?** Backend
      - **Blocked on other issue**: None
 
-  - Issue 2:
-     - **Description**: The cinematic video files () use a codec unsupported by web browsers, causing playback failure.
-     - **Attempted fixes**: A re-encoding script (Error: ffmpeg is not installed.
-Install it with:
-  macOS:   brew install ffmpeg
-  Ubuntu:  sudo apt install ffmpeg
-  Windows: choco install ffmpeg) exists but has not been run or verified in this session.
-     - **Next debug checklist**: Run yarn run v1.22.22
-$ bash scripts/reencode-cinematics.sh
-Error: ffmpeg is not installed.
-Install it with:
-  macOS:   brew install ffmpeg
-  Ubuntu:  sudo apt install ffmpeg
-  Windows: choco install ffmpeg
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. and test web video playback after the UI is re-enabled.
-     - **Why fix this issue and what will be achieved with the fix?** Will enable the Premium Cinematic feature to work on the web platform.
-     - **Status**:  IN PROGRESS
-     - **Is recurring issue?** N
-     - **Should Test frontend/backend/both after fix?** Frontend (Web)
-     - **Blocked on other issue**: None
-
 **In progress Task List**:
-  - None.
+  - Task 1: Identity Hardening Implementation (P0)
+     - **Where to resume**: The agent just finished removing the old admin system from . The very next step is to start modifying the user registration and login flow to implement canonical usernames, as detailed in 's checklist.
+     - **What will be achieved with this?** A secure and robust user identity system, resilient to case-sensitivity and username-change-related bugs.
+     - **Status**: IN PROGRESS
+     - **Should Test frontend/backend/both after fix?** backend
+     - **Blocked on something**: None
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P1: Re-introduce Cinematic Playback behind Paywall**: Use the new placeholder function  as a starting point. Add a Play Cinematic button back to the  screen. This button's  handler must check  and . If true, it should mount and show the . If false, it should navigate the user to the  screen.
+    *   **P0: Complete GOD MODE Endpoint Implementation**: The user requested a comprehensive list of GOD MODE endpoints in message #435 (e.g., , , , ). The agent has only implemented a subset. The remaining endpoints need to be added to , all protected by  and with audit logging.
+    *   **P1: Implement Server-Side Entitlements & IAP Flow**: The task from message #78 to make entitlements server-authoritative and wire up a real purchase flow (e.g., with RevenueCat) has not been started.
+    *   **P1: Re-introduce Cinematic Playback Behind Paywall**: The original plan to add a Play Cinematic button back to , guarded by entitlement checks, is still pending.
+
 *   **Future Tasks:**
-    *   **P1: Progression polish:** Further UI/UX improvements to the hero progression screens.
-    *   **P1: Cinematics Phase 2:** After re-enabling behind the paywall and fixing web assets, potentially migrate from  to .
-    *   **P2: Campaign Integration:** Deeper integration of the campaign system.
-    *   **P3: Re-enable RevenueCat:** Integrate a real payment provider to replace the dev-only entitlement grants.
-    *   **P3: Full Backend code cleanup:** Aligns with the pending issue to address  technical debt more thoroughly.
+    *   **P2: Enable MFA for Admin Account**: The hooks for MFA are in place (,  fields). The full implementation (setup, verification) needs to be built for production security.
+    *   **P2: Fix Web Video Asset Compatibility**: The cinematic video files in  use a codec unsupported by web browsers. The  script needs to be run and verified.
 
 **Completed work in this session**
-- **Full Premium Cinematic Feature Implementation**:
-  - **Renaming**: Renamed the entire feature from Paid to Premium.
-  - **Entitlement System**: Implemented a robust, two-layer entitlement system ( and ) with backward-compatible migration from old keys.
-  - **Canonical Stats Layer**: Created  to be the single source of truth for hero stats, correctly applying the +10% HP / +5% ATK perk.
-  - **Canonical Power Layer**: Created  to centralize all hero power calculations.
-  - **Full UI Refactor**: Refactored 7 screens (, , , , , , ) to use the new canonical helpers, ensuring consistent stats and power display.
-  - **UI/UX Polish**: Fixed scrolling on the  page and implemented a detailed three-state ownership badge for clarity.
-  - **Hardening**: Created and verified CI guards to prevent regressions (no free cinematics, no inline power formulas).
-  - **DEV Tools**: Enhanced the  screen with comprehensive DEV tools for managing entitlements for testing.
-  - **Bug Fixes**: Solved a critical  mismatch bug and a Zustand reactivity issue.
+- **Chat System Security Overhaul**:
+  - Implemented server-authoritative identity using JWT tokens, removing client-provided usernames from all chat-related API calls.
+  - Added robust content filtering: URL/PII blocking and a leetspeak-aware slur filter with an automatic permanent ban mechanism.
+  - Implemented rate limiting and message validation.
+  - Added a full user-facing moderation suite: long-press to report messages and block users.
+  - Created backend database models and indexes for messages, reports, and user moderation status, including a 90-day TTL index for message retention.
+- **Admin System GOD MODE Implementation**:
+  - Created a secure, centralized  gate that locks all admin functionality to the ADAM user via JWT authentication.
+  - Implemented an initial set of GOD MODE endpoints for viewing users and setting their currencies.
+  - Established an  collection to record every action taken by the admin.
+  - **Removed a legacy, dangerously insecure secondary admin system.**
+  - Securely updated the super-admin's username and password.
+- **UI & Feature Hardening**:
+  - Performed a final verification pass on the Premium Cinematic feature.
+  - Renamed all user-facing paid copy to premium and added a CI guard () to prevent regressions.
+  - Added links for Privacy Policy, Terms of Service, Data Deletion, and Community Guidelines to the profile screen.
 
 **Earlier issues found/mentioned but not fixed**
-- None. The agent was extremely thorough and addressed all issues raised by the user within the session.
+   - **Incomplete GOD MODE endpoints**: The user provided a large list of required admin endpoints in message #435. The agent only implemented a few of them. The rest are pending.
+   - **Video Codec Issue**: An issue from the previous fork where video assets are not web-compatible remains unfixed.
+
+**Known issue recurrence from previous fork**
+  - **Large, monolithic  file**: This was noted in the initial summary and remains an issue, although the agent has improved the structure of the code *within* the file.
+  - **Security Vulnerabilities Introduced by Agent**: The user had to intervene multiple times to point out critical security flaws (non-server-authoritative chat, insecure admin endpoints, identity confusion risks) that the agent had introduced or missed in its initial implementations. This is a recurring pattern of the agent not prioritizing security by default.
 
 **Code Architecture**
-scripts
+
 
 **Key Technical Concepts**
-- **Canonical Stat Computation**: Using a single helper function () to derive final hero stats, ensuring that bonuses (like the cinematic perk) are applied consistently across the entire application.
-- **Centralized Power Calculation**: Using a single helper () to prevent different parts of the UI from calculating power with inconsistent formulas.
-- **Zustand State Management & Migration**: Using Zustand for client-side state, including persisting to . Implemented a one-time migration logic within the store's hydration process to seamlessly update old data keys to a new format.
-- **CI Guard Scripts**: Using Node.js scripts, run via yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.25s., to enforce architectural rules and prevent regressions (e.g., blocking forbidden code patterns).
+- **Server-Authoritative Identity**: A critical security principle implemented where the user's identity is derived exclusively from a trusted source (the JWT token on the server) rather than from client-provided data.
+- **FastAPI Dependency Injection**: Used extensively to secure endpoints with  and the new .
+- **Content Moderation Pipeline**: A series of server-side checks on incoming chat messages for validation, rate-limiting, PII, URLs, and prohibited language (slurs).
+- **Leetspeak Normalization**: Implemented a function () to normalize text (lowercase, remove symbols, handle leetspeak) before checking against a list of banned words, making the filter more robust.
+- **Admin Auditing**: Created a dedicated  collection in MongoDB to create an immutable record of all actions performed by the super-admin.
+- **Database Indexing for Performance & Retention**: Created indexes on MongoDB collections for faster queries (, ) and implemented a TTL (Time-To-Live) index on  to automatically delete records after 90 days.
+
+**key DB schema**
+  - **chat_messages**: 
+  - **chat_reports**: 
+  - **chat_user_status**: 
+  - **chat_moderation_log**: 
+  - **admin_audit_log**: 
 
 **All files of reference**
-*   **Created in this session**:
-    *   : The new canonical source for hero combat stats.
-    *   : The new canonical source for hero power calculations.
-    *   : A placeholder for future cinematic playback logic.
-    *   : A new CI guard to prevent inconsistent power calculations.
-*   **Heavily Modified in this session**:
-    *   : Overhauled to support Premium naming, dynamic keys, and data migration.
-    *   : Refactored to use canonical stats, made scrollable, and added a detailed 3-state ownership badge.
-    *   : Overhauled with Premium naming and enhanced DEV tools.
-    *   , , , , , : All refactored to remove inline power/stat calculations and use the new canonical helpers.
-    *   , , : All updated to reflect the Premium rename.
+*   : The heart of the application. It was heavily modified to implement the secure chat and admin systems. It's the primary file for all upcoming backend work.
+*   : The main UI component for the chat feature. It was updated to include moderation UI and use the new secure API endpoints.
+*   : The frontend's API wrapper. It was updated to reflect the new server-authoritative endpoint signatures.
+*   : Modified to add legal links.
 
 **Critical Info for New Agent**
-- **The Premium Cinematic system is implemented but playback is OFF.** Do not try to fix the missing playback button. The next task is to re-add it behind the new entitlement checks.
-- **All power and stat calculations are now centralized.** To change a stat or power formula, modify  or  respectively. Do not edit individual screens.
-- **CI guards are active.** Any attempt to re-introduce free cinematics UI or inline power formulas will be blocked by yarn run v1.22.22
-$ npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power
-
-> frontend@1.0.0 guard:hero
-> node scripts/guard-no-hero-list-fallback.mjs
-
-[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
-
-> frontend@1.0.0 guard:tier
-> node scripts/guard-no-direct-tier-imports.mjs
-
-[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
-
-> frontend@1.0.0 guard:select-hero
-> node scripts/guard-select-user-hero-by-id.mjs
-
-[guard:selectUserHeroById] ✅ O(1) selector enforced.
-
-> frontend@1.0.0 guard:user-heroes-map
-> node scripts/guard-user-heroes-map-sync.mjs
-
-[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
-
-> frontend@1.0.0 guard:feature-flags
-> node scripts/guard-feature-flags.mjs
-
-[guard:feature-flags] Checking feature flag architecture...
-[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
-
-> frontend@1.0.0 guard:hero-signature
-> node scripts/guard-get-user-hero-signature.mjs
-
-[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
-[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
-
-> frontend@1.0.0 guard:no-free-cinematics
-> node scripts/guard-no-free-cinematics.mjs
-
-✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
-
-> frontend@1.0.0 guard:no-inline-power
-> node scripts/guard-no-inline-power.mjs
-
-✅ guard-no-inline-power: No inline power formulas in app/ screens.
-Done in 1.27s..
-- **The user has seen the three-state badge on  work correctly** (No pack, Pack owned/hero not, Hero owned).
+- **You are in the middle of a critical security refactor.** The user's last message (#435) is your direct set of instructions. Follow it precisely.
+- **The immediate next step is Identity Hardening**: You must implement canonical usernames (), create a unique index, and update the JWT  to be the immutable .
+- **The old, insecure admin system has been removed**, but you must now implement the full suite of GOD MODE endpoints as specified by the user. Every new admin endpoint must be protected by .
+- **Do not re-introduce security vulnerabilities.** The user is highly security-conscious. Every feature that involves user identity or state modification must be server-authoritative.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST):** Asked for the hero-detail layout wrapper to verify the scrolling fix. (RESOLVED, agent confirmed it's scrollable)
-2.  **User:** Provided a detailed hardening spec, focusing on consistency, guards, and UX polish for badges. (COMPLETED)
-3.  **User:** Asked for the  file and  stats section to provide diffs. (PROVIDED)
-4.  **User:** Provided a detailed spec to rename Paid to Premium, create a canonical power helper, refactor all screens, and fix scrolling. (COMPLETED)
-5.  **User:** Asked for all files that display HP/ATK outside of  to provide refactoring instructions. (PROVIDED)
-6.  **Agent:** Summarized the successful implementation of the stat perk and consistent power on the hero list. (COMPLETED)
-7.  **User:** Provided a detailed spec to implement the canonical stats layer as a critical correction to the agent's initial plan. (COMPLETED)
-8.  **Agent:** Asked for guidance on where to apply the stat perk, proposing a frontend-only approach in . (SUPERSEDED by user's correction)
-9.  **User:** Asked the agent to identify where combat stats are computed. (PROVIDED)
-10. **Agent:** Confirmed a detailed plan to implement the initial, more complex spec from the user. (COMPLETED)
+1.  **User (LATEST)**: Provided a detailed final plan to fix identity confusion, remove the old admin system, and correctly implement GOD MODE powers. **This is the primary work plan for the next agent.** (IN-PROGRESS)
+2.  **User**: Asked to verify the ADAM account has super admin powers. (COMPLETED)
+3.  **User**: Requested to change the admin username and password to specific values. (COMPLETED)
+4.  **User**: Asked for their current username and password. (RESOLVED)
+5.  **User**: Asked for all existing  endpoints to review. (RESOLVED, led to discovery of insecure old system)
+6.  **User**: Asked for the admin auth/user schema to design a better security model. (RESOLVED)
+7.  **User**: Asked the agent to continue after the admin security vulnerability was fixed. (RESOLVED)
+8.  **User**: Provided a detailed plan to fix the admin security vulnerability (insecure admin endpoints, not ADAM-only) and add hooks for MFA. (COMPLETED)
+9.  **User**: Asked for the full code of the implemented chat/admin endpoints for review. (RESOLVED)
+10. **User**: Asked the agent to proceed with making the chat server-authoritative after it provided a summary. (RESOLVED)
 
 **Project Health Check:**
-*   **Broken**: Web playback for cinematics (due to asset codecs, not code).
-*   **Mocked**: The paywall system uses DEV buttons for granting entitlements instead of real payment processing.
+- **Broken**:
+    - Web video playback for cinematics (due to incompatible video codecs).
+- **Mocked**:
+    - The In-App Purchase (IAP) flow is not implemented; entitlements are granted via dev tools or admin endpoints.
+- **Needs Hardening**:
+    - User identity system (canonicalization and JWT subject change is in progress).
 
 **3rd Party Integrations**
 *   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).
 *   **RevenueCat**: Packages installed, but the integration is functionally disabled.
-*   **@azesmway/react-native-unity**: Scaffolding code exists but is not integrated.
 *   **expo-av**: Used for video playback.
 *   **ffmpeg**: Installed in the environment for video processing.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (screenshot_tool was used heavily to verify all UI states and fixes).
+  - Testing agent used after significant changes: NO (Agent used manual  commands for backend testing).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created:
     - 
   - Known regressions: None.
 
 **Credentials to test flow:**
-- Create a new user (e.g., 'testuser1' with password 'password') or use the existing  /  user.
+- **Super Admin**:
+    - Username: 
+    - Password: 
 
 **What agent forgot to execute**
-- Nothing. The agent was extremely diligent in following a series of complex and evolving user specifications. It successfully identified and fixed its own intermediate bugs and completed all requested hardening and refactoring tasks.
-
+- The agent has not yet completed the full Identity Hardening task from user message #435. It only completed the first part (removing the old admin system).
+- The agent has not implemented the complete list of GOD MODE endpoints requested by the user in message #435.
+- The major feature for server-side entitlements and a real IAP flow (message #78) was acknowledged but never started.
 </analysis>

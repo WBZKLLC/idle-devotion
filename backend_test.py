@@ -26,7 +26,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://stat-boost-system.preview.emergentagent.com/api"
+BACKEND_URL = "https://secureid-3.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

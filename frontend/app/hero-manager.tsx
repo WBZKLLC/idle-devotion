@@ -87,7 +87,6 @@ interface ChangeLog {
 }
 
 export default function HeroManagerScreen() {
-  const router = useRouter();
   const params = useLocalSearchParams();
   const { user, userHeroes, fetchUserHeroes, fetchUser } = useGameStore();
   const hydrated = useHydration();

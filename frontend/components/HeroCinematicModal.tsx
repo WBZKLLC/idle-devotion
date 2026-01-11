@@ -286,7 +286,7 @@ export default function HeroCinematicModal({
               /* Web: use native HTML5 video for better compatibility */
               <video
                 key={videoSource}
-                src={videoSource}
+                src={`${videoSource}${videoSource.includes('?') ? '&' : '?'}_t=${Date.now()}`}
                 style={{
                   width: '100%',
                   height: '100%',

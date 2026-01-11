@@ -120,9 +120,6 @@ api.interceptors.response.use(
     // Log all errors for debugging
     console.error(`[API] ${error.config?.method?.toUpperCase()} ${error.config?.url} → ${status || 'NETWORK'}: ${detail}`);
     
-    // Mark as handled BEFORE showing alert (prevents duplicate handling)
-    markErrorHandled(error);
-    
     switch (status) {
       case 401:
         // Session expired or invalid token

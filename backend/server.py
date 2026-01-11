@@ -223,9 +223,10 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
 
 async def enforce_single_admin():
     """
-    Startup safety check: Ensure only ADAM has is_admin=True.
+    Startup safety check: Ensure only the user with username_canon=="adam" has is_admin=True.
     Any other user with is_admin=True gets it removed.
-    Uses username_canon for reliable matching.
+    
+    SECURITY: Uses hardcoded SUPER_ADMIN_CANON, NOT an env var.
     """
     # Remove is_admin from ALL users first (clean slate)
     await db.users.update_many(
@@ -233,15 +234,17 @@ async def enforce_single_admin():
         {"$set": {"is_admin": False}}
     )
     
-    # Then set is_admin=True ONLY for ADAM (via username_canon)
-    admin_canon = canonicalize_username(SUPER_ADMIN_USERNAME)
+    # Then set is_admin=True ONLY for username_canon=="adam" (hardcoded)
     result = await db.users.update_one(
-        {"username_canon": admin_canon},
+        {"username_canon": SUPER_ADMIN_CANON},
         {"$set": {"is_admin": True}}
     )
     
     if result.modified_count > 0:
-        print(f"✅ Admin privileges granted to {SUPER_ADMIN_USERNAME}")
+        print(f"✅ Admin privileges granted to {SUPER_ADMIN_DISPLAY_NAME}")
+    elif result.matched_count == 0:
+        # SECURITY: No admin account exists - log warning, do NOT grant to anyone else
+        print(f"⚠️ WARNING: No user with username_canon='{SUPER_ADMIN_CANON}' found. No admin granted.")
     
     # Log any users that had is_admin removed (for audit)
     # This is handled by the clean slate approach above

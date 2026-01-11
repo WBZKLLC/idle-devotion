@@ -157,11 +157,12 @@ async def authenticate_request(
     
     Performs:
     1. JWT verification
-    2. UUID format validation
-    3. User lookup by immutable ID
-    4. Frozen account check
-    5. tokens_valid_after check (mass revocation)
-    6. Individual jti revocation check
+    2. Validates jti and iat are present (required for revocation)
+    3. UUID format validation
+    4. User lookup by immutable ID
+    5. Frozen account check
+    6. tokens_valid_after check (mass revocation)
+    7. Individual jti revocation check
     
     Args:
         credentials: HTTP Bearer credentials
@@ -198,6 +199,13 @@ async def authenticate_request(
             raise HTTPException(status_code=401, detail="Invalid token payload")
         return None, None
     
+    # SECURITY: Require jti and iat for revocation checks
+    # Tokens without these cannot be properly revoked/audited
+    if not jti or iat is None:
+        if require_auth:
+            raise HTTPException(status_code=401, detail="Invalid token: missing required claims")
+        return None, None
+    
     # Validate sub is UUID format
     try:
         uuid.UUID(user_id)
@@ -220,6 +228,7 @@ async def authenticate_request(
         return None, None
     
     # SECURITY: tokens_valid_after check (mass revocation)
+    # Compare in UTC consistently
     token_iat_dt = _to_dt_utc(iat)
     tokens_valid_after = user.get("tokens_valid_after")
     if tokens_valid_after and token_iat_dt:
@@ -229,7 +238,7 @@ async def authenticate_request(
             return None, None
     
     # SECURITY: Individual jti revocation check
-    if jti and await is_token_revoked(jti):
+    if await is_token_revoked(jti):
         if require_auth:
             raise HTTPException(status_code=401, detail="Token has been revoked")
         return None, None

@@ -6350,7 +6350,7 @@ async def admin_spawn_gift(
             affected_count += 1
             affected_user_ids.append(get_user_id(target))
     
-    await log_god_action(
+    audit_entry = await log_god_action(
         admin_user=admin_user,
         action_type="spawn_gift",
         target_username=payload.target_username or "*",
@@ -6365,10 +6365,12 @@ async def admin_spawn_gift(
         reason=payload.reason,
         request=request,
         batch_id=batch_id,
+        auth_jti=admin_user.get("_auth_jti"),
     )
     
     return {
         "success": True,
+        "request_id": audit_entry.request_id,
         "batch_id": batch_id,
         "affected_users": affected_count,
         "gift_type": payload.gift_type,

@@ -4231,40 +4231,55 @@ async def arena_battle(username: str, request: ArenaBattleRequest):
         "win_streak": user_record["win_streak"] + 1 if victory else 0
     }
 
-# ==================== CHAT SYSTEM (HARDENED) ====================
+# ==================== CHAT SYSTEM (SERVER-AUTHORITATIVE) ====================
+
+# Pydantic models for chat payloads
+class ChatSendPayload(BaseModel):
+    message: str
+    channel_type: str = "world"
+    channel_id: Optional[str] = None
+    language: str = "en"
+    client_msg_id: Optional[str] = None
+    server_region: str = "global"
+
+class ChatReportPayload(BaseModel):
+    reported_username: str
+    reason: str
+    message_id: Optional[str] = None
+    details: Optional[str] = None
 
 @api_router.post("/chat/send")
 @limiter.limit("10/minute")
 async def send_chat_message(
+    payload: ChatSendPayload,
     request: Request,
-    username: str,
-    channel_type: str,
-    message: str,
-    client_msg_id: Optional[str] = None,  # For idempotency
-    language: str = "en",
-    channel_id: Optional[str] = None,
-    server_region: str = "global"
+    current_user: dict = Depends(get_current_user),
 ):
     """
-    Send a chat message (SECURED)
+    Send a chat message (SERVER-AUTHORITATIVE)
     
     Security features:
-    - Server-authoritative: username validated against DB
-    - Rate limited: 10 messages/minute per IP
+    - Server-authoritative: sender derived from JWT, NOT client
+    - Rate limited: 10 messages/minute per IP + per-user
     - Input validation: length, characters, PII, URLs
     - Profanity filtering
     - Moderation checks: mute/ban/shadowban
+    - Prohibited token detection with permanent ban
     - Idempotency via client_msg_id
     """
-    # Validate user exists
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    # CRITICAL: Require authentication
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
-    user_id = user["id"]
+    # Derive sender from JWT - NEVER trust client
+    sender_username = current_user.get("username")
+    sender_id = str(current_user.get("id") or current_user.get("_id") or "")
+    
+    if not sender_username or not sender_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
     # Check rate limit (per-user)
-    is_allowed, retry_after = check_chat_rate_limit(user_id)
+    is_allowed, retry_after = check_chat_rate_limit(sender_id)
     if not is_allowed:
         raise HTTPException(
             status_code=429, 
@@ -4273,11 +4288,339 @@ async def send_chat_message(
         )
     
     # Check moderation status (mute/ban)
-    is_restricted, restriction_reason = await is_user_chat_restricted(user_id)
+    is_restricted, restriction_reason = await is_user_chat_restricted(sender_id)
     if is_restricted:
         raise HTTPException(status_code=403, detail=restriction_reason)
     
     # Check shadowban (silently accept but don't broadcast)
+    is_shadow = await is_user_shadowbanned(sender_id)
+    
+    # Validate channel type
+    if payload.channel_type not in ["world", "local", "guild", "private"]:
+        raise HTTPException(status_code=400, detail="Invalid channel type")
+    
+    # Validate language
+    language = payload.language if payload.language in SUPPORTED_LANGUAGES else "en"
+    
+    # Sanitize message
+    sanitized_message = sanitize_chat_message(payload.message)
+    
+    # Validate message length
+    if len(sanitized_message) < CHAT_CONFIG["min_message_length"]:
+        raise HTTPException(status_code=400, detail="Message too short")
+    
+    if len(sanitized_message) > CHAT_CONFIG["max_message_length"]:
+        raise HTTPException(status_code=400, detail=f"Message too long (max {CHAT_CONFIG['max_message_length']} characters)")
+    
+    # Block URLs
+    if detect_url(sanitized_message):
+        raise HTTPException(status_code=400, detail="URLs are not allowed in chat")
+    
+    # Block PII
+    pii_type = detect_pii(sanitized_message)
+    if pii_type:
+        raise HTTPException(status_code=400, detail="Personal information (emails, phone numbers) not allowed in chat")
+    
+    # Check for prohibited tokens (PERMANENT BAN)
+    prohibited_key = check_prohibited_tokens(sanitized_message)
+    if prohibited_key:
+        # Issue permanent ban - do NOT log message content
+        await issue_permanent_ban(sender_id, sender_username, prohibited_key)
+        raise HTTPException(status_code=403, detail="Banned")
+    
+    # Censor profanity (lesser offenses)
+    censored_message = censor_message(sanitized_message)
+    
+    # Idempotency check
+    if payload.client_msg_id:
+        existing = await db.chat_messages.find_one({
+            "sender_id": sender_id,
+            "client_msg_id": payload.client_msg_id
+        })
+        if existing:
+            return convert_objectid(existing)
+    
+    # Create chat message
+    chat_msg = ChatMessage(
+        sender_id=sender_id,
+        sender_username=sender_username,
+        channel_type=payload.channel_type,
+        channel_id=payload.channel_id,
+        message=censored_message,
+        language=language,
+        server_region=payload.server_region
+    )
+    
+    msg_dict = chat_msg.dict()
+    if payload.client_msg_id:
+        msg_dict["client_msg_id"] = payload.client_msg_id
+    
+    # If shadowbanned, store but mark as hidden
+    if is_shadow:
+        msg_dict["is_shadowbanned"] = True
+    
+    await db.chat_messages.insert_one(msg_dict)
+    
+    return convert_objectid(msg_dict)
+
+
+@api_router.get("/chat/messages")
+@limiter.limit("30/minute")
+async def get_chat_messages(
+    request: Request,
+    channel_type: str,
+    channel_id: Optional[str] = None,
+    server_region: str = "global",
+    limit: int = 50,
+    before_timestamp: Optional[str] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Get chat messages for a channel (SERVER-AUTHORITATIVE)
+    
+    Security features:
+    - Rate limited: 30 requests/minute per IP
+    - Max limit capped to prevent scraping
+    - Shadowbanned messages only visible to sender
+    - Blocked users filtered
+    - User identity from JWT for filtering
+    """
+    # Cap limit to prevent scraping
+    limit = min(limit, CHAT_CONFIG["max_fetch_limit"])
+    
+    query = {"channel_type": channel_type}
+    
+    # Filter shadowbanned messages (only show to the sender)
+    if current_user:
+        user_id = str(current_user.get("id") or current_user.get("_id") or "")
+        
+        if user_id:
+            # Get user's blocked list
+            user_status = await get_user_chat_status(user_id)
+            blocked_users = user_status.get("blocked_users", []) if user_status else []
+            
+            # Complex query: show non-shadowbanned OR own shadowbanned messages
+            query["$or"] = [
+                {"is_shadowbanned": {"$ne": True}},
+                {"sender_id": user_id, "is_shadowbanned": True}
+            ]
+            
+            # Filter out messages from blocked users
+            if blocked_users:
+                query["sender_id"] = {"$nin": blocked_users}
+    else:
+        # Anonymous/no auth - only show non-shadowbanned
+        query["is_shadowbanned"] = {"$ne": True}
+    
+    if channel_type == "local":
+        query["server_region"] = server_region
+    elif channel_type in ["guild", "private"]:
+        if not channel_id:
+            raise HTTPException(status_code=400, detail="channel_id required for guild/private chat")
+        query["channel_id"] = channel_id
+    
+    # Pagination support
+    if before_timestamp:
+        try:
+            query["timestamp"] = {"$lt": datetime.fromisoformat(before_timestamp.replace('Z', '+00:00'))}
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid timestamp format")
+    
+    messages = await db.chat_messages.find(query).sort("timestamp", -1).limit(limit).to_list(limit)
+    
+    # Reverse to show oldest first
+    messages.reverse()
+    
+    # Remove internal fields before returning
+    result = []
+    for msg in messages:
+        msg_clean = convert_objectid(msg)
+        msg_clean.pop("is_shadowbanned", None)
+        msg_clean.pop("client_msg_id", None)
+        result.append(msg_clean)
+    
+    return result
+
+
+# ==================== CHAT MODERATION ENDPOINTS (SERVER-AUTHORITATIVE) ====================
+
+@api_router.post("/chat/report")
+async def report_chat_message(
+    payload: ChatReportPayload,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Report a chat message or user (SERVER-AUTHORITATIVE)
+    
+    Reporter is derived from JWT, NOT client.
+    Reasons: spam, harassment, hate_speech, inappropriate, other
+    """
+    # CRITICAL: Require authentication
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    # Derive reporter from JWT
+    reporter_username = current_user.get("username")
+    reporter_id = str(current_user.get("id") or current_user.get("_id") or "")
+    
+    if not reporter_username or not reporter_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    # Validate reported user
+    reported = await db.users.find_one({"username": payload.reported_username})
+    if not reported:
+        raise HTTPException(status_code=404, detail="Reported user not found")
+    
+    # Can't report yourself
+    if reported.get("username") == reporter_username:
+        raise HTTPException(status_code=400, detail="Cannot report yourself")
+    
+    # Validate reason
+    valid_reasons = ["spam", "harassment", "hate_speech", "inappropriate", "other"]
+    if payload.reason not in valid_reasons:
+        raise HTTPException(status_code=400, detail=f"Invalid reason. Must be one of: {', '.join(valid_reasons)}")
+    
+    # Check if message exists (if provided)
+    if payload.message_id:
+        message = await db.chat_messages.find_one({"id": payload.message_id})
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Create report
+    report = ChatReport(
+        reporter_id=reporter_id,
+        reporter_username=reporter_username,
+        reported_user_id=reported["id"],
+        reported_username=payload.reported_username,
+        message_id=payload.message_id,
+        reason=payload.reason,
+        details=payload.details[:500] if payload.details else None  # Limit details length
+    )
+    
+    await db.chat_reports.insert_one(report.dict())
+    
+    # Increment report count on user status
+    await db.chat_user_status.update_one(
+        {"user_id": reported["id"]},
+        {
+            "$set": {"user_id": reported["id"], "username": payload.reported_username},
+            "$inc": {"report_count": 1}
+        },
+        upsert=True
+    )
+    
+    # Auto-action: If user gets 5+ reports, auto-mute for review
+    user_status = await get_user_chat_status(reported["id"])
+    if user_status and user_status.get("report_count", 0) >= 5:
+        if not user_status.get("is_muted"):
+            await db.chat_user_status.update_one(
+                {"user_id": reported["id"]},
+                {
+                    "$set": {
+                        "is_muted": True,
+                        "mute_expires_at": datetime.utcnow() + timedelta(hours=1)
+                    }
+                }
+            )
+            await log_moderation_action(
+                user_id=reported["id"],
+                username=payload.reported_username,
+                action_type="mute",
+                reason="Auto-muted due to multiple reports",
+                issued_by="system",
+                duration_minutes=60
+            )
+    
+    return {"success": True, "report_id": report.id, "message": "Report submitted successfully"}
+
+
+@api_router.post("/chat/block-user")
+async def block_user(
+    blocked_username: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Block a user from appearing in your chat (SERVER-AUTHORITATIVE)"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    user_id = str(current_user.get("id") or current_user.get("_id") or "")
+    username = current_user.get("username")
+    
+    if not user_id or not username:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    blocked = await db.users.find_one({"username": blocked_username})
+    if not blocked:
+        raise HTTPException(status_code=404, detail="User to block not found")
+    
+    if username == blocked_username:
+        raise HTTPException(status_code=400, detail="Cannot block yourself")
+    
+    await db.chat_user_status.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {"user_id": user_id, "username": username},
+            "$addToSet": {"blocked_users": blocked["id"]}
+        },
+        upsert=True
+    )
+    
+    return {"success": True, "message": f"Blocked {blocked_username}"}
+
+
+@api_router.post("/chat/unblock-user")
+async def unblock_user(
+    blocked_username: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Unblock a user (SERVER-AUTHORITATIVE)"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    user_id = str(current_user.get("id") or current_user.get("_id") or "")
+    
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    blocked = await db.users.find_one({"username": blocked_username})
+    if not blocked:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.chat_user_status.update_one(
+        {"user_id": user_id},
+        {"$pull": {"blocked_users": blocked["id"]}}
+    )
+    
+    return {"success": True, "message": f"Unblocked {blocked_username}"}
+
+
+@api_router.get("/chat/blocked-users")
+async def get_blocked_users(
+    current_user: dict = Depends(get_current_user),
+):
+    """Get list of blocked users (SERVER-AUTHORITATIVE)"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    user_id = str(current_user.get("id") or current_user.get("_id") or "")
+    
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    status = await get_user_chat_status(user_id)
+    blocked_ids = status.get("blocked_users", []) if status else []
+    
+    # Get usernames for blocked IDs
+    blocked_users = []
+    for blocked_id in blocked_ids:
+        blocked_user = await db.users.find_one({"id": blocked_id})
+        if blocked_user:
+            blocked_users.append({
+                "id": blocked_id,
+                "username": blocked_user["username"]
+            })
+    
+    return {"blocked_users": blocked_users}
     is_shadow = await is_user_shadowbanned(user_id)
     
     # Validate channel type

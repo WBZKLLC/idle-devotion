@@ -629,6 +629,37 @@ db = client[os.environ['DB_NAME']]
 # Create the main app without a prefix
 app = FastAPI()
 
+# =============================================================================
+# SECURITY MIDDLEWARE: Global Admin Route Lock
+# =============================================================================
+# This middleware acts as a FAIL-CLOSED outer wall for all /api/admin/* routes.
+# Even if a developer forgets to add Depends(require_super_admin), this prevents
+# anonymous access to admin endpoints.
+# 
+# NOTE: This does NOT replace require_super_admin - it's an additional layer.
+# =============================================================================
+
+@app.middleware("http")
+async def admin_route_guard(request: Request, call_next):
+    """
+    Global security gate for admin routes.
+    
+    Blocks ANY request to /api/admin/* without Authorization header.
+    This is a fail-closed design - even if an endpoint lacks proper
+    auth dependency, it cannot be accessed anonymously.
+    """
+    path = request.url.path
+    
+    if path.startswith("/api/admin"):
+        auth = request.headers.get("authorization")
+        if not auth or not auth.lower().startswith("bearer "):
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Admin access required", "code": "ADMIN_AUTH_REQUIRED"}
+            )
+    
+    return await call_next(request)
+
 # Add rate limiter to the app
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

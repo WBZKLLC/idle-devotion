@@ -2881,9 +2881,7 @@ async def get_user_equipped_bubble(username: str):
 @api_router.post("/selene-banner/record-purchase")
 async def record_selene_purchase(username: str, amount_usd: float, bundle_id: str):
     """Record a purchase on the Selene banner (for chat bubble unlock tracking)"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     # Update spending tracking
     await db.selene_banner_progress.update_one(

@@ -280,6 +280,7 @@ export default function HeroCinematicModal({
               /* Web: use native HTML5 video for better compatibility */
               <video
                 src={videoSource}
+                crossOrigin="anonymous"
                 style={{
                   width: '100%',
                   height: '100%',
@@ -290,8 +291,9 @@ export default function HeroCinematicModal({
                 }}
                 autoPlay
                 playsInline
+                muted={false}
                 onLoadStart={() => {
-                  logCine('web:loadStart', { heroKey });
+                  logCine('web:loadStart', { heroKey, src: videoSource });
                   setIsLoading(true);
                 }}
                 onCanPlay={() => {

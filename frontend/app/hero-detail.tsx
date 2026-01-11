@@ -341,26 +341,38 @@ export default function HeroDetailScreen() {
           {activeTab === 'stats' && (
             <GlassCard>
               <Text style={styles.sectionTitle}>Combat Stats</Text>
+              {combatStats.hasCinematicBonus && (
+                <View style={styles.bonusBadge}>
+                  <Ionicons name="videocam" size={12} color={COLORS.gold.primary} />
+                  <Text style={styles.bonusBadgeText}>Cinematic Bonus Active</Text>
+                </View>
+              )}
               <View style={styles.statsGrid}>
                 <View style={styles.statRow}>
                   <Ionicons name="heart" size={18} color="#e74c3c" />
                   <Text style={styles.statLabel}>HP</Text>
-                  <Text style={styles.statValue}>{hero.current_hp?.toLocaleString() || heroData.base_hp}</Text>
+                  <Text style={[styles.statValue, combatStats.hasCinematicBonus && styles.statValueBoosted]}>
+                    {combatStats.hp.toLocaleString()}
+                    {combatStats.hasCinematicBonus && <Text style={styles.bonusIndicator}> +10%</Text>}
+                  </Text>
                 </View>
                 <View style={styles.statRow}>
                   <Ionicons name="flash" size={18} color="#f39c12" />
                   <Text style={styles.statLabel}>ATK</Text>
-                  <Text style={styles.statValue}>{hero.current_atk?.toLocaleString() || heroData.base_atk}</Text>
+                  <Text style={[styles.statValue, combatStats.hasCinematicBonus && styles.statValueBoosted]}>
+                    {combatStats.atk.toLocaleString()}
+                    {combatStats.hasCinematicBonus && <Text style={styles.bonusIndicator}> +5%</Text>}
+                  </Text>
                 </View>
                 <View style={styles.statRow}>
                   <Ionicons name="shield" size={18} color="#3498db" />
                   <Text style={styles.statLabel}>DEF</Text>
-                  <Text style={styles.statValue}>{hero.current_def?.toLocaleString() || heroData.base_def}</Text>
+                  <Text style={styles.statValue}>{combatStats.def.toLocaleString()}</Text>
                 </View>
                 <View style={styles.statRow}>
                   <Ionicons name="speedometer" size={18} color="#9b59b6" />
                   <Text style={styles.statLabel}>SPD</Text>
-                  <Text style={styles.statValue}>{heroData.base_speed || 100}</Text>
+                  <Text style={styles.statValue}>{combatStats.speed}</Text>
                 </View>
               </View>
               <View style={styles.elementRow}>

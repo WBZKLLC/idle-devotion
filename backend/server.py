@@ -1982,7 +1982,7 @@ async def auth_login(request: LoginRequest):
 async def set_password(username: str, new_password: str):
     """Set password for a legacy account (users without passwords).
     
-    SECURITY: Looks up user via username_canon, JWT uses user_id.
+    SECURITY: Looks up user via username_canon, ensures UUID id, JWT uses UUID.
     """
     if len(new_password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
@@ -1995,15 +1995,23 @@ async def set_password(username: str, new_password: str):
     if user.get("password_hash"):
         raise HTTPException(status_code=400, detail="Account already has a password")
     
+    # Ensure user has UUID id
+    if not user.get("id"):
+        new_id = str(uuid.uuid4())
+        await db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"id": new_id}}
+        )
+        user["id"] = new_id
+    
     # Set the password
     await db.users.update_one(
         {"username_canon": username_canon},
         {"$set": {"password_hash": hash_password(new_password)}}
     )
     
-    # Create JWT token with immutable user_id as subject
-    user_id = user.get("id") or str(user.get("_id"))
-    token = create_access_token(data={"sub": user_id})
+    # Create JWT token with UUID "id" as subject (NEVER use _id)
+    token = create_access_token(data={"sub": user["id"]})
     
     return {
         "message": "Password set successfully",

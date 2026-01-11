@@ -143,12 +143,18 @@ def get_user_id(user: dict) -> str:
     """Standardized helper to get user ID from user dict (handles both 'id' and '_id')"""
     return str(user.get("id") or user.get("_id") or "")
 
+def canonicalize_username(username: str) -> str:
+    """Convert username to canonical form for lookups.
+    Always lowercase, trimmed. This is the source of truth for identity.
+    """
+    return username.strip().lower()
+
 def is_super_admin(user: dict) -> bool:
-    """Check if user is the super admin (ADAM). Case-insensitive."""
+    """Check if user is the super admin (ADAM) via canonical username."""
     if not user:
         return False
-    username = user.get("username") or ""
-    return username.upper() == SUPER_ADMIN_USERNAME.upper()
+    username_canon = user.get("username_canon") or ""
+    return username_canon == canonicalize_username(SUPER_ADMIN_USERNAME)
 
 async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """

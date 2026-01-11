@@ -323,8 +323,36 @@ export default function ChatScreen() {
       outputRange: ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#9400D3', '#FF0000'],
     }) : null;
 
+    const showMessageOptions = () => {
+      if (isOwn) return;
+      
+      Alert.alert(
+        msg.sender_username,
+        'What would you like to do?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Report Message', 
+            onPress: () => handleReportMessage(msg),
+            style: 'destructive'
+          },
+          { 
+            text: 'Block User', 
+            onPress: () => handleBlockUser(msg.sender_username),
+            style: 'destructive'
+          },
+        ]
+      );
+    };
+
     return (
-      <View key={msg.id || index} style={[styles.messageRow, isOwn && styles.messageRowOwn]}>
+      <TouchableOpacity 
+        key={msg.id || index} 
+        style={[styles.messageRow, isOwn && styles.messageRowOwn]}
+        onLongPress={showMessageOptions}
+        delayLongPress={500}
+        activeOpacity={0.8}
+      >
         {/* Avatar */}
         {!isOwn && (
           <View style={[styles.avatar, { borderColor: bubble.border_color }]}>
@@ -373,7 +401,7 @@ export default function ChatScreen() {
             <Text style={styles.avatarText}>{msg.sender_username.charAt(0).toUpperCase()}</Text>
           </View>
         )}
-      </View>
+      </TouchableOpacity>
     );
   };
 

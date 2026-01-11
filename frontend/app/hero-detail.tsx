@@ -227,12 +227,8 @@ export default function HeroDetailScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Hero Portrait - Tappable for 5+ Star Cinematic */}
-          <TouchableOpacity 
-            style={styles.portraitContainer}
-            onPress={handlePortraitTap}
-            activeOpacity={isFivePlusStar() ? 0.8 : 1}
-          >
+          {/* Hero Portrait */}
+          <View style={styles.portraitContainer}>
             <GlassCard style={styles.portraitCard}>
               <LinearGradient
                 colors={getRarityGradient(heroData.rarity)}
@@ -268,14 +264,6 @@ export default function HeroDetailScreen() {
                   )}
                 </View>
                 
-                {/* 5+ Star Indicator */}
-                {isFivePlusStar() && (
-                  <View style={styles.fivePlusIndicator}>
-                    <Ionicons name="play-circle" size={18} color={COLORS.cream.pure} />
-                    <Text style={styles.fivePlusIndicatorText}>Tap for Cinematic</Text>
-                  </View>
-                )}
-                
                 {/* Star Level - shows 0 stars as 0 (no forced "1 star") */}
                 <View style={styles.starsContainer}>
                   {displayStars(hero) > 0 &&
@@ -288,7 +276,7 @@ export default function HeroDetailScreen() {
                 </View>
               </LinearGradient>
             </GlassCard>
-          </TouchableOpacity>
+          </View>
 
           {/* Tier Selector (animated, gated per-hero) */}
           {hero && heroData && (

@@ -3160,8 +3160,8 @@ FEATURE_FLAGS_CONFIG = {
         "MAINTENANCE_MODE": False,
         # Multi-sweep cleared stages
         "CAMPAIGN_SWEEP": True,
-        # 5+ star hero video previews
-        "HERO_CINEMATICS": True,
+        # 5+ star hero video previews (PAID FEATURE - disabled)
+        "HERO_CINEMATICS": False,
         # Hero progression screen
         "HERO_PROGRESSION_ENABLED": True,
         # Example rollout: 15% of users

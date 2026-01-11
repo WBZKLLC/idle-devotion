@@ -123,8 +123,12 @@ def verify_token(token: str) -> Optional[dict]:
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get current user from JWT token.
     
-    SECURITY: JWT 'sub' is now the immutable user_id, NOT the username.
+    SECURITY: JWT 'sub' is the immutable user_id (UUID string).
     This prevents identity confusion if usernames ever change.
+    
+    Supports both:
+    - New users: have "id" field (UUID string)
+    - Legacy users: may only have "_id" (ObjectId)
     """
     if not credentials:
         return None
@@ -138,8 +142,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if not user_id:
         return None
     
-    # Load user by immutable ID
+    # Primary lookup: by UUID "id" field (preferred)
     user = await db.users.find_one({"id": user_id})
+    
+    # Fallback: try ObjectId lookup for legacy users
+    if not user:
+        try:
+            user = await db.users.find_one({"_id": ObjectId(user_id)})
+        except Exception:
+            # Invalid ObjectId format - not a legacy user
+            pass
+    
     return user
 
 # =============================================================================

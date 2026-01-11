@@ -224,24 +224,28 @@ export default function PaidFeaturesScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Sample Hero List */}
-              <Text style={styles.sampleLabel}>Quick Grant/Revoke:</Text>
-              <View style={styles.heroList}>
-                {SAMPLE_HERO_IDS.map((heroId) => {
-                  const owned = isHeroOwned(heroId);
-                  return (
-                    <TouchableOpacity
-                      key={heroId}
-                      style={[styles.heroChip, owned && styles.heroChipOwned]}
-                      onPress={() => owned ? handleDevRevokeHero(heroId) : handleDevGrantHero(heroId)}
-                    >
-                      <Text style={[styles.heroChipText, owned && styles.heroChipTextOwned]}>
-                        {owned ? '✓ ' : ''}{heroId.split('_')[0]}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+              {/* User's Hero List */}
+              <Text style={styles.sampleLabel}>Your Heroes (click to toggle):</Text>
+              {userHeroes.length === 0 ? (
+                <Text style={styles.noHeroesText}>No heroes found. Login and collect heroes first.</Text>
+              ) : (
+                <View style={styles.heroList}>
+                  {userHeroes.slice(0, 12).map((hero: any) => {
+                    const owned = isHeroOwned(hero.id);
+                    return (
+                      <TouchableOpacity
+                        key={hero.id}
+                        style={[styles.heroChip, owned && styles.heroChipOwned]}
+                        onPress={() => owned ? handleDevRevokeHero(hero.id) : handleDevGrantHero(hero.id)}
+                      >
+                        <Text style={[styles.heroChipText, owned && styles.heroChipTextOwned]} numberOfLines={1}>
+                          {owned ? '✓ ' : ''}{hero.name.split(' ')[0]}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
             </View>
           )}
 

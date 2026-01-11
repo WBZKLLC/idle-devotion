@@ -143,7 +143,9 @@ export default function TeamBuilderScreen() {
       if (slot.heroData?.hero_data) {
         const heroData = slot.heroData.hero_data;
         const levelMult = 1 + (slot.heroData.level - 1) * 0.05;
-        power += (heroData.base_hp + heroData.base_atk * 3 + heroData.base_def * 2) * levelMult;
+        // Use canonical stats helper for premium cinematic bonus
+        const stats = computeCombatStats(slot.heroData, heroData);
+        power += computePower(stats) * levelMult;
       }
     });
     setTeamPower(Math.floor(power));

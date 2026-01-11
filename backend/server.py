@@ -451,10 +451,10 @@ async def revoke_token(
 
 
 async def revoke_all_user_tokens(user_id: str):
-    """Revoke all tokens for a user by setting tokens_valid_after to now"""
+    """Revoke all tokens for a user by setting tokens_valid_after to now (timezone-aware UTC)"""
     await db.users.update_one(
         {"id": user_id},
-        {"$set": {"tokens_valid_after": datetime.utcnow()}}
+        {"$set": {"tokens_valid_after": datetime.now(timezone.utc)}}
     )
 
 async def log_god_action(

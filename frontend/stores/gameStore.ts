@@ -9,7 +9,7 @@ import {
   clearAuthData 
 } from '../lib/authStorage';
 
-// API layer with token setter
+// API layer with token setter and global error handling
 import {
   getUserHeroes,
   getUserHeroById as apiGetUserHeroById,
@@ -26,6 +26,7 @@ import {
   getUserCR,
   setProfilePicture,
   apiSetAuthToken,
+  apiSetForceLogoutCallback,
 } from '../lib/api';
 
 interface User {

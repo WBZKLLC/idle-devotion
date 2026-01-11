@@ -1908,11 +1908,15 @@ async def auth_login(request: LoginRequest):
 
 @api_router.post("/auth/set-password")
 async def set_password(username: str, new_password: str):
-    """Set password for a legacy account (users without passwords)"""
+    """Set password for a legacy account (users without passwords).
+    
+    SECURITY: Looks up user via username_canon, JWT uses user_id.
+    """
     if len(new_password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
-    user = await db.users.find_one({"username": {"$regex": f"^{username}$", "$options": "i"}})
+    username_canon = canonicalize_username(username)
+    user = await db.users.find_one({"username_canon": username_canon})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -1921,12 +1925,13 @@ async def set_password(username: str, new_password: str):
     
     # Set the password
     await db.users.update_one(
-        {"username": user["username"]},
+        {"username_canon": username_canon},
         {"$set": {"password_hash": hash_password(new_password)}}
     )
     
-    # Create JWT token
-    token = create_access_token(data={"sub": user["username"]})
+    # Create JWT token with immutable user_id as subject
+    user_id = user.get("id") or str(user.get("_id"))
+    token = create_access_token(data={"sub": user_id})
     
     return {
         "message": "Password set successfully",

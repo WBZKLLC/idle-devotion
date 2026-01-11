@@ -309,7 +309,7 @@ class IdentityHardeningTester:
         auth_headers = {"Authorization": f"Bearer {self.admin_token}"}
         success, response = self.make_request("POST", "/chat/send", {
             "message": "Hello from identity test",
-            "channel_type": "global"
+            "channel_type": "world"
         }, headers=auth_headers)
         
         if not success:

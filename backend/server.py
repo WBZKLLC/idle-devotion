@@ -2017,7 +2017,7 @@ async def startup_event():
         await db.admin_audit_log.create_index([("target_user_id", 1), ("issued_at", -1)])
         await db.admin_audit_log.create_index([("issued_by", 1), ("issued_at", -1)])
         await db.admin_audit_log.create_index([("request_id", 1)], unique=True)  # Always generated, not sparse
-        await db.admin_audit_log.create_index([("batch_id", 1)], sparse=True)
+        await db.admin_audit_log.create_index([("batch_id", 1)], sparse=True)  # Optional field, sparse OK
         await db.admin_audit_log.create_index([("auth_jti", 1)], sparse=True)
         print("✅ Created admin_audit_log indexes")
     except Exception as e:

@@ -112,14 +112,19 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
-    """Create a JWT access token"""
+    """Create a JWT access token with unique token ID (jti) for traceability"""
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS))
-    to_encode.update({"exp": expire})
+    jti = str(uuid.uuid4())  # Unique token ID for audit/revocation
+    to_encode.update({
+        "exp": expire,
+        "jti": jti,
+        "iat": datetime.utcnow(),  # Issued at
+    })
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str) -> Optional[dict]:
-    """Verify a JWT token and return the payload"""
+    """Verify a JWT token and return the payload (includes jti for audit)"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload

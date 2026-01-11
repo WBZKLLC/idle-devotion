@@ -4,6 +4,15 @@
 // Prevents optimistic updates and ensures server-authoritative state
 
 import { Alert } from 'react-native';
+import { isErrorHandledGlobally } from './api';
+
+/**
+ * Structured result type for safeMutation
+ * Preserves server error details while providing consistent interface
+ */
+export type MutationResult<T> = 
+  | { ok: true; data: T }
+  | { ok: false; error: any; detail?: string };
 
 /**
  * Options for safeMutation
@@ -24,24 +33,43 @@ interface SafeMutationOptions<T> {
   /** The fetchUser function to call if refreshUser is true */
   fetchUserFn?: () => Promise<void>;
   
-  /** Show default error alert (default: false - interceptor handles it) */
+  /** 
+   * Show error alert if not already handled globally (default: false)
+   * The global interceptor handles most errors, so this is rarely needed
+   */
   showErrorAlert?: boolean;
   
-  /** Custom error message for alert */
+  /** Custom error message for alert (overrides server detail) */
   errorMessage?: string;
+  
+  /**
+   * If true, rethrow the error after handling (default: false)
+   * Use this when the caller needs to handle the error further
+   */
+  rethrow?: boolean;
+}
+
+/**
+ * Extract error detail from various error formats
+ */
+function getErrorDetail(error: any): string {
+  return error?.response?.data?.detail 
+    || error?.message 
+    || 'Something went wrong';
 }
 
 /**
  * Safe mutation wrapper that enforces consistent patterns:
  * 1. Always awaits the server response
  * 2. Optionally refreshes user state after success
- * 3. Handles errors with shared messaging
+ * 3. Returns structured result { ok, data } or { ok, error, detail }
  * 4. Never assumes success - state only updates after server confirms
+ * 5. Respects global error handling - won't duplicate alerts
  * 
  * @param actionName - Name of the action for logging
  * @param fn - The async mutation function to execute
  * @param opts - Options for customizing behavior
- * @returns The result of the mutation, or undefined if it failed
+ * @returns Structured result with ok/data or ok/error/detail
  * 
  * @example
  * ```tsx
@@ -54,13 +82,19 @@ interface SafeMutationOptions<T> {
  *     onSuccess: (data) => setHeroes(data.heroes)
  *   }
  * );
+ * 
+ * if (result.ok) {
+ *   // Use result.data
+ * } else {
+ *   // result.error and result.detail available
+ * }
  * ```
  */
 export async function safeMutation<T>(
   actionName: string,
   fn: () => Promise<T>,
   opts: SafeMutationOptions<T> = {}
-): Promise<T | undefined> {
+): Promise<MutationResult<T>> {
   const {
     onSuccess,
     onError,
@@ -68,13 +102,14 @@ export async function safeMutation<T>(
     fetchUserFn,
     showErrorAlert = false,
     errorMessage,
+    rethrow = false,
   } = opts;
 
   try {
     console.log(`[safeMutation] Starting: ${actionName}`);
     
     // Execute the mutation - ALWAYS await server response
-    const result = await fn();
+    const data = await fn();
     
     console.log(`[safeMutation] Success: ${actionName}`);
     
@@ -90,12 +125,13 @@ export async function safeMutation<T>(
     
     // Call success callback
     if (onSuccess) {
-      await onSuccess(result);
+      await onSuccess(data);
     }
     
-    return result;
+    return { ok: true, data };
     
   } catch (error: any) {
+    const detail = getErrorDetail(error);
     console.error(`[safeMutation] Failed: ${actionName}`, error);
     
     // Call error callback
@@ -103,30 +139,37 @@ export async function safeMutation<T>(
       onError(error);
     }
     
-    // Show error alert if requested (usually the interceptor handles this)
-    if (showErrorAlert) {
-      const message = errorMessage || error?.response?.data?.detail || error?.message || 'Something went wrong';
-      Alert.alert('Error', message);
+    // Only show alert if:
+    // 1. showErrorAlert is true
+    // 2. Error was NOT already handled by global interceptor
+    if (showErrorAlert && !isErrorHandledGlobally(error)) {
+      Alert.alert('Error', errorMessage || detail);
     }
     
-    // Don't re-throw - return undefined to indicate failure
-    // This allows screens to check: if (result) { ... }
-    return undefined;
+    // Optionally rethrow for callers that need to handle further
+    if (rethrow) {
+      throw error;
+    }
+    
+    return { ok: false, error, detail };
   }
 }
 
 /**
- * Hook-friendly version that returns loading state
- * Use this when you need loading indicators in components
+ * Helper to check if a mutation result succeeded
+ * Useful for TypeScript narrowing
+ */
+export function isMutationSuccess<T>(result: MutationResult<T>): result is { ok: true; data: T } {
+  return result.ok === true;
+}
+
+/**
+ * Hook-friendly version that creates a bound executor
  * 
  * @example
  * ```tsx
- * const { execute, isLoading } = useSafeMutation();
- * 
- * const handlePull = async () => {
- *   const result = await execute('pullGacha', () => pullGacha('single', 'coins'));
- *   if (result) setHeroes(result.heroes);
- * };
+ * const execute = createMutationExecutor(fetchUser);
+ * const result = await execute('pullGacha', () => pullGacha('single', 'coins'));
  * ```
  */
 export function createMutationExecutor(fetchUserFn?: () => Promise<void>) {
@@ -134,7 +177,7 @@ export function createMutationExecutor(fetchUserFn?: () => Promise<void>) {
     actionName: string,
     fn: () => Promise<T>,
     opts: Omit<SafeMutationOptions<T>, 'fetchUserFn'> = {}
-  ): Promise<T | undefined> {
+  ): Promise<MutationResult<T>> {
     return safeMutation(actionName, fn, {
       ...opts,
       fetchUserFn,

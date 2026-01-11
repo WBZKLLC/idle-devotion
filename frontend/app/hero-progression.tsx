@@ -60,10 +60,6 @@ import {
   GlassCard,
 } from '../components/DivineShell';
 
-// Cinematic (UI-only)
-import HeroCinematicModal from '../components/HeroCinematicModal';
-import { getHeroCinematicVideo, heroNameToId, VIDEOS_AVAILABLE } from '../constants/heroCinematics';
-
 const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
 const STAR_SHARD_COSTS: Record<number, number> = { 1: 10, 2: 20, 3: 40, 4: 80, 5: 160, 6: 320 };

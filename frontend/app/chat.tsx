@@ -539,6 +539,14 @@ export default function ChatScreen() {
             )}
           </ScrollView>
 
+          {/* Rate Limit Banner */}
+          {rateLimitMessage && (
+            <View style={styles.rateLimitBanner}>
+              <Ionicons name="time-outline" size={16} color={COLORS.error} />
+              <Text style={styles.rateLimitText}>{rateLimitMessage}</Text>
+            </View>
+          )}
+
           {/* Input Area - Fixed at bottom */}
           <View style={styles.inputArea}>
             <View style={styles.inputWrapper}>

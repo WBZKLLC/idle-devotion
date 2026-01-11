@@ -572,8 +572,9 @@ export async function attackGuildWarApi(username: string, targetGuildId: string)
 }
 
 // ─────────────────────────────────────────────────────────────
-// CHAT (chat.tsx)
+// CHAT (chat.tsx) - SERVER-AUTHORITATIVE
 // ─────────────────────────────────────────────────────────────
+// All chat endpoints now use JWT auth. Do NOT pass username.
 
 export async function getChatBubbles(username: string) {
   const u = requireUsername(username);
@@ -583,6 +584,8 @@ export async function getChatBubbles(username: string) {
 
 export async function getChatMessages(params?: {
   channel_type?: string;
+  channel_id?: string;
+  server_region?: string;
   limit?: number;
   before?: string;
 }) {
@@ -597,26 +600,15 @@ export async function getUserChatBubble(senderUsername: string) {
 }
 
 export async function sendChatMessage(payload: {
-  username: string;
   message: string;
   channel_type?: string;
+  channel_id?: string;
   language?: string;
   client_msg_id?: string;
+  server_region?: string;
 }) {
-  const u = requireUsername(payload.username);
-  const res = await api.post(
-    `/chat/send`,
-    null,
-    { 
-      params: { 
-        username: u, 
-        message: payload.message, 
-        channel_type: payload.channel_type, 
-        language: payload.language,
-        client_msg_id: payload.client_msg_id,
-      } 
-    }
-  );
+  // Server derives sender from JWT - do NOT send username
+  const res = await api.post(`/chat/send`, payload);
   return res.data;
 }
 
@@ -630,37 +622,35 @@ export async function equipChatBubble(username: string, bubbleId: string) {
   return res.data;
 }
 
-// Chat Moderation APIs
+// Chat Moderation APIs (SERVER-AUTHORITATIVE)
+// Reporter derived from JWT - do NOT send reporter_username
 export async function reportChatMessage(payload: {
-  reporter_username: string;
   reported_username: string;
   reason: string;
   message_id?: string;
   details?: string;
 }) {
-  const res = await api.post(`/chat/report`, null, { params: payload });
+  const res = await api.post(`/chat/report`, payload);
   return res.data;
 }
 
-export async function blockChatUser(username: string, blockedUsername: string) {
-  const u = requireUsername(username);
+// Block/unblock use JWT auth - do NOT send username
+export async function blockChatUser(blockedUsername: string) {
   const res = await api.post(`/chat/block-user`, null, { 
-    params: { username: u, blocked_username: blockedUsername } 
+    params: { blocked_username: blockedUsername } 
   });
   return res.data;
 }
 
-export async function unblockChatUser(username: string, blockedUsername: string) {
-  const u = requireUsername(username);
+export async function unblockChatUser(blockedUsername: string) {
   const res = await api.post(`/chat/unblock-user`, null, { 
-    params: { username: u, blocked_username: blockedUsername } 
+    params: { blocked_username: blockedUsername } 
   });
   return res.data;
 }
 
-export async function getBlockedUsers(username: string) {
-  const u = requireUsername(username);
-  const res = await api.get(`/chat/blocked-users`, { params: { username: u } });
+export async function getBlockedUsers() {
+  const res = await api.get(`/chat/blocked-users`);
   return res.data;
 }
 

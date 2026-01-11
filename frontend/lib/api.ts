@@ -74,7 +74,6 @@ export function apiSetAuthToken(token: string | null) {
 api.interceptors.request.use(
   (config) => {
     if (AUTH_TOKEN && !config.headers?.Authorization) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${AUTH_TOKEN}`;
     }
     return config;

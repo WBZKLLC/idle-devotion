@@ -46,22 +46,47 @@ interface HeroCinematicModalProps {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Codec error detection for web
+// ─────────────────────────────────────────────────────────────
+function isUnsupportedCodecError(msg: string | null): boolean {
+  if (!msg) return false;
+  return (
+    msg.includes('DEMUXER_ERROR_NO_SUPPORTED_STREAMS') ||
+    msg.includes('no supported streams') ||
+    msg.includes('MEDIA_ERR_SRC_NOT_SUPPORTED') ||
+    msg.includes('Format error') ||
+    msg.includes('could not be decoded')
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Fallback component for error/unavailable states
 // ─────────────────────────────────────────────────────────────
 function CinematicFallback({ 
   title, 
   subtitle, 
-  onClose 
+  onClose,
+  isCodecError = false,
 }: { 
   title: string; 
   subtitle?: string; 
   onClose: () => void;
+  isCodecError?: boolean;
 }) {
   return (
     <View style={styles.fallbackContainer}>
-      <Ionicons name="videocam-off" size={64} color={COLORS.gold.primary} />
+      <Ionicons 
+        name={isCodecError ? "desktop-outline" : "videocam-off"} 
+        size={64} 
+        color={COLORS.gold.primary} 
+      />
       <Text style={styles.fallbackTitle}>{title}</Text>
       {subtitle && <Text style={styles.fallbackSubtitle}>{subtitle}</Text>}
+      {isCodecError && (
+        <Text style={styles.fallbackHint}>
+          Try viewing on mobile device for best experience.
+        </Text>
+      )}
       <TouchableOpacity style={styles.fallbackButton} onPress={onClose}>
         <Text style={styles.fallbackButtonText}>Close</Text>
       </TouchableOpacity>

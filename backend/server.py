@@ -1950,6 +1950,11 @@ async def startup_event():
     # 2. Create unique index on user.id for fast JWT lookups
     # NOT sparse - migration guarantees all users have UUID id
     try:
+        # Drop old sparse index if it exists to replace with non-sparse
+        try:
+            await db.users.drop_index("id_1")
+        except Exception:
+            pass
         await db.users.create_index([("id", 1)], unique=True)
         print("✅ Created unique index on user.id (non-sparse)")
     except Exception as e:

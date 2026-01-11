@@ -71,8 +71,8 @@ class IdentityHardeningTester:
         """Test A: New User Registration - verify JWT works"""
         print("\n=== Test A: New User Registration ===")
         
-        # Generate unique username
-        test_username = f"SecurityTest{int(time.time())}"
+        # Generate unique username (shorter to avoid 20 char limit)
+        test_username = f"SecTest{int(time.time()) % 10000}"
         
         success, response = self.make_request("POST", "/user/register", {
             "username": test_username,

@@ -33,6 +33,9 @@ export default function PaidFeaturesScreen() {
 
   const item = useMemo(() => ENTITLEMENTS.PAID_CINEMATICS, []);
   const owned = Boolean(entitlements?.PAID_CINEMATICS);
+  
+  // Debug: Log entitlements on render
+  console.log('[PaidFeatures] entitlements:', JSON.stringify(entitlements), 'owned:', owned);
 
   const handlePurchase = () => {
     Alert.alert(

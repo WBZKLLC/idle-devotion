@@ -251,7 +251,7 @@ export default function HeroCinematicModal({
                 resizeMode={ResizeMode.CONTAIN}
                 shouldPlay={visible && !error}
                 isLooping={false}
-                useNativeControls={false}
+                useNativeControls={Platform.OS === 'web'}
                 onLoadStart={handleLoadStart}
                 onLoad={handleLoad}
                 onPlaybackStatusUpdate={handlePlaybackStatusUpdate}

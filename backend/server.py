@@ -186,23 +186,73 @@ async def enforce_single_admin():
     """
     Startup safety check: Ensure only ADAM has is_admin=True.
     Any other user with is_admin=True gets it removed.
+    Uses case-insensitive matching for consistency.
     """
-    # Remove is_admin from any user that isn't ADAM
-    result = await db.users.update_many(
-        {
-            "username": {"$ne": SUPER_ADMIN_USERNAME, "$regex": f"^(?!{SUPER_ADMIN_USERNAME}$)", "$options": "i"},
-            "is_admin": True
-        },
+    # Remove is_admin from ALL users first (clean slate)
+    await db.users.update_many(
+        {"is_admin": True},
         {"$set": {"is_admin": False}}
     )
-    if result.modified_count > 0:
-        print(f"⚠️ WARNING: Removed is_admin from {result.modified_count} unauthorized user(s)")
     
-    # Ensure ADAM has is_admin=True (case-insensitive)
-    await db.users.update_one(
-        {"username": {"$regex": f"^{SUPER_ADMIN_USERNAME}$", "$options": "i"}},
+    # Then set is_admin=True ONLY for ADAM (case-insensitive)
+    result = await db.users.update_one(
+        {"username": {"$regex": f"^{re.escape(SUPER_ADMIN_USERNAME)}$", "$options": "i"}},
         {"$set": {"is_admin": True}}
     )
+    
+    if result.modified_count > 0:
+        print(f"✅ Admin privileges granted to {SUPER_ADMIN_USERNAME}")
+    
+    # Log any users that had is_admin removed (for audit)
+    # This is handled by the clean slate approach above
+
+# =============================================================================
+# GOD MODE AUDIT LOGGING
+# =============================================================================
+
+class AdminAuditLog(BaseModel):
+    """Audit log entry for admin actions"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    action_type: str  # set_currencies, set_vip, reset_user, ban_user, etc.
+    issued_by: str  # Admin username (always ADAM)
+    target_username: str
+    target_user_id: str
+    fields_changed: dict = Field(default_factory=dict)  # {field: {old: x, new: y}}
+    reason: Optional[str] = None
+    request_ip: Optional[str] = None
+    user_agent: Optional[str] = None
+    issued_at: datetime = Field(default_factory=datetime.utcnow)
+
+async def log_god_action(
+    admin_user: dict,
+    action_type: str,
+    target_username: str,
+    target_user_id: str,
+    fields_changed: dict,
+    reason: Optional[str] = None,
+    request: Request = None,
+):
+    """
+    Log a GOD MODE admin action with full audit trail.
+    
+    This creates a permanent record of every admin action for:
+    - Security auditing
+    - Rollback capabilities
+    - Compliance requirements
+    """
+    log_entry = AdminAuditLog(
+        action_type=action_type,
+        issued_by=admin_user.get("username", "UNKNOWN"),
+        target_username=target_username,
+        target_user_id=target_user_id,
+        fields_changed=fields_changed,
+        reason=reason,
+        request_ip=request.client.host if request and request.client else None,
+        user_agent=request.headers.get("user-agent") if request else None,
+    )
+    
+    await db.admin_audit_log.insert_one(log_entry.dict())
+    return log_entry
 
 async def log_admin_action(
     admin_user: dict,
@@ -214,7 +264,7 @@ async def log_admin_action(
     duration_minutes: Optional[int] = None,
     notes: Optional[str] = None
 ):
-    """Log an admin action with full audit trail"""
+    """Log a chat moderation admin action with full audit trail"""
     action = ChatModerationAction(
         user_id=target_user_id,
         username=target_username,

@@ -945,15 +945,6 @@ export default function HeroProgressionScreen() {
             </View>
           </View>
         </Modal>
-
-        {/* Cinematic modal */}
-        <HeroCinematicModal
-          visible={showCinematicModal}
-          onClose={closeCinematic}
-          videoSource={cinematicVideoSource}
-          heroName={heroName}
-          heroKey={heroData ? heroNameToId(heroData.name) : 'unknown'}
-        />
       </SafeAreaView>
     </View>
   );

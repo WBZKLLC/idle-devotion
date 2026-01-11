@@ -392,15 +392,18 @@ backend:
 
   - task: "Identity Hardening - Canonical usernames and immutable JWT subject"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "🔐 SECURITY IMPLEMENTATION: Identity Hardening to prevent username confusion attacks. Changes: (1) Added username_canon field to User model for canonical lookups. (2) Created unique index on username_canon. (3) Updated /user/register to populate username_canon and reserve 'adam'. (4) Updated /auth/login to lookup via username_canon (case-insensitive). (5) Changed JWT 'sub' from username to immutable user_id. (6) Updated get_current_user to load user by ID from JWT. (7) Updated require_super_admin to check username_canon == 'adam'. (8) Migrated 6 existing users to have username_canon. Test: Register new user, login, verify JWT works for authenticated endpoints (chat, admin), test case-insensitive login, verify 'adam' is reserved."
+      - working: true
+        agent: "testing"
+        comment: "🔐 IDENTITY HARDENING TESTING COMPLETE: Comprehensive security testing of authentication system refactor completed successfully. All 14 tests passed (100% success rate). TESTED SCENARIOS: (A) New User Registration - SecTest6198 registered successfully with JWT token, username_canon correctly populated as lowercase 'sectest6198'. (B) Case-Insensitive Login - All variations work: 'adam', 'ADAM', 'Adam' all authenticate successfully. (C) Reserved Username Protection - Registration with 'adam' and 'ADAM' correctly rejected with 'reserved' error (case-insensitive protection working). (D) JWT Authentication - Token verification successful, user ID present in JWT payload (7a6ae566-59df-4187-aa35-65836091f6f8). (E) Admin Endpoint Access - ADAM token successfully accesses GET /api/admin/user/adam, regular user token correctly denied with 403 Forbidden. (F) Chat Endpoint Authentication - Chat message sent successfully via POST /api/chat/send with server-authoritative sender ID derived from JWT. SECURITY VERIFICATION: (1) JWT 'sub' now contains immutable user_id instead of username ✅ (2) Login uses username_canon for case-insensitive lookup ✅ (3) Registration populates username_canon and reserves 'adam' ✅ (4) get_current_user loads user by ID from JWT ✅ (5) Admin endpoints require super admin via username_canon check ✅ (6) All authenticated endpoints work with new JWT structure ✅. Identity Hardening implementation is SECURE and FUNCTIONAL - critical security refactor successfully deployed."
 
 frontend:
   - task: "Equipment screen UI"

@@ -601,12 +601,21 @@ export async function sendChatMessage(payload: {
   message: string;
   channel_type?: string;
   language?: string;
+  client_msg_id?: string;
 }) {
   const u = requireUsername(payload.username);
   const res = await api.post(
     `/chat/send`,
     null,
-    { params: { username: u, message: payload.message, channel_type: payload.channel_type, language: payload.language } }
+    { 
+      params: { 
+        username: u, 
+        message: payload.message, 
+        channel_type: payload.channel_type, 
+        language: payload.language,
+        client_msg_id: payload.client_msg_id,
+      } 
+    }
   );
   return res.data;
 }
@@ -618,6 +627,40 @@ export async function equipChatBubble(username: string, bubbleId: string) {
     null,
     { params: { bubble_id: bubbleId } }
   );
+  return res.data;
+}
+
+// Chat Moderation APIs
+export async function reportChatMessage(payload: {
+  reporter_username: string;
+  reported_username: string;
+  reason: string;
+  message_id?: string;
+  details?: string;
+}) {
+  const res = await api.post(`/chat/report`, null, { params: payload });
+  return res.data;
+}
+
+export async function blockChatUser(username: string, blockedUsername: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/chat/block-user`, null, { 
+    params: { username: u, blocked_username: blockedUsername } 
+  });
+  return res.data;
+}
+
+export async function unblockChatUser(username: string, blockedUsername: string) {
+  const u = requireUsername(username);
+  const res = await api.post(`/chat/unblock-user`, null, { 
+    params: { username: u, blocked_username: blockedUsername } 
+  });
+  return res.data;
+}
+
+export async function getBlockedUsers(username: string) {
+  const u = requireUsername(username);
+  const res = await api.get(`/chat/blocked-users`, { params: { username: u } });
   return res.data;
 }
 

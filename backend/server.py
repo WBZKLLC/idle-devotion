@@ -2191,6 +2191,39 @@ async def verify_auth(current_user: dict = Depends(get_current_user)):
     
     return {"valid": True, "user": user_data}
 
+
+@api_router.post("/auth/logout")
+async def logout(current_user: dict = Depends(get_current_user)):
+    """
+    Logout by revoking the current token.
+    
+    The token's jti is added to the revoked_tokens collection,
+    making it immediately invalid for future requests.
+    """
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    jti = current_user.get("_auth_jti")
+    exp = current_user.get("_auth_exp")
+    user_id = get_user_id(current_user)
+    
+    if not jti:
+        raise HTTPException(status_code=400, detail="Token does not contain jti")
+    
+    # Calculate expiry time for TTL cleanup
+    expires_at = datetime.utcfromtimestamp(exp) if exp else datetime.utcnow() + timedelta(hours=168)
+    
+    await revoke_token(
+        jti=jti,
+        user_id=user_id,
+        expires_at=expires_at,
+        reason="User logout",
+        revoked_by=current_user.get("username"),
+    )
+    
+    return {"success": True, "message": "Logged out successfully"}
+
+
 # =============================================================================
 # SUPER ADMIN BOOTSTRAP ENDPOINT (One-time use)
 # =============================================================================

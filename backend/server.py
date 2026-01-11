@@ -5026,10 +5026,14 @@ async def send_chat_message(
     - Moderation checks: mute/ban/shadowban
     - Prohibited token detection with permanent ban
     - Idempotency via client_msg_id
+    - Frozen account check
     """
     # CRITICAL: Require authentication
     if not current_user:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    # SECURITY: Frozen accounts cannot send messages
+    assert_account_active(current_user)
     
     # Derive sender from JWT - NEVER trust client
     sender_username = current_user.get("username")

@@ -422,6 +422,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 280,
   },
+  fallbackHint: {
+    color: COLORS.gold.muted,
+    fontSize: 12,
+    marginTop: 12,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
   fallbackButton: {
     marginTop: 24,
     paddingHorizontal: 32,

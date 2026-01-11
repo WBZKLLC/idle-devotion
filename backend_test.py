@@ -1,462 +1,391 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Launch Banner and Journey Systems
-=========================================================
+Identity Hardening Backend Test Suite
+Tests the critical security refactor for authentication system.
 
-This script tests the NEW Launch Banner and Journey APIs as requested.
-
-Test Requirements:
-1. Launch Banner APIs:
-   - GET /api/launch-banner/hero - Should return featured hero "Aethon, The Celestial Blade"
-   - GET /api/launch-banner/status/Adam - Should return banner status with pity counter, time remaining
-   - GET /api/launch-banner/bundles/Adam - Should return available bundles
-   - POST /api/launch-banner/pull/Adam - Single pull (requires crystals/gems)
-   - POST /api/launch-banner/pull/Adam?multi=true - Multi pull (10x)
-
-2. Journey APIs:
-   - GET /api/journey/Adam - Should return 7-day journey data with days 1-7, milestones, and login rewards
-   - POST /api/journey/Adam/claim-login?day=1 - Claim day 1 login reward (if not already claimed)
-
-Authentication: username=Adam, password=Adam123!
+Key Changes Being Tested:
+1. JWT 'sub' is now immutable user_id (not username)
+2. Login uses username_canon for case-insensitive lookup
+3. Registration populates username_canon and reserves 'adam'
+4. get_current_user loads user by ID from JWT
 """
 
 import requests
 import json
 import sys
-from datetime import datetime
+import time
+from typing import Dict, Any, Optional
 
-# Configuration
+# Backend URL from environment
 BACKEND_URL = "https://secureid-3.preview.emergentagent.com/api"
-USERNAME = "Adam"
-PASSWORD = "Adam123!"
 
-class Colors:
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    WHITE = '\033[97m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+# Test credentials
+ADMIN_USERNAME = "adam"
+ADMIN_PASSWORD = "t-l!8c2mUfl*94?7drlj=f$d4&pl+u5ay!st$2Lt0lwros#ip_c#7-thaclbu!t1"
 
-def print_header(title):
-    print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.CYAN}{title.center(60)}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.END}")
-
-def print_test(test_name):
-    print(f"\n{Colors.BOLD}{Colors.BLUE}🧪 Testing: {test_name}{Colors.END}")
-
-def print_success(message):
-    print(f"{Colors.GREEN}✅ {message}{Colors.END}")
-
-def print_error(message):
-    print(f"{Colors.RED}❌ {message}{Colors.END}")
-
-def print_warning(message):
-    print(f"{Colors.YELLOW}⚠️  {message}{Colors.END}")
-
-def print_info(message):
-    print(f"{Colors.PURPLE}ℹ️  {message}{Colors.END}")
-
-def authenticate():
-    """Authenticate and get JWT token"""
-    print_test("User Authentication")
-    
-    # Try to login first
-    login_data = {
-        "username": USERNAME,
-        "password": PASSWORD
-    }
-    
-    try:
-        response = requests.post(f"{BACKEND_URL}/auth/login", json=login_data, timeout=10)
+class IdentityHardeningTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.test_results = []
+        self.admin_token = None
         
-        if response.status_code == 200:
-            data = response.json()
-            token = data.get("token")
-            print_success(f"Login successful for user: {USERNAME}")
-            print_info(f"Token received: {token[:20]}...")
-            return token
-        elif response.status_code == 401:
-            print_warning("Login failed - user may not exist or wrong password")
-            return None
-        else:
-            print_error(f"Login failed with status {response.status_code}: {response.text}")
-            return None
-            
-    except requests.exceptions.RequestException as e:
-        print_error(f"Authentication request failed: {e}")
-        return None
-
-def test_launch_banner_hero():
-    """Test GET /api/launch-banner/hero"""
-    print_test("Launch Banner - Featured Hero")
-    
-    try:
-        response = requests.get(f"{BACKEND_URL}/launch-banner/hero", timeout=10)
+    def log_test(self, test_name: str, success: bool, details: str = ""):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        result = f"{status}: {test_name}"
+        if details:
+            result += f" - {details}"
+        print(result)
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "details": details
+        })
         
-        if response.status_code == 200:
-            data = response.json()
-            hero = data.get("hero", {})
-            hero_name = hero.get("name", "Unknown")
+    def make_request(self, method: str, endpoint: str, data: Dict = None, headers: Dict = None) -> tuple[bool, Dict]:
+        """Make HTTP request and return (success, response_data)"""
+        url = f"{BACKEND_URL}{endpoint}"
+        default_headers = {"Content-Type": "application/json"}
+        if headers:
+            default_headers.update(headers)
             
-            if hero_name == "Aethon, The Celestial Blade":
-                print_success(f"✅ Featured hero correct: {hero_name}")
-                print_info(f"Hero details: {hero.get('rarity', 'Unknown')} {hero.get('element', 'Unknown')} {hero.get('hero_class', 'Unknown')}")
-                return True
+        try:
+            if method.upper() == "GET":
+                response = self.session.get(url, headers=default_headers)
+            elif method.upper() == "POST":
+                response = self.session.post(url, json=data, headers=default_headers)
             else:
-                print_error(f"❌ Wrong featured hero. Expected: 'Aethon, The Celestial Blade', Got: '{hero_name}'")
-                return False
-        else:
-            print_error(f"❌ Request failed with status {response.status_code}: {response.text}")
-            return False
-            
-    except requests.exceptions.RequestException as e:
-        print_error(f"❌ Request failed: {e}")
-        return False
-
-def test_launch_banner_status(token):
-    """Test GET /api/launch-banner/status/Adam"""
-    print_test("Launch Banner - User Status")
-    
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    
-    try:
-        response = requests.get(f"{BACKEND_URL}/launch-banner/status/{USERNAME}", headers=headers, timeout=10)
-        
-        if response.status_code == 200:
-            data = response.json()
-            
-            # Check required fields
-            banner = data.get("banner", {})
-            user_progress = data.get("user_progress", {})
-            time_remaining = data.get("time_remaining", {})
-            
-            print_success("✅ Banner status retrieved successfully")
-            print_info(f"Banner name: {banner.get('name', 'Unknown')}")
-            print_info(f"Pity counter: {user_progress.get('pity_counter', 0)}")
-            print_info(f"Total pulls: {user_progress.get('total_pulls', 0)}")
-            print_info(f"Has featured hero: {user_progress.get('has_featured_hero', False)}")
-            print_info(f"Banner active: {time_remaining.get('is_active', False)}")
-            
-            # Verify featured hero in banner
-            featured_hero = banner.get("featured_hero", {})
-            if featured_hero.get("name") == "Aethon, The Celestial Blade":
-                print_success("✅ Featured hero in banner status is correct")
-                return True
+                return False, {"error": f"Unsupported method: {method}"}
+                
+            if response.status_code in [200, 201]:
+                return True, response.json()
             else:
-                print_error(f"❌ Featured hero in banner status incorrect: {featured_hero.get('name')}")
-                return False
-                
-        else:
-            print_error(f"❌ Request failed with status {response.status_code}: {response.text}")
+                return False, {
+                    "status_code": response.status_code,
+                    "error": response.text
+                }
+        except Exception as e:
+            return False, {"error": str(e)}
+    
+    def test_new_user_registration(self) -> bool:
+        """Test A: New User Registration - verify JWT works"""
+        print("\n=== Test A: New User Registration ===")
+        
+        # Generate unique username
+        test_username = f"SecurityTest{int(time.time())}"
+        
+        success, response = self.make_request("POST", "/user/register", {
+            "username": test_username,
+            "password": "testpass123"
+        })
+        
+        if not success:
+            self.log_test("A1: User Registration", False, f"Registration failed: {response}")
             return False
             
-    except requests.exceptions.RequestException as e:
-        print_error(f"❌ Request failed: {e}")
-        return False
-
-def test_launch_banner_bundles(token):
-    """Test GET /api/launch-banner/bundles/Adam"""
-    print_test("Launch Banner - Available Bundles")
-    
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    
-    try:
-        response = requests.get(f"{BACKEND_URL}/launch-banner/bundles/{USERNAME}", headers=headers, timeout=10)
-        
-        if response.status_code == 200:
-            data = response.json()
-            bundles = data.get("bundles", [])
-            all_bundles = data.get("all_bundles", [])
-            
-            print_success("✅ Bundles retrieved successfully")
-            print_info(f"Available bundles: {len(bundles)}")
-            print_info(f"Total bundles: {len(all_bundles)}")
-            
-            if bundles:
-                for bundle in bundles[:3]:  # Show first 3
-                    print_info(f"Bundle: {bundle.get('name', 'Unknown')} - ${bundle.get('price_usd', 0)}")
-            
-            return True
-                
-        else:
-            print_error(f"❌ Request failed with status {response.status_code}: {response.text}")
+        # Check response contains token
+        if "token" not in response:
+            self.log_test("A1: User Registration", False, "No token in registration response")
             return False
             
-    except requests.exceptions.RequestException as e:
-        print_error(f"❌ Request failed: {e}")
-        return False
-
-def test_launch_banner_pull_single(token):
-    """Test POST /api/launch-banner/pull/Adam (single pull)"""
-    print_test("Launch Banner - Single Pull")
-    
-    if not token:
-        print_error("❌ No authentication token available")
-        return False
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    try:
-        # First check user's current crystals/gems
-        user_response = requests.get(f"{BACKEND_URL}/user/{USERNAME}", headers=headers, timeout=10)
-        if user_response.status_code == 200:
-            user_data = user_response.json()
-            crystals = user_data.get("crystals", 0)
-            gems = user_data.get("gems", 0)
-            print_info(f"User crystals: {crystals}, gems: {gems}")
-            
-            # Check if user has enough currency for a pull
-            if crystals < 100 and gems < 100:
-                print_warning("⚠️ User may not have enough crystals/gems for pull")
+        token = response["token"]
+        self.log_test("A1: User Registration", True, f"User {test_username} registered successfully")
         
-        response = requests.post(f"{BACKEND_URL}/launch-banner/pull/{USERNAME}", headers=headers, timeout=10)
+        # Test that JWT token works for authenticated endpoints
+        auth_headers = {"Authorization": f"Bearer {token}"}
+        success, verify_response = self.make_request("GET", "/auth/verify", headers=auth_headers)
         
-        if response.status_code == 200:
-            data = response.json()
-            results = data.get("results", [])
-            cost = data.get("cost", 0)
-            new_pity = data.get("new_pity", 0)
-            
-            print_success("✅ Single pull successful")
-            print_info(f"Cost: {cost} crystals")
-            print_info(f"New pity counter: {new_pity}")
-            print_info(f"Results count: {len(results)}")
-            
-            if results:
-                for result in results:
-                    hero = result.get("hero", {})
-                    print_info(f"Pulled: {hero.get('name', 'Unknown')} ({hero.get('rarity', 'Unknown')})")
-            
-            return True
-                
-        elif response.status_code == 400:
-            error_detail = response.json().get("detail", "Unknown error")
-            if "Insufficient" in error_detail:
-                print_warning(f"⚠️ Expected error - insufficient currency: {error_detail}")
-                return True  # This is expected behavior
-            else:
-                print_error(f"❌ Unexpected error: {error_detail}")
-                return False
-        else:
-            print_error(f"❌ Request failed with status {response.status_code}: {response.text}")
+        if not success:
+            self.log_test("A2: JWT Token Verification", False, f"Token verification failed: {verify_response}")
             return False
             
-    except requests.exceptions.RequestException as e:
-        print_error(f"❌ Request failed: {e}")
-        return False
-
-def test_launch_banner_pull_multi(token):
-    """Test POST /api/launch-banner/pull/Adam?multi=true (multi pull)"""
-    print_test("Launch Banner - Multi Pull (10x)")
-    
-    if not token:
-        print_error("❌ No authentication token available")
-        return False
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    try:
-        response = requests.post(f"{BACKEND_URL}/launch-banner/pull/{USERNAME}?multi=true", headers=headers, timeout=10)
-        
-        if response.status_code == 200:
-            data = response.json()
-            results = data.get("results", [])
-            cost = data.get("cost", 0)
-            new_pity = data.get("new_pity", 0)
-            
-            print_success("✅ Multi pull successful")
-            print_info(f"Cost: {cost} crystals")
-            print_info(f"New pity counter: {new_pity}")
-            print_info(f"Results count: {len(results)}")
-            
-            if results:
-                for i, result in enumerate(results[:3]):  # Show first 3
-                    hero = result.get("hero", {})
-                    print_info(f"Pull {i+1}: {hero.get('name', 'Unknown')} ({hero.get('rarity', 'Unknown')})")
-            
-            return True
-                
-        elif response.status_code == 400:
-            error_detail = response.json().get("detail", "Unknown error")
-            if "Insufficient" in error_detail:
-                print_warning(f"⚠️ Expected error - insufficient currency: {error_detail}")
-                return True  # This is expected behavior
-            else:
-                print_error(f"❌ Unexpected error: {error_detail}")
-                return False
-        else:
-            print_error(f"❌ Request failed with status {response.status_code}: {response.text}")
+        # Check that user data is returned correctly
+        if "user" not in verify_response or verify_response["user"]["username"] != test_username:
+            self.log_test("A2: JWT Token Verification", False, "Invalid user data in token verification")
             return False
             
-    except requests.exceptions.RequestException as e:
-        print_error(f"❌ Request failed: {e}")
-        return False
-
-def test_journey_data(token):
-    """Test GET /api/journey/Adam"""
-    print_test("Journey - 7-Day Journey Data")
-    
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    
-    try:
-        response = requests.get(f"{BACKEND_URL}/journey/{USERNAME}", headers=headers, timeout=10)
+        self.log_test("A2: JWT Token Verification", True, "JWT token works for authenticated endpoints")
         
-        if response.status_code == 200:
-            data = response.json()
-            
-            # Check required fields
-            account_age = data.get("account_age_days", 0)
-            current_day = data.get("current_day", 0)
-            days = data.get("days", {})
-            
-            print_success("✅ Journey data retrieved successfully")
-            print_info(f"Account age: {account_age} days")
-            print_info(f"Current day: {current_day}")
-            print_info(f"Days configured: {len(days)}")
-            
-            # Verify all 7 days are present
-            if len(days) == 7:
-                print_success("✅ All 7 days present in journey data")
-                
-                # Check structure of each day
-                for day_num in range(1, 8):
-                    day_data = days.get(str(day_num), {})
-                    if day_data:
-                        print_info(f"Day {day_num}: Unlocked={day_data.get('is_unlocked', False)}, Current={day_data.get('is_current', False)}, Login Claimed={day_data.get('login_claimed', False)}")
-                
-                return True
-            else:
-                print_error(f"❌ Expected 7 days, got {len(days)}")
-                return False
-                
-        else:
-            print_error(f"❌ Request failed with status {response.status_code}: {response.text}")
+        # Check that username_canon was populated (should be lowercase)
+        expected_canon = test_username.lower()
+        if verify_response["user"].get("username_canon") != expected_canon:
+            self.log_test("A3: Username Canon Population", False, f"Expected username_canon: {expected_canon}, got: {verify_response['user'].get('username_canon')}")
             return False
             
-    except requests.exceptions.RequestException as e:
-        print_error(f"❌ Request failed: {e}")
-        return False
-
-def test_journey_claim_login(token):
-    """Test POST /api/journey/Adam/claim-login?day=1"""
-    print_test("Journey - Claim Day 1 Login Reward")
+        self.log_test("A3: Username Canon Population", True, f"username_canon correctly set to: {expected_canon}")
+        return True
     
-    if not token:
-        print_error("❌ No authentication token available")
-        return False
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    try:
-        response = requests.post(f"{BACKEND_URL}/journey/{USERNAME}/claim-login?day=1", headers=headers, timeout=10)
+    def test_case_insensitive_login(self) -> bool:
+        """Test B: Case-insensitive login with existing super admin"""
+        print("\n=== Test B: Case-Insensitive Login ===")
         
-        if response.status_code == 200:
-            data = response.json()
-            success = data.get("success", False)
-            day = data.get("day", 0)
-            rewards = data.get("rewards", {})
-            
-            print_success("✅ Day 1 login reward claimed successfully")
-            print_info(f"Day: {day}")
-            print_info(f"Success: {success}")
-            print_info(f"Rewards: {rewards}")
-            
-            return True
-                
-        elif response.status_code == 400:
-            error_detail = response.json().get("detail", "Unknown error")
-            if "Already claimed" in error_detail:
-                print_warning(f"⚠️ Expected behavior - reward already claimed: {error_detail}")
-                return True  # This is expected if already claimed
-            elif "not yet unlocked" in error_detail:
-                print_warning(f"⚠️ Day not yet unlocked: {error_detail}")
-                return True  # This is expected for new accounts
-            else:
-                print_error(f"❌ Unexpected error: {error_detail}")
-                return False
-        else:
-            print_error(f"❌ Request failed with status {response.status_code}: {response.text}")
+        # Test lowercase 'adam'
+        success, response = self.make_request("POST", "/auth/login", {
+            "username": "adam",
+            "password": ADMIN_PASSWORD
+        })
+        
+        if not success:
+            self.log_test("B1: Lowercase Login", False, f"Login with 'adam' failed: {response}")
             return False
             
-    except requests.exceptions.RequestException as e:
-        print_error(f"❌ Request failed: {e}")
-        return False
+        if "token" not in response:
+            self.log_test("B1: Lowercase Login", False, "No token in login response")
+            return False
+            
+        self.admin_token = response["token"]
+        self.log_test("B1: Lowercase Login", True, "Login with 'adam' successful")
+        
+        # Test uppercase 'ADAM'
+        success, response = self.make_request("POST", "/auth/login", {
+            "username": "ADAM",
+            "password": ADMIN_PASSWORD
+        })
+        
+        if not success:
+            self.log_test("B2: Uppercase Login", False, f"Login with 'ADAM' failed: {response}")
+            return False
+            
+        if "token" not in response:
+            self.log_test("B2: Uppercase Login", False, "No token in login response")
+            return False
+            
+        self.log_test("B2: Uppercase Login", True, "Login with 'ADAM' successful")
+        
+        # Test mixed case 'Adam'
+        success, response = self.make_request("POST", "/auth/login", {
+            "username": "Adam",
+            "password": ADMIN_PASSWORD
+        })
+        
+        if not success:
+            self.log_test("B3: Mixed Case Login", False, f"Login with 'Adam' failed: {response}")
+            return False
+            
+        if "token" not in response:
+            self.log_test("B3: Mixed Case Login", False, "No token in login response")
+            return False
+            
+        self.log_test("B3: Mixed Case Login", True, "Login with 'Adam' successful")
+        return True
+    
+    def test_reserved_username(self) -> bool:
+        """Test C: Reserved Username Test - 'adam' should be reserved"""
+        print("\n=== Test C: Reserved Username Test ===")
+        
+        # Try to register with 'adam' (should FAIL)
+        success, response = self.make_request("POST", "/user/register", {
+            "username": "adam",
+            "password": "hacker123"
+        })
+        
+        if success:
+            self.log_test("C1: Reserve 'adam'", False, "Registration with 'adam' should have failed but succeeded")
+            return False
+            
+        # Check for appropriate error message
+        error_msg = response.get("error", "").lower()
+        if "reserved" not in error_msg:
+            self.log_test("C1: Reserve 'adam'", False, f"Expected 'reserved' error, got: {response}")
+            return False
+            
+        self.log_test("C1: Reserve 'adam'", True, "Registration with 'adam' correctly rejected")
+        
+        # Try to register with 'ADAM' (should also FAIL - case insensitive)
+        success, response = self.make_request("POST", "/user/register", {
+            "username": "ADAM",
+            "password": "hacker123"
+        })
+        
+        if success:
+            self.log_test("C2: Reserve 'ADAM'", False, "Registration with 'ADAM' should have failed but succeeded")
+            return False
+            
+        # Check for appropriate error message
+        error_msg = response.get("error", "").lower()
+        if "reserved" not in error_msg:
+            self.log_test("C2: Reserve 'ADAM'", False, f"Expected 'reserved' error, got: {response}")
+            return False
+            
+        self.log_test("C2: Reserve 'ADAM'", True, "Registration with 'ADAM' correctly rejected (case-insensitive)")
+        return True
+    
+    def test_jwt_authentication(self) -> bool:
+        """Test D: Token-based Authentication - JWT contains user_id"""
+        print("\n=== Test D: JWT Authentication ===")
+        
+        if not self.admin_token:
+            self.log_test("D1: Token Availability", False, "No admin token available from previous tests")
+            return False
+            
+        # Verify token works for auth endpoint
+        auth_headers = {"Authorization": f"Bearer {self.admin_token}"}
+        success, response = self.make_request("GET", "/auth/verify", headers=auth_headers)
+        
+        if not success:
+            self.log_test("D1: Auth Verify", False, f"Token verification failed: {response}")
+            return False
+            
+        if not response.get("valid"):
+            self.log_test("D1: Auth Verify", False, "Token marked as invalid")
+            return False
+            
+        # Check user data is present
+        user_data = response.get("user")
+        if not user_data:
+            self.log_test("D1: Auth Verify", False, "No user data in verification response")
+            return False
+            
+        # Verify user has ID (immutable identifier)
+        if not user_data.get("id"):
+            self.log_test("D2: User ID Present", False, "No user ID in verification response")
+            return False
+            
+        self.log_test("D1: Auth Verify", True, "Token verification successful with user data")
+        self.log_test("D2: User ID Present", True, f"User ID present: {user_data.get('id')}")
+        return True
+    
+    def test_admin_endpoint_access(self) -> bool:
+        """Test E: Admin Endpoint Access - require_super_admin"""
+        print("\n=== Test E: Admin Endpoint Access ===")
+        
+        if not self.admin_token:
+            self.log_test("E1: Admin Token", False, "No admin token available")
+            return False
+            
+        # Test admin endpoint with ADAM's token
+        auth_headers = {"Authorization": f"Bearer {self.admin_token}"}
+        success, response = self.make_request("GET", "/god/users?limit=5", headers=auth_headers)
+        
+        if not success:
+            self.log_test("E1: Admin Access", False, f"Admin endpoint access failed: {response}")
+            return False
+            
+        # Check that we get users list
+        if "users" not in response:
+            self.log_test("E1: Admin Access", False, "No users list in admin response")
+            return False
+            
+        self.log_test("E1: Admin Access", True, f"Admin endpoint accessible, returned {len(response['users'])} users")
+        
+        # Test with non-admin token (create a regular user first)
+        test_username = f"RegularUser{int(time.time())}"
+        success, reg_response = self.make_request("POST", "/user/register", {
+            "username": test_username,
+            "password": "testpass123"
+        })
+        
+        if not success:
+            self.log_test("E2: Regular User Creation", False, "Failed to create regular user for testing")
+            return False
+            
+        regular_token = reg_response["token"]
+        regular_headers = {"Authorization": f"Bearer {regular_token}"}
+        
+        # Try admin endpoint with regular user token (should fail with 403)
+        success, response = self.make_request("GET", "/god/users?limit=5", headers=regular_headers)
+        
+        if success:
+            self.log_test("E2: Non-Admin Rejection", False, "Regular user should not have admin access")
+            return False
+            
+        # Check for 403 status
+        if response.get("status_code") != 403:
+            self.log_test("E2: Non-Admin Rejection", False, f"Expected 403, got: {response.get('status_code')}")
+            return False
+            
+        self.log_test("E2: Non-Admin Rejection", True, "Regular user correctly denied admin access (403)")
+        return True
+    
+    def test_chat_endpoint(self) -> bool:
+        """Test F: Chat Endpoint - authenticated via JWT"""
+        print("\n=== Test F: Chat Endpoint Authentication ===")
+        
+        if not self.admin_token:
+            self.log_test("F1: Token Availability", False, "No admin token available")
+            return False
+            
+        # Test chat send endpoint with token
+        auth_headers = {"Authorization": f"Bearer {self.admin_token}"}
+        success, response = self.make_request("POST", "/chat/send", {
+            "message": "Hello from identity test",
+            "channel_type": "global"
+        }, headers=auth_headers)
+        
+        if not success:
+            self.log_test("F1: Chat Send", False, f"Chat send failed: {response}")
+            return False
+            
+        # Check that message was sent successfully
+        if "message" not in response:
+            self.log_test("F1: Chat Send", False, "No message confirmation in response")
+            return False
+            
+        # Verify sender is derived from JWT (server-authoritative)
+        sent_message = response["message"]
+        if not sent_message.get("sender_id"):
+            self.log_test("F2: Server-Authoritative Sender", False, "No sender_id in message")
+            return False
+            
+        self.log_test("F1: Chat Send", True, "Chat message sent successfully")
+        self.log_test("F2: Server-Authoritative Sender", True, f"Sender ID derived from JWT: {sent_message.get('sender_id')}")
+        return True
+    
+    def run_all_tests(self) -> bool:
+        """Run all identity hardening tests"""
+        print("🔐 IDENTITY HARDENING TEST SUITE")
+        print("=" * 50)
+        
+        all_passed = True
+        
+        # Run all test scenarios
+        test_methods = [
+            self.test_new_user_registration,
+            self.test_case_insensitive_login,
+            self.test_reserved_username,
+            self.test_jwt_authentication,
+            self.test_admin_endpoint_access,
+            self.test_chat_endpoint
+        ]
+        
+        for test_method in test_methods:
+            try:
+                result = test_method()
+                if not result:
+                    all_passed = False
+            except Exception as e:
+                print(f"❌ EXCEPTION in {test_method.__name__}: {e}")
+                all_passed = False
+        
+        # Summary
+        print("\n" + "=" * 50)
+        print("🔐 IDENTITY HARDENING TEST SUMMARY")
+        print("=" * 50)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        total = len(self.test_results)
+        
+        print(f"Tests Passed: {passed}/{total}")
+        print(f"Success Rate: {(passed/total)*100:.1f}%")
+        
+        if all_passed:
+            print("✅ ALL IDENTITY HARDENING TESTS PASSED")
+        else:
+            print("❌ SOME TESTS FAILED - SECURITY ISSUES DETECTED")
+            
+        return all_passed
 
 def main():
-    """Main testing function"""
-    print_header("LAUNCH BANNER & JOURNEY API TESTING")
-    print_info(f"Backend URL: {BACKEND_URL}")
-    print_info(f"Test User: {USERNAME}")
-    print_info(f"Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    """Main test execution"""
+    tester = IdentityHardeningTester()
+    success = tester.run_all_tests()
     
-    # Track test results
-    test_results = []
-    
-    # 1. Authentication
-    token = authenticate()
-    test_results.append(("Authentication", token is not None))
-    
-    # 2. Launch Banner Tests
-    print_header("LAUNCH BANNER API TESTS")
-    
-    # Test featured hero endpoint
-    result = test_launch_banner_hero()
-    test_results.append(("Launch Banner - Featured Hero", result))
-    
-    # Test banner status
-    result = test_launch_banner_status(token)
-    test_results.append(("Launch Banner - Status", result))
-    
-    # Test bundles
-    result = test_launch_banner_bundles(token)
-    test_results.append(("Launch Banner - Bundles", result))
-    
-    # Test single pull
-    result = test_launch_banner_pull_single(token)
-    test_results.append(("Launch Banner - Single Pull", result))
-    
-    # Test multi pull
-    result = test_launch_banner_pull_multi(token)
-    test_results.append(("Launch Banner - Multi Pull", result))
-    
-    # 3. Journey Tests
-    print_header("JOURNEY API TESTS")
-    
-    # Test journey data
-    result = test_journey_data(token)
-    test_results.append(("Journey - 7-Day Data", result))
-    
-    # Test login claim
-    result = test_journey_claim_login(token)
-    test_results.append(("Journey - Claim Login", result))
-    
-    # 4. Summary
-    print_header("TEST SUMMARY")
-    
-    passed = 0
-    total = len(test_results)
-    
-    for test_name, result in test_results:
-        if result:
-            print_success(f"✅ {test_name}")
-            passed += 1
-        else:
-            print_error(f"❌ {test_name}")
-    
-    print(f"\n{Colors.BOLD}Results: {passed}/{total} tests passed ({(passed/total)*100:.1f}%){Colors.END}")
-    
-    if passed == total:
-        print_success("🎉 ALL TESTS PASSED! Launch Banner and Journey APIs are working correctly.")
-        return 0
+    if success:
+        print("\n🎉 Identity Hardening implementation is SECURE and FUNCTIONAL!")
+        sys.exit(0)
     else:
-        print_error(f"⚠️ {total - passed} tests failed. Please check the issues above.")
-        return 1
+        print("\n⚠️  Identity Hardening has ISSUES that need attention!")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)
+    main()

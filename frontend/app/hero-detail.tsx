@@ -82,10 +82,6 @@ export default function HeroDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stats' | 'skills' | 'equip'>('stats');
   
-  // 5+ Star Cinematic Modal State
-  const [showCinematicModal, setShowCinematicModal] = useState(false);
-  const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
-
   // Tier selection (DEFAULT = 1-star art)
   const [selectedTier, setSelectedTier] = useState<DisplayTier>(1);
 
@@ -97,80 +93,6 @@ export default function HeroDetailScreen() {
     if (tierArtUrl) return { uri: tierArtUrl };
     return require('../assets/backgrounds/sanctum_environment_01.jpg');
   }, [tierArtUrl]);
-
-  // Check if hero is at 5+ star (final ascension)
-  const isFivePlusStar = useCallback(() => {
-    if (!hero) return false;
-    return unlockedTierForHero(hero) === 6;
-  }, [hero]);
-
-  // Check if hero is UR or UR+ (for preview button visibility)
-  const isHighRarity = useCallback(() => {
-    if (!heroData) return false;
-    return heroData.rarity === 'UR' || heroData.rarity === 'UR+';
-  }, [heroData]);
-
-  // Handle tap on hero portrait for 5+ cinematic
-  const handlePortraitTap = useCallback(() => {
-    if (!heroData) return;
-    
-    if (!isFivePlusStar()) {
-      return;
-    }
-    
-    // Feature flag gate
-    const cinematicsEnabled = isFeatureEnabled('HERO_CINEMATICS', { 
-      stableId: user?.id ?? user?.username 
-    });
-    if (!cinematicsEnabled) {
-      Alert.alert('Coming Soon', 'Hero cinematics are not yet available.');
-      return;
-    }
-    
-    const heroId = heroNameToId(heroData.name);
-    const videoSource = getHeroCinematicVideo(heroId);
-    
-    if (videoSource) {
-      setCinematicVideoSource(videoSource);
-      setShowCinematicModal(true);
-    } else {
-      if (__DEV__) {
-        console.log(`[HeroDetail] No cinematic video for ${heroId} at 5+ star`);
-      }
-    }
-  }, [heroData, isFivePlusStar, user?.id, user?.username]);
-
-  // Handle preview button tap (for UR/UR+ heroes not yet at 5+)
-  const handlePreview5PlusCinematic = useCallback(() => {
-    if (!heroData) return;
-    
-    // Feature flag gate
-    const cinematicsEnabled = isFeatureEnabled('HERO_CINEMATICS', { 
-      stableId: user?.id ?? user?.username 
-    });
-    if (!cinematicsEnabled) {
-      Alert.alert('Coming Soon', 'Hero cinematics are not yet available.');
-      return;
-    }
-    
-    const heroId = heroNameToId(heroData.name);
-    const videoSource = getHeroCinematicVideo(heroId);
-    
-    if (videoSource) {
-      setCinematicVideoSource(videoSource);
-      setShowCinematicModal(true);
-    } else {
-      if (__DEV__) {
-        console.log(`[HeroDetail] Preview: No cinematic video available for ${heroId}`);
-      }
-    }
-  }, [heroData, user?.id, user?.username]);
-
-  // Close cinematic modal
-  const handleCloseCinematic = useCallback(() => {
-    setShowCinematicModal(false);
-    setCinematicVideoSource(null);
-  }, []);
 
   // Compute unlocked tier from hero stars/awakening (MUST be before early returns)
   // Use hero?.id in deps to avoid reference changes causing hooks mismatch

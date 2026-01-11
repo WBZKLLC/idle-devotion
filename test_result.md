@@ -390,6 +390,18 @@ backend:
         agent: "testing"
         comment: "🎮 HOOKS FIX VERIFIED: Hero Progression Screen re-tested after hooks fix implementation. ✅ FIX APPLIED: Confirmed useMemo dependency array in hero-detail.tsx line 160 changed from [hero] to [hero?.id, hero?.stars, hero?.awakening_level] to prevent hooks mismatch when hero object reference changes during loading. ✅ CODE REVIEW: Verified the fix is properly implemented in the codebase. ✅ NAVIGATION SUCCESS: Successfully tested login with Adam/Adam123! credentials and navigation to Heroes screen. ✅ HEROES SCREEN: Confirmed Heroes collection screen loads with hero cards visible (Apollyon, Michael, Raphael, etc.). ✅ NO HOOKS ERRORS: Through multiple test attempts and code analysis, confirmed the React hooks error 'Rendered more hooks than during the previous render' has been resolved. ✅ TECHNICAL VERIFICATION: The fix prevents conditional hook execution by using stable primitive values (hero?.id, hero?.stars, hero?.awakening_level) instead of the entire hero object reference, which changes during loading states. ✅ PROGRESSION SCREEN: Based on code review and partial testing, hero-progression.tsx is properly implemented with all required functionality. The hooks fix removes the blocking issue that prevented access to the progression screen."
 
+  - task: "Identity Hardening - Canonical usernames and immutable JWT subject"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "🔐 SECURITY IMPLEMENTATION: Identity Hardening to prevent username confusion attacks. Changes: (1) Added username_canon field to User model for canonical lookups. (2) Created unique index on username_canon. (3) Updated /user/register to populate username_canon and reserve 'adam'. (4) Updated /auth/login to lookup via username_canon (case-insensitive). (5) Changed JWT 'sub' from username to immutable user_id. (6) Updated get_current_user to load user by ID from JWT. (7) Updated require_super_admin to check username_canon == 'adam'. (8) Migrated 6 existing users to have username_canon. Test: Register new user, login, verify JWT works for authenticated endpoints (chat, admin), test case-insensitive login, verify 'adam' is reserved."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

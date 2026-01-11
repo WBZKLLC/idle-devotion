@@ -2287,12 +2287,15 @@ async def verify_auth(current_user: dict = Depends(get_current_user)):
 
 
 @api_router.post("/auth/logout")
-async def logout(current_user: dict = Depends(get_current_user)):
+@limiter.limit("10/minute")  # Prevent logout spam
+async def logout(request: Request, current_user: dict = Depends(get_current_user)):
     """
     Logout by revoking the current token.
     
     The token's jti is added to the revoked_tokens collection,
     making it immediately invalid for future requests.
+    
+    Rate limited to 10/minute to prevent abuse.
     """
     if not current_user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")

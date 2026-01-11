@@ -402,8 +402,8 @@ class RevokedToken(BaseModel):
     """Revoked JWT token entry for surgical token invalidation"""
     jti: str  # Unique token ID from JWT
     user_id: str  # User whose token was revoked
-    revoked_at: datetime = Field(default_factory=datetime.utcnow)
-    expires_at: datetime  # When the original token would have expired (for TTL cleanup)
+    revoked_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # Timezone-aware UTC
+    expires_at: datetime  # When the original token would have expired (for TTL cleanup) - MUST be timezone-aware UTC
     reason: Optional[str] = None
     revoked_by: Optional[str] = None  # Admin who revoked (if admin action)
 

@@ -7,65 +7,38 @@
  * IMPORTANT:
  * - All heroIds MUST match existing hero IDs exactly
  * - Use static require() for video assets, NOT URLs
- * - If a video is missing, the lookup returns undefined (safe fallback)
+ * - If a video is missing, the lookup returns null (safe fallback)
  */
 
 // Type definition for hero cinematic mapping
-export type HeroId = 
-  | 'azrael_the_fallen'
-  | 'marcus_the_shield'
-  | 'kane_the_berserker'
-  | 'soren_the_flame'
-  | 'lysander_the_frost'
-  | 'theron_the_storm'
-  | 'kai_the_tempest'
-  | 'robin_the_hunter'
-  | 'darius_the_void'
-  | 'leon_the_paladin'
-  | 'lucian_the_divine'
-  | 'morgana_the_shadow'
-  | 'artemis_the_swift'
-  | 'orion_the_mystic'
-  | 'phoenix_the_reborn'
-  | 'gale_the_windwalker'
-  | 'seraphiel_the_radiant'
-  | 'malachi_the_destroyer'
-  | 'selene_the_moonbow'
-  | 'raphael_the_eternal'
-  | 'michael_the_archangel'
-  | 'apollyon_the_fallen';
-
-/**
- * Video asset mappings for 5+ star hero cinematics
- * 
- * NOTE: Videos must be placed in /assets/videos/hero_5plus/ folder
- * Format: {hero_id}_5plus.mp4
- * 
- * PLACEHOLDER: Currently using require() with placeholder paths.
- * Replace with actual video files when available.
- */
+export type HeroId =
+  | 'azrael_the_fallen' | 'marcus_the_shield' | 'kane_the_berserker' | 'soren_the_flame'
+  | 'lysander_the_frost' | 'theron_the_storm' | 'kai_the_tempest' | 'robin_the_hunter'
+  | 'darius_the_void' | 'leon_the_paladin' | 'lucian_the_divine' | 'morgana_the_shadow'
+  | 'artemis_the_swift' | 'orion_the_mystic' | 'phoenix_the_reborn' | 'gale_the_windwalker'
+  | 'seraphiel_the_radiant' | 'malachi_the_destroyer' | 'selene_the_moonbow'
+  | 'raphael_the_eternal' | 'michael_the_archangel' | 'apollyon_the_fallen';
 
 // Video availability flag - set to true when actual videos are added
 export const VIDEOS_AVAILABLE = true;
 
-// Placeholder video source (can be a static image or loading animation)
-// This is returned when VIDEOS_AVAILABLE is false
-export const PLACEHOLDER_VIDEO = null;
+// require() returns a module id (number)
+export type CinematicModule = number;
 
 /**
  * Get the cinematic video source for a hero at 5+ star
  * @param heroId - The hero's unique identifier (must match exactly)
- * @returns Video require source or undefined if not available
+ * @returns Video module id or null if not available
  */
-export function getHeroCinematicVideo(heroId: string): any | undefined {
+export function getHeroCinematicVideo(heroId: string): CinematicModule | null {
   if (!VIDEOS_AVAILABLE) {
     if (__DEV__) {
       console.log(`[HeroCinematics] Videos not yet available. Hero: ${heroId}`);
     }
-    return undefined;
+    return null;
   }
   
-  return HERO_5PLUS_CINEMATICS[heroId as HeroId];
+  return HERO_5PLUS_CINEMATICS[heroId as HeroId] ?? null;
 }
 
 /**
@@ -80,10 +53,9 @@ export function hasCinematicVideo(heroId: string): boolean {
 
 /**
  * Hero cinematic video mappings
- * 
  * All 22 hero videos are now available
  */
-export const HERO_5PLUS_CINEMATICS: Partial<Record<HeroId, any>> = {
+export const HERO_5PLUS_CINEMATICS: Partial<Record<HeroId, CinematicModule>> = {
   azrael_the_fallen: require('../assets/videos/hero_5plus/azrael_the_fallen_5plus.mp4'),
   marcus_the_shield: require('../assets/videos/hero_5plus/marcus_the_shield_5plus.mp4'),
   kane_the_berserker: require('../assets/videos/hero_5plus/kane_the_berserker_5plus.mp4'),

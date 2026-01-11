@@ -460,6 +460,16 @@ export default function ProfileScreen() {
             <Ionicons name="open-outline" size={16} color={COLORS.cream.dark} />
           </TouchableOpacity>
 
+          {/* Terms of Service Link */}
+          <TouchableOpacity 
+            style={styles.privacyButton} 
+            onPress={() => Linking.openURL('https://raw.githubusercontent.com/WBZKLLC/idle-devotion-legal/f7f9cca412b9649f14797da1dc806ebc37e58ce2/TERMS_OF_SERVICE.md')}
+          >
+            <Ionicons name="reader-outline" size={20} color={COLORS.cream.soft} />
+            <Text style={styles.privacyText}>Terms of Service</Text>
+            <Ionicons name="open-outline" size={16} color={COLORS.cream.dark} />
+          </TouchableOpacity>
+
           {/* Logout Button */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={24} color={COLORS.cream.pure} />

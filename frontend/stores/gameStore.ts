@@ -420,12 +420,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     set({ isLoading: false });
     
-    if (!result) {
-      set({ error: 'Failed to pull gacha' });
-      throw new Error('Gacha pull failed');
+    if (!result.ok) {
+      // Server error detail is preserved in result.detail
+      set({ error: result.detail || 'Failed to pull gacha' });
+      throw new Error(result.detail || 'Gacha pull failed');
     }
     
-    return result;
+    return result.data;
   },
 
   upgradeHero: async (heroInstanceId: string) => {
@@ -449,9 +450,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     set({ isLoading: false });
     
-    if (!result) {
-      set({ error: 'Failed to upgrade hero' });
-      throw new Error('Hero upgrade failed');
+    if (!result.ok) {
+      set({ error: result.detail || 'Failed to upgrade hero' });
+      throw new Error(result.detail || 'Hero upgrade failed');
     }
   },
 
@@ -468,11 +469,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     );
     
-    if (!result) {
-      throw new Error('Failed to claim idle rewards');
+    if (!result.ok) {
+      throw new Error(result.detail || 'Failed to claim idle rewards');
     }
     
-    return result;
+    return result.data;
   },
 
   fetchCR: async () => {

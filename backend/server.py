@@ -8374,9 +8374,7 @@ async def list_redemption_codes():
 @api_router.post("/codes/redeem")
 async def redeem_code(username: str, code: str):
     """Redeem a code for rewards"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Normalize code (uppercase)
     code = code.strip().upper()

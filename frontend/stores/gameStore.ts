@@ -394,58 +394,79 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   pullGacha: async (pullType: 'single' | 'multi', currencyType: 'gems' | 'coins') => {
-    const { user } = get();
+    const { user, fetchUser, fetchUserHeroes } = get();
     if (!user) throw new Error('No user found');
     
-    set({ isLoading: true });
-    try {
-      // Uses centralized API wrapper from lib/api.ts
-      const result = await apiPullGacha(user.username, pullType, currencyType);
-      
-      // Refresh user and heroes data
-      await get().fetchUser();
-      await get().fetchUserHeroes();
-      
-      set({ isLoading: false });
-      return result;
-    } catch (error: any) {
-      set({ error: error.response?.data?.detail || error?.message || 'Failed to pull gacha', isLoading: false });
-      throw error;
+    set({ isLoading: true, error: null });
+    
+    const result = await safeMutation(
+      'pullGacha',
+      () => apiPullGacha(user.username, pullType, currencyType),
+      {
+        refreshUser: true,
+        fetchUserFn: fetchUser,
+        onSuccess: async () => {
+          // Also refresh heroes after gacha
+          await fetchUserHeroes();
+        },
+      }
+    );
+    
+    set({ isLoading: false });
+    
+    if (!result) {
+      set({ error: 'Failed to pull gacha' });
+      throw new Error('Gacha pull failed');
     }
+    
+    return result;
   },
 
   upgradeHero: async (heroInstanceId: string) => {
-    const { user } = get();
+    const { user, fetchUser, fetchUserHeroes } = get();
     if (!user) throw new Error('No user found');
     
-    set({ isLoading: true });
-    try {
-      // Uses centralized API wrapper from lib/api.ts
-      await apiUpgradeHero(user.username, heroInstanceId);
-      
-      // Refresh heroes data
-      await get().fetchUserHeroes();
-      set({ isLoading: false });
-    } catch (error: any) {
-      set({ error: error.response?.data?.detail || error?.message || 'Failed to upgrade hero', isLoading: false });
-      throw error;
+    set({ isLoading: true, error: null });
+    
+    const result = await safeMutation(
+      'upgradeHero',
+      () => apiUpgradeHero(user.username, heroInstanceId),
+      {
+        refreshUser: true,
+        fetchUserFn: fetchUser,
+        onSuccess: async () => {
+          // Also refresh heroes after upgrade
+          await fetchUserHeroes();
+        },
+      }
+    );
+    
+    set({ isLoading: false });
+    
+    if (!result) {
+      set({ error: 'Failed to upgrade hero' });
+      throw new Error('Hero upgrade failed');
     }
   },
 
   claimIdleRewards: async () => {
-    const { user } = get();
+    const { user, fetchUser } = get();
     if (!user) throw new Error('No user found');
     
-    try {
-      const data = await claimIdle(user.username);
-      
-      // Refresh user data
-      await get().fetchUser();
-      return data;
-    } catch (error) {
-      console.error('Failed to claim idle rewards:', error);
-      throw error;
+    const result = await safeMutation(
+      'claimIdleRewards',
+      () => claimIdle(user.username),
+      {
+        refreshUser: true,
+        fetchUserFn: fetchUser,
+      }
+    );
+    
+    if (!result) {
+      throw new Error('Failed to claim idle rewards');
     }
+    
+    return result;
   },
 
   fetchCR: async () => {

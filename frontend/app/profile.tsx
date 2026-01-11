@@ -450,6 +450,16 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           )}
 
+          {/* Privacy Policy Link */}
+          <TouchableOpacity 
+            style={styles.privacyButton} 
+            onPress={() => Linking.openURL('https://raw.githubusercontent.com/WBZKLLC/idle-devotion-legal/3ac3346b1366f21306c49b187459798e6c26cacf/PRIVACY_POLICY.md')}
+          >
+            <Ionicons name="document-text-outline" size={20} color={COLORS.cream.soft} />
+            <Text style={styles.privacyText}>Privacy Policy</Text>
+            <Ionicons name="open-outline" size={16} color={COLORS.cream.dark} />
+          </TouchableOpacity>
+
           {/* Logout Button */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={24} color={COLORS.cream.pure} />

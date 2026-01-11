@@ -316,19 +316,18 @@ class IdentityHardeningTester:
             self.log_test("F1: Chat Send", False, f"Chat send failed: {response}")
             return False
             
-        # Check that message was sent successfully
-        if "message" not in response:
-            self.log_test("F1: Chat Send", False, "No message confirmation in response")
+        # Check that message was sent successfully (response is the message itself)
+        if "id" not in response:
+            self.log_test("F1: Chat Send", False, "No message ID in response")
             return False
             
         # Verify sender is derived from JWT (server-authoritative)
-        sent_message = response["message"]
-        if not sent_message.get("sender_id"):
+        if not response.get("sender_id"):
             self.log_test("F2: Server-Authoritative Sender", False, "No sender_id in message")
             return False
             
         self.log_test("F1: Chat Send", True, "Chat message sent successfully")
-        self.log_test("F2: Server-Authoritative Sender", True, f"Sender ID derived from JWT: {sent_message.get('sender_id')}")
+        self.log_test("F2: Server-Authoritative Sender", True, f"Sender ID derived from JWT: {response.get('sender_id')}")
         return True
     
     def run_all_tests(self) -> bool:

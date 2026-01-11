@@ -1625,6 +1625,10 @@ async def startup_event():
     await init_heroes()
     await init_islands_and_chapters()
     
+    # SECURITY: Enforce single admin (only ADAM)
+    await enforce_single_admin()
+    print(f"✅ Admin enforcement complete. Super admin: {SUPER_ADMIN_USERNAME}")
+    
     # Create chat indexes for performance
     await db.chat_messages.create_index([("channel_type", 1), ("timestamp", -1)])
     await db.chat_messages.create_index([("sender_id", 1)])

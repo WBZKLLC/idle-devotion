@@ -190,23 +190,107 @@ export default function ChatScreen() {
   const handleSendMessage = async () => {
     if (!user || !newMessage.trim()) return;
     
+    // Clear any previous rate limit message
+    setRateLimitMessage(null);
+    
     setSending(true);
     try {
+      // Generate client message ID for idempotency
+      const clientMsgId = `${user.username}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       await sendChatMessage({
         username: user.username,
         channel_type: selectedChannel,
         message: newMessage.trim(),
         language: selectedLanguage,
+        client_msg_id: clientMsgId,
       });
       
       setNewMessage('');
       await loadMessages();
       scrollViewRef.current?.scrollToEnd({ animated: true });
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to send message');
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail || 'Failed to send message';
+      
+      if (status === 429) {
+        // Rate limited
+        setRateLimitMessage(detail);
+        setTimeout(() => setRateLimitMessage(null), 5000);
+      } else if (status === 403) {
+        // Muted or banned
+        Alert.alert('Chat Restricted', detail);
+      } else if (status === 400) {
+        // Validation error (PII, URL, etc.)
+        Alert.alert('Message Blocked', detail);
+      } else {
+        Alert.alert('Error', detail);
+      }
     } finally {
       setSending(false);
     }
+  };
+
+  const handleReportMessage = (msg: ChatMessage) => {
+    if (msg.sender_username === user?.username) {
+      Alert.alert('Error', 'You cannot report your own message');
+      return;
+    }
+    setReportTarget(msg);
+    setSelectedReason('');
+    setReportDetails('');
+    setShowReportModal(true);
+  };
+
+  const submitReport = async () => {
+    if (!user || !reportTarget || !selectedReason) {
+      Alert.alert('Error', 'Please select a reason');
+      return;
+    }
+    
+    setReporting(true);
+    try {
+      await reportChatMessage({
+        reporter_username: user.username,
+        reported_username: reportTarget.sender_username,
+        reason: selectedReason,
+        message_id: reportTarget.id,
+        details: reportDetails.trim() || undefined,
+      });
+      
+      Alert.alert('Report Submitted', 'Thank you for helping keep our community safe. We will review this report.');
+      setShowReportModal(false);
+      setReportTarget(null);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to submit report');
+    } finally {
+      setReporting(false);
+    }
+  };
+
+  const handleBlockUser = async (username: string) => {
+    if (!user) return;
+    
+    Alert.alert(
+      'Block User',
+      `Are you sure you want to block ${username}? You won't see their messages anymore.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await blockChatUser(user.username, username);
+              Alert.alert('Blocked', `${username} has been blocked`);
+              await loadMessages(); // Refresh to hide their messages
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.detail || 'Failed to block user');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleEquipBubble = async (bubbleId: string) => {

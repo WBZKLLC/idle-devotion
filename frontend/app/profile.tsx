@@ -11,6 +11,7 @@ import {
   TextInput,
   ActivityIndicator,
   FlatList,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';

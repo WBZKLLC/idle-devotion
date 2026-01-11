@@ -12,12 +12,17 @@ import {
   Image,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
+import { useEntitlementStore } from '../stores/entitlementStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { getTeamsFull, updateTeamSlots, createTeamFull, setActiveTeam } from '../lib/api';
+
+// CANONICAL combat stats and power helpers
+import { computeCombatStats } from '../lib/combatStats';
+import { computePower } from '../lib/power';
 
 interface TeamSlot {
   slot: number;

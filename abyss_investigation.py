@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://paywall-ui.preview.emergentagent.com/api"
+BASE_URL = "https://stat-boost-system.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

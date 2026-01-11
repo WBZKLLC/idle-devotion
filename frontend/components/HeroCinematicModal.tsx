@@ -242,8 +242,41 @@ export default function HeroCinematicModal({
                 subtitle={error}
                 onClose={handleClose} 
               />
+            ) : Platform.OS === 'web' && typeof videoSource === 'string' ? (
+              /* Web: use native HTML5 video for better compatibility */
+              <video
+                src={videoSource}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  maxWidth: SCREEN_WIDTH,
+                  maxHeight: SCREEN_HEIGHT * 0.6,
+                  objectFit: 'contain',
+                  backgroundColor: 'transparent',
+                }}
+                autoPlay
+                playsInline
+                onLoadStart={() => {
+                  logCine('web:loadStart', { heroKey });
+                  setIsLoading(true);
+                }}
+                onCanPlay={() => {
+                  logCine('web:canPlay', { heroKey });
+                  setIsLoading(false);
+                }}
+                onEnded={() => {
+                  logCine('web:ended', { heroKey });
+                }}
+                onError={(e) => {
+                  const target = e.target as HTMLVideoElement;
+                  const errMsg = target?.error?.message ?? 'Video playback failed';
+                  logCine('web:error', { heroKey, error: errMsg, code: target?.error?.code });
+                  setError(errMsg);
+                  setIsLoading(false);
+                }}
+              />
             ) : (
-              /* Video player - normalized source for cross-platform */
+              /* Native: use expo-av Video component */
               <Video
                 ref={videoRef}
                 source={normalizedSource as any}
@@ -251,7 +284,7 @@ export default function HeroCinematicModal({
                 resizeMode={ResizeMode.CONTAIN}
                 shouldPlay={visible && !error}
                 isLooping={false}
-                useNativeControls={Platform.OS === 'web'}
+                useNativeControls={false}
                 onLoadStart={handleLoadStart}
                 onLoad={handleLoad}
                 onPlaybackStatusUpdate={handlePlaybackStatusUpdate}

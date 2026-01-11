@@ -3,7 +3,7 @@
 // Screens should import from here to prevent endpoint string drift
 
 import axios, { AxiosError } from 'axios';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 
 const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
 const API_BASE = RAW
@@ -21,14 +21,16 @@ export const api = axios.create({
 // ─────────────────────────────────────────────────────────────
 
 let _lastAlertTime = 0;
-let _forceLogoutCallback: (() => void) | null = null;
+let _forceLogoutCallback: (() => Promise<void>) | null = null;
+let _isLoggingOut = false;  // Prevent multiple logout triggers
 const ALERT_DEBOUNCE_MS = 3000;
 
 /**
  * Register the logout callback from gameStore.
  * Called once during app initialization.
+ * Callback MUST clear persisted storage (AsyncStorage/SecureStore).
  */
-export function apiSetForceLogoutCallback(cb: () => void) {
+export function apiSetForceLogoutCallback(cb: () => Promise<void>) {
   _forceLogoutCallback = cb;
 }
 
@@ -44,6 +46,24 @@ function _showErrorAlert(title: string, message: string) {
     Alert.alert(title, message);
   }
   console.error(`[API] ${title}: ${message}`);
+}
+
+/**
+ * Mark an error as globally handled to prevent duplicate alerts.
+ * Screens should check this before showing their own alerts.
+ */
+export function markErrorHandled(error: any): void {
+  if (error && typeof error === 'object') {
+    error._handledGlobally = true;
+  }
+}
+
+/**
+ * Check if an error was already handled by the global interceptor.
+ * Use this in catch blocks to avoid duplicate alerts.
+ */
+export function isErrorHandledGlobally(error: any): boolean {
+  return error?._handledGlobally === true;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -83,8 +103,9 @@ api.interceptors.request.use(
 
 // ─────────────────────────────────────────────────────────────
 // GLOBAL RESPONSE INTERCEPTOR
-// Centralized handling for 401/403/429/5xx
+// Centralized handling for 401/403/429/4xx/5xx
 // All screens automatically inherit this behavior
+// Marks errors as _handledGlobally to prevent duplicate alerts
 // ─────────────────────────────────────────────────────────────
 
 api.interceptors.response.use(
@@ -92,7 +113,7 @@ api.interceptors.response.use(
   (response) => response,
   
   // Error - centralized handling
-  (error: AxiosError<{ detail?: string }>) => {
+  async (error: AxiosError<{ detail?: string }>) => {
     const status = error.response?.status;
     const detail = error.response?.data?.detail || error.message || 'Unknown error';
     const retryAfter = error.response?.headers?.['retry-after'];
@@ -100,17 +121,33 @@ api.interceptors.response.use(
     // Log all errors for debugging
     console.error(`[API] ${error.config?.method?.toUpperCase()} ${error.config?.url} → ${status || 'NETWORK'}: ${detail}`);
     
+    // Mark as handled BEFORE showing alert (prevents duplicate handling)
+    markErrorHandled(error);
+    
     switch (status) {
       case 401:
         // Session expired or invalid token
-        // Clear token and force re-login
-        apiSetAuthToken(null);
-        _showErrorAlert('Session Expired', 'Please log in again.');
-        
-        // Trigger logout callback if registered (clears store, navigates to login)
-        // Do NOT call API endpoints here to avoid infinite loops
-        if (_forceLogoutCallback) {
-          setTimeout(() => _forceLogoutCallback?.(), 100);
+        // Guard against multiple logout triggers
+        if (!_isLoggingOut) {
+          _isLoggingOut = true;
+          
+          // Clear token immediately (in-memory)
+          apiSetAuthToken(null);
+          
+          _showErrorAlert('Session Expired', 'Please log in again.');
+          
+          // Trigger logout callback (clears store + persisted storage)
+          // Do NOT call API endpoints here to avoid infinite loops
+          if (_forceLogoutCallback) {
+            try {
+              await _forceLogoutCallback();
+            } catch (e) {
+              console.error('[API] Force logout callback failed:', e);
+            }
+          }
+          
+          // Reset flag after a delay to allow re-triggering if needed
+          setTimeout(() => { _isLoggingOut = false; }, 1000);
         }
         break;
         
@@ -127,6 +164,18 @@ api.interceptors.response.use(
         _showErrorAlert('Too Many Requests', retryMsg);
         break;
         
+      case 400:
+      case 422:
+        // Validation / bad request - show server detail
+        _showErrorAlert('Request Error', detail);
+        break;
+        
+      case 404:
+        // Not found - only show if it's a user-facing request
+        // (Some 404s are expected during data loading)
+        _showErrorAlert('Not Found', detail);
+        break;
+        
       default:
         if (status && status >= 500) {
           // Server error
@@ -135,11 +184,12 @@ api.interceptors.response.use(
           // Network error (no response)
           _showErrorAlert('Network Error', 'Please check your connection and try again.');
         }
-        // 4xx errors (except 401/403/429) are passed through for screen-level handling
+        // Other 4xx errors are still marked as handled but may not show alert
         break;
     }
     
     // Always reject so screens can handle specific cases if needed
+    // Error is now marked with _handledGlobally = true
     return Promise.reject(error);
   }
 );

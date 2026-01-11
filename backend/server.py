@@ -132,12 +132,14 @@ def verify_token(token: str) -> Optional[dict]:
         return None
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get current user from JWT token.
+    """Get current user from JWT token with full revocation enforcement.
     
     SECURITY: 
     - JWT 'sub' MUST be the immutable UUID "id" field
     - Only queries by {"id": sub} - no ObjectId fallback
     - Validates sub is UUID format before querying
+    - Enforces token revocation (by jti and by tokens_valid_after)
+    - Rejects frozen accounts
     """
     if not credentials:
         return None
@@ -148,17 +150,43 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         return None
     
     user_id = payload.get("sub")
+    jti = payload.get("jti")
+    iat = payload.get("iat")
+    
     if not user_id:
         return None
     
     # SECURITY: Validate user_id is UUID format (no ObjectId allowed)
     try:
-        uuid.UUID(user_id)  # Raises ValueError if not valid UUID
+        uuid.UUID(user_id)
     except (ValueError, TypeError):
         return None  # Reject non-UUID tokens
     
     # Query ONLY by UUID "id" field
     user = await db.users.find_one({"id": user_id})
+    if not user:
+        return None
+    
+    # SECURITY: Check if account is frozen
+    if user.get("account_frozen"):
+        return None
+    
+    # SECURITY: Check tokens_valid_after (mass revocation)
+    if iat:
+        token_iat_dt = datetime.utcfromtimestamp(iat)
+        tokens_valid_after = user.get("tokens_valid_after")
+        if tokens_valid_after and token_iat_dt < tokens_valid_after:
+            return None  # Token was issued before revocation
+    
+    # SECURITY: Check individual token revocation (by jti)
+    if jti and await is_token_revoked(jti):
+        return None
+    
+    # Attach token info for downstream use
+    user["_auth_jti"] = jti
+    user["_auth_iat"] = iat
+    user["_auth_exp"] = payload.get("exp")
+    
     return user
 
 # =============================================================================

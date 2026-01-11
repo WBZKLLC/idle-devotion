@@ -200,9 +200,12 @@ export default function HeroCinematicModal({
       statusBarTranslucent
     >
       <View style={styles.overlay}>
+        {/* Tap anywhere to close */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         <LinearGradient
           colors={['rgba(0,0,0,0.95)', 'rgba(10,10,30,0.98)', 'rgba(0,0,0,0.95)']}
           style={styles.gradientBackground}
+          pointerEvents="box-none"
         >
           {/* Header */}
           <View style={styles.header}>

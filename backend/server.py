@@ -321,6 +321,23 @@ def canonicalize_username(username: str) -> str:
     """
     return username.strip().lower()
 
+def assert_account_active(user: dict):
+    """
+    Assert that a user account is not frozen.
+    
+    MUST be called on ALL mutation endpoints (economy, upgrades, purchases, etc.)
+    to ensure frozen accounts cannot modify any state.
+    
+    Raises:
+        HTTPException: 403 if account is frozen
+    """
+    if user.get("account_frozen"):
+        raise HTTPException(
+            status_code=403, 
+            detail="Account is frozen. Contact support.",
+            headers={"X-Frozen-Reason": "account_frozen"}
+        )
+
 def is_super_admin(user: dict) -> bool:
     """Check if user is the super admin via canonical username.
     

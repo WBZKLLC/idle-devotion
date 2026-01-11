@@ -253,8 +253,8 @@ export default function ChatScreen() {
     
     setReporting(true);
     try {
+      // Server derives reporter from JWT - do NOT pass reporter_username
       await reportChatMessage({
-        reporter_username: user.username,
         reported_username: reportTarget.sender_username,
         reason: selectedReason,
         message_id: reportTarget.id,
@@ -265,18 +265,23 @@ export default function ChatScreen() {
       setShowReportModal(false);
       setReportTarget(null);
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to submit report');
+      const status = error.response?.status;
+      if (status === 401) {
+        Alert.alert('Authentication Required', 'Please log in to report messages');
+      } else {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to submit report');
+      }
     } finally {
       setReporting(false);
     }
   };
 
-  const handleBlockUser = async (username: string) => {
+  const handleBlockUser = async (usernameToBlock: string) => {
     if (!user) return;
     
     Alert.alert(
       'Block User',
-      `Are you sure you want to block ${username}? You won't see their messages anymore.`,
+      `Are you sure you want to block ${usernameToBlock}? You won't see their messages anymore.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -284,11 +289,17 @@ export default function ChatScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await blockChatUser(user.username, username);
-              Alert.alert('Blocked', `${username} has been blocked`);
+              // Server derives current user from JWT - do NOT pass username
+              await blockChatUser(usernameToBlock);
+              Alert.alert('Blocked', `${usernameToBlock} has been blocked`);
               await loadMessages(); // Refresh to hide their messages
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.detail || 'Failed to block user');
+              const status = error.response?.status;
+              if (status === 401) {
+                Alert.alert('Authentication Required', 'Please log in to block users');
+              } else {
+                Alert.alert('Error', error.response?.data?.detail || 'Failed to block user');
+              }
             }
           }
         }

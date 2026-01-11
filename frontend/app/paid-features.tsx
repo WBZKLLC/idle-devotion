@@ -26,12 +26,13 @@ import { useEntitlementStore } from '../stores/entitlementStore';
 import COLORS from '../theme/colors';
 
 export default function PaidFeaturesScreen() {
-  const hasEntitlement = useEntitlementStore(s => s.hasEntitlement);
+  // Subscribe directly to entitlements state for proper reactivity
+  const entitlements = useEntitlementStore(s => s.entitlements);
   const grantDev = useEntitlementStore(s => s.grantEntitlementDevOnly);
   const revokeDev = useEntitlementStore(s => s.revokeEntitlementDevOnly);
 
   const item = useMemo(() => ENTITLEMENTS.PAID_CINEMATICS, []);
-  const owned = hasEntitlement('PAID_CINEMATICS');
+  const owned = Boolean(entitlements?.PAID_CINEMATICS);
 
   const handlePurchase = () => {
     Alert.alert(

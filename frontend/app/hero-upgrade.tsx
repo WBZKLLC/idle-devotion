@@ -176,6 +176,13 @@ export default function HeroUpgradeScreen() {
 
   const heroData = heroDetails.hero_data;
   const stats = heroDetails.calculated_stats;
+  
+  // Apply premium cinematic bonus to display stats
+  const actualHeroId = heroDetails?.hero_id || heroDetails?.user_hero?.hero_id || heroId || '';
+  const owned = hasHeroPremiumCinematicOwned(actualHeroId);
+  const bonus = premiumCinematicOwnershipBonus(owned);
+  const displayHp = Math.floor((stats?.hp ?? 0) * bonus.hpMult);
+  const displayAtk = Math.floor((stats?.atk ?? 0) * bonus.atkMult);
 
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>

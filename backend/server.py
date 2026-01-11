@@ -81,6 +81,12 @@ SECRET_KEY = os.environ.get("JWT_SECRET_KEY", secrets.token_hex(32))
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24 * 7  # 7 days
 
+# =============================================================================
+# SUPER ADMIN CONFIGURATION (Server-enforced, single admin)
+# =============================================================================
+SUPER_ADMIN_USERNAME = os.environ.get("SUPER_ADMIN_USERNAME", "ADAM")
+ADMIN_MFA_BYPASS = os.environ.get("ADMIN_MFA_BYPASS", "true").lower() == "true"  # Dev mode
+
 # Security
 security = HTTPBearer(auto_error=False)
 
@@ -123,6 +129,111 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     
     user = await db.users.find_one({"username": username})
     return user
+
+# =============================================================================
+# SUPER ADMIN HELPERS (Server-authoritative, JWT-bound)
+# =============================================================================
+
+def get_user_id(user: dict) -> str:
+    """Standardized helper to get user ID from user dict (handles both 'id' and '_id')"""
+    return str(user.get("id") or user.get("_id") or "")
+
+def is_super_admin(user: dict) -> bool:
+    """Check if user is the super admin (ADAM). Case-insensitive."""
+    if not user:
+        return False
+    username = user.get("username") or ""
+    return username.upper() == SUPER_ADMIN_USERNAME.upper()
+
+async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Dependency that requires the super admin (ADAM) to be authenticated.
+    
+    - Returns 401 if not logged in
+    - Returns 403 if logged in but not ADAM
+    - Returns the admin user dict if valid
+    
+    NEVER trust client-provided admin_username - always derive from JWT.
+    """
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    token = credentials.credentials
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    if not is_super_admin(user):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Optional: MFA check for production
+    # if user.get("mfa_enabled") and not ADMIN_MFA_BYPASS:
+    #     mfa_code = request.headers.get("X-Admin-MFA")
+    #     if not validate_totp(user.get("mfa_secret"), mfa_code):
+    #         raise HTTPException(status_code=403, detail="MFA required")
+    
+    return user
+
+async def enforce_single_admin():
+    """
+    Startup safety check: Ensure only ADAM has is_admin=True.
+    Any other user with is_admin=True gets it removed.
+    """
+    # Remove is_admin from any user that isn't ADAM
+    result = await db.users.update_many(
+        {
+            "username": {"$ne": SUPER_ADMIN_USERNAME, "$regex": f"^(?!{SUPER_ADMIN_USERNAME}$)", "$options": "i"},
+            "is_admin": True
+        },
+        {"$set": {"is_admin": False}}
+    )
+    if result.modified_count > 0:
+        print(f"⚠️ WARNING: Removed is_admin from {result.modified_count} unauthorized user(s)")
+    
+    # Ensure ADAM has is_admin=True (case-insensitive)
+    await db.users.update_one(
+        {"username": {"$regex": f"^{SUPER_ADMIN_USERNAME}$", "$options": "i"}},
+        {"$set": {"is_admin": True}}
+    )
+
+async def log_admin_action(
+    admin_user: dict,
+    action_type: str,
+    target_user_id: str,
+    target_username: str,
+    reason: str,
+    request: Request = None,
+    duration_minutes: Optional[int] = None,
+    notes: Optional[str] = None
+):
+    """Log an admin action with full audit trail"""
+    action = ChatModerationAction(
+        user_id=target_user_id,
+        username=target_username,
+        action_type=action_type,
+        reason=reason,
+        duration_minutes=duration_minutes,
+        issued_by=admin_user.get("username", "UNKNOWN"),
+        notes=notes
+    )
+    
+    action_dict = action.dict()
+    
+    # Add audit metadata
+    if request:
+        action_dict["audit_ip"] = request.client.host if request.client else None
+        action_dict["audit_user_agent"] = request.headers.get("user-agent")
+    
+    await db.chat_moderation_log.insert_one(action_dict)
+    return action
 
 # AI Narration setup
 try:

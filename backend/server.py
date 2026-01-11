@@ -2553,9 +2553,7 @@ async def user_login(username: str):
 @api_router.post("/user/{username}/profile-picture")
 async def update_profile_picture(username: str, hero_id: str):
     """Update user's profile picture to a hero they own"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     # Verify user owns this hero
     user_hero = await db.user_heroes.find_one({"user_id": user_data["id"], "hero_id": hero_id})

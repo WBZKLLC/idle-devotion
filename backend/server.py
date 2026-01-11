@@ -4912,22 +4912,30 @@ async def admin_get_moderation_log(
     return [convert_objectid(log) for log in logs]
 
 
-# ==================== DATA RETENTION & DELETION ====================
+# ==================== DATA RETENTION & DELETION (SERVER-AUTHORITATIVE) ====================
 
-@api_router.delete("/chat/user-data/{username}")
-async def delete_user_chat_data(username: str, confirm: bool = False):
+@api_router.delete("/chat/user-data")
+async def delete_user_chat_data(
+    confirm: bool = False,
+    current_user: dict = Depends(get_current_user),
+):
     """
-    Delete all chat data for a user (for account deletion requests)
-    Requires confirm=true to proceed
+    Delete all chat data for the authenticated user (SELF-ONLY)
+    
+    Requires confirm=true to proceed.
+    User can only delete their own data.
     """
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
     if not confirm:
         raise HTTPException(status_code=400, detail="Must set confirm=true to delete data")
     
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    username = current_user.get("username")
+    user_id = str(current_user.get("id") or current_user.get("_id") or "")
     
-    user_id = user["id"]
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
     # Delete all messages by this user
     msg_result = await db.chat_messages.delete_many({"sender_id": user_id})

@@ -101,6 +101,9 @@ export default function HeroDetailScreen() {
   // Use hero?.id in deps to avoid reference changes causing hooks mismatch
   const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero?.id, hero?.stars, hero?.awakening_level]);
 
+  // CANONICAL combat stats with all bonuses applied (cinematic ownership, etc.)
+  const combatStats = useMemo(() => computeCombatStats(hero, heroData), [hero, heroData]);
+
   // Enforce tier gating reactively - if hero data changes, clamp selectedTier
   useEffect(() => {
     if (!hero) return;

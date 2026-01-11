@@ -5792,6 +5792,682 @@ async def admin_give_hero(
     }
 
 
+# =============================================================================
+# GOD MODE: HERO MANAGEMENT
+# =============================================================================
+
+class SetHeroStateRequest(BaseModel):
+    target_username: str
+    hero_id: str
+    stars: Optional[int] = None  # 1-7
+    level: Optional[int] = None  # 1-300
+    awakening_level: Optional[int] = None  # 0-5
+    skill_levels: Optional[dict] = None  # {"skill_1": 5, "skill_2": 3}
+    reason: str = "Admin adjustment"
+
+@api_router.post("/admin/hero/set-state")
+async def admin_set_hero_state(
+    request: Request,
+    payload: SetHeroStateRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Set specific hero state for a user's hero.
+    
+    Only specified fields are updated. Unspecified fields remain unchanged.
+    """
+    target = await db.users.find_one({"username_canon": canonicalize_username(payload.target_username)})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Find user's hero
+    user_hero = await db.user_heroes.find_one({
+        "username": target["username"],
+        "hero_data.id": payload.hero_id
+    })
+    
+    if not user_hero:
+        raise HTTPException(status_code=404, detail="User does not own this hero")
+    
+    # Build update and track changes
+    update_fields = {}
+    fields_changed = {}
+    
+    if payload.stars is not None:
+        if not 1 <= payload.stars <= 7:
+            raise HTTPException(status_code=400, detail="Stars must be 1-7")
+        fields_changed["stars"] = {"old": user_hero.get("stars", 1), "new": payload.stars}
+        update_fields["stars"] = payload.stars
+    
+    if payload.level is not None:
+        if not 1 <= payload.level <= 300:
+            raise HTTPException(status_code=400, detail="Level must be 1-300")
+        fields_changed["level"] = {"old": user_hero.get("level", 1), "new": payload.level}
+        update_fields["level"] = payload.level
+    
+    if payload.awakening_level is not None:
+        if not 0 <= payload.awakening_level <= 5:
+            raise HTTPException(status_code=400, detail="Awakening level must be 0-5")
+        fields_changed["awakening_level"] = {"old": user_hero.get("awakening_level", 0), "new": payload.awakening_level}
+        update_fields["awakening_level"] = payload.awakening_level
+    
+    if payload.skill_levels is not None:
+        fields_changed["skill_levels"] = {"old": user_hero.get("skill_levels", {}), "new": payload.skill_levels}
+        update_fields["skill_levels"] = payload.skill_levels
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    await db.user_heroes.update_one(
+        {"_id": user_hero["_id"]},
+        {"$set": update_fields}
+    )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="set_hero_state",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed={"hero_id": payload.hero_id, **fields_changed},
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Updated {payload.hero_id} for {payload.target_username}",
+        "changes": fields_changed
+    }
+
+
+class RevokeHeroRequest(BaseModel):
+    target_username: str
+    hero_id: str
+    reason: str = "Admin revocation"
+
+@api_router.post("/admin/hero/revoke")
+async def admin_revoke_hero(
+    request: Request,
+    payload: RevokeHeroRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Remove a hero from a user's roster.
+    """
+    target = await db.users.find_one({"username_canon": canonicalize_username(payload.target_username)})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Find and remove hero
+    result = await db.user_heroes.delete_one({
+        "username": target["username"],
+        "hero_data.id": payload.hero_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User does not own this hero")
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="revoke_hero",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed={"hero_id": payload.hero_id, "action": "removed"},
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Revoked {payload.hero_id} from {payload.target_username}"
+    }
+
+
+# =============================================================================
+# GOD MODE: ACCOUNT MANAGEMENT
+# =============================================================================
+
+class FreezeAccountRequest(BaseModel):
+    target_username: str
+    freeze: bool = True
+    reason: str = "Admin action"
+
+@api_router.post("/admin/account/freeze")
+async def admin_freeze_account(
+    request: Request,
+    payload: FreezeAccountRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Freeze/unfreeze a user account.
+    
+    Frozen accounts cannot:
+    - Login (existing JWTs are invalidated)
+    - Perform any game actions
+    """
+    # SECURITY: Cannot freeze the super admin
+    if canonicalize_username(payload.target_username) == SUPER_ADMIN_CANON:
+        raise HTTPException(status_code=403, detail="Cannot freeze super admin account")
+    
+    target = await db.users.find_one({"username_canon": canonicalize_username(payload.target_username)})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    old_frozen = target.get("account_frozen", False)
+    
+    # Update freeze status and invalidate tokens
+    update_data = {
+        "account_frozen": payload.freeze,
+        "frozen_at": datetime.utcnow() if payload.freeze else None,
+        "frozen_reason": payload.reason if payload.freeze else None,
+    }
+    
+    if payload.freeze:
+        update_data["token_invalidated_at"] = datetime.utcnow()
+    
+    await db.users.update_one(
+        {"username_canon": canonicalize_username(payload.target_username)},
+        {"$set": update_data}
+    )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="freeze_account" if payload.freeze else "unfreeze_account",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed={"account_frozen": {"old": old_frozen, "new": payload.freeze}},
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"{'Froze' if payload.freeze else 'Unfroze'} account {payload.target_username}"
+    }
+
+
+# =============================================================================
+# GOD MODE: CHAT MESSAGE MANAGEMENT
+# =============================================================================
+
+class DeleteMessageRequest(BaseModel):
+    message_id: str
+    reason: str = "Admin deletion"
+
+@api_router.post("/admin/chat/delete-message")
+async def admin_delete_message(
+    request: Request,
+    payload: DeleteMessageRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Soft-delete a chat message.
+    
+    Message is marked as deleted but retained for audit purposes.
+    """
+    message = await db.chat_messages.find_one({"id": payload.message_id})
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Soft delete
+    await db.chat_messages.update_one(
+        {"id": payload.message_id},
+        {"$set": {
+            "deleted": True,
+            "deleted_at": datetime.utcnow(),
+            "deleted_by": admin_user.get("username"),
+            "deletion_reason": payload.reason,
+            "original_message": message.get("message", "")  # Preserve for audit
+        }}
+    )
+    
+    # Clear the visible message
+    await db.chat_messages.update_one(
+        {"id": payload.message_id},
+        {"$set": {"message": "[Message deleted by admin]"}}
+    )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="delete_message",
+        target_username=message.get("sender_username", "unknown"),
+        target_user_id=message.get("sender_id", "unknown"),
+        fields_changed={"message_id": payload.message_id, "original_preview": message.get("message", "")[:100]},
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Deleted message {payload.message_id}"
+    }
+
+
+# =============================================================================
+# GOD MODE: LIVE-OPS
+# =============================================================================
+
+class BroadcastAnnouncementRequest(BaseModel):
+    title: str
+    message: str
+    priority: str = "normal"  # normal, important, urgent
+    expires_at: Optional[str] = None  # ISO datetime string
+    target_audience: str = "all"  # all, vip, new_users
+
+@api_router.post("/admin/liveops/announcement")
+async def admin_broadcast_announcement(
+    request: Request,
+    payload: BroadcastAnnouncementRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Broadcast an in-game announcement to all users.
+    """
+    announcement = {
+        "id": str(uuid.uuid4()),
+        "title": payload.title,
+        "message": payload.message,
+        "priority": payload.priority,
+        "target_audience": payload.target_audience,
+        "created_at": datetime.utcnow(),
+        "created_by": admin_user.get("username"),
+        "expires_at": datetime.fromisoformat(payload.expires_at) if payload.expires_at else None,
+        "active": True
+    }
+    
+    await db.announcements.insert_one(announcement)
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="broadcast_announcement",
+        target_username="*",
+        target_user_id="*",
+        fields_changed={"announcement_id": announcement["id"], "title": payload.title},
+        reason=f"Broadcast: {payload.title}",
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "announcement_id": announcement["id"],
+        "message": f"Announcement '{payload.title}' broadcasted"
+    }
+
+
+@api_router.get("/admin/liveops/announcements")
+async def admin_get_announcements(
+    active_only: bool = True,
+    limit: int = 50,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: View all announcements.
+    """
+    query = {"active": True} if active_only else {}
+    announcements = await db.announcements.find(query).sort("created_at", -1).limit(limit).to_list(limit)
+    return [convert_objectid(a) for a in announcements]
+
+
+@api_router.delete("/admin/liveops/announcement/{announcement_id}")
+async def admin_delete_announcement(
+    request: Request,
+    announcement_id: str,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Deactivate an announcement.
+    """
+    result = await db.announcements.update_one(
+        {"id": announcement_id},
+        {"$set": {"active": False, "deactivated_at": datetime.utcnow()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="delete_announcement",
+        target_username="*",
+        target_user_id="*",
+        fields_changed={"announcement_id": announcement_id},
+        reason="Deactivated announcement",
+        request=request,
+    )
+    
+    return {"success": True, "message": "Announcement deactivated"}
+
+
+class FeatureFlagRequest(BaseModel):
+    flag_name: str
+    enabled: bool
+    reason: str = "Admin toggle"
+
+@api_router.post("/admin/liveops/feature-flag")
+async def admin_toggle_feature_flag(
+    request: Request,
+    payload: FeatureFlagRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Toggle a feature flag.
+    
+    Feature flags control runtime behavior without code deployment.
+    """
+    # Get current state
+    existing = await db.feature_flags.find_one({"name": payload.flag_name})
+    old_value = existing.get("enabled", False) if existing else False
+    
+    await db.feature_flags.update_one(
+        {"name": payload.flag_name},
+        {"$set": {
+            "name": payload.flag_name,
+            "enabled": payload.enabled,
+            "updated_at": datetime.utcnow(),
+            "updated_by": admin_user.get("username")
+        }},
+        upsert=True
+    )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="toggle_feature_flag",
+        target_username="*",
+        target_user_id="*",
+        fields_changed={"flag": payload.flag_name, "old": old_value, "new": payload.enabled},
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "flag": payload.flag_name,
+        "enabled": payload.enabled
+    }
+
+
+@api_router.get("/admin/liveops/feature-flags")
+async def admin_get_feature_flags(
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: View all feature flags.
+    """
+    flags = await db.feature_flags.find().to_list(100)
+    return [convert_objectid(f) for f in flags]
+
+
+class SpawnGiftRequest(BaseModel):
+    target_username: Optional[str] = None  # None = all users
+    gift_type: str  # crystals, coins, hero, item
+    amount: Optional[int] = None  # For currency
+    hero_id: Optional[str] = None  # For hero gift
+    reason: str = "Compensation/Gift"
+
+@api_router.post("/admin/liveops/spawn-gift")
+async def admin_spawn_gift(
+    request: Request,
+    payload: SpawnGiftRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Spawn gifts/compensation for users.
+    
+    Can target specific user or all users.
+    """
+    if payload.target_username:
+        # Single user gift
+        target = await db.users.find_one({"username_canon": canonicalize_username(payload.target_username)})
+        if not target:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        targets = [target]
+    else:
+        # All users - limit for safety
+        targets = await db.users.find().limit(10000).to_list(10000)
+    
+    affected_count = 0
+    
+    for target in targets:
+        if payload.gift_type in ["crystals", "coins", "gold", "divine_essence"]:
+            if not payload.amount:
+                raise HTTPException(status_code=400, detail="Amount required for currency gifts")
+            await db.users.update_one(
+                {"_id": target["_id"]},
+                {"$inc": {payload.gift_type: payload.amount}}
+            )
+            affected_count += 1
+        
+        elif payload.gift_type == "hero":
+            if not payload.hero_id:
+                raise HTTPException(status_code=400, detail="hero_id required for hero gifts")
+            
+            hero_data = await db.heroes.find_one({"id": payload.hero_id})
+            if not hero_data:
+                raise HTTPException(status_code=404, detail="Hero not found")
+            
+            # Check if already owned
+            existing = await db.user_heroes.find_one({
+                "username": target["username"],
+                "hero_data.id": payload.hero_id
+            })
+            
+            if existing:
+                # Add shards instead
+                await db.user_heroes.update_one(
+                    {"_id": existing["_id"]},
+                    {"$inc": {"shards": 30}}
+                )
+            else:
+                user_hero = UserHero(
+                    username=target["username"],
+                    hero_data=hero_data,
+                    stars=1,
+                    level=1
+                )
+                await db.user_heroes.insert_one(user_hero.dict())
+            affected_count += 1
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="spawn_gift",
+        target_username=payload.target_username or "*",
+        target_user_id="*" if not payload.target_username else get_user_id(targets[0]),
+        fields_changed={
+            "gift_type": payload.gift_type,
+            "amount": payload.amount,
+            "hero_id": payload.hero_id,
+            "affected_users": affected_count
+        },
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "affected_users": affected_count,
+        "gift_type": payload.gift_type,
+        "amount": payload.amount
+    }
+
+
+class AdjustDropRateRequest(BaseModel):
+    banner_type: str  # common, premium, divine, limited
+    rate_adjustments: dict  # {"SSR": 0.05, "SR": 0.15, ...}
+    reason: str  # REQUIRED - must explain why
+
+@api_router.post("/admin/liveops/adjust-drop-rates")
+async def admin_adjust_drop_rates(
+    request: Request,
+    payload: AdjustDropRateRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Adjust gacha drop rates. HEAVILY AUDITED.
+    
+    This is a sensitive operation that affects game economy.
+    All changes are logged with full detail.
+    """
+    if not payload.reason or len(payload.reason) < 10:
+        raise HTTPException(status_code=400, detail="Detailed reason required (min 10 chars)")
+    
+    # Get current rates
+    current_rates = await db.drop_rates.find_one({"banner_type": payload.banner_type})
+    old_rates = current_rates.get("rates", {}) if current_rates else {}
+    
+    # Update rates
+    await db.drop_rates.update_one(
+        {"banner_type": payload.banner_type},
+        {"$set": {
+            "banner_type": payload.banner_type,
+            "rates": payload.rate_adjustments,
+            "updated_at": datetime.utcnow(),
+            "updated_by": admin_user.get("username")
+        }},
+        upsert=True
+    )
+    
+    # HEAVY audit logging for drop rate changes
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="adjust_drop_rates",
+        target_username="*",
+        target_user_id="*",
+        fields_changed={
+            "banner_type": payload.banner_type,
+            "old_rates": old_rates,
+            "new_rates": payload.rate_adjustments,
+            "AUDIT_SENSITIVE": True
+        },
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "banner_type": payload.banner_type,
+        "old_rates": old_rates,
+        "new_rates": payload.rate_adjustments,
+        "warning": "Drop rate change logged with high audit priority"
+    }
+
+
+# =============================================================================
+# GOD MODE: OVERSIGHT - Suspicious Activity & Logs
+# =============================================================================
+
+@api_router.get("/admin/oversight/user-activity/{target_username}")
+async def admin_get_user_activity(
+    request: Request,
+    target_username: str,
+    limit: int = 100,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: View detailed activity log for a user.
+    
+    Shows recent actions, login history, purchases, etc.
+    """
+    target = await db.users.find_one({"username_canon": canonicalize_username(target_username)})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Gather activity from various sources
+    activity = {
+        "user_info": {
+            "username": target.get("username"),
+            "created_at": str(target.get("created_at")),
+            "last_login": str(target.get("last_login_date")),
+            "login_days": target.get("login_days", 0),
+            "vip_level": target.get("vip_level", 0),
+            "total_spent": target.get("total_spent", 0),
+            "account_frozen": target.get("account_frozen", False),
+        },
+        "chat_status": await get_user_chat_status(target_id),
+        "recent_chat_messages": await db.chat_messages.find(
+            {"sender_id": target_id}
+        ).sort("timestamp", -1).limit(20).to_list(20),
+        "chat_reports_against": await db.chat_reports.find(
+            {"reported_user_id": target_id}
+        ).sort("created_at", -1).limit(20).to_list(20),
+        "moderation_history": await db.chat_moderation_log.find(
+            {"user_id": target_id}
+        ).sort("issued_at", -1).limit(20).to_list(20),
+    }
+    
+    # Log the oversight action
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="view_user_activity",
+        target_username=target_username,
+        target_user_id=target_id,
+        fields_changed={},
+        reason="Admin oversight",
+        request=request,
+    )
+    
+    return convert_objectid(activity)
+
+
+@api_router.get("/admin/oversight/suspicious-patterns")
+async def admin_get_suspicious_patterns(
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Detect potentially suspicious activity patterns.
+    
+    Checks for:
+    - Rapid currency gains
+    - Unusual login patterns
+    - Multiple reports
+    """
+    suspicious = []
+    
+    # Users with multiple reports against them
+    pipeline = [
+        {"$group": {"_id": "$reported_user_id", "report_count": {"$sum": 1}}},
+        {"$match": {"report_count": {"$gte": 3}}},
+        {"$sort": {"report_count": -1}},
+        {"$limit": 20}
+    ]
+    multi_reported = await db.chat_reports.aggregate(pipeline).to_list(20)
+    
+    for item in multi_reported:
+        user = await db.users.find_one({"id": item["_id"]})
+        if user:
+            suspicious.append({
+                "type": "multiple_reports",
+                "username": user.get("username"),
+                "user_id": item["_id"],
+                "report_count": item["report_count"]
+            })
+    
+    # Users with very high currency (potential exploits)
+    high_currency = await db.users.find({
+        "$or": [
+            {"crystals": {"$gte": 100000}},
+            {"coins": {"$gte": 10000000}}
+        ]
+    }).limit(20).to_list(20)
+    
+    for user in high_currency:
+        suspicious.append({
+            "type": "high_currency",
+            "username": user.get("username"),
+            "crystals": user.get("crystals", 0),
+            "coins": user.get("coins", 0)
+        })
+    
+    return suspicious
+
+
 # ==================== DATA RETENTION & DELETION (SERVER-AUTHORITATIVE) ====================
 
 @api_router.delete("/chat/user-data")

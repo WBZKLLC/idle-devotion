@@ -2,13 +2,13 @@
  * Paid Features Screen
  * 
  * Shows purchasable premium features.
- * Currently: Hero Cinematics ($9.99)
+ * Currently: Hero Cinematics Pack ($9.99)
  * 
  * Payment flow is NOT implemented yet - this is UI wiring only.
  * DEV mode provides grant/revoke buttons for testing.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,22 +17,45 @@ import {
   Alert,
   SafeAreaView,
   ScrollView,
+  TextInput,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ENTITLEMENTS } from '../lib/entitlements';
+import { ENTITLEMENTS, cinematicOwnedKey } from '../lib/entitlements';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import COLORS from '../theme/colors';
+
+// Sample hero IDs for DEV testing (common ones)
+const SAMPLE_HERO_IDS = [
+  'michael_the_archangel',
+  'gabriel_herald_of_dawn',
+  'raphael_divine_healer',
+  'lucifer_fallen_star',
+  'athena_goddess_of_wisdom',
+  'zeus_lord_of_thunder',
+  'hades_lord_of_underworld',
+];
 
 export default function PaidFeaturesScreen() {
   // Subscribe directly to entitlements state for proper reactivity
   const entitlements = useEntitlementStore(s => s.entitlements);
+  const setEntitlement = useEntitlementStore(s => s.setEntitlement);
   const grantDev = useEntitlementStore(s => s.grantEntitlementDevOnly);
   const revokeDev = useEntitlementStore(s => s.revokeEntitlementDevOnly);
+  const setHeroCinematicOwned = useEntitlementStore(s => s.setHeroCinematicOwned);
 
-  const item = useMemo(() => ENTITLEMENTS.PAID_CINEMATICS, []);
-  const owned = Boolean(entitlements?.PAID_CINEMATICS);
+  // DEV: text input for custom hero ID
+  const [customHeroId, setCustomHeroId] = useState('');
+
+  const item = useMemo(() => ENTITLEMENTS.PAID_CINEMATICS_PACK, []);
+  const packOwned = Boolean(entitlements?.['PAID_CINEMATICS_PACK']);
+
+  // Count how many heroes have cinematics owned
+  const ownedHeroCount = useMemo(() => {
+    return Object.keys(entitlements || {}).filter(k => k.startsWith('CINEMATIC_OWNED:')).length;
+  }, [entitlements]);
 
   const handlePurchase = () => {
     Alert.alert(
@@ -50,14 +73,37 @@ export default function PaidFeaturesScreen() {
     );
   };
 
-  const handleDevGrant = async () => {
-    await grantDev('PAID_CINEMATICS');
-    Alert.alert('DEV Mode', 'Granted PAID_CINEMATICS entitlement (dev only).');
+  // DEV: Grant/revoke pack
+  const handleDevGrantPack = async () => {
+    await grantDev('PAID_CINEMATICS_PACK');
+    Alert.alert('DEV Mode', 'Granted PAID_CINEMATICS_PACK entitlement.');
   };
 
-  const handleDevRevoke = async () => {
-    await revokeDev('PAID_CINEMATICS');
-    Alert.alert('DEV Mode', 'Revoked PAID_CINEMATICS entitlement (dev only).');
+  const handleDevRevokePack = async () => {
+    await revokeDev('PAID_CINEMATICS_PACK');
+    Alert.alert('DEV Mode', 'Revoked PAID_CINEMATICS_PACK entitlement.');
+  };
+
+  // DEV: Grant per-hero ownership
+  const handleDevGrantHero = async (heroId: string) => {
+    if (!heroId.trim()) {
+      Alert.alert('Error', 'Please enter a hero ID');
+      return;
+    }
+    await setHeroCinematicOwned(heroId.trim(), true);
+    Alert.alert('DEV Mode', `Granted cinematic ownership for: ${heroId.trim()}`);
+    setCustomHeroId('');
+  };
+
+  // DEV: Revoke per-hero ownership
+  const handleDevRevokeHero = async (heroId: string) => {
+    await setHeroCinematicOwned(heroId, false);
+    Alert.alert('DEV Mode', `Revoked cinematic ownership for: ${heroId}`);
+  };
+
+  // Check if a hero has cinematic owned
+  const isHeroOwned = (heroId: string) => {
+    return Boolean(entitlements?.[cinematicOwnedKey(heroId)]);
   };
 
   return (
@@ -81,7 +127,7 @@ export default function PaidFeaturesScreen() {
             Unlock premium content for Idle Devotion.
           </Text>
 
-          {/* Cinematics Feature Card */}
+          {/* Cinematics Pack Feature Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.iconContainer}>
@@ -89,8 +135,8 @@ export default function PaidFeaturesScreen() {
               </View>
               <View style={styles.cardTitleContainer}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
-                <View style={[styles.badge, owned ? styles.badgeOwned : styles.badgeLocked]}>
-                  <Text style={styles.badgeText}>{owned ? '✓ Owned' : 'Locked'}</Text>
+                <View style={[styles.badge, packOwned ? styles.badgeOwned : styles.badgeLocked]}>
+                  <Text style={styles.badgeText}>{packOwned ? '✓ Owned' : 'Locked'}</Text>
                 </View>
               </View>
             </View>
@@ -104,50 +150,101 @@ export default function PaidFeaturesScreen() {
 
             {/* Purchase Button */}
             <TouchableOpacity
-              style={[styles.purchaseButton, owned && styles.purchaseButtonDisabled]}
-              disabled={owned}
+              style={[styles.purchaseButton, packOwned && styles.purchaseButtonDisabled]}
+              disabled={packOwned}
               onPress={handlePurchase}
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={owned ? ['#444', '#333'] : ['#9B2CFF', '#7B1FA2']}
+                colors={packOwned ? ['#444', '#333'] : ['#9B2CFF', '#7B1FA2']}
                 style={styles.purchaseGradient}
               >
                 <Ionicons 
-                  name={owned ? 'checkmark-circle' : 'cart'} 
+                  name={packOwned ? 'checkmark-circle' : 'cart'} 
                   size={20} 
                   color="#fff" 
                 />
                 <Text style={styles.purchaseText}>
-                  {owned ? 'Unlocked' : 'Purchase'}
+                  {packOwned ? 'Unlocked' : 'Purchase'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* DEV Mode Buttons */}
+            {/* DEV Mode - Pack Controls */}
             {__DEV__ && (
               <View style={styles.devSection}>
-                <Text style={styles.devLabel}>DEV MODE</Text>
+                <Text style={styles.devLabel}>DEV MODE — Pack Controls</Text>
                 <View style={styles.devButtonRow}>
-                  {!owned ? (
+                  {!packOwned ? (
                     <TouchableOpacity
                       style={styles.devButton}
-                      onPress={handleDevGrant}
+                      onPress={handleDevGrantPack}
                     >
-                      <Text style={styles.devButtonText}>Grant Unlock</Text>
+                      <Text style={styles.devButtonText}>Grant Pack</Text>
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity
                       style={[styles.devButton, styles.devButtonRevoke]}
-                      onPress={handleDevRevoke}
+                      onPress={handleDevRevokePack}
                     >
-                      <Text style={styles.devButtonText}>Revoke Unlock</Text>
+                      <Text style={styles.devButtonText}>Revoke Pack</Text>
                     </TouchableOpacity>
                   )}
                 </View>
               </View>
             )}
           </View>
+
+          {/* DEV Mode - Per-Hero Ownership */}
+          {__DEV__ && (
+            <View style={styles.devCard}>
+              <Text style={styles.devCardTitle}>DEV: Per-Hero Cinematic Ownership</Text>
+              <Text style={styles.devCardSubtitle}>
+                Owning a hero's cinematic grants +10% HP, +5% ATK to that hero.
+              </Text>
+              <Text style={styles.devCardSubtitle}>
+                Currently owned: {ownedHeroCount} hero cinematics
+              </Text>
+
+              {/* Custom Hero ID Input */}
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.heroInput}
+                  value={customHeroId}
+                  onChangeText={setCustomHeroId}
+                  placeholder="Enter hero_id..."
+                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <TouchableOpacity
+                  style={styles.grantButton}
+                  onPress={() => handleDevGrantHero(customHeroId)}
+                >
+                  <Text style={styles.grantButtonText}>Grant</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Sample Hero List */}
+              <Text style={styles.sampleLabel}>Quick Grant/Revoke:</Text>
+              <View style={styles.heroList}>
+                {SAMPLE_HERO_IDS.map((heroId) => {
+                  const owned = isHeroOwned(heroId);
+                  return (
+                    <TouchableOpacity
+                      key={heroId}
+                      style={[styles.heroChip, owned && styles.heroChipOwned]}
+                      onPress={() => owned ? handleDevRevokeHero(heroId) : handleDevGrantHero(heroId)}
+                    >
+                      <Text style={[styles.heroChipText, owned && styles.heroChipTextOwned]}>
+                        {owned ? '✓ ' : ''}{heroId.split('_')[0]}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
 
           {/* Restore Purchases */}
           <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
@@ -157,7 +254,7 @@ export default function PaidFeaturesScreen() {
           {/* Footer Note */}
           <Text style={styles.footerNote}>
             Purchases will be verified server-side when payments are enabled.
-            {__DEV__ && ' Use DEV buttons above to test unlock flow.'}
+            {__DEV__ && ' Use DEV buttons above to test unlock flow and stat bonuses.'}
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -196,6 +293,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 18,
+    paddingBottom: 100,
   },
   subtitle: {
     color: 'rgba(245,240,232,0.75)',
@@ -320,6 +418,85 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 13,
+  },
+  // DEV Card for per-hero ownership
+  devCard: {
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(30, 122, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(30, 122, 255, 0.3)',
+  },
+  devCardTitle: {
+    color: '#1E7AFF',
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  devCardSubtitle: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  heroInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.select({ ios: 12, android: 8, default: 10 }),
+    color: COLORS.cream.pure,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  grantButton: {
+    backgroundColor: '#1E7AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  grantButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  sampleLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  heroList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  heroChip: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  heroChipOwned: {
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    borderColor: 'rgba(76, 175, 80, 0.5)',
+  },
+  heroChipText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  heroChipTextOwned: {
+    color: 'rgba(76, 217, 100, 0.95)',
   },
   restoreButton: {
     marginTop: 20,

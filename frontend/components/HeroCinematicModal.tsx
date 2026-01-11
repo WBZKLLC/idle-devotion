@@ -21,6 +21,7 @@ import {
   Text,
   ActivityIndicator,
   Platform,
+  Pressable,
 } from 'react-native';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';

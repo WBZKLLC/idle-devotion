@@ -247,7 +247,10 @@ export default function TeamScreen() {
                     <View style={styles.heroPower}>
                       <Text style={styles.heroPowerLabel}>PWR</Text>
                       <Text style={styles.heroPowerValue}>
-                        {(hero.current_hp + hero.current_atk * 2 + hero.current_def).toLocaleString()}
+                        {(() => {
+                          const stats = computeCombatStats(hero, hero.hero_data);
+                          return computeTeamPower(stats).toLocaleString();
+                        })()}
                       </Text>
                     </View>
                   </TouchableOpacity>

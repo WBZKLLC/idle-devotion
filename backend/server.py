@@ -1863,12 +1863,18 @@ async def register_user(request: RegisterRequest):
 
 @api_router.post("/auth/login")
 async def auth_login(request: LoginRequest):
-    """Authenticate user with password and return JWT token"""
+    """Authenticate user with password and return JWT token.
+    
+    SECURITY:
+    - Looks up user via username_canon (prevents case-sensitivity exploits)
+    - JWT 'sub' is the immutable user_id (not username)
+    """
     username = request.username.strip()
     password = request.password
     
-    # Find user (case-insensitive)
-    user = await db.users.find_one({"username": {"$regex": f"^{username}$", "$options": "i"}})
+    # Find user by canonical username (case-insensitive lookup)
+    username_canon = canonicalize_username(username)
+    user = await db.users.find_one({"username_canon": username_canon})
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -1885,8 +1891,9 @@ async def auth_login(request: LoginRequest):
     if not verify_password(password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
-    # Create JWT token
-    token = create_access_token(data={"sub": user["username"]})
+    # Create JWT token with immutable user_id as subject (NOT username)
+    user_id = user.get("id") or str(user.get("_id"))
+    token = create_access_token(data={"sub": user_id})
     
     # Return user data without password hash
     user_data = convert_objectid(user.copy())

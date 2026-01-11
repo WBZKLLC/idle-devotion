@@ -23,10 +23,22 @@ import {
   getUserChatBubble,
   sendChatMessage,
   equipChatBubble,
+  reportChatMessage,
+  blockChatUser,
+  getBlockedUsers,
 } from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+
+// Report reasons
+const REPORT_REASONS = [
+  { id: 'spam', label: 'Spam', icon: 'mail-unread' },
+  { id: 'harassment', label: 'Harassment', icon: 'warning' },
+  { id: 'hate_speech', label: 'Hate Speech', icon: 'alert-circle' },
+  { id: 'inappropriate', label: 'Inappropriate Content', icon: 'eye-off' },
+  { id: 'other', label: 'Other', icon: 'ellipsis-horizontal' },
+];
 
 interface ChatMessage {
   id: string;

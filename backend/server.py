@@ -5098,6 +5098,469 @@ async def admin_get_moderation_log(
     return [convert_objectid(log) for log in logs]
 
 
+# =============================================================================
+# GOD MODE ADMIN ENDPOINTS (ADAM-ONLY, JWT-BOUND, FULLY AUDITED)
+# =============================================================================
+# These endpoints give ADAM complete control over the game.
+# Every action is logged with full audit trail for security and rollback.
+
+# Pydantic models for GOD MODE requests
+class SetCurrenciesRequest(BaseModel):
+    target_username: str
+    coins: Optional[int] = None
+    gold: Optional[int] = None
+    crystals: Optional[int] = None
+    divine_essence: Optional[int] = None
+    hero_shards: Optional[int] = None
+    friendship_points: Optional[int] = None
+    soul_dust: Optional[int] = None
+    skill_essence: Optional[int] = None
+    star_crystals: Optional[int] = None
+    divine_gems: Optional[int] = None
+    guild_coins: Optional[int] = None
+    pvp_medals: Optional[int] = None
+    enhancement_stones: Optional[int] = None
+    hero_exp: Optional[int] = None
+    stamina: Optional[int] = None
+    reason: Optional[str] = "Admin adjustment"
+
+class SetVIPRequest(BaseModel):
+    target_username: str
+    vip_level: int
+    total_spent: Optional[float] = None
+    reason: Optional[str] = "Admin adjustment"
+
+class UnlockFeatureRequest(BaseModel):
+    target_username: str
+    feature_key: str  # chat_unlocked, tutorial_completed, etc.
+    reason: Optional[str] = "Admin unlock"
+
+class ResetUserRequest(BaseModel):
+    target_username: str
+    scope: str  # "progress", "chat", "currencies", "all"
+    reason: Optional[str] = "Admin reset"
+
+class RevokeTokensRequest(BaseModel):
+    target_username: str
+    reason: Optional[str] = "Security action"
+
+
+@api_router.get("/admin/user/{target_username}")
+async def admin_get_user(
+    request: Request,
+    target_username: str,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Get full server-truth view of any user.
+    
+    Returns complete user data (password_hash redacted).
+    Useful for debugging, support, and verification.
+    """
+    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(target_username)}$", "$options": "i"}})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Redact sensitive fields
+    user_data = convert_objectid(target.copy())
+    user_data.pop("password_hash", None)
+    
+    # Add chat moderation status
+    chat_status = await get_user_chat_status(get_user_id(target))
+    user_data["_chat_status"] = chat_status
+    
+    # Add hero count
+    heroes = await db.user_heroes.find({"username": target_username}).to_list(1000)
+    user_data["_hero_count"] = len(heroes)
+    
+    # Log the view action
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="view_user",
+        target_username=target_username,
+        target_user_id=get_user_id(target),
+        fields_changed={},
+        reason="Admin viewed user data",
+        request=request,
+    )
+    
+    return user_data
+
+
+@api_router.post("/admin/user/set-currencies")
+async def admin_set_currencies(
+    request: Request,
+    payload: SetCurrenciesRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Set any currency value for any user.
+    
+    Only specified fields are updated. Unspecified fields remain unchanged.
+    """
+    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Build update dict and track changes
+    update_fields = {}
+    fields_changed = {}
+    
+    currency_fields = [
+        "coins", "gold", "crystals", "divine_essence", "hero_shards",
+        "friendship_points", "soul_dust", "skill_essence", "star_crystals",
+        "divine_gems", "guild_coins", "pvp_medals", "enhancement_stones",
+        "hero_exp", "stamina"
+    ]
+    
+    for field in currency_fields:
+        new_value = getattr(payload, field, None)
+        if new_value is not None:
+            old_value = target.get(field, 0)
+            update_fields[field] = new_value
+            fields_changed[field] = {"old": old_value, "new": new_value}
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No currency fields specified")
+    
+    # Apply update
+    await db.users.update_one(
+        {"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}},
+        {"$set": update_fields}
+    )
+    
+    # Log the action
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="set_currencies",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed=fields_changed,
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Updated currencies for {payload.target_username}",
+        "changes": fields_changed
+    }
+
+
+@api_router.post("/admin/user/set-vip")
+async def admin_set_vip(
+    request: Request,
+    payload: SetVIPRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Set VIP level and total spent for any user.
+    """
+    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Validate VIP level
+    if payload.vip_level < 0 or payload.vip_level > 15:
+        raise HTTPException(status_code=400, detail="VIP level must be 0-15")
+    
+    update_fields = {"vip_level": payload.vip_level}
+    fields_changed = {
+        "vip_level": {"old": target.get("vip_level", 0), "new": payload.vip_level}
+    }
+    
+    if payload.total_spent is not None:
+        update_fields["total_spent"] = payload.total_spent
+        fields_changed["total_spent"] = {"old": target.get("total_spent", 0), "new": payload.total_spent}
+    
+    await db.users.update_one(
+        {"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}},
+        {"$set": update_fields}
+    )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="set_vip",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed=fields_changed,
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Set VIP level {payload.vip_level} for {payload.target_username}",
+        "changes": fields_changed
+    }
+
+
+@api_router.post("/admin/user/unlock-feature")
+async def admin_unlock_feature(
+    request: Request,
+    payload: UnlockFeatureRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Unlock features for any user.
+    
+    Supported features:
+    - chat_unlocked: Enable chat access
+    - tutorial_completed: Mark tutorial as done
+    - first_purchase_used: Mark first purchase bonus as claimed
+    """
+    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Validate feature key
+    valid_features = ["chat_unlocked", "tutorial_completed", "first_purchase_used"]
+    if payload.feature_key not in valid_features:
+        raise HTTPException(status_code=400, detail=f"Invalid feature. Must be one of: {', '.join(valid_features)}")
+    
+    old_value = target.get(payload.feature_key, False)
+    
+    await db.users.update_one(
+        {"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}},
+        {"$set": {payload.feature_key: True}}
+    )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="unlock_feature",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed={payload.feature_key: {"old": old_value, "new": True}},
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Unlocked {payload.feature_key} for {payload.target_username}"
+    }
+
+
+@api_router.post("/admin/user/reset")
+async def admin_reset_user(
+    request: Request,
+    payload: ResetUserRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Reset user data by scope.
+    
+    Scopes:
+    - currencies: Reset all currencies to defaults
+    - chat: Clear chat status (unmute, unban, clear blocks)
+    - progress: Reset VIP, login days, pity counters
+    - all: Full reset (keeps username/password)
+    """
+    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    valid_scopes = ["currencies", "chat", "progress", "all"]
+    if payload.scope not in valid_scopes:
+        raise HTTPException(status_code=400, detail=f"Invalid scope. Must be one of: {', '.join(valid_scopes)}")
+    
+    fields_changed = {}
+    
+    if payload.scope in ["currencies", "all"]:
+        currency_defaults = {
+            "crystals": 300, "coins": 10000, "gold": 5000,
+            "divine_essence": 0, "hero_shards": 0, "friendship_points": 0,
+            "soul_dust": 0, "skill_essence": 0, "star_crystals": 0,
+            "divine_gems": 100, "guild_coins": 0, "pvp_medals": 0,
+            "enhancement_stones": 0, "hero_exp": 0, "stamina": 100
+        }
+        for field, default in currency_defaults.items():
+            fields_changed[field] = {"old": target.get(field, 0), "new": default}
+        
+        await db.users.update_one(
+            {"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}},
+            {"$set": currency_defaults}
+        )
+    
+    if payload.scope in ["chat", "all"]:
+        # Clear chat status
+        await db.chat_user_status.delete_one({"user_id": target_id})
+        fields_changed["chat_status"] = {"old": "various", "new": "cleared"}
+    
+    if payload.scope in ["progress", "all"]:
+        progress_defaults = {
+            "vip_level": 0, "total_spent": 0, "login_days": 0,
+            "pity_counter": 0, "pity_counter_premium": 0, "pity_counter_divine": 0,
+            "total_pulls": 0, "arena_rank": 0
+        }
+        for field, default in progress_defaults.items():
+            fields_changed[field] = {"old": target.get(field, 0), "new": default}
+        
+        await db.users.update_one(
+            {"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}},
+            {"$set": progress_defaults}
+        )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type=f"reset_user_{payload.scope}",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed=fields_changed,
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Reset {payload.scope} for {payload.target_username}",
+        "scope": payload.scope
+    }
+
+
+@api_router.post("/admin/auth/revoke-tokens")
+async def admin_revoke_tokens(
+    request: Request,
+    payload: RevokeTokensRequest,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Invalidate all sessions for a user.
+    
+    Implementation note: Since we use stateless JWTs, this works by:
+    1. Changing the user's token_invalidation_timestamp
+    2. Future JWT validation checks this timestamp
+    
+    For full implementation, add token_invalidated_at to User model
+    and check it in get_current_user().
+    """
+    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Set invalidation timestamp
+    invalidation_time = datetime.utcnow()
+    await db.users.update_one(
+        {"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}},
+        {"$set": {"token_invalidated_at": invalidation_time}}
+    )
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="revoke_tokens",
+        target_username=payload.target_username,
+        target_user_id=target_id,
+        fields_changed={"token_invalidated_at": {"old": None, "new": str(invalidation_time)}},
+        reason=payload.reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": f"Revoked all tokens for {payload.target_username}",
+        "invalidated_at": invalidation_time.isoformat()
+    }
+
+
+@api_router.get("/admin/audit-log")
+async def admin_get_audit_log(
+    request: Request,
+    target_username: Optional[str] = None,
+    action_type: Optional[str] = None,
+    limit: int = 100,
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: View admin audit log.
+    
+    Shows all GOD MODE actions with full details.
+    """
+    query = {}
+    if target_username:
+        query["target_username"] = {"$regex": f"^{re.escape(target_username)}$", "$options": "i"}
+    if action_type:
+        query["action_type"] = action_type
+    
+    logs = await db.admin_audit_log.find(query).sort("issued_at", -1).limit(limit).to_list(limit)
+    
+    return [convert_objectid(log) for log in logs]
+
+
+@api_router.post("/admin/user/give-hero")
+async def admin_give_hero(
+    request: Request,
+    target_username: str,
+    hero_id: str,
+    stars: int = 1,
+    level: int = 1,
+    reason: Optional[str] = "Admin gift",
+    admin_user: dict = Depends(require_super_admin),
+):
+    """
+    GOD MODE: Give a hero to any user.
+    """
+    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(target_username)}$", "$options": "i"}})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    target_id = get_user_id(target)
+    
+    # Validate hero exists
+    hero_data = await db.heroes.find_one({"id": hero_id})
+    if not hero_data:
+        raise HTTPException(status_code=404, detail="Hero not found in game data")
+    
+    # Check if user already has this hero
+    existing = await db.user_heroes.find_one({
+        "username": target["username"],
+        "hero_data.id": hero_id
+    })
+    
+    if existing:
+        # Upgrade existing hero
+        new_stars = min(existing.get("stars", 1) + stars, 7)
+        await db.user_heroes.update_one(
+            {"_id": existing["_id"]},
+            {"$set": {"stars": new_stars}}
+        )
+        action_desc = f"Upgraded {hero_id} to {new_stars} stars"
+    else:
+        # Create new hero
+        user_hero = UserHero(
+            username=target["username"],
+            hero_data=hero_data,
+            stars=min(stars, 7),
+            level=level
+        )
+        await db.user_heroes.insert_one(user_hero.dict())
+        action_desc = f"Gave {hero_id} at {stars} stars, level {level}"
+    
+    await log_god_action(
+        admin_user=admin_user,
+        action_type="give_hero",
+        target_username=target_username,
+        target_user_id=target_id,
+        fields_changed={"hero": {"hero_id": hero_id, "stars": stars, "level": level}},
+        reason=reason,
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "message": action_desc
+    }
+
+
 # ==================== DATA RETENTION & DELETION (SERVER-AUTHORITATIVE) ====================
 
 @api_router.delete("/chat/user-data")

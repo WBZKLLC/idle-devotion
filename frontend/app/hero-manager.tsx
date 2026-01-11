@@ -218,10 +218,11 @@ export default function HeroManagerScreen() {
                 hero_info: slotData.hero_data,
               },
             };
-            // Calculate power
+            // Calculate power using canonical stats helper
             if (slotData.hero_data) {
               const levelMult = 1 + (slotData.user_hero?.level || 1 - 1) * 0.05;
-              const heroPower = (slotData.hero_data.base_hp + slotData.hero_data.base_atk * 3 + slotData.hero_data.base_def * 2) * levelMult;
+              const stats = computeCombatStats(slotData.user_hero, slotData.hero_data);
+              const heroPower = computePower(stats) * levelMult;
               power += heroPower;
             }
           } else {

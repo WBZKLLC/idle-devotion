@@ -1723,10 +1723,15 @@ async def startup_event():
     # IDENTITY HARDENING: Database indexes and migrations
     # =============================================================================
     
-    # 1. Create unique index on username_canon
+    # 1. Create unique index on username_canon (NOT sparse - all users must have it)
     try:
-        await db.users.create_index([("username_canon", 1)], unique=True, sparse=True)
-        print("✅ Created unique index on username_canon")
+        # Drop sparse index if it exists, then create non-sparse
+        await db.users.drop_index("username_canon_1")
+    except Exception:
+        pass  # Index may not exist
+    try:
+        await db.users.create_index([("username_canon", 1)], unique=True)
+        print("✅ Created unique index on username_canon (non-sparse)")
     except Exception as e:
         print(f"⚠️ Index on username_canon may already exist: {e}")
     

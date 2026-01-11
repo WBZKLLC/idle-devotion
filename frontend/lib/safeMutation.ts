@@ -34,19 +34,13 @@ interface SafeMutationOptions<T> {
   fetchUserFn?: () => Promise<void>;
   
   /** 
-   * Show error alert if not already handled globally (default: false)
-   * The global interceptor handles most errors, so this is rarely needed
+   * Show error alert if not already handled globally (default: true)
+   * Set to false only if you handle errors in a custom way
    */
   showErrorAlert?: boolean;
   
   /** Custom error message for alert (overrides server detail) */
   errorMessage?: string;
-  
-  /**
-   * If true, rethrow the error after handling (default: false)
-   * Use this when the caller needs to handle the error further
-   */
-  rethrow?: boolean;
 }
 
 /**

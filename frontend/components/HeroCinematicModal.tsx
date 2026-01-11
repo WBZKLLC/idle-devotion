@@ -279,22 +279,22 @@ export default function HeroCinematicModal({
             ) : Platform.OS === 'web' && typeof videoSource === 'string' ? (
               /* Web: use native HTML5 video for better compatibility */
               <video
+                key={videoSource}
                 src={videoSource}
-                crossOrigin="anonymous"
                 style={{
                   width: '100%',
                   height: '100%',
                   maxWidth: SCREEN_WIDTH,
                   maxHeight: SCREEN_HEIGHT * 0.6,
                   objectFit: 'contain',
-                  backgroundColor: 'transparent',
+                  backgroundColor: 'black',
                 }}
                 autoPlay
                 playsInline
-                muted={false}
-                onLoadStart={() => {
-                  logCine('web:loadStart', { heroKey, src: videoSource });
-                  setIsLoading(true);
+                controls
+                onLoadedData={() => {
+                  logCine('web:loadedData', { heroKey });
+                  setIsLoading(false);
                 }}
                 onCanPlay={() => {
                   logCine('web:canPlay', { heroKey });
@@ -306,7 +306,7 @@ export default function HeroCinematicModal({
                 onError={(e) => {
                   const target = e.target as HTMLVideoElement;
                   const errMsg = target?.error?.message ?? 'Video playback failed';
-                  logCine('web:error', { heroKey, error: errMsg, code: target?.error?.code });
+                  logCine('web:error', { heroKey, error: errMsg, code: target?.error?.code, src: videoSource });
                   setError(errMsg);
                   setIsLoading(false);
                 }}

@@ -2030,6 +2030,81 @@ async def verify_auth(current_user: dict = Depends(get_current_user)):
     
     return {"valid": True, "user": user_data}
 
+# =============================================================================
+# SUPER ADMIN BOOTSTRAP ENDPOINT (One-time use)
+# =============================================================================
+class BootstrapAdminRequest(BaseModel):
+    password: str
+
+@api_router.post("/admin/bootstrap-super-admin")
+async def bootstrap_super_admin(
+    request: BootstrapAdminRequest,
+    bootstrap_token: str = Header(None, alias="X-Bootstrap-Token")
+):
+    """
+    One-time endpoint to create the ADAM super admin account.
+    
+    SECURITY:
+    - Requires SUPER_ADMIN_BOOTSTRAP_TOKEN env var to be set
+    - Requires X-Bootstrap-Token header to match
+    - Can only be used ONCE (fails if adam account exists)
+    - After use, remove SUPER_ADMIN_BOOTSTRAP_TOKEN from env
+    
+    Usage:
+    1. Set SUPER_ADMIN_BOOTSTRAP_TOKEN=<secure-random-token> in env
+    2. Call this endpoint with X-Bootstrap-Token: <same-token>
+    3. Remove SUPER_ADMIN_BOOTSTRAP_TOKEN from env
+    """
+    # Check if bootstrap is enabled
+    if not SUPER_ADMIN_BOOTSTRAP_TOKEN:
+        raise HTTPException(
+            status_code=403, 
+            detail="Bootstrap disabled. Set SUPER_ADMIN_BOOTSTRAP_TOKEN env var."
+        )
+    
+    # Verify bootstrap token
+    if not bootstrap_token or bootstrap_token != SUPER_ADMIN_BOOTSTRAP_TOKEN:
+        raise HTTPException(status_code=403, detail="Invalid bootstrap token")
+    
+    # Validate password
+    if len(request.password) < 12:
+        raise HTTPException(
+            status_code=400, 
+            detail="Admin password must be at least 12 characters"
+        )
+    
+    # Check if ADAM already exists
+    admin_canon = canonicalize_username(SUPER_ADMIN_USERNAME)
+    existing = await db.users.find_one({"username_canon": admin_canon})
+    if existing:
+        raise HTTPException(
+            status_code=400, 
+            detail="Super admin account already exists. Bootstrap can only run once."
+        )
+    
+    # Create ADAM account
+    admin_user = User(
+        username=SUPER_ADMIN_USERNAME,
+        username_canon=admin_canon,
+        password_hash=hash_password(request.password)
+    )
+    await db.users.insert_one(admin_user.dict())
+    
+    # Mark as admin
+    await db.users.update_one(
+        {"username_canon": admin_canon},
+        {"$set": {"is_admin": True}}
+    )
+    
+    # Create JWT token
+    token = create_access_token(data={"sub": admin_user.id})
+    
+    return {
+        "message": f"Super admin '{SUPER_ADMIN_USERNAME}' created successfully",
+        "token": token,
+        "warning": "Remove SUPER_ADMIN_BOOTSTRAP_TOKEN from environment immediately!"
+    }
+
 @api_router.get("/user/{username}")
 async def get_user(username: str):
     """Get user data"""

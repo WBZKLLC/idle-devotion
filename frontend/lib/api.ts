@@ -181,7 +181,7 @@ api.interceptors.response.use(
           _showErrorAlertOnce('Server Error', 'Something went wrong. Please try again later.', error);
         } else if (!status) {
           // Network error (no response)
-          _showErrorAlert('Network Error', 'Please check your connection and try again.');
+          _showErrorAlertOnce('Network Error', 'Please check your connection and try again.', error);
         }
         // Other 4xx errors are still marked as handled but may not show alert
         break;

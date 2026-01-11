@@ -258,13 +258,13 @@ export default function HeroUpgradeScreen() {
               <View style={styles.statsGrid}>
                 <View style={styles.statCard}>
                   <Ionicons name="heart" size={24} color="#FF6B6B" />
-                  <Text style={styles.statValue}>{stats?.hp?.toLocaleString()}</Text>
-                  <Text style={styles.statLabel}>HP</Text>
+                  <Text style={styles.statValue}>{displayHp.toLocaleString()}</Text>
+                  <Text style={styles.statLabel}>HP{owned ? ' +10%' : ''}</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Ionicons name="flash" size={24} color="#FF9F43" />
-                  <Text style={styles.statValue}>{stats?.atk?.toLocaleString()}</Text>
-                  <Text style={styles.statLabel}>ATK</Text>
+                  <Text style={styles.statValue}>{displayAtk.toLocaleString()}</Text>
+                  <Text style={styles.statLabel}>ATK{owned ? ' +5%' : ''}</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Ionicons name="shield" size={24} color="#54A0FF" />

@@ -1775,9 +1775,9 @@ async def startup_event():
             )
         print(f"✅ Migration complete: {len(users_without_uuid)} users updated with UUID id")
     
-    # SECURITY: Enforce single admin (only ADAM)
+    # SECURITY: Enforce single admin (only username_canon=="adam")
     await enforce_single_admin()
-    print(f"✅ Admin enforcement complete. Super admin: {SUPER_ADMIN_USERNAME}")
+    print(f"✅ Admin enforcement complete. Super admin canon: {SUPER_ADMIN_CANON}")
     
     # Create chat indexes for performance
     await db.chat_messages.create_index([("channel_type", 1), ("timestamp", -1)])

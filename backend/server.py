@@ -376,19 +376,33 @@ async def is_token_revoked(jti: str) -> bool:
     return revoked is not None
 
 
-async def revoke_token(jti: str, user_id: str, expires_at: datetime, reason: str = None, revoked_by: str = None):
-    """Revoke a specific token by jti"""
+async def revoke_token(
+    jti: str, 
+    user_id: str, 
+    expires_at: datetime, 
+    reason: str = None, 
+    revoked_by: str = None
+):
+    """
+    Revoke a specific token by jti.
+    
+    Only catches DuplicateKeyError (already revoked).
+    Other DB failures will raise and must be handled by caller.
+    """
+    from pymongo.errors import DuplicateKeyError
+    
     revoked = RevokedToken(
         jti=jti,
         user_id=user_id,
+        revoked_at=datetime.utcnow(),  # Explicit UTC timestamp
         expires_at=expires_at,
         reason=reason,
         revoked_by=revoked_by,
     )
     try:
         await db.revoked_tokens.insert_one(revoked.dict())
-    except Exception:
-        pass  # Already revoked (duplicate key)
+    except DuplicateKeyError:
+        pass  # Already revoked - this is fine
 
 
 async def revoke_all_user_tokens(user_id: str):

@@ -55,7 +55,7 @@ export function hasCinematicVideo(heroId: string): boolean {
  * Hero cinematic video mappings
  * All 22 hero videos are now available
  */
-export const HERO_5PLUS_CINEMATICS: Partial<Record<HeroId, CinematicModule>> = {
+export const HERO_5PLUS_CINEMATICS: Partial<Record<HeroId, CinematicSource>> = {
   azrael_the_fallen: require('../assets/videos/hero_5plus/azrael_the_fallen_5plus.mp4'),
   marcus_the_shield: require('../assets/videos/hero_5plus/marcus_the_shield_5plus.mp4'),
   kane_the_berserker: require('../assets/videos/hero_5plus/kane_the_berserker_5plus.mp4'),

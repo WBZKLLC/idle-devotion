@@ -2284,9 +2284,9 @@ async def logout(current_user: dict = Depends(get_current_user)):
     if exp is None:
         raise HTTPException(status_code=401, detail="Invalid token: missing expiration")
     
-    # Derive expires_at from token exp + 5 minute buffer for clock skew
+    # Derive expires_at from token exp (timezone-aware UTC) + 5 minute buffer for clock skew
     try:
-        expires_at = datetime.utcfromtimestamp(exp) + timedelta(minutes=5)
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc) + timedelta(minutes=5)
     except (ValueError, TypeError, OSError):
         raise HTTPException(status_code=401, detail="Invalid token: invalid expiration")
     

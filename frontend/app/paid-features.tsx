@@ -2,7 +2,7 @@
  * Paid Features Screen
  * 
  * Shows purchasable premium features.
- * Currently: Hero Cinematics Pack ($9.99)
+ * Currently: Premium Cinematics ($9.99)
  * 
  * Payment flow is NOT implemented yet - this is UI wiring only.
  * DEV mode provides grant/revoke buttons for testing.
@@ -23,7 +23,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ENTITLEMENTS, cinematicOwnedKey } from '../lib/entitlements';
+import { ENTITLEMENTS, premiumCinematicOwnedKey } from '../lib/entitlements';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import { useGameStore } from '../stores/gameStore';
 import COLORS from '../theme/colors';
@@ -34,7 +34,7 @@ export default function PaidFeaturesScreen() {
   const setEntitlement = useEntitlementStore(s => s.setEntitlement);
   const grantDev = useEntitlementStore(s => s.grantEntitlementDevOnly);
   const revokeDev = useEntitlementStore(s => s.revokeEntitlementDevOnly);
-  const setHeroCinematicOwned = useEntitlementStore(s => s.setHeroCinematicOwned);
+  const setHeroPremiumCinematicOwned = useEntitlementStore(s => s.setHeroPremiumCinematicOwned);
   
   // Get user's actual heroes from game store
   const user = useGameStore(s => s.user);
@@ -58,12 +58,12 @@ export default function PaidFeaturesScreen() {
   // DEV: text input for custom hero ID
   const [customHeroId, setCustomHeroId] = useState('');
 
-  const item = useMemo(() => ENTITLEMENTS.PAID_CINEMATICS_PACK, []);
-  const packOwned = Boolean(entitlements?.['PAID_CINEMATICS_PACK']);
+  const item = useMemo(() => ENTITLEMENTS.PREMIUM_CINEMATICS_PACK, []);
+  const packOwned = Boolean(entitlements?.['PREMIUM_CINEMATICS_PACK']);
 
-  // Count how many heroes have cinematics owned
+  // Count how many heroes have premium cinematics owned
   const ownedHeroCount = useMemo(() => {
-    return Object.keys(entitlements || {}).filter(k => k.startsWith('CINEMATIC_OWNED:')).length;
+    return Object.keys(entitlements || {}).filter(k => k.startsWith('PREMIUM_CINEMATIC_OWNED:')).length;
   }, [entitlements]);
 
   const handlePurchase = () => {
@@ -84,30 +84,30 @@ export default function PaidFeaturesScreen() {
 
   // DEV: Grant/revoke pack
   const handleDevGrantPack = async () => {
-    await grantDev('PAID_CINEMATICS_PACK');
-    Alert.alert('DEV Mode', 'Granted PAID_CINEMATICS_PACK entitlement.');
+    await grantDev('PREMIUM_CINEMATICS_PACK');
+    Alert.alert('DEV Mode', 'Granted PREMIUM_CINEMATICS_PACK entitlement.');
   };
 
   const handleDevRevokePack = async () => {
-    await revokeDev('PAID_CINEMATICS_PACK');
-    Alert.alert('DEV Mode', 'Revoked PAID_CINEMATICS_PACK entitlement.');
+    await revokeDev('PREMIUM_CINEMATICS_PACK');
+    Alert.alert('DEV Mode', 'Revoked PREMIUM_CINEMATICS_PACK entitlement.');
   };
 
-  // DEV: Grant per-hero ownership
+  // DEV: Grant per-hero premium cinematic ownership
   const handleDevGrantHero = async (heroId: string) => {
     if (!heroId.trim()) {
       Alert.alert('Error', 'Please enter a hero ID');
       return;
     }
-    await setHeroCinematicOwned(heroId.trim(), true);
-    Alert.alert('DEV Mode', `Granted cinematic ownership for: ${heroId.trim()}`);
+    await setHeroPremiumCinematicOwned(heroId.trim(), true);
+    Alert.alert('DEV Mode', `Granted premium cinematic ownership for: ${heroId.trim()}`);
     setCustomHeroId('');
   };
 
-  // DEV: Revoke per-hero ownership
+  // DEV: Revoke per-hero premium cinematic ownership
   const handleDevRevokeHero = async (heroId: string) => {
-    await setHeroCinematicOwned(heroId, false);
-    Alert.alert('DEV Mode', `Revoked cinematic ownership for: ${heroId}`);
+    await setHeroPremiumCinematicOwned(heroId, false);
+    Alert.alert('DEV Mode', `Revoked premium cinematic ownership for: ${heroId}`);
   };
 
   // Check if a hero has cinematic owned

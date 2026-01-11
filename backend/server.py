@@ -247,11 +247,18 @@ async def authenticate_request(
         return None, None
     
     # SECURITY: tokens_valid_after check (mass revocation)
-    # Compare in UTC consistently
+    # Both datetimes normalized to timezone-aware UTC for consistent comparison
     token_iat_dt = _to_dt_utc(iat)
+    if token_iat_dt is None:
+        # iat exists but couldn't be converted (invalid format)
+        if require_auth:
+            raise HTTPException(status_code=401, detail="Invalid token: bad iat")
+        return None, None
+    
     tokens_valid_after = user.get("tokens_valid_after")
-    if tokens_valid_after and token_iat_dt:
-        if token_iat_dt < tokens_valid_after:
+    if tokens_valid_after:
+        tva = _normalize_dt_utc(tokens_valid_after)
+        if token_iat_dt < tva:
             if require_auth:
                 raise HTTPException(status_code=401, detail="Token has been revoked")
             return None, None

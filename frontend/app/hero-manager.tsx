@@ -12,6 +12,7 @@ import {
   Modal,
   RefreshControl,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { useEntitlementStore } from '../stores/entitlementStore';

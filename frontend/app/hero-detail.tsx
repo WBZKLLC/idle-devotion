@@ -346,27 +346,27 @@ export default function HeroDetailScreen() {
           {activeTab === 'stats' && (
             <GlassCard>
               <Text style={styles.sectionTitle}>Combat Stats</Text>
-              {combatStats.hasCinematicBonus && (
+              {combatStats.hasPremiumCinematicBonus && (
                 <View style={styles.bonusBadge}>
                   <Ionicons name="videocam" size={12} color={COLORS.gold.primary} />
-                  <Text style={styles.bonusBadgeText}>Cinematic Bonus Active</Text>
+                  <Text style={styles.bonusBadgeText}>Premium Cinematic Bonus</Text>
                 </View>
               )}
               <View style={styles.statsGrid}>
                 <View style={styles.statRow}>
                   <Ionicons name="heart" size={18} color="#e74c3c" />
                   <Text style={styles.statLabel}>HP</Text>
-                  <Text style={[styles.statValue, combatStats.hasCinematicBonus && styles.statValueBoosted]}>
+                  <Text style={[styles.statValue, combatStats.hasPremiumCinematicBonus && styles.statValueBoosted]}>
                     {combatStats.hp.toLocaleString()}
-                    {combatStats.hasCinematicBonus && <Text style={styles.bonusIndicator}> +10%</Text>}
+                    {combatStats.hasPremiumCinematicBonus && <Text style={styles.bonusIndicator}> +10%</Text>}
                   </Text>
                 </View>
                 <View style={styles.statRow}>
                   <Ionicons name="flash" size={18} color="#f39c12" />
                   <Text style={styles.statLabel}>ATK</Text>
-                  <Text style={[styles.statValue, combatStats.hasCinematicBonus && styles.statValueBoosted]}>
+                  <Text style={[styles.statValue, combatStats.hasPremiumCinematicBonus && styles.statValueBoosted]}>
                     {combatStats.atk.toLocaleString()}
-                    {combatStats.hasCinematicBonus && <Text style={styles.bonusIndicator}> +5%</Text>}
+                    {combatStats.hasPremiumCinematicBonus && <Text style={styles.bonusIndicator}> +5%</Text>}
                   </Text>
                 </View>
                 <View style={styles.statRow}>

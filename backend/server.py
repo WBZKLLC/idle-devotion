@@ -1690,6 +1690,12 @@ async def startup_event():
     await db.chat_reports.create_index([("reported_user_id", 1)])
     await db.chat_user_status.create_index([("user_id", 1)], unique=True)
     await db.chat_moderation_log.create_index([("username", 1), ("issued_at", -1)])
+    
+    # Create GOD MODE audit log indexes
+    await db.admin_audit_log.create_index([("issued_at", -1)])
+    await db.admin_audit_log.create_index([("action_type", 1), ("issued_at", -1)])
+    await db.admin_audit_log.create_index([("target_username", 1), ("issued_at", -1)])
+    await db.admin_audit_log.create_index([("issued_by", 1), ("issued_at", -1)])
 
 async def get_random_hero_from_db(pity_counter: int, summon_type: str = "common"):
     """Select a random hero based on gacha rates with pity system

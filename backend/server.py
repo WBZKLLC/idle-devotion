@@ -160,10 +160,12 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
     """
     Dependency that requires the super admin (ADAM) to be authenticated.
     
+    SECURITY:
     - Returns 401 if not logged in
-    - Returns 403 if logged in but not ADAM
+    - Returns 403 if logged in but not ADAM (via username_canon)
     - Returns the admin user dict if valid
     
+    JWT 'sub' is the immutable user_id. We load user by ID, then check username_canon.
     NEVER trust client-provided admin_username - always derive from JWT.
     """
     if not credentials:
@@ -174,11 +176,12 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
-    username = payload.get("sub")
-    if not username:
+    user_id = payload.get("sub")
+    if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
     
-    user = await db.users.find_one({"username": username})
+    # Load user by immutable ID
+    user = await db.users.find_one({"id": user_id})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     

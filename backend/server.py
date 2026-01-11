@@ -2672,9 +2672,7 @@ async def equip_frame(username: str, frame_id: str):
 @api_router.post("/user/{username}/unequip-frame")
 async def unequip_frame(username: str):
     """Unequip current frame and revert to default"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     await db.users.update_one(
         {"username": username},

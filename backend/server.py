@@ -260,10 +260,13 @@ async def enforce_single_admin():
 # =============================================================================
 
 class AdminAuditLog(BaseModel):
-    """Audit log entry for admin actions"""
+    """Audit log entry for admin actions - production-grade traceability"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))  # Unique per-request correlation ID
     action_type: str  # set_currencies, set_vip, reset_user, ban_user, etc.
     issued_by: str  # Admin username (always ADAM)
+    issued_by_user_id: Optional[str] = None  # Admin's UUID for extra traceability
+    auth_jti: Optional[str] = None  # JWT token ID for session correlation / incident response
     target_username: str
     target_user_id: str
     fields_changed: dict = Field(default_factory=dict)  # {field: {old: x, new: y}}
@@ -273,7 +276,7 @@ class AdminAuditLog(BaseModel):
     request_path: Optional[str] = None
     request_method: Optional[str] = None
     batch_id: Optional[str] = None  # For batch operations (e.g., spawn_gift to all users)
-    issued_at: datetime = Field(default_factory=datetime.utcnow)
+    issued_at: datetime = Field(default_factory=datetime.utcnow)  # Server timestamp (single source of truth)
 
 async def log_god_action(
     admin_user: dict,
@@ -284,7 +287,8 @@ async def log_god_action(
     reason: Optional[str] = None,
     request: Request = None,
     batch_id: Optional[str] = None,
-):
+    auth_jti: Optional[str] = None,
+) -> AdminAuditLog:
     """
     Log a GOD MODE admin action with full audit trail.
     
@@ -292,10 +296,15 @@ async def log_god_action(
     - Security auditing
     - Rollback capabilities
     - Compliance requirements
+    - Incident response (via request_id and auth_jti)
+    
+    Returns the log entry (includes request_id for response correlation).
     """
     log_entry = AdminAuditLog(
         action_type=action_type,
         issued_by=admin_user.get("username", "UNKNOWN"),
+        issued_by_user_id=get_user_id(admin_user) if admin_user else None,
+        auth_jti=auth_jti,
         target_username=target_username,
         target_user_id=target_user_id,
         fields_changed=fields_changed,
@@ -305,7 +314,7 @@ async def log_god_action(
         request_path=str(request.url.path) if request else None,
         request_method=request.method if request else None,
         batch_id=batch_id,
-        issued_at=datetime.utcnow(),
+        # issued_at uses model default (datetime.utcnow) - single source of truth
     )
     
     await db.admin_audit_log.insert_one(log_entry.dict())

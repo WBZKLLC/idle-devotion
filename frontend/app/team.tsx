@@ -54,7 +54,9 @@ export default function TeamScreen() {
     selectedHeroes.forEach((heroId) => {
       const hero = userHeroes.find((h) => h.id === heroId);
       if (hero) {
-        totalPower += hero.current_hp + hero.current_atk * 2 + hero.current_def;
+        // Use canonical combat stats (includes premium cinematic bonus)
+        const stats = computeCombatStats(hero, hero.hero_data);
+        totalPower += computeTeamPower(stats);
       }
     });
     return totalPower;

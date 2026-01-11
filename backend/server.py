@@ -2344,6 +2344,9 @@ async def set_password(username: str, new_password: str):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # SECURITY: Frozen accounts cannot change password
+    assert_account_active(user)
+    
     if user.get("password_hash"):
         raise HTTPException(status_code=400, detail="Account already has a password")
     

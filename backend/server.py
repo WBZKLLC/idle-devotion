@@ -286,6 +286,51 @@ class AdminAuditLog(BaseModel):
     batch_id: Optional[str] = None  # For batch operations (e.g., spawn_gift to all users)
     issued_at: datetime = Field(default_factory=datetime.utcnow)  # Server timestamp (single source of truth)
 
+
+# =============================================================================
+# TOKEN REVOCATION
+# =============================================================================
+
+class RevokedToken(BaseModel):
+    """Revoked JWT token entry for surgical token invalidation"""
+    jti: str  # Unique token ID from JWT
+    user_id: str  # User whose token was revoked
+    revoked_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: datetime  # When the original token would have expired (for TTL cleanup)
+    reason: Optional[str] = None
+    revoked_by: Optional[str] = None  # Admin who revoked (if admin action)
+
+
+async def is_token_revoked(jti: str) -> bool:
+    """Check if a specific token has been revoked by jti"""
+    if not jti:
+        return False
+    revoked = await db.revoked_tokens.find_one({"jti": jti})
+    return revoked is not None
+
+
+async def revoke_token(jti: str, user_id: str, expires_at: datetime, reason: str = None, revoked_by: str = None):
+    """Revoke a specific token by jti"""
+    revoked = RevokedToken(
+        jti=jti,
+        user_id=user_id,
+        expires_at=expires_at,
+        reason=reason,
+        revoked_by=revoked_by,
+    )
+    try:
+        await db.revoked_tokens.insert_one(revoked.dict())
+    except Exception:
+        pass  # Already revoked (duplicate key)
+
+
+async def revoke_all_user_tokens(user_id: str):
+    """Revoke all tokens for a user by setting tokens_valid_after to now"""
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"tokens_valid_after": datetime.utcnow()}}
+    )
+
 async def log_god_action(
     admin_user: dict,
     action_type: str,

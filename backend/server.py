@@ -585,6 +585,12 @@ class User(BaseModel):
     password_hash: Optional[str] = None  # Hashed password for secure login
     server_id: str = "server_1"  # Server assignment with default
     
+    # ==================== TOKEN REVOCATION ====================
+    tokens_valid_after: datetime = Field(default_factory=lambda: datetime(1970, 1, 1))  # Tokens with iat < this are invalid
+    account_frozen: bool = False  # Frozen accounts cannot authenticate
+    frozen_at: Optional[datetime] = None
+    frozen_reason: Optional[str] = None
+    
     # ==================== CURRENCY SYSTEM ====================
     crystals: int = 300  # Premium currency (renamed from gems)
     coins: int = 10000  # Regular currency

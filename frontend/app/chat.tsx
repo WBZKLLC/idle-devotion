@@ -103,6 +103,16 @@ export default function ChatScreen() {
   const [userBubbles, setUserBubbles] = useState<{ available: any[], locked: any[] }>({ available: [], locked: [] });
   const [equippedBubble, setEquippedBubble] = useState<ChatBubble>(DEFAULT_BUBBLE);
   
+  // Report modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ChatMessage | null>(null);
+  const [selectedReason, setSelectedReason] = useState<string>('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reporting, setReporting] = useState(false);
+  
+  // Rate limit feedback
+  const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
+  
   const scrollViewRef = useRef<ScrollView>(null);
   const rainbowAnim = useRef(new Animated.Value(0)).current;
 

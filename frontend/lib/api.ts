@@ -178,7 +178,7 @@ api.interceptors.response.use(
       default:
         if (status && status >= 500) {
           // Server error
-          _showErrorAlert('Server Error', 'Something went wrong. Please try again later.');
+          _showErrorAlertOnce('Server Error', 'Something went wrong. Please try again later.', error);
         } else if (!status) {
           // Network error (no response)
           _showErrorAlert('Network Error', 'Please check your connection and try again.');

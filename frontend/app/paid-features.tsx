@@ -236,11 +236,11 @@ export default function PaidFeaturesScreen() {
 
               {/* User's Hero List */}
               <Text style={styles.sampleLabel}>Your Heroes (click to toggle):</Text>
-              {userHeroes.length === 0 ? (
+              {heroList.length === 0 ? (
                 <Text style={styles.noHeroesText}>No heroes found. Login and collect heroes first.</Text>
               ) : (
                 <View style={styles.heroList}>
-                  {userHeroes.slice(0, 12).map((hero: any) => {
+                  {heroList.slice(0, 12).map((hero: any) => {
                     const owned = isHeroOwned(hero.id);
                     return (
                       <TouchableOpacity

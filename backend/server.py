@@ -137,14 +137,33 @@ def verify_token(token: str) -> Optional[dict]:
 # =============================================================================
 
 def _to_dt_utc(ts) -> Optional[datetime]:
-    """Convert timestamp to UTC datetime. Supports int/float (unix) or datetime."""
+    """Convert timestamp to timezone-aware UTC datetime.
+    
+    Always returns timezone-aware UTC, never naive.
+    Handles: int/float (unix timestamp), datetime (aware or naive).
+    """
     if ts is None:
         return None
     if isinstance(ts, (int, float)):
-        return datetime.utcfromtimestamp(ts)
+        return datetime.fromtimestamp(ts, tz=timezone.utc)
     if isinstance(ts, datetime):
-        return ts
+        # If naive, assume UTC; if aware, convert to UTC
+        if ts.tzinfo is None:
+            return ts.replace(tzinfo=timezone.utc)
+        return ts.astimezone(timezone.utc)
     return None
+
+
+def _normalize_dt_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    """Normalize a datetime to timezone-aware UTC.
+    
+    Used for values from MongoDB which may be naive (assumed UTC).
+    """
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 async def authenticate_request(

@@ -262,11 +262,11 @@ class IdentityHardeningTester:
             return False
             
         # Check that we get user data
-        if "user" not in response:
-            self.log_test("E1: Admin Access", False, "No user data in admin response")
+        if "username" not in response:
+            self.log_test("E1: Admin Access", False, "No username in admin response")
             return False
             
-        self.log_test("E1: Admin Access", True, f"Admin endpoint accessible, returned user data for: {response['user'].get('username')}")
+        self.log_test("E1: Admin Access", True, f"Admin endpoint accessible, returned user data for: {response.get('username')}")
         
         # Test with non-admin token (create a regular user first)
         test_username = f"RegUser{int(time.time()) % 10000}"

@@ -283,7 +283,7 @@ class IdentityHardeningTester:
         regular_headers = {"Authorization": f"Bearer {regular_token}"}
         
         # Try admin endpoint with regular user token (should fail with 403)
-        success, response = self.make_request("GET", "/god/users?limit=5", headers=regular_headers)
+        success, response = self.make_request("GET", "/admin/user/adam", headers=regular_headers)
         
         if success:
             self.log_test("E2: Non-Admin Rejection", False, "Regular user should not have admin access")

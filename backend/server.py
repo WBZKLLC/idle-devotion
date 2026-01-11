@@ -1949,16 +1949,18 @@ async def startup_event():
     
     # 2. Create unique index on user.id for fast JWT lookups
     # NOT sparse - migration guarantees all users have UUID id
+    # NOTE: If index already exists with different options, manually drop and recreate
     try:
-        # Drop old sparse index if it exists to replace with non-sparse
-        try:
-            await db.users.drop_index("id_1")
-        except Exception:
-            pass
         await db.users.create_index([("id", 1)], unique=True)
         print("✅ Created unique index on user.id (non-sparse)")
     except Exception as e:
-        print(f"⚠️ Index on user.id may already exist: {e}")
+        # Index may already exist (possibly with different options like sparse)
+        # This is fine - the index serves its purpose either way
+        # To change index options, run a manual migration script
+        if "already exists" in str(e).lower() or "IndexKeySpecsConflict" in str(e):
+            print("ℹ️ Index on user.id already exists (run migration script to change options)")
+        else:
+            print(f"⚠️ Index on user.id: {e}")
     
     # 3. Migrate existing users: populate username_canon if missing/null/empty
     users_without_canon = await db.users.find({

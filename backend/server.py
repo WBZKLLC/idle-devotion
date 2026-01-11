@@ -338,6 +338,23 @@ def assert_account_active(user: dict):
             headers={"X-Frozen-Reason": "account_frozen"}
         )
 
+async def get_user_for_mutation(username: str) -> dict:
+    """
+    Fetch a user by username for mutation operations.
+    
+    Combines user lookup + frozen account check in one call.
+    Use this for all state-mutating endpoints.
+    
+    Raises:
+        HTTPException: 404 if user not found
+        HTTPException: 403 if account is frozen
+    """
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    assert_account_active(user)
+    return user
+
 def is_super_admin(user: dict) -> bool:
     """Check if user is the super admin via canonical username.
     

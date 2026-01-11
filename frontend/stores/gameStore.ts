@@ -102,6 +102,7 @@ interface GameState {
   restoreSession: () => Promise<void>;
   login: () => Promise<any>;
   logout: () => Promise<void>;
+  registerForceLogout: () => void;  // Register callback for API 401 handling
   fetchUser: () => Promise<void>;
   fetchUserHeroes: () => Promise<void>;
   fetchAllHeroes: () => Promise<void>;

@@ -172,7 +172,7 @@ api.interceptors.response.use(
       case 404:
         // Not found - only show if it's a user-facing request
         // (Some 404s are expected during data loading)
-        _showErrorAlert('Not Found', detail);
+        _showErrorAlertOnce('Not Found', detail, error);
         break;
         
       default:

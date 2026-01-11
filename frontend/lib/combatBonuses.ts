@@ -2,7 +2,7 @@
  * Combat Bonuses
  * 
  * Defines all combat stat modifiers from various sources.
- * Currently: Cinematic ownership bonus.
+ * Currently: Premium Cinematic ownership bonus.
  * Future: Equipment bonuses, buff bonuses, etc.
  */
 
@@ -24,15 +24,15 @@ export const NO_BONUS: CombatBonus = {
 };
 
 /**
- * Cinematic ownership bonus.
- * Owning a hero's cinematic grants:
+ * Premium Cinematic ownership bonus.
+ * Owning a hero's Premium Cinematic grants:
  * - +10% HP
  * - +5% ATK
  * 
- * @param isOwned - Whether the user owns this hero's cinematic
+ * @param isOwned - Whether the user owns this hero's premium cinematic
  * @returns CombatBonus multipliers
  */
-export function cinematicOwnershipBonus(isOwned: boolean): CombatBonus {
+export function premiumCinematicOwnershipBonus(isOwned: boolean): CombatBonus {
   if (!isOwned) return NO_BONUS;
   
   return {

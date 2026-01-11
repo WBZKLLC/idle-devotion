@@ -2,7 +2,7 @@
  * Cinematics Access Helper
  * 
  * Determines if user can access cinematics based on:
- * 1. Paid entitlement (PAID_CINEMATICS_PACK)
+ * 1. Paid entitlement (PREMIUM_CINEMATICS_PACK)
  * 2. Feature flag (HERO_CINEMATICS)
  * 
  * Also provides per-hero ownership check for stat bonuses.
@@ -26,7 +26,7 @@ import { useEntitlementStore } from '../stores/entitlementStore';
  */
 export function canAccessCinematics(stableId?: string): boolean {
   const store = useEntitlementStore.getState();
-  const hasPack = store.hasEntitlement('PAID_CINEMATICS_PACK');
+  const hasPack = store.hasEntitlement('PREMIUM_CINEMATICS_PACK');
   if (!hasPack) return false;
   
   return isFeatureEnabled('HERO_CINEMATICS', { stableId });
@@ -37,29 +37,29 @@ export function canAccessCinematics(stableId?: string): boolean {
  */
 export function useCanAccessCinematics(stableId?: string): boolean {
   const entitlements = useEntitlementStore(s => s.entitlements);
-  const hasPack = Boolean(entitlements['PAID_CINEMATICS_PACK']);
+  const hasPack = Boolean(entitlements['PREMIUM_CINEMATICS_PACK']);
   if (!hasPack) return false;
   
   return isFeatureEnabled('HERO_CINEMATICS', { stableId });
 }
 
 /**
- * Check if user owns the cinematic for a specific hero.
+ * Check if user owns the premium cinematic for a specific hero.
  * This is what grants the stat perk (+10% HP, +5% ATK).
  * @param heroId - The hero's stable ID (e.g., 'michael_the_archangel')
- * @returns true if user owns this hero's cinematic
+ * @returns true if user owns this hero's premium cinematic
  */
-export function hasHeroCinematicOwned(heroId: string): boolean {
+export function hasHeroPremiumCinematicOwned(heroId: string): boolean {
   if (!heroId) return false;
-  return useEntitlementStore.getState().hasHeroCinematicOwned(heroId);
+  return useEntitlementStore.getState().hasHeroPremiumCinematicOwned(heroId);
 }
 
 /**
  * Hook version for reactive per-hero ownership check
  */
-export function useHasHeroCinematicOwned(heroId: string): boolean {
+export function useHasHeroPremiumCinematicOwned(heroId: string): boolean {
   const entitlements = useEntitlementStore(s => s.entitlements);
   if (!heroId) return false;
-  const key = `CINEMATIC_OWNED:${heroId}`;
+  const key = `PREMIUM_CINEMATIC_OWNED:${heroId}`;
   return Boolean(entitlements[key]);
 }

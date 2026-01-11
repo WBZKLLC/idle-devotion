@@ -4,14 +4,14 @@
  * This is the CANONICAL place where hero combat stats are computed for display.
  * All UI screens MUST use this helper for HP/ATK/DEF/SPD display and power calculations.
  * 
- * Applies all bonuses (currently: cinematic ownership).
+ * Applies all bonuses (currently: premium cinematic ownership).
  * 
  * Later, when server-side verification is implemented, this logic can be
  * mirrored on the backend for actual combat outcomes.
  */
 
-import { cinematicOwnershipBonus, type CombatBonus } from './combatBonuses';
-import { hasHeroCinematicOwned } from './cinematicsAccess';
+import { premiumCinematicOwnershipBonus, type CombatBonus } from './combatBonuses';
+import { hasHeroPremiumCinematicOwned } from './cinematicsAccess';
 
 /**
  * Clamp a number to integer within bounds
@@ -30,7 +30,7 @@ export type CombatStats = {
   def: number;
   speed: number;
   // Bonus info for UI display
-  hasCinematicBonus: boolean;
+  hasPremiumCinematicBonus: boolean;
 };
 
 /**
@@ -46,6 +46,7 @@ function extractHeroId(hero: any): string {
     hero?.id ??
     hero?.hero_data?.hero_id ??
     hero?.hero_data?.stable_id ??
+    hero?.hero_data?.id ??
     ''
   );
 }
@@ -53,7 +54,7 @@ function extractHeroId(hero: any): string {
 /**
  * Compute final combat stats for a hero with all bonuses applied.
  * 
- * THIS IS THE ONLY PLACE WHERE CINEMATIC PERK IS APPLIED.
+ * THIS IS THE ONLY PLACE WHERE PREMIUM CINEMATIC PERK IS APPLIED.
  * All UI must use this function for consistency.
  * 
  * @param hero - User's hero instance (with current_hp, current_atk, etc.)
@@ -70,9 +71,9 @@ export function computeCombatStats(hero: any, heroData: any): CombatStats {
   // Get hero ID for per-hero bonuses
   const heroId = extractHeroId(hero) || extractHeroId(heroData);
   
-  // Check cinematic ownership
-  const hasCinematicOwned = heroId ? hasHeroCinematicOwned(heroId) : false;
-  const bonus = cinematicOwnershipBonus(hasCinematicOwned);
+  // Check premium cinematic ownership
+  const hasPremiumCinematicOwned = heroId ? hasHeroPremiumCinematicOwned(heroId) : false;
+  const bonus = premiumCinematicOwnershipBonus(hasPremiumCinematicOwned);
 
   // Apply bonuses
   return {
@@ -80,26 +81,35 @@ export function computeCombatStats(hero: any, heroData: any): CombatStats {
     atk: Math.floor(baseAtk * bonus.atkMult),
     def: Math.floor(baseDef * bonus.defMult),
     speed: Math.floor(baseSpeed * bonus.speedMult),
-    hasCinematicBonus: hasCinematicOwned,
+    hasPremiumCinematicBonus: hasPremiumCinematicOwned,
   };
 }
 
 /**
- * Compute hero power rating using bonused stats.
- * Uses the standard formula: HP + ATK*3 + DEF*2 + SPD*1.5
+ * Compute combat stats from pre-calculated stats (e.g., from backend).
+ * Applies premium cinematic bonus on top.
  * 
- * @param hero - User's hero instance
- * @param heroData - Hero base data
- * @returns Power rating (integer)
+ * @param stats - Pre-calculated stats object { hp, atk, def, speed }
+ * @param heroId - Hero ID for bonus lookup
+ * @returns CombatStats with all bonuses applied
  */
-export function computeHeroPower(hero: any, heroData: any): number {
-  const stats = computeCombatStats(hero, heroData);
-  return Math.floor(stats.hp + stats.atk * 3 + stats.def * 2 + stats.speed * 1.5);
-}
+export function computeCombatStatsFromCalculated(
+  stats: { hp?: number; atk?: number; def?: number; speed?: number } | null,
+  heroId: string
+): CombatStats {
+  const baseHp = clampInt(stats?.hp ?? 0, 0, 999999999);
+  const baseAtk = clampInt(stats?.atk ?? 0, 0, 999999999);
+  const baseDef = clampInt(stats?.def ?? 0, 0, 999999999);
+  const baseSpeed = clampInt(stats?.speed ?? 100, 0, 999999999);
 
-/**
- * Compute power from raw stats (for cases where stats are already computed)
- */
-export function computePowerFromStats(stats: CombatStats): number {
-  return Math.floor(stats.hp + stats.atk * 3 + stats.def * 2 + stats.speed * 1.5);
+  const hasPremiumCinematicOwned = heroId ? hasHeroPremiumCinematicOwned(heroId) : false;
+  const bonus = premiumCinematicOwnershipBonus(hasPremiumCinematicOwned);
+
+  return {
+    hp: Math.floor(baseHp * bonus.hpMult),
+    atk: Math.floor(baseAtk * bonus.atkMult),
+    def: Math.floor(baseDef * bonus.defMult),
+    speed: Math.floor(baseSpeed * bonus.speedMult),
+    hasPremiumCinematicBonus: hasPremiumCinematicOwned,
+  };
 }

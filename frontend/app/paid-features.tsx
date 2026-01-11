@@ -8,7 +8,7 @@
  * DEV mode provides grant/revoke buttons for testing.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,

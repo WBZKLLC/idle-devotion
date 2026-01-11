@@ -1937,6 +1937,11 @@ async def startup_event():
     await db.admin_audit_log.create_index([("request_id", 1)], unique=True, sparse=True)
     await db.admin_audit_log.create_index([("batch_id", 1)], sparse=True)
     await db.admin_audit_log.create_index([("auth_jti", 1)], sparse=True)  # For session correlation
+    
+    # Create token revocation indexes
+    await db.revoked_tokens.create_index([("jti", 1)], unique=True)  # Fast lookup by token ID
+    await db.revoked_tokens.create_index([("user_id", 1)])  # Find all revoked tokens for a user
+    await db.revoked_tokens.create_index([("expires_at", 1)], expireAfterSeconds=0)  # TTL cleanup
 
 async def get_random_hero_from_db(pity_counter: int, summon_type: str = "common"):
     """Select a random hero based on gacha rates with pity system

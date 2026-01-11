@@ -2929,9 +2929,7 @@ async def record_selene_purchase(username: str, amount_usd: float, bundle_id: st
 @limiter.limit("30/minute")  # Max 30 gacha pulls per minute per IP (prevents abuse)
 async def pull_gacha(request: Request, username: str, body: PullRequest):
     """Perform gacha pull - Premium (crystals) or Common (coins) (rate limited)"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     user = User(**user_data)
     num_pulls = 10 if body.pull_type == "multi" else 1

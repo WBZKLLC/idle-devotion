@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,19 +6,24 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Modal,
   Image,
-  Dimensions,
+  ActivityIndicator,
+  Alert,
+  Modal,
   RefreshControl,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { useEntitlementStore } from '../stores/entitlementStore';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import COLORS from '../theme/colors';
 
-// Centralized API wrappers (no raw axios in screens)
+// CANONICAL combat stats and power helpers
+import { computeCombatStats } from '../lib/combatStats';
+import { computePower } from '../lib/power';
+
+// Centralized API - team endpoints
 import { getTeamsByMode, getTeamsList, getTeamsFull, saveModeTeam } from '../lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

@@ -260,13 +260,22 @@ export default function HeroCinematicModal({
               </View>
             )}
 
-            {/* Error state */}
+            {/* Error state - with codec-specific messaging */}
             {error ? (
-              <CinematicFallback 
-                title="Failed to Load Video" 
-                subtitle={error}
-                onClose={handleClose} 
-              />
+              isUnsupportedCodecError(error) && Platform.OS === 'web' ? (
+                <CinematicFallback 
+                  title="Browser Format Not Supported" 
+                  subtitle="This cinematic uses a video format not supported by web browsers."
+                  onClose={handleClose}
+                  isCodecError={true}
+                />
+              ) : (
+                <CinematicFallback 
+                  title="Failed to Load Video" 
+                  subtitle={error}
+                  onClose={handleClose} 
+                />
+              )
             ) : Platform.OS === 'web' && typeof videoSource === 'string' ? (
               /* Web: use native HTML5 video for better compatibility */
               <video

@@ -470,6 +470,26 @@ export default function ProfileScreen() {
             <Ionicons name="open-outline" size={16} color={COLORS.cream.dark} />
           </TouchableOpacity>
 
+          {/* Data Deletion Policy Link */}
+          <TouchableOpacity 
+            style={styles.privacyButton} 
+            onPress={() => Linking.openURL('https://raw.githubusercontent.com/WBZKLLC/idle-devotion-legal/dd4a5a4eb52346e817f3869fd54fa2baacddc210/DATA_DELETION_POLICY.md')}
+          >
+            <Ionicons name="trash-outline" size={20} color={COLORS.cream.soft} />
+            <Text style={styles.privacyText}>Data Deletion Policy</Text>
+            <Ionicons name="open-outline" size={16} color={COLORS.cream.dark} />
+          </TouchableOpacity>
+
+          {/* Community Guidelines Link */}
+          <TouchableOpacity 
+            style={styles.privacyButton} 
+            onPress={() => Linking.openURL('https://raw.githubusercontent.com/WBZKLLC/idle-devotion-legal/dd4a5a4eb52346e817f3869fd54fa2baacddc210/COMMUNITY_GUIDELINES.md')}
+          >
+            <Ionicons name="people-outline" size={20} color={COLORS.cream.soft} />
+            <Text style={styles.privacyText}>Community Guidelines</Text>
+            <Ionicons name="open-outline" size={16} color={COLORS.cream.dark} />
+          </TouchableOpacity>
+
           {/* Logout Button */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={24} color={COLORS.cream.pure} />

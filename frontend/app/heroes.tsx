@@ -98,23 +98,22 @@ export default function HeroesScreen() {
     if (displayTier > userMaxUnlockedTier) setDisplayTier(userMaxUnlockedTier);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userMaxUnlockedTier]);
+  
+  // Subscribe to entitlements for reactive power updates
+  const entitlements = useEntitlementStore(s => s.entitlements);
 
   const calculatePower = (hero: any) => {
     const heroData = hero.hero_data;
     if (!heroData) return 0;
 
+    // Use canonical combat stats (includes premium cinematic bonus)
+    const stats = computeCombatStats(hero, heroData);
+
     const levelMult = 1 + (hero.level - 1) * 0.05;
-
-    const starMult = 1 + displayStars(hero) * 0.1; // stars=0 => no bonus
-
+    const starMult = 1 + displayStars(hero) * 0.1;
     const awakenMult = 1 + (hero.awakening_level || 0) * 0.2;
 
-    return Math.floor(
-      (heroData.base_hp + heroData.base_atk * 3 + heroData.base_def * 2) *
-        levelMult *
-        starMult *
-        awakenMult
-    );
+    return computePowerWithMultipliers(stats, levelMult, starMult, awakenMult);
   };
 
   const filteredAndSortedHeroes = userHeroes

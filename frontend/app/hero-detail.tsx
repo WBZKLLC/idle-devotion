@@ -349,13 +349,21 @@ export default function HeroDetailScreen() {
           {activeTab === 'stats' && (
             <GlassCard>
               <Text style={styles.sectionTitle}>Combat Stats</Text>
-              {/* Premium Cinematic Ownership Status */}
+              {/* Premium Cinematic Ownership Status - 3 states */}
               {combatStats.hasPremiumCinematicBonus ? (
+                // State 1: Hero cinematic owned (bonuses active)
                 <View style={styles.bonusBadge}>
                   <Ionicons name="videocam" size={12} color={COLORS.gold.primary} />
                   <Text style={styles.bonusBadgeText}>Premium Cinematic Owned (+10% HP, +5% ATK)</Text>
                 </View>
+              ) : packOwned ? (
+                // State 2: Pack owned but this hero not owned
+                <View style={styles.packOwnedBadge}>
+                  <Ionicons name="videocam-outline" size={12} color="rgba(155, 89, 182, 0.8)" />
+                  <Text style={styles.packOwnedBadgeText}>Pack Owned — this hero not owned</Text>
+                </View>
               ) : (
+                // State 3: Pack not owned
                 <View style={styles.notOwnedBadge}>
                   <Ionicons name="videocam-outline" size={12} color="rgba(255,255,255,0.5)" />
                   <Text style={styles.notOwnedBadgeText}>Premium Cinematic Not Owned</Text>

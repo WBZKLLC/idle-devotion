@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStore } from '../stores/gameStore';
 import { useFeatureStore } from '../stores/featureStore';
+import { useEntitlementStore } from '../stores/entitlementStore';
 import { isFeatureEnabled } from '../lib/features';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
@@ -34,6 +35,7 @@ function MaintenanceScreen() {
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const hydrateAuth = useGameStore(s => s.hydrateAuth);
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
+  const hydrateEntitlements = useEntitlementStore(s => s.hydrateEntitlements);
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
@@ -44,10 +46,13 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       // Hydrate auth from storage - ALWAYS runs, no conditional
       await hydrateAuth().catch(() => {});
       
+      // Hydrate paid entitlements from storage
+      await hydrateEntitlements().catch(() => {});
+      
       setIsRestoring(false);
     };
     restore();
-  }, [hydrateRemoteFeatures, hydrateAuth]);
+  }, [hydrateRemoteFeatures, hydrateAuth, hydrateEntitlements]);
 
   // Show loading while restoring session
   if (isRestoring) {

@@ -772,4 +772,32 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   backBtnText: { color: '#0A0B10', fontSize: 14, fontWeight: '900' },
+  
+  // Cinematic Bonus Styles
+  bonusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 215, 140, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 140, 0.3)',
+  },
+  bonusBadgeText: {
+    color: 'rgba(255, 215, 140, 0.95)',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  statValueBoosted: {
+    color: 'rgba(76, 217, 100, 0.95)',
+  },
+  bonusIndicator: {
+    color: 'rgba(76, 217, 100, 0.8)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
 });

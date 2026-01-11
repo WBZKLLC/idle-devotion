@@ -1,5 +1,5 @@
 /**
- * Paid Features Screen
+ * Premium Features Screen
  * 
  * Shows purchasable premium features.
  * Currently: Premium Cinematics ($9.99)

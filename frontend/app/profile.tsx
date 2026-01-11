@@ -423,14 +423,14 @@ export default function ProfileScreen() {
             </Text>
           </View>
 
-          {/* Paid Features Button */}
+          {/* Premium Features Button */}
           <TouchableOpacity 
             style={styles.paidFeaturesButton} 
             onPress={() => router.push('/paid-features')}
           >
             <LinearGradient colors={['#9B2CFF', '#7B1FA2', '#4A148C']} style={styles.paidFeaturesGradient}>
               <Ionicons name="diamond" size={24} color={COLORS.cream.pure} />
-              <Text style={styles.paidFeaturesText}>Paid Features</Text>
+              <Text style={styles.paidFeaturesText}>Premium Features</Text>
               <Ionicons name="chevron-forward" size={20} color={COLORS.cream.pure} />
             </LinearGradient>
           </TouchableOpacity>

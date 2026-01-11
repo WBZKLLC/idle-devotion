@@ -1,5 +1,5 @@
 /**
- * Entitlements - Paid Feature Definitions
+ * Entitlements - Premium Feature Definitions
  * 
  * Single source of truth for all paid/premium features.
  * Used by entitlementStore and paywall UI.

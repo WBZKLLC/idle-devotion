@@ -127,19 +127,19 @@ api.interceptors.response.use(
         if (!_isLoggingOut) {
           _isLoggingOut = true;
           
-          // Clear token immediately (in-memory)
-          apiSetAuthToken(null);
-          
+          // Show global UX once; mark handled ONLY if we actually show it
           _showErrorAlertOnce('Session Expired', 'Please log in again.', error);
           
-          // Trigger logout callback (clears store + persisted storage)
-          // Do NOT call API endpoints here to avoid infinite loops
+          // Deterministic logout: let the callback clear persisted storage + in-memory token
+          // Fallback: if callback is not registered, clear in-memory token here
           if (_forceLogoutCallback) {
             try {
               await _forceLogoutCallback();
             } catch (e) {
               console.error('[API] Force logout callback failed:', e);
             }
+          } else {
+            apiSetAuthToken(null);
           }
           
           // Reset flag after a delay to allow re-triggering if needed

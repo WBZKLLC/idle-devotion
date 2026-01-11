@@ -368,7 +368,9 @@ export default function HeroManagerScreen() {
       if (heroInfo) {
         const level = slot.heroData?.level || 1;
         const levelMult = 1 + (level - 1) * 0.05;
-        power += (heroInfo.base_hp + heroInfo.base_atk * 3 + heroInfo.base_def * 2) * levelMult;
+        // Use canonical stats helper for premium cinematic bonus
+        const stats = computeCombatStats(slot.heroData, heroInfo);
+        power += computePower(stats) * levelMult;
       }
     });
     setTeamPower(Math.floor(power));

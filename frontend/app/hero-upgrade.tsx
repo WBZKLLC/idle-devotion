@@ -12,12 +12,17 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useGameStore } from '../stores/gameStore';
+import { useEntitlementStore } from '../stores/entitlementStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { getHeroDetails, levelUpHero as apiLevelUpHero, promoteHeroStar, awakenHero as apiAwakenHero } from '../lib/api';
+
+// CANONICAL premium cinematic bonus
+import { premiumCinematicOwnershipBonus } from '../lib/combatBonuses';
+import { hasHeroPremiumCinematicOwned } from '../lib/cinematicsAccess';
 
 // Centralized tier logic (single source of truth for star/tier calculations)
 import { MAX_STAR_TIER, displayStars, starsSuffix } from '../lib/progression';

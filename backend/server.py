@@ -445,9 +445,13 @@ async def revoke_token(
         revoked_by=revoked_by,
     )
     try:
-        await db.revoked_tokens.insert_one(revoked.dict())
+        result = await db.revoked_tokens.insert_one(revoked.dict())
+        print(f"🔒 Token revoked: jti={jti[:12]}..., inserted_id={result.inserted_id}")
     except DuplicateKeyError:
-        pass  # Already revoked - this is fine
+        print(f"🔒 Token already revoked: jti={jti[:12]}...")
+    except Exception as e:
+        print(f"❌ Error revoking token: {e}")
+        raise
 
 
 async def revoke_all_user_tokens(user_id: str):

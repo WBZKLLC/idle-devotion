@@ -111,6 +111,26 @@ export default function HeroManagerScreen() {
     dungeons: null,
   });
 
+  // Animation values
+  const flashAnim = useState(new Animated.Value(0))[0];
+  const saveAnim = useState(new Animated.Value(1))[0];
+
+  // Animation helper
+  const flashSlotAnimation = () => {
+    Animated.sequence([
+      Animated.timing(flashAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+      Animated.timing(flashAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  };
+
   // Initialize slots based on selected mode
   const initializeSlots = useCallback(() => {
     const modeConfig = GAME_MODES[selectedMode];

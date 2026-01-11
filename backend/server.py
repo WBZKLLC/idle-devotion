@@ -7211,9 +7211,7 @@ async def get_hero_details(user_hero_id: str, username: str):
 @api_router.post("/hero/{user_hero_id}/level-up")
 async def level_up_hero(user_hero_id: str, username: str, levels: int = 1):
     """Level up a hero using gold"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
     if not user_hero:

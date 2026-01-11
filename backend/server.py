@@ -1806,9 +1806,18 @@ class AuthResponse(BaseModel):
 
 @api_router.post("/user/register")
 async def register_user(request: RegisterRequest):
-    """Register a new user with password"""
+    """Register a new user with password.
+    
+    SECURITY:
+    - Creates canonical username (lowercase) for reliable lookups
+    - Reserves 'adam' as a protected username (super admin)
+    - JWT 'sub' is the immutable user_id (not username)
+    """
     username = request.username.strip()
     password = request.password
+    
+    # Create canonical username for lookups
+    username_canon = canonicalize_username(username)
     
     # Validate username
     if len(username) < 3:
@@ -1818,24 +1827,30 @@ async def register_user(request: RegisterRequest):
     if not re.match(r'^[a-zA-Z0-9_]+$', username):
         raise HTTPException(status_code=400, detail="Username can only contain letters, numbers, and underscores")
     
+    # SECURITY: Reserve 'adam' as protected username
+    admin_canon = canonicalize_username(SUPER_ADMIN_USERNAME)
+    if username_canon == admin_canon:
+        raise HTTPException(status_code=400, detail="This username is reserved")
+    
     # Validate password
     if len(password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
-    # Check if username exists
-    existing = await db.users.find_one({"username": {"$regex": f"^{username}$", "$options": "i"}})
+    # Check if canonical username exists (prevents 'Adam', 'ADAM', 'adam' duplicates)
+    existing = await db.users.find_one({"username_canon": username_canon})
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
     
-    # Create user with hashed password
+    # Create user with hashed password and canonical username
     user = User(
         username=username,
+        username_canon=username_canon,
         password_hash=hash_password(password)
     )
     await db.users.insert_one(user.dict())
     
-    # Create JWT token
-    token = create_access_token(data={"sub": username})
+    # Create JWT token with immutable user_id as subject (NOT username)
+    token = create_access_token(data={"sub": user.id})
     
     user_dict = user.dict()
     del user_dict["password_hash"]  # Don't send password hash to client

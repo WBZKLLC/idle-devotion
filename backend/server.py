@@ -430,19 +430,24 @@ async def revoke_token(
     Other DB failures will raise and must be handled by caller.
     
     expires_at MUST be timezone-aware UTC for TTL index to work correctly.
+    If normalization fails, defaults to now + 8 days to ensure record persists.
     """
     from pymongo.errors import DuplicateKeyError
     
     # Ensure expires_at is timezone-aware UTC for TTL index
-    expires_at_utc = _normalize_dt_utc(expires_at) or datetime.now(timezone.utc)
+    # If normalization fails, use safe fallback (token TTL + buffer) to ensure
+    # revocation record persists long enough to cover any valid token
+    expires_at_utc = _normalize_dt_utc(expires_at)
+    if expires_at_utc is None:
+        expires_at_utc = datetime.now(timezone.utc) + timedelta(days=8)
     
     revoked = RevokedToken(
         jti=jti,
         user_id=user_id,
-        revoked_at=datetime.now(timezone.utc),  # Timezone-aware UTC
         expires_at=expires_at_utc,
         reason=reason,
         revoked_by=revoked_by,
+        # revoked_at uses model default (datetime.now(timezone.utc))
     )
     try:
         result = await db.revoked_tokens.insert_one(revoked.dict())

@@ -28,24 +28,6 @@ import { getTeamsByMode, getTeamsList, getTeamsFull, saveModeTeam } from '../lib
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const COLORS = {
-  navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },
-  gold: { darkest: '#8b7355', dark: '#b8860b', primary: '#c9a227', medium: '#d4af37', light: '#e6c666' },
-  cream: { pure: '#ffffff', soft: '#f8f6f0', dark: '#e8e0d0' },
-  rarity: {
-    N: '#9e9e9e',
-    R: '#4CAF50',
-    SR: '#2196F3',
-    SSR: '#9C27B0',
-    'SSR+': '#E91E63',
-    UR: '#FF9800',
-    'UR+': '#F44336',
-  },
-  success: '#22c55e',
-  error: '#ef4444',
-  warning: '#f59e0b',
-};
-
 // API_BASE removed - using centralized lib/api.ts wrappers
 
 // Game modes with their team configurations

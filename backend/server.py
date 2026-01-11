@@ -349,7 +349,9 @@ async def get_user_for_mutation(username: str) -> dict:
         HTTPException: 404 if user not found
         HTTPException: 403 if account is frozen
     """
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     assert_account_active(user)
     return user
 

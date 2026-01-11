@@ -3858,9 +3858,7 @@ async def get_vip_packages(username: str):
 @api_router.post("/vip/package/purchase")
 async def purchase_vip_package(username: str, package_tier: str):
     """Purchase a VIP package with crystals"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))
     

@@ -6,7 +6,7 @@ Quick Backend API Status Check
 import requests
 import json
 
-BASE_URL = "https://identityguard-1.preview.emergentagent.com/api"
+BASE_URL = "https://secureauth-hub-1.preview.emergentagent.com/api"
 TEST_USERNAME = "testplayer"
 
 def test_endpoint(method, endpoint, **kwargs):

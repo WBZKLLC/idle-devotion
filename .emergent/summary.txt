@@ -1,88 +1,91 @@
 <analysis>
+
 **original_problem_statement**:
-The user's primary goal was to perform a comprehensive security overhaul of the application's identity, authentication, and administration systems. This involved:
-1.  **Identity Hardening**: Fixing a critical identity confusion vulnerability by introducing a canonical source of truth for usernames (), making JWTs based on immutable user IDs instead of mutable usernames, and ensuring the super-admin ADAM account is uniquely and permanently reserved.
-2.  **GOD MODE Implementation**: Implementing a full suite of powerful, server-authoritative administrative (GOD MODE) endpoints for managing users, game economy, and live operations.
-3.  **Admin System Security**: Ensuring all admin endpoints are protected by a robust, centralized security gate that relies on the new hardened identity model. This included implementing detailed, production-grade audit logging for every admin action.
-4.  **Token Revocation**: Implementing a secure and performant two-layer token revocation system to allow for instant invalidation of a single token (logout) or all tokens for a user (account freeze, admin action).
-5.  **Code Quality and Refactoring**: Refactoring the authentication and authorization logic to eliminate duplicated code and follow best practices, including making all datetime handling timezone-aware to prevent subtle bugs.
+The user's primary goal was to perform a comprehensive security and stability overhaul of the application's identity, authentication, administration, and error handling systems. This involved:
+1.  **Identity Hardening (Backend)**: Fixing critical identity vulnerabilities by using canonical usernames, immutable user IDs in JWTs, and securing the super-admin account.
+2.  **GOD MODE Implementation (Backend)**: Implementing a full suite of powerful, server-authoritative administrative endpoints, secured with robust access control and detailed audit logging.
+3.  **Token Revocation (Backend)**: Implementing a secure and performant two-layer token revocation system (surgical and mass revocation).
+4.  **Code Quality and Refactoring (Backend)**: Centralizing auth logic, ensuring all datetime handling is timezone-aware (UTC), and making DB indexes production-safe.
+5.  **Crash Containment & Safe Failure (Frontend)**: Implementing a global, centralized system for handling API errors (4xx/5xx), standardizing the logic for all data mutations to prevent inconsistent states, and eliminating optimistic UI updates for critical data like currency.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application backend has undergone a complete security transformation, resulting in a production-grade identity, authentication, and administration system.
-- **Identity is Hardened**: User identity is now based on a non-optional, lowercase  field and an immutable UUID uid=0(root) gid=0(root) groups=0(root) field. JWT  claims now correctly contain the user's UUID uid=0(root) gid=0(root) groups=0(root). The ADAM super-admin account is uniquely identified by  and this username is permanently reserved at the application and database level (via a non-sparse unique index).
-- **GOD MODE is Implemented**: A comprehensive suite of admin endpoints now exists under  for managing the economy, user progression, live-ops (announcements, feature flags, drop rates), and enforcement (account freezing). All endpoints are protected by a centralized  dependency.
-- **Production-Grade Auditing**: Every administrative action is logged to an  collection. Log entries contain rich context, including a unique , the JWT's  (for session correlation), , the exact fields changed, and the reason for the action. The collection is indexed for fast queries.
-- **Token Revocation is Active**: A robust, two-layer token revocation system is in place. It supports surgical revocation of single tokens via a  collection (with a TTL index for auto-cleanup) and mass-revocation of all a user's tokens via a  timestamp on the user document. Logout, account freezing, and a dedicated admin endpoint all leverage this system.
-- **Auth Logic is Centralized**: All authentication and revocation logic has been refactored into a single, centralized  helper function, eliminating duplicated code and ensuring all security checks are applied consistently. All datetime operations are now timezone-aware (UTC) to prevent bugs.
+The application has undergone a complete, production-grade security and stability hardening on both the backend and frontend.
+- **Backend**: The auth system is fully hardened with canonical usernames, immutable UUIDs in JWTs, integer-based timestamps, and timezone-aware logic. A comprehensive suite of GOD MODE admin endpoints exists, protected by a global middleware and a  dependency. A two-layer token revocation system is active and all admin actions are captured in a detailed audit log. All mutation endpoints now correctly check for frozen accounts via a  helper, effectively making frozen accounts read-only.
+- **Frontend**: A global error handling system has been implemented.
+    - An Axios response interceptor in  centrally handles all major HTTP error codes (401, 403, 429, 400, 404, 5xx), preventing crashes and providing consistent user feedback.
+    - A  wrapper in  enforces a standard, safe pattern for all API calls that change data, including consistent loading/success/error states and server data refreshing.
+    - The 401 (Unauthorized) flow is now deterministic, triggering a full logout that clears persisted  data to prevent inconsistent UI states.
+    - Logic is in place to prevent duplicate error alerts (e.g., from both the global interceptor and a local screen).
 
 **Last working item**:
-    - Last item agent was working: The agent completed the final step of the security overhaul: making all datetime handling in the authentication and revocation system explicitly timezone-aware (UTC). This involved creating a helper function () to convert timestamps and ensuring all comparisons between the JWT  and the database  fields were done consistently in an aware context.
+    - Last item agent was working: The agent completed a final production polish pass on the newly created frontend stability features. This involved refining the Axios interceptor and  wrapper to prevent double alerts, preserve server error details correctly, improve 4xx error coverage, and make the forced 401 logout flow fully deterministic by ensuring it clears persisted storage () first.
     - Status: USER VERIFICATION PENDING
     - Agent Testing Done: Y
-    - Which testing method agent to use? backend testing agent
+    - Which testing method agent to use? both
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-There are no pending or in-progress issues from this session. The entire security overhaul task is complete, pending final user review.
+There are no pending or in-progress issues. The entire security and stability overhaul is functionally complete, pending final user review.
 
 **In progress Task List**:
 There are no in-progress tasks.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
+    *   **P0: Implement Network Instability Handling (Frontend)**: As mentioned by the user as the NEXT step, this involves adding:
+        *   Request retry/backoff logic for idempotent GET requests.
+        *   Idempotency keys for critical POST requests to prevent duplicate actions.
+        *   An offline banner and a tap to retry mechanism for failed requests.
     *   **P1: Implement Server-Side Entitlements & IAP Flow**: The task from the original problem statement to make entitlements server-authoritative and wire up a real purchase flow (e.g., with RevenueCat) has not been started.
     *   **P1: Re-introduce Cinematic Playback Behind Paywall**: The original plan to add a Play Cinematic button back to , guarded by entitlement checks, is still pending.
 
 *   **Future Tasks:**
-    *   **P2: Enable MFA for Admin Account**: The hooks for MFA are in place (,  fields). The full implementation (setup, verification) needs to be built for production security.
+    *   **P2: Enable MFA for Admin Account**: The database fields (, ) exist, but the full implementation (setup, verification) needs to be built.
     *   **P2: Fix Web Video Asset Compatibility**: The cinematic video files in  use a codec unsupported by web browsers. The  script needs to be run and verified.
-    *   **P2: Consolidate and Refactor **: The main backend file, , is extremely large and contains logic for many different features. A file-level refactor should be considered to improve maintainability.
+    *   **P2: Consolidate and Refactor **: The main backend file, , is a large monolith and is a candidate for a file-level refactor to improve maintainability.
 
 **Completed work in this session**
-- **Complete Identity and Auth System Overhaul:**
-  - Implemented  as the canonical source of truth for user identity.
-  - Migrated all existing users to have a  and a UUID uid=0(root) gid=0(root) groups=0(root).
-  - Changed JWT  claim to use the immutable UUID uid=0(root) gid=0(root) groups=0(root) instead of the mutable username.
-  - Hardened the registration process to permanently reserve the  username, independent of any environment variables.
-  - Created non-sparse unique indexes on  and  to enforce uniqueness at the database level.
-- **Full GOD MODE Admin System Implementation:**
-  - Implemented a comprehensive suite of admin endpoints covering economy, progression, user management, and live-ops.
-  - Secured all admin endpoints with a  dependency that checks for .
-  - Added robust validation to all sensitive live-ops endpoints (e.g., , ) to prevent accidental abuse.
-- **Production-Grade Audit Logging System:**
-  - Created a detailed  model with fields for ,  (token ID), , , , and more.
-  - Ensured every GOD MODE action writes a detailed, immutable entry to the  collection.
-  - Added database indexes to the audit log collection for efficient querying during investigations.
-- **Complete Token Revocation System:**
-  - Implemented a two-layer revocation strategy:
-    1.  Mass revocation via a  timestamp on the user model.
-    2.  Surgical revocation of individual tokens via a  collection using the JWT  claim.
-  - Created a  endpoint for users.
-  - Updated the  and  endpoints to leverage the revocation system.
-  - Added a TTL index to the  collection for automatic data cleanup.
-- **Auth Logic Refactoring and Hardening:**
-  - Centralized all authentication, validation, and revocation logic into a single  helper function, removing duplicated code and ensuring consistency.
-  - Made all datetime handling in the auth system explicitly timezone-aware (UTC) to prevent subtle, time-related bugs.
+- **Complete Backend Security Overhaul:**
+    - Finalized JWT claims to use integer timestamps and made all datetime handling UTC-aware.
+    - Made database indexes (, ) non-sparse and startup-safe.
+    - Added rate-limiting to the  endpoint.
+    - Implemented a global middleware to guard all  routes.
+    - **Systematically applied frozen account checks to all 60+ mutation endpoints**, making frozen accounts read-only across the entire backend.
+- **Complete Frontend Stability Overhaul:**
+    - **Implemented a global Axios response interceptor** in  to centrally handle 401, 403, 429, 400, 404, and 5xx errors.
+    - **Created a  wrapper** in  to standardize mutation logic (loading states, error handling, data refresh). The wrapper now returns a structured result  to preserve server details.
+    - **Made the 401 force logout flow fully deterministic**, ensuring it clears  to prevent auth race conditions.
+    - **Implemented logic to prevent duplicate error alerts** from the global interceptor and local screens.
+    - Refactored key mutations in  (gacha, upgrades, etc.) to use the new  pattern.
+    - Audited and confirmed there are no optimistic currency/XP updates in the frontend.
 
 **Earlier issues found/mentioned but not fixed**
-All security issues identified by the user during this session were addressed and fixed. The remaining unfixed items are listed under Upcoming and Future Tasks.
+   - **Issue 1:** The cinematic video feature for 5+ star heroes is known to be broken. The video files fail to load due to an incompatible codec. The frontend gracefully handles the error, but the feature is non-functional.
+     - **Why to solve this issue and what will be achieved with this?** Fixing this will restore a premium cosmetic feature for players who have acquired high-tier heroes.
+     - **Should Test frontend/backend/both after fix:** frontend
+     - **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
-  - The main backend file, , remains a large monolith. While the code *within* it has been significantly improved and hardened, the file itself has grown even larger and is a candidate for future refactoring.
+  - The main backend file, , remains a large monolith. The file has grown even larger during the security hardening, making it a prime candidate for future refactoring to improve maintainability.
 
 **Code Architecture**
-
+safeMutationsafeMutation
 
 **Key Technical Concepts**
-- **Canonical Usernames**: Using a standardized, case-insensitive version of a username () as the primary identifier for lookups to prevent identity confusion.
-- **Immutable JWT Subject ()**: Using a non-changing user identifier (UUID uid=0(root) gid=0(root) groups=0(root)) as the JWT subject claim, decoupling authentication from mutable user data like usernames.
-- **Centralized Auth Logic**: Refactoring all authentication and authorization checks into a single, reusable helper function () to ensure consistency and maintainability.
-- **Two-Layer Token Revocation**: A robust strategy combining a user-level timestamp () for mass revocation and a denylist collection () for revoking individual tokens by their .
-- **Production-Grade Audit Logging**: Creating a detailed, immutable log of all high-privilege actions, including rich context like request IDs, IP addresses, and token identifiers () for security and traceability.
-- **Timezone-Aware Datetimes**: Explicitly handling all datetimes with timezone information (UTC) to prevent subtle but critical bugs in time-sensitive logic like token expiration and revocation checks.
-- **Idempotent Database Migrations**: Using startup scripts to apply schema changes (adding fields, creating indexes) in a way that can be run multiple times without causing errors.
+- **Backend:**
+    - **Canonical Usernames & Immutable JWTs**: Core of the hardened identity system.
+    - **Centralized Auth Logic**: All auth checks flow through .
+    - **Two-Layer Token Revocation**: Surgical () and mass () revocation.
+    - **Production-Grade Audit Logging**: Detailed, immutable logs for all admin actions.
+    - **Timezone-Aware Datetimes (UTC)**: Prevents time-related bugs.
+    - **Production-Safe DB Migrations**:  calls are guarded to not fail on already exists.
+- **Frontend:**
+    - **Global API Error Handling (Axios Interceptors)**: A single source of truth for handling HTTP error codes (4xx/5xx) and providing consistent user feedback.
+    - **Safe Mutation Wrapper**: A higher-order function pattern () that enforces consistent logic for API calls that mutate data, including loading states, success/failure handling, and data refreshing.
+    - **Deterministic Auth State Management**: A robust flow for handling forced logouts (401) that clears persisted storage () before in-memory state to prevent race conditions.
+    - **Duplicate UX Prevention**: Using flags on error objects () to coordinate between global (interceptor) and local (screen) error UI.
 
 **key DB schema**
   - **users**: 
@@ -90,43 +93,54 @@ All security issues identified by the user during this session were addressed an
   - **admin_audit_log**: 
 
 **All files of reference**
-- : The single most important file, containing the entire backend logic that was refactored and hardened. All new security features, models, and endpoints are here.
+- : The monolithic backend file containing all security logic.
+- : Key frontend file containing the Axios instance and the new global response interceptor.
+- : New frontend file with the  wrapper function.
+- : The main Zustand store, now integrated with the new stability patterns.
+- : The root layout file, responsible for initializing the force logout callback.
 
 **Critical Info for New Agent**
-- **The backend security model has been completely overhauled.** Do not assume anything based on previous versions. The new source of truth for identity is  and the UUID uid=0(root) gid=0(root) groups=0(root).
-- **All admin actions are gated by **, which is now a highly secure dependency that checks against the hardcoded .
-- **All authentication logic is centralized in **. If you need to understand how tokens are verified or users are loaded, start there. Do not add new auth logic elsewhere.
-- The user is a security expert who performs deep code audits. Ensure any new code adheres to the established patterns for security, validation, and logging.
+- The backend and frontend have been significantly hardened for security and stability. **Do not add new logic that bypasses these systems.**
+- **Backend**: All new mutation endpoints MUST use the  helper to enforce frozen account checks.
+- **Frontend**: All new mutations SHOULD use the  wrapper from  to ensure consistent error handling and state management. New global error logic should be added to the interceptor in .
+- The user is a security and stability expert who performs deep code audits. Adherence to the established patterns for security, validation, logging, and error handling is critical.
+- The next high-priority task, as indicated by the user, is to implement frontend network instability handling (retries, offline banners, etc.).
+
+**documents created in this job**
+- /app/frontend/lib/safeMutation.ts
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Asked for the final  function to review the datetime handling, which was the final subtle bug to fix. (RESOLVED)
-2.  **User**: Asked for the  implementation to sanity check it. (RESOLVED)
-3.  **User**: Asked to refactor the duplicated auth logic into a single helper. (COMPLETED)
-4.  **User**: Asked if JWTs included a  and requested a safe revocation strategy. (COMPLETED)
-5.  **User**: Asked for the  model definition to check for compliance fields. (RESOLVED)
-6.  **User**: Asked for a representative GOD MODE endpoint to review the diff tracking and validation logic. (RESOLVED)
-7.  **User**: Ran a final GO/NO-GO checklist and confirmed the system was SHIP SAFE. (RESOLVED)
-8.  **User**: Asked for  for a final sanity check before shipping GOD MODE endpoints. (RESOLVED)
-9.  **User**: Confirmed the  function was now airtight and approved proceeding with GOD MODE implementation. (RESOLVED)
-10. **User**: Provided a new, secure password for the ADAM account after the agent exposed the old one. (COMPLETED)
+1.  **User (LATEST)**: Provided a final, refined diff for the frontend stability polish, focusing on making the error handling even more robust and deterministic. (RESOLVED, agent applied the diff).
+2.  **User**: Requested the diff for the polish pass to review it. (RESOLVED, agent provided it).
+3.  **User**: Reviewed the agent's first polish pass and identified 4 high-risk issues (double alerts, error swallowing, non-deterministic logout, incomplete 4xx handling) and requested a final patch. (RESOLVED, agent implemented fixes).
+4.  **User**: Requested the diff of the initial stability fixes (interceptor, safeMutation) to review. (RESOLVED, agent provided code blocks).
+5.  **User**: Provided instructions to implement the three keystone frontend stability fixes: a global interceptor, a  wrapper, and an audit to kill optimistic updates. (COMPLETED).
+6.  **User**: Audited the frontend error handling, confirmed it was partial and inconsistent, and requested fixes. (COMPLETED).
+7.  **User**: Completed the backend security finalization by ensuring ALL mutation endpoints had frozen account checks. (COMPLETED).
+8.  **User**: Requested the agent to systematically find and fix all mutation endpoints that were missing frozen account checks. (COMPLETED).
+9.  **User**: Provided instructions for the final backend security hardening: add a global admin middleware, audit for auth bypasses, and enforce frozen account checks on mutations. (COMPLETED).
+10. **User**: Confirmed the entire backend auth/audit hardening arc was complete and requested a final verification sequence with . (COMPLETED).
 
 **Project Health Check:**
 - **Broken**:
     - Web video playback for cinematics (due to incompatible video codecs).
 - **Hardened**:
-    - The entire backend identity, authentication, authorization, and administration system is now hardened to a production-grade standard.
+    - The entire backend identity, authentication, authorization, and administration system.
+    - The entire frontend API error handling and mutation logic.
 - **Mocked**:
-    - The In-App Purchase (IAP) flow is not implemented; entitlements are granted via admin endpoints.
+    - The In-App Purchase (IAP) flow is not implemented.
 
 **3rd Party Integrations**
 *   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).
 *   **RevenueCat**: Packages installed, but the integration is functionally disabled.
 *   **expo-av**: Used for video playback.
 *   **ffmpeg**: Installed in the environment for video processing.
+*   **axios**: Used for frontend API calls.
+*   **zustand**: For frontend state management.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (The agent prepared to use it and received results from it earlier in the session).
-  - Troubleshoot agent used after agent stuck in loop: NO
+  - Testing agent used after significant changes: NO (Agent used extensive custom scripts and manual verification in this session).
+  - Troubleshoot agent used after agent stuck in loop: YES (Agent self-corrected from a recursion error caused by a faulty  replacement).
   - Test files created: None.
   - Known regressions: None.
 
@@ -136,5 +150,6 @@ All security issues identified by the user during this session were addressed an
     - Password: 
 
 **What agent forgot to execute**
-- The agent successfully executed all user requests in this session. The forgotten items are the larger-scope tasks from the initial handover summary that were not part of the core security overhaul, such as implementing the IAP flow and fixing video codecs. These are correctly captured in Upcoming and Future Tasks.
+- The agent successfully executed all user requests in this session. The forgotten items are the larger-scope tasks from the initial handover summary that were intentionally deferred to focus on the security/stability overhaul (e.g., IAP flow, MFA). These are correctly captured in Upcoming and Future Tasks.
+
 </analysis>

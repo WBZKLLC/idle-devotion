@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://identityguard-1.preview.emergentagent.com/api"
+BASE_URL = "https://secureauth-hub-1.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

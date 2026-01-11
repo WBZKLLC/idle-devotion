@@ -2253,10 +2253,16 @@ async def logout(current_user: dict = Depends(get_current_user)):
     user_id = get_user_id(current_user)
     
     if not jti:
-        raise HTTPException(status_code=400, detail="Token does not contain jti")
+        raise HTTPException(status_code=401, detail="Invalid token: missing jti")
     
-    # Calculate expiry time for TTL cleanup
-    expires_at = datetime.utcfromtimestamp(exp) if exp else datetime.utcnow() + timedelta(hours=168)
+    if exp is None:
+        raise HTTPException(status_code=401, detail="Invalid token: missing expiration")
+    
+    # Derive expires_at from token exp + 5 minute buffer for clock skew
+    try:
+        expires_at = datetime.utcfromtimestamp(exp) + timedelta(minutes=5)
+    except (ValueError, TypeError, OSError):
+        raise HTTPException(status_code=401, detail="Invalid token: invalid expiration")
     
     await revoke_token(
         jti=jti,

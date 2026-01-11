@@ -205,6 +205,12 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
     
+    # SECURITY: Validate user_id is UUID format (same guard as get_current_user)
+    try:
+        uuid.UUID(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+    
     # Load user by immutable ID
     user = await db.users.find_one({"id": user_id})
     if not user:

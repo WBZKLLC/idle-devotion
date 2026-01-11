@@ -391,7 +391,7 @@ class AdminAuditLog(BaseModel):
     request_path: Optional[str] = None
     request_method: Optional[str] = None
     batch_id: Optional[str] = None  # For batch operations (e.g., spawn_gift to all users)
-    issued_at: datetime = Field(default_factory=datetime.utcnow)  # Server timestamp (single source of truth)
+    issued_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # Timezone-aware UTC
 
 
 # =============================================================================

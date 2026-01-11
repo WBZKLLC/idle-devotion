@@ -1421,6 +1421,18 @@ async def init_islands_and_chapters():
 async def startup_event():
     await init_heroes()
     await init_islands_and_chapters()
+    
+    # Create chat indexes for performance
+    await db.chat_messages.create_index([("channel_type", 1), ("timestamp", -1)])
+    await db.chat_messages.create_index([("sender_id", 1)])
+    await db.chat_messages.create_index([("client_msg_id", 1)], sparse=True)
+    await db.chat_messages.create_index([("timestamp", 1)], expireAfterSeconds=90*24*60*60)  # 90 day retention
+    
+    # Create moderation indexes
+    await db.chat_reports.create_index([("status", 1), ("created_at", -1)])
+    await db.chat_reports.create_index([("reported_user_id", 1)])
+    await db.chat_user_status.create_index([("user_id", 1)], unique=True)
+    await db.chat_moderation_log.create_index([("username", 1), ("issued_at", -1)])
 
 async def get_random_hero_from_db(pity_counter: int, summon_type: str = "common"):
     """Select a random hero based on gacha rates with pity system

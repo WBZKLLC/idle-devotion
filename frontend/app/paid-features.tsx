@@ -25,18 +25,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ENTITLEMENTS, cinematicOwnedKey } from '../lib/entitlements';
 import { useEntitlementStore } from '../stores/entitlementStore';
+import { useGameStore } from '../stores/gameStore';
 import COLORS from '../theme/colors';
-
-// Sample hero IDs for DEV testing (common ones)
-const SAMPLE_HERO_IDS = [
-  'michael_the_archangel',
-  'gabriel_herald_of_dawn',
-  'raphael_divine_healer',
-  'lucifer_fallen_star',
-  'athena_goddess_of_wisdom',
-  'zeus_lord_of_thunder',
-  'hades_lord_of_underworld',
-];
 
 export default function PaidFeaturesScreen() {
   // Subscribe directly to entitlements state for proper reactivity
@@ -45,6 +35,15 @@ export default function PaidFeaturesScreen() {
   const grantDev = useEntitlementStore(s => s.grantEntitlementDevOnly);
   const revokeDev = useEntitlementStore(s => s.revokeEntitlementDevOnly);
   const setHeroCinematicOwned = useEntitlementStore(s => s.setHeroCinematicOwned);
+  
+  // Get user's actual heroes from game store
+  const user = useGameStore(s => s.user);
+  const userHeroes = useMemo(() => {
+    return (user?.heroes || []).map((h: any) => ({
+      id: h.hero_id || h.id || '',
+      name: h.hero_data?.name || h.name || 'Unknown',
+    })).filter((h: any) => h.id);
+  }, [user?.heroes]);
 
   // DEV: text input for custom hero ID
   const [customHeroId, setCustomHeroId] = useState('');

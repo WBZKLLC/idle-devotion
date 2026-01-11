@@ -332,6 +332,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     console.log('[logout] User logged out, auth cleared');
   },
 
+  /**
+   * Register the force logout callback with the API layer.
+   * This should be called once during app initialization.
+   * Enables the global API interceptor to force logout on 401.
+   */
+  registerForceLogout: () => {
+    const { logout } = get();
+    apiSetForceLogoutCallback(async () => {
+      console.log('[API] Force logout triggered by 401');
+      await logout();
+      // Navigation to login is handled by the auth state change in the app
+    });
+  },
+
   fetchUser: async () => {
     const { user } = get();
     if (!user) return;

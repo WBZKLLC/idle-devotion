@@ -41,11 +41,10 @@ function _shouldShowAlert(): boolean {
   return true;
 }
 
-function _showErrorAlert(title: string, message: string) {
-  if (_shouldShowAlert()) {
-    Alert.alert(title, message);
-  }
-  console.error(`[API] ${title}: ${message}`);
+function _showErrorAlertOnce(title: string, message: string, error?: any) {
+  if (!_shouldShowAlert()) return;
+  if (error) markErrorHandled(error); // ONLY mark when we actually show global UX
+  Alert.alert(title, message);
 }
 
 /**

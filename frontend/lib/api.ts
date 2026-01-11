@@ -2,7 +2,8 @@
 // SINGLE SOURCE OF TRUTH for all backend API calls
 // Screens should import from here to prevent endpoint string drift
 
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import { Alert, Platform } from 'react-native';
 
 const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
 const API_BASE = RAW
@@ -13,6 +14,37 @@ export const api = axios.create({
   baseURL: API_BASE,
   timeout: 20000,
 });
+
+// ─────────────────────────────────────────────────────────────
+// GLOBAL ERROR HANDLING STATE
+// Prevents spam alerts and handles forced logout
+// ─────────────────────────────────────────────────────────────
+
+let _lastAlertTime = 0;
+let _forceLogoutCallback: (() => void) | null = null;
+const ALERT_DEBOUNCE_MS = 3000;
+
+/**
+ * Register the logout callback from gameStore.
+ * Called once during app initialization.
+ */
+export function apiSetForceLogoutCallback(cb: () => void) {
+  _forceLogoutCallback = cb;
+}
+
+function _shouldShowAlert(): boolean {
+  const now = Date.now();
+  if (now - _lastAlertTime < ALERT_DEBOUNCE_MS) return false;
+  _lastAlertTime = now;
+  return true;
+}
+
+function _showErrorAlert(title: string, message: string) {
+  if (_shouldShowAlert()) {
+    Alert.alert(title, message);
+  }
+  console.error(`[API] ${title}: ${message}`);
+}
 
 // ─────────────────────────────────────────────────────────────
 // AUTH TOKEN MANAGEMENT
@@ -48,6 +80,69 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// ─────────────────────────────────────────────────────────────
+// GLOBAL RESPONSE INTERCEPTOR
+// Centralized handling for 401/403/429/5xx
+// All screens automatically inherit this behavior
+// ─────────────────────────────────────────────────────────────
+
+api.interceptors.response.use(
+  // Success - pass through
+  (response) => response,
+  
+  // Error - centralized handling
+  (error: AxiosError<{ detail?: string }>) => {
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || error.message || 'Unknown error';
+    const retryAfter = error.response?.headers?.['retry-after'];
+    
+    // Log all errors for debugging
+    console.error(`[API] ${error.config?.method?.toUpperCase()} ${error.config?.url} → ${status || 'NETWORK'}: ${detail}`);
+    
+    switch (status) {
+      case 401:
+        // Session expired or invalid token
+        // Clear token and force re-login
+        apiSetAuthToken(null);
+        _showErrorAlert('Session Expired', 'Please log in again.');
+        
+        // Trigger logout callback if registered (clears store, navigates to login)
+        // Do NOT call API endpoints here to avoid infinite loops
+        if (_forceLogoutCallback) {
+          setTimeout(() => _forceLogoutCallback?.(), 100);
+        }
+        break;
+        
+      case 403:
+        // Forbidden - account frozen, permission denied, etc.
+        _showErrorAlert('Action Blocked', detail);
+        break;
+        
+      case 429:
+        // Rate limited
+        const retryMsg = retryAfter 
+          ? `Please wait ${retryAfter} seconds and try again.`
+          : 'Please slow down and try again.';
+        _showErrorAlert('Too Many Requests', retryMsg);
+        break;
+        
+      default:
+        if (status && status >= 500) {
+          // Server error
+          _showErrorAlert('Server Error', 'Something went wrong. Please try again later.');
+        } else if (!status) {
+          // Network error (no response)
+          _showErrorAlert('Network Error', 'Please check your connection and try again.');
+        }
+        // 4xx errors (except 401/403/429) are passed through for screen-level handling
+        break;
+    }
+    
+    // Always reject so screens can handle specific cases if needed
+    return Promise.reject(error);
+  }
 );
 
 export function requireUsername(username?: string) {

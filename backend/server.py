@@ -3791,9 +3791,7 @@ async def get_vip_comparison(username: str):
 @api_router.post("/vip/purchase")
 async def vip_purchase(username: str, amount_usd: float):
     """Process VIP purchase (in production, integrate with payment processor)"""
-    user = await db.users.find_one({"username": username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_for_mutation(username)  # Includes frozen check
     
     if amount_usd <= 0:
         raise HTTPException(status_code=400, detail="Invalid purchase amount")

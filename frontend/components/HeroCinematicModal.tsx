@@ -80,14 +80,26 @@ export default function HeroCinematicModal({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Log on open
+  // Log on open with platform info
   React.useEffect(() => {
     if (visible) {
-      logCine('open', { heroKey, heroName, moduleId: videoSource });
+      logCine('open', { 
+        heroKey, 
+        heroName, 
+        platform: Platform.OS,
+        raw: videoSource,
+        normalized: typeof videoSource === 'string' ? '{ uri }' : 'module',
+      });
       setIsLoading(true);
       setError(null);
     }
   }, [visible, heroKey, heroName, videoSource]);
+
+  // Normalize source: string (web) → { uri }, number (native) → pass through
+  const normalizedSource = React.useMemo(() => {
+    if (!videoSource) return null;
+    return typeof videoSource === 'string' ? { uri: videoSource } : videoSource;
+  }, [videoSource]);
 
   // Cleanup function - stops and unloads video
   const cleanupVideo = useCallback(async () => {

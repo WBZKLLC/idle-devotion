@@ -572,17 +572,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User registration and authentication"
-    - "Gacha pull system with pity mechanics"
-    - "Hero upgrade/rank up system"
-    - "Daily login rewards and idle resource generation"
+    - "Identity Hardening - Canonical usernames and immutable JWT subject"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Phase 1 MVP implementation complete. All core backend endpoints implemented including user registration, gacha system with pity, hero management, rank up, daily rewards, idle generation, and team management. Frontend has complete UI with 5 screens (Home, Gacha, Heroes, Team, Profile) with tab navigation. Ready for backend testing."
+    message: "🔐 IDENTITY HARDENING IMPLEMENTATION COMPLETE: Critical security refactor to prevent username confusion attacks. Changes implemented: (1) Added username_canon field to User model. (2) Created unique index on username_canon and user.id. (3) Registration now populates username_canon, reserves 'adam'. (4) Login uses username_canon for case-insensitive lookup. (5) JWT 'sub' now contains immutable user_id (not username). (6) get_current_user loads user by ID from JWT. (7) require_super_admin checks username_canon == 'adam'. (8) Migrated 6 existing users. TESTING REQUIRED: (A) New user registration - verify JWT works. (B) Login with existing user (ADAM/t-l!8c2mUfl*94?7drlj=f$d4&pl+u5ay!st$2Lt0lwros#ip_c#7-thaclbu!t1) - verify auth works. (C) Case-insensitive login (adam vs ADAM vs Adam). (D) Verify 'adam' username is reserved for new registrations. (E) Test authenticated endpoints (chat send, admin endpoints)."
   - agent: "main"
     message: "NEW: Implemented Launch Exclusive Banner System and 7-Day Journey System. Backend APIs: /api/launch-banner/status, /api/launch-banner/pull, /api/launch-banner/bundles, /api/launch-banner/hero, /api/journey. Frontend screens: launch-banner.tsx (exclusive 72hr banner with Aethon hero, pity system, bundles), journey.tsx (7-day player journey with daily rewards). Updated index.tsx with navigation to both. Ready for testing."
   - agent: "main"

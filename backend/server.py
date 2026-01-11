@@ -114,7 +114,11 @@ def verify_token(token: str) -> Optional[dict]:
         return None
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get current user from JWT token"""
+    """Get current user from JWT token.
+    
+    SECURITY: JWT 'sub' is now the immutable user_id, NOT the username.
+    This prevents identity confusion if usernames ever change.
+    """
     if not credentials:
         return None
     
@@ -123,11 +127,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if not payload:
         return None
     
-    username = payload.get("sub")
-    if not username:
+    user_id = payload.get("sub")
+    if not user_id:
         return None
     
-    user = await db.users.find_one({"username": username})
+    # Load user by immutable ID
+    user = await db.users.find_one({"id": user_id})
     return user
 
 # =============================================================================

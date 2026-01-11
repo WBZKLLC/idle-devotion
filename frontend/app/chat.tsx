@@ -198,8 +198,8 @@ export default function ChatScreen() {
       // Generate client message ID for idempotency
       const clientMsgId = `${user.username}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
+      // Server derives sender from JWT - do NOT pass username
       await sendChatMessage({
-        username: user.username,
         channel_type: selectedChannel,
         message: newMessage.trim(),
         language: selectedLanguage,
@@ -213,7 +213,10 @@ export default function ChatScreen() {
       const status = error.response?.status;
       const detail = error.response?.data?.detail || 'Failed to send message';
       
-      if (status === 429) {
+      if (status === 401) {
+        // Not authenticated
+        Alert.alert('Authentication Required', 'Please log in to send messages');
+      } else if (status === 429) {
         // Rate limited
         setRateLimitMessage(detail);
         setTimeout(() => setRateLimitMessage(null), 5000);

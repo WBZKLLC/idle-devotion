@@ -87,6 +87,13 @@ ACCESS_TOKEN_EXPIRE_HOURS = 24 * 7  # 7 days
 SUPER_ADMIN_USERNAME = os.environ.get("SUPER_ADMIN_USERNAME", "ADAM")
 ADMIN_MFA_BYPASS = os.environ.get("ADMIN_MFA_BYPASS", "true").lower() == "true"  # Dev mode
 
+# Bootstrap token for one-time ADAM creation (set in env, use once, then remove)
+SUPER_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("SUPER_ADMIN_BOOTSTRAP_TOKEN", None)
+
+# SECURITY: Reserved usernames that can NEVER be registered via normal registration
+# "adam" is ALWAYS reserved regardless of SUPER_ADMIN_USERNAME setting
+RESERVED_USERNAMES_CANON = frozenset({"adam"})
+
 # Security
 security = HTTPBearer(auto_error=False)
 

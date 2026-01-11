@@ -1691,6 +1691,36 @@ async def startup_event():
     await init_heroes()
     await init_islands_and_chapters()
     
+    # =============================================================================
+    # IDENTITY HARDENING: Create unique index on username_canon
+    # =============================================================================
+    try:
+        await db.users.create_index([("username_canon", 1)], unique=True, sparse=True)
+        print("✅ Created unique index on username_canon")
+    except Exception as e:
+        print(f"⚠️ Index on username_canon may already exist: {e}")
+    
+    # Also create index on user.id for fast JWT lookups
+    try:
+        await db.users.create_index([("id", 1)], unique=True, sparse=True)
+        print("✅ Created unique index on user.id")
+    except Exception as e:
+        print(f"⚠️ Index on user.id may already exist: {e}")
+    
+    # Migrate existing users: populate username_canon if missing
+    users_without_canon = await db.users.find({"username_canon": {"$exists": False}}).to_list(None)
+    if users_without_canon:
+        print(f"🔄 Migrating {len(users_without_canon)} users to have username_canon...")
+        for user in users_without_canon:
+            username = user.get("username", "")
+            if username:
+                canon = canonicalize_username(username)
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {"username_canon": canon}}
+                )
+        print(f"✅ Migration complete: {len(users_without_canon)} users updated")
+    
     # SECURITY: Enforce single admin (only ADAM)
     await enforce_single_admin()
     print(f"✅ Admin enforcement complete. Super admin: {SUPER_ADMIN_USERNAME}")

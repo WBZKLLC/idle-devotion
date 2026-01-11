@@ -277,68 +277,22 @@ def is_super_admin(user: dict) -> bool:
     username_canon = user.get("username_canon") or ""
     return username_canon == SUPER_ADMIN_CANON
 
+
 async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Dependency that requires the super admin (ADAM) to be authenticated.
     
-    SECURITY:
-    - Returns 401 if not logged in
-    - Returns 403 if logged in but not ADAM (via username_canon)
-    - Returns 403 if account is frozen
-    - Returns 401 if token is revoked (by jti or tokens_valid_after)
-    - Returns the admin user dict if valid (includes _auth_jti for audit)
+    Uses centralized authenticate_request() for all auth + revocation checks,
+    then additionally verifies the user is ADAM (via username_canon).
     
-    JWT 'sub' is the immutable user_id. We load user by ID, then check username_canon.
-    NEVER trust client-provided admin_username - always derive from JWT.
+    Returns 401 if not logged in or token revoked.
+    Returns 403 if logged in but not ADAM or account frozen.
+    Returns the admin user dict if valid (includes _auth_* for audit).
     """
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    token = credentials.credentials
-    payload = verify_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    user_id = payload.get("sub")
-    jti = payload.get("jti")
-    iat = payload.get("iat")
-    
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token payload")
-    
-    # SECURITY: Validate user_id is UUID format (same guard as get_current_user)
-    try:
-        uuid.UUID(user_id)
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=401, detail="Invalid token payload")
-    
-    # Load user by immutable ID
-    user = await db.users.find_one({"id": user_id})
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    # SECURITY: Check if account is frozen
-    if user.get("account_frozen"):
-        raise HTTPException(status_code=403, detail="Account is frozen")
-    
-    # SECURITY: Check tokens_valid_after (mass revocation)
-    if iat:
-        token_iat_dt = datetime.utcfromtimestamp(iat)
-        tokens_valid_after = user.get("tokens_valid_after")
-        if tokens_valid_after and token_iat_dt < tokens_valid_after:
-            raise HTTPException(status_code=401, detail="Token has been revoked")
-    
-    # SECURITY: Check individual token revocation (by jti)
-    if jti and await is_token_revoked(jti):
-        raise HTTPException(status_code=401, detail="Token has been revoked")
+    user, _ = await authenticate_request(credentials, require_auth=True)
     
     if not is_super_admin(user):
         raise HTTPException(status_code=403, detail="Admin access required")
-    
-    # Attach JWT info to user dict for audit logging
-    user["_auth_jti"] = jti
-    user["_auth_iat"] = iat
-    user["_auth_exp"] = payload.get("exp")
     
     # Optional: MFA check for production
     # if user.get("mfa_enabled") and not ADMIN_MFA_BYPASS:

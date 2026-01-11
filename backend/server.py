@@ -200,7 +200,7 @@ async def enforce_single_admin():
     """
     Startup safety check: Ensure only ADAM has is_admin=True.
     Any other user with is_admin=True gets it removed.
-    Uses case-insensitive matching for consistency.
+    Uses username_canon for reliable matching.
     """
     # Remove is_admin from ALL users first (clean slate)
     await db.users.update_many(
@@ -208,9 +208,10 @@ async def enforce_single_admin():
         {"$set": {"is_admin": False}}
     )
     
-    # Then set is_admin=True ONLY for ADAM (case-insensitive)
+    # Then set is_admin=True ONLY for ADAM (via username_canon)
+    admin_canon = canonicalize_username(SUPER_ADMIN_USERNAME)
     result = await db.users.update_one(
-        {"username": {"$regex": f"^{re.escape(SUPER_ADMIN_USERNAME)}$", "$options": "i"}},
+        {"username_canon": admin_canon},
         {"$set": {"is_admin": True}}
     )
     

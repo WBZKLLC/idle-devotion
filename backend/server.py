@@ -6216,12 +6216,20 @@ async def admin_get_feature_flags(
     return [convert_objectid(f) for f in flags]
 
 
+# Safety constants for GOD MODE operations
+SPAWN_GIFT_MAX_AMOUNT = 1_000_000  # Maximum currency gift per operation
+SPAWN_GIFT_MAX_USERS = 10_000  # Maximum users for batch operations
+ALLOWED_GIFT_TYPES = {"crystals", "coins", "gold", "divine_essence", "hero"}
+ALLOWED_BANNER_TYPES = {"common", "premium", "divine", "limited", "event"}
+
 class SpawnGiftRequest(BaseModel):
-    target_username: Optional[str] = None  # None = all users
-    gift_type: str  # crystals, coins, hero, item
-    amount: Optional[int] = None  # For currency
+    target_username: Optional[str] = None  # None = all users (requires confirm_all)
+    gift_type: str  # crystals, coins, gold, divine_essence, hero
+    amount: Optional[int] = None  # For currency gifts (must be positive)
     hero_id: Optional[str] = None  # For hero gift
-    reason: str = "Compensation/Gift"
+    reason: str  # REQUIRED with min length for batch operations
+    confirm_all: bool = False  # Must be True when targeting all users
+    max_users: int = 10000  # Cap for batch operations
 
 @api_router.post("/admin/liveops/spawn-gift")
 async def admin_spawn_gift(
@@ -6232,30 +6240,67 @@ async def admin_spawn_gift(
     """
     GOD MODE: Spawn gifts/compensation for users.
     
-    Can target specific user or all users.
+    Can target specific user or all users (requires confirm_all=true).
+    All operations are logged with batch_id for traceability.
     """
+    # Generate batch_id for traceability
+    batch_id = str(uuid.uuid4())
+    
+    # Validate gift_type
+    if payload.gift_type not in ALLOWED_GIFT_TYPES:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid gift_type. Must be one of: {', '.join(ALLOWED_GIFT_TYPES)}"
+        )
+    
+    # Validate reason for batch operations
+    if payload.target_username is None:
+        if not payload.confirm_all:
+            raise HTTPException(
+                status_code=400, 
+                detail="confirm_all=true required when targeting all users"
+            )
+        if not payload.reason or len(payload.reason) < 20:
+            raise HTTPException(
+                status_code=400, 
+                detail="Detailed reason required (min 20 chars) for batch gifts"
+            )
+    
+    # Validate amount for currency gifts
+    if payload.gift_type in ["crystals", "coins", "gold", "divine_essence"]:
+        if payload.amount is None:
+            raise HTTPException(status_code=400, detail="Amount required for currency gifts")
+        if payload.amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be a positive integer")
+        if payload.amount > SPAWN_GIFT_MAX_AMOUNT:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Amount exceeds safety limit of {SPAWN_GIFT_MAX_AMOUNT:,}"
+            )
+    
+    # Get targets
     if payload.target_username:
         # Single user gift
         target = await db.users.find_one({"username_canon": canonicalize_username(payload.target_username)})
         if not target:
             raise HTTPException(status_code=404, detail="User not found")
-        
         targets = [target]
     else:
-        # All users - limit for safety
-        targets = await db.users.find().limit(10000).to_list(10000)
+        # All users - with safety cap
+        limit = min(payload.max_users, SPAWN_GIFT_MAX_USERS)
+        targets = await db.users.find().limit(limit).to_list(limit)
     
     affected_count = 0
+    affected_user_ids = []
     
     for target in targets:
         if payload.gift_type in ["crystals", "coins", "gold", "divine_essence"]:
-            if not payload.amount:
-                raise HTTPException(status_code=400, detail="Amount required for currency gifts")
             await db.users.update_one(
                 {"_id": target["_id"]},
                 {"$inc": {payload.gift_type: payload.amount}}
             )
             affected_count += 1
+            affected_user_ids.append(get_user_id(target))
         
         elif payload.gift_type == "hero":
             if not payload.hero_id:
@@ -6286,6 +6331,7 @@ async def admin_spawn_gift(
                 )
                 await db.user_heroes.insert_one(user_hero.dict())
             affected_count += 1
+            affected_user_ids.append(get_user_id(target))
     
     await log_god_action(
         admin_user=admin_user,
@@ -6296,14 +6342,17 @@ async def admin_spawn_gift(
             "gift_type": payload.gift_type,
             "amount": payload.amount,
             "hero_id": payload.hero_id,
-            "affected_users": affected_count
+            "affected_users": affected_count,
+            "is_batch": payload.target_username is None,
         },
         reason=payload.reason,
         request=request,
+        batch_id=batch_id,
     )
     
     return {
         "success": True,
+        "batch_id": batch_id,
         "affected_users": affected_count,
         "gift_type": payload.gift_type,
         "amount": payload.amount

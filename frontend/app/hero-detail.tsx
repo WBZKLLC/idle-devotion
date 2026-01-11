@@ -346,10 +346,16 @@ export default function HeroDetailScreen() {
           {activeTab === 'stats' && (
             <GlassCard>
               <Text style={styles.sectionTitle}>Combat Stats</Text>
-              {combatStats.hasPremiumCinematicBonus && (
+              {/* Premium Cinematic Ownership Status */}
+              {combatStats.hasPremiumCinematicBonus ? (
                 <View style={styles.bonusBadge}>
                   <Ionicons name="videocam" size={12} color={COLORS.gold.primary} />
-                  <Text style={styles.bonusBadgeText}>Premium Cinematic Bonus</Text>
+                  <Text style={styles.bonusBadgeText}>Premium Cinematic Owned (+10% HP, +5% ATK)</Text>
+                </View>
+              ) : (
+                <View style={styles.notOwnedBadge}>
+                  <Ionicons name="videocam-outline" size={12} color="rgba(255,255,255,0.5)" />
+                  <Text style={styles.notOwnedBadgeText}>Premium Cinematic Not Owned</Text>
                 </View>
               )}
               <View style={styles.statsGrid}>

@@ -607,6 +607,91 @@ export default function ChatScreen() {
             </View>
           </Modal>
 
+          {/* Report Modal */}
+          <Modal
+            visible={showReportModal}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setShowReportModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.reportModal}>
+                <View style={styles.reportModalHeader}>
+                  <Text style={styles.modalTitle}>⚠️ Report Message</Text>
+                  <TouchableOpacity onPress={() => setShowReportModal(false)}>
+                    <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                  </TouchableOpacity>
+                </View>
+                
+                {reportTarget && (
+                  <View style={styles.reportTargetInfo}>
+                    <Text style={styles.reportTargetLabel}>Reporting:</Text>
+                    <Text style={styles.reportTargetUser}>{reportTarget.sender_username}</Text>
+                    <Text style={styles.reportTargetMessage} numberOfLines={2}>
+                      "{reportTarget.message}"
+                    </Text>
+                  </View>
+                )}
+                
+                <Text style={styles.reportSectionTitle}>Select Reason:</Text>
+                <View style={styles.reportReasons}>
+                  {REPORT_REASONS.map(reason => (
+                    <TouchableOpacity
+                      key={reason.id}
+                      style={[
+                        styles.reportReasonButton,
+                        selectedReason === reason.id && styles.reportReasonButtonSelected
+                      ]}
+                      onPress={() => setSelectedReason(reason.id)}
+                    >
+                      <Ionicons 
+                        name={reason.icon as any} 
+                        size={18} 
+                        color={selectedReason === reason.id ? COLORS.navy.darkest : COLORS.cream.soft} 
+                      />
+                      <Text style={[
+                        styles.reportReasonText,
+                        selectedReason === reason.id && styles.reportReasonTextSelected
+                      ]}>
+                        {reason.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                
+                <Text style={styles.reportSectionTitle}>Additional Details (optional):</Text>
+                <TextInput
+                  style={styles.reportDetailsInput}
+                  value={reportDetails}
+                  onChangeText={setReportDetails}
+                  placeholder="Provide more context..."
+                  placeholderTextColor={COLORS.navy.light}
+                  multiline
+                  maxLength={200}
+                />
+                
+                <TouchableOpacity
+                  style={[styles.reportSubmitButton, !selectedReason && styles.reportSubmitButtonDisabled]}
+                  onPress={submitReport}
+                  disabled={!selectedReason || reporting}
+                >
+                  {reporting ? (
+                    <ActivityIndicator color={COLORS.navy.darkest} />
+                  ) : (
+                    <>
+                      <Ionicons name="flag" size={18} color={COLORS.navy.darkest} />
+                      <Text style={styles.reportSubmitText}>Submit Report</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                
+                <Text style={styles.reportDisclaimer}>
+                  False reports may result in action against your account.
+                </Text>
+              </View>
+            </View>
+          </Modal>
+
           {/* Bubble Selection Modal */}
           <Modal
             visible={showBubbleModal}

@@ -159,13 +159,28 @@ def _to_dt_utc(ts) -> Optional[datetime]:
     return None
 
 
-def _normalize_dt_utc(dt: Optional[datetime]) -> Optional[datetime]:
-    """Normalize a datetime to timezone-aware UTC.
+def _normalize_dt_utc(dt) -> Optional[datetime]:
+    """Normalize a value to timezone-aware UTC datetime.
     
-    Used for values from MongoDB which may be naive (assumed UTC).
+    Defensive implementation that handles:
+    - None: returns None
+    - int/float: treats as UNIX timestamp, converts to aware UTC
+    - naive datetime: assumes UTC, attaches tzinfo
+    - aware datetime: converts to UTC
+    - other types: returns None (does not raise)
+    
+    Used for values from MongoDB (may be naive) and for defensive
+    handling on audit/revocation paths where crashes must be avoided.
     """
     if dt is None:
         return None
+    if isinstance(dt, (int, float)):
+        try:
+            return datetime.fromtimestamp(dt, tz=timezone.utc)
+        except (ValueError, OSError, OverflowError):
+            return None  # Invalid timestamp
+    if not isinstance(dt, datetime):
+        return None  # Unknown type - return None safely
     if dt.tzinfo is None:
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)

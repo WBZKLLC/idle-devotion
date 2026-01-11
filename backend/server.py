@@ -131,62 +131,125 @@ def verify_token(token: str) -> Optional[dict]:
     except JWTError:
         return None
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get current user from JWT token with full revocation enforcement.
+
+# =============================================================================
+# CENTRALIZED AUTH + REVOCATION GATE (Single Source of Truth)
+# =============================================================================
+
+def _to_dt_utc(ts) -> Optional[datetime]:
+    """Convert timestamp to UTC datetime. Supports int/float (unix) or datetime."""
+    if ts is None:
+        return None
+    if isinstance(ts, (int, float)):
+        return datetime.utcfromtimestamp(ts)
+    if isinstance(ts, datetime):
+        return ts
+    return None
+
+
+async def authenticate_request(
+    credentials: Optional[HTTPAuthorizationCredentials],
+    *,
+    require_auth: bool,
+) -> tuple:
+    """
+    Central auth + revocation gate. Single source of truth for all auth checks.
     
-    SECURITY: 
-    - JWT 'sub' MUST be the immutable UUID "id" field
-    - Only queries by {"id": sub} - no ObjectId fallback
-    - Validates sub is UUID format before querying
-    - Enforces token revocation (by jti and by tokens_valid_after)
-    - Rejects frozen accounts
+    Performs:
+    1. JWT verification
+    2. UUID format validation
+    3. User lookup by immutable ID
+    4. Frozen account check
+    5. tokens_valid_after check (mass revocation)
+    6. Individual jti revocation check
+    
+    Args:
+        credentials: HTTP Bearer credentials
+        require_auth: If True, raises HTTPException on failure.
+                      If False, returns (None, None) on failure.
+    
+    Returns:
+        (user_dict, payload_dict) on success
+        (None, None) on failure (if require_auth=False)
+    
+    Raises:
+        HTTPException: On auth failure (if require_auth=True)
     """
     if not credentials:
-        return None
+        if require_auth:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        return None, None
     
     token = credentials.credentials
     payload = verify_token(token)
     if not payload:
-        return None
+        if require_auth:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        return None, None
     
     user_id = payload.get("sub")
     jti = payload.get("jti")
     iat = payload.get("iat")
+    exp = payload.get("exp")
     
+    # Validate sub exists
     if not user_id:
-        return None
+        if require_auth:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+        return None, None
     
-    # SECURITY: Validate user_id is UUID format (no ObjectId allowed)
+    # Validate sub is UUID format
     try:
         uuid.UUID(user_id)
     except (ValueError, TypeError):
-        return None  # Reject non-UUID tokens
+        if require_auth:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+        return None, None
     
-    # Query ONLY by UUID "id" field
+    # Load user by immutable UUID id
     user = await db.users.find_one({"id": user_id})
     if not user:
-        return None
+        if require_auth:
+            raise HTTPException(status_code=401, detail="User not found")
+        return None, None
     
-    # SECURITY: Check if account is frozen
+    # SECURITY: Frozen account check
     if user.get("account_frozen"):
-        return None
+        if require_auth:
+            raise HTTPException(status_code=403, detail="Account is frozen")
+        return None, None
     
-    # SECURITY: Check tokens_valid_after (mass revocation)
-    if iat:
-        token_iat_dt = datetime.utcfromtimestamp(iat)
-        tokens_valid_after = user.get("tokens_valid_after")
-        if tokens_valid_after and token_iat_dt < tokens_valid_after:
-            return None  # Token was issued before revocation
+    # SECURITY: tokens_valid_after check (mass revocation)
+    token_iat_dt = _to_dt_utc(iat)
+    tokens_valid_after = user.get("tokens_valid_after")
+    if tokens_valid_after and token_iat_dt:
+        if token_iat_dt < tokens_valid_after:
+            if require_auth:
+                raise HTTPException(status_code=401, detail="Token has been revoked")
+            return None, None
     
-    # SECURITY: Check individual token revocation (by jti)
+    # SECURITY: Individual jti revocation check
     if jti and await is_token_revoked(jti):
-        return None
+        if require_auth:
+            raise HTTPException(status_code=401, detail="Token has been revoked")
+        return None, None
     
-    # Attach token info for downstream use
+    # Attach auth context for downstream use (audit logging, etc.)
     user["_auth_jti"] = jti
     user["_auth_iat"] = iat
-    user["_auth_exp"] = payload.get("exp")
+    user["_auth_exp"] = exp
     
+    return user, payload
+
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get current user from JWT token.
+    
+    Returns None on auth failure (for optional auth endpoints).
+    Uses centralized authenticate_request() for all checks.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=False)
     return user
 
 # =============================================================================

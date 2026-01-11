@@ -266,10 +266,10 @@ class IdentityHardeningTester:
             self.log_test("E1: Admin Access", False, "No user data in admin response")
             return False
             
-        self.log_test("E1: Admin Access", True, f"Admin endpoint accessible, returned {len(response['users'])} users")
+        self.log_test("E1: Admin Access", True, f"Admin endpoint accessible, returned user data for: {response['user'].get('username')}")
         
         # Test with non-admin token (create a regular user first)
-        test_username = f"RegularUser{int(time.time())}"
+        test_username = f"RegUser{int(time.time()) % 10000}"
         success, reg_response = self.make_request("POST", "/user/register", {
             "username": test_username,
             "password": "testpass123"

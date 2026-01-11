@@ -110,9 +110,9 @@ export default function PaidFeaturesScreen() {
     Alert.alert('DEV Mode', `Revoked premium cinematic ownership for: ${heroId}`);
   };
 
-  // Check if a hero has cinematic owned
+  // Check if a hero has premium cinematic owned
   const isHeroOwned = (heroId: string) => {
-    return Boolean(entitlements?.[cinematicOwnedKey(heroId)]);
+    return Boolean(entitlements?.[premiumCinematicOwnedKey(heroId)]);
   };
 
   return (
@@ -127,7 +127,7 @@ export default function PaidFeaturesScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={COLORS.cream.pure} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Paid Features</Text>
+          <Text style={styles.headerTitle}>Premium Features</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -136,7 +136,7 @@ export default function PaidFeaturesScreen() {
             Unlock premium content for Idle Devotion.
           </Text>
 
-          {/* Cinematics Pack Feature Card */}
+          {/* Premium Cinematics Pack Feature Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.iconContainer}>

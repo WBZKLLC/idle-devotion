@@ -11,7 +11,12 @@ import {
   Alert,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
+import { useEntitlementStore } from '../stores/entitlementStore';
 import { Ionicons } from '@expo/vector-icons';
+
+// CANONICAL combat stats and power helpers
+import { computeCombatStats } from '../lib/combatStats';
+import { computeTeamPower } from '../lib/power';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'SR': '#4CAF50',
@@ -22,6 +27,8 @@ const RARITY_COLORS: { [key: string]: string } = {
 
 export default function TeamScreen() {
   const { user, userHeroes, fetchUserHeroes, isLoading } = useGameStore();
+  // Subscribe to entitlements for reactive power updates
+  const entitlements = useEntitlementStore(s => s.entitlements);
   const [selectedHeroes, setSelectedHeroes] = useState<string[]>([]);
 
   useEffect(() => {

@@ -2033,7 +2033,12 @@ async def startup_event():
         await db.admin_audit_log.create_index([("auth_jti", 1)], sparse=True)  # Optional field, sparse OK
         print("✅ Created admin_audit_log indexes")
     except Exception as e:
-        print(f"⚠️ admin_audit_log indexes may already exist: {e}")
+        # Index may already exist (possibly with different options like sparse)
+        # This is fine - the index serves its purpose either way
+        if "already exists" in str(e).lower() or "IndexKeySpecsConflict" in str(e):
+            print("ℹ️ admin_audit_log indexes already exist (run migration script to change options)")
+        else:
+            print(f"⚠️ admin_audit_log indexes: {e}")
     
     # Create token revocation indexes
     try:

@@ -501,6 +501,11 @@ const styles = StyleSheet.create({
   heroChipTextOwned: {
     color: 'rgba(76, 217, 100, 0.95)',
   },
+  noHeroesText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
   restoreButton: {
     marginTop: 20,
     alignItems: 'center',

@@ -5833,42 +5833,46 @@ async def admin_revoke_tokens(
     admin_user: dict = Depends(require_super_admin),
 ):
     """
-    GOD MODE: Invalidate all sessions for a user.
+    GOD MODE: Revoke all tokens for a user instantly.
     
-    Implementation note: Since we use stateless JWTs, this works by:
-    1. Changing the user's token_invalidation_timestamp
-    2. Future JWT validation checks this timestamp
-    
-    For full implementation, add token_invalidated_at to User model
-    and check it in get_current_user().
+    Sets tokens_valid_after to current time, which invalidates
+    all tokens issued before this timestamp.
     """
-    target = await db.users.find_one({"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}})
+    target = await db.users.find_one({"username_canon": canonicalize_username(payload.target_username)})
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
     
     target_id = get_user_id(target)
+    old_tokens_valid_after = target.get("tokens_valid_after")
     
-    # Set invalidation timestamp
-    invalidation_time = datetime.utcnow()
+    # Set tokens_valid_after to now - all prior tokens become invalid
+    new_tokens_valid_after = datetime.utcnow()
     await db.users.update_one(
-        {"username": {"$regex": f"^{re.escape(payload.target_username)}$", "$options": "i"}},
-        {"$set": {"token_invalidated_at": invalidation_time}}
+        {"username_canon": canonicalize_username(payload.target_username)},
+        {"$set": {"tokens_valid_after": new_tokens_valid_after}}
     )
     
-    await log_god_action(
+    audit_entry = await log_god_action(
         admin_user=admin_user,
         action_type="revoke_tokens",
         target_username=payload.target_username,
         target_user_id=target_id,
-        fields_changed={"token_invalidated_at": {"old": None, "new": str(invalidation_time)}},
+        fields_changed={
+            "tokens_valid_after": {
+                "old": str(old_tokens_valid_after) if old_tokens_valid_after else None, 
+                "new": str(new_tokens_valid_after)
+            }
+        },
         reason=payload.reason,
         request=request,
+        auth_jti=admin_user.get("_auth_jti"),
     )
     
     return {
         "success": True,
+        "request_id": audit_entry.request_id,
         "message": f"Revoked all tokens for {payload.target_username}",
-        "invalidated_at": invalidation_time.isoformat()
+        "tokens_valid_after": new_tokens_valid_after.isoformat()
     }
 
 

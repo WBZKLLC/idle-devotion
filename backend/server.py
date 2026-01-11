@@ -221,6 +221,8 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
     SECURITY:
     - Returns 401 if not logged in
     - Returns 403 if logged in but not ADAM (via username_canon)
+    - Returns 403 if account is frozen
+    - Returns 401 if token is revoked (by jti or tokens_valid_after)
     - Returns the admin user dict if valid (includes _auth_jti for audit)
     
     JWT 'sub' is the immutable user_id. We load user by ID, then check username_canon.
@@ -235,6 +237,9 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
     user_id = payload.get("sub")
+    jti = payload.get("jti")
+    iat = payload.get("iat")
+    
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
     
@@ -249,11 +254,28 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     
+    # SECURITY: Check if account is frozen
+    if user.get("account_frozen"):
+        raise HTTPException(status_code=403, detail="Account is frozen")
+    
+    # SECURITY: Check tokens_valid_after (mass revocation)
+    if iat:
+        token_iat_dt = datetime.utcfromtimestamp(iat)
+        tokens_valid_after = user.get("tokens_valid_after")
+        if tokens_valid_after and token_iat_dt < tokens_valid_after:
+            raise HTTPException(status_code=401, detail="Token has been revoked")
+    
+    # SECURITY: Check individual token revocation (by jti)
+    if jti and await is_token_revoked(jti):
+        raise HTTPException(status_code=401, detail="Token has been revoked")
+    
     if not is_super_admin(user):
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Attach JWT jti to user dict for audit logging
-    user["_auth_jti"] = payload.get("jti")
+    # Attach JWT info to user dict for audit logging
+    user["_auth_jti"] = jti
+    user["_auth_iat"] = iat
+    user["_auth_exp"] = payload.get("exp")
     
     # Optional: MFA check for production
     # if user.get("mfa_enabled") and not ADMIN_MFA_BYPASS:

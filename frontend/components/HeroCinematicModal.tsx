@@ -121,9 +121,15 @@ export default function HeroCinematicModal({
   }, [visible, heroKey, heroName, videoSource]);
 
   // Normalize source: string (web) → { uri }, number (native) → pass through
+  // Add cache-busting for web to avoid stale video files
   const normalizedSource = React.useMemo(() => {
     if (!videoSource) return null;
-    return typeof videoSource === 'string' ? { uri: videoSource } : videoSource;
+    if (typeof videoSource === 'string') {
+      // Add timestamp to bust cache
+      const cacheBuster = `${videoSource}${videoSource.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+      return { uri: cacheBuster };
+    }
+    return videoSource;
   }, [videoSource]);
 
   // Cleanup function - stops and unloads video

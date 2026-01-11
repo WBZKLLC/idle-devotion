@@ -145,10 +145,15 @@ export default function HeroCinematicModal({
     }
   }, [heroKey]);
 
-  // Handle video load error
-  const handleError = useCallback((errorMessage: string) => {
-    logCine('error', { heroKey, error: errorMessage });
-    setError(errorMessage);
+  // Handle video load error - accepts any type, stringifies safely
+  const handleError = useCallback((e: any) => {
+    const msg =
+      typeof e === 'string'
+        ? e
+        : e?.error ?? e?.message ?? JSON.stringify(e);
+
+    logCine('error', { heroKey, error: msg });
+    setError(String(msg));
     setIsLoading(false);
   }, [heroKey]);
 

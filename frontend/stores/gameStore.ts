@@ -330,22 +330,28 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   logout: async () => {
+    // Clear persisted storage FIRST (critical for force logout)
     await clearAuthData();
+    // Clear in-memory token
     apiSetAuthToken(null);
+    // Clear store state
     set({ user: null, userHeroes: [], userHeroesById: {}, allHeroes: [], authToken: null, needsPassword: false });
-    console.log('[logout] User logged out, auth cleared');
+    console.log('[logout] User logged out, auth and storage cleared');
   },
 
   /**
    * Register the force logout callback with the API layer.
    * This should be called once during app initialization.
    * Enables the global API interceptor to force logout on 401.
+   * 
+   * CRITICAL: The callback clears persisted storage to prevent
+   * flash states on next hydration.
    */
   registerForceLogout: () => {
     const { logout } = get();
     apiSetForceLogoutCallback(async () => {
       console.log('[API] Force logout triggered by 401');
-      await logout();
+      await logout();  // Clears storage + in-memory token + store
       // Navigation to login is handled by the auth state change in the app
     });
   },

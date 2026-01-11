@@ -5171,12 +5171,15 @@ async def admin_get_user(
     user_data = convert_objectid(target.copy())
     user_data.pop("password_hash", None)
     
-    # Add chat moderation status
+    # Add chat moderation status (properly serialized)
     chat_status = await get_user_chat_status(get_user_id(target))
-    user_data["_chat_status"] = chat_status
+    if chat_status:
+        user_data["_chat_status"] = convert_objectid(chat_status)
+    else:
+        user_data["_chat_status"] = None
     
     # Add hero count
-    heroes = await db.user_heroes.find({"username": target_username}).to_list(1000)
+    heroes = await db.user_heroes.find({"username": {"$regex": f"^{re.escape(target_username)}$", "$options": "i"}}).to_list(1000)
     user_data["_hero_count"] = len(heroes)
     
     # Log the view action

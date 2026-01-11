@@ -270,6 +270,9 @@ class AdminAuditLog(BaseModel):
     reason: Optional[str] = None
     request_ip: Optional[str] = None
     user_agent: Optional[str] = None
+    request_path: Optional[str] = None
+    request_method: Optional[str] = None
+    batch_id: Optional[str] = None  # For batch operations (e.g., spawn_gift to all users)
     issued_at: datetime = Field(default_factory=datetime.utcnow)
 
 async def log_god_action(
@@ -280,6 +283,7 @@ async def log_god_action(
     fields_changed: dict,
     reason: Optional[str] = None,
     request: Request = None,
+    batch_id: Optional[str] = None,
 ):
     """
     Log a GOD MODE admin action with full audit trail.
@@ -298,6 +302,10 @@ async def log_god_action(
         reason=reason,
         request_ip=request.client.host if request and request.client else None,
         user_agent=request.headers.get("user-agent") if request else None,
+        request_path=str(request.url.path) if request else None,
+        request_method=request.method if request else None,
+        batch_id=batch_id,
+        issued_at=datetime.utcnow(),
     )
     
     await db.admin_audit_log.insert_one(log_entry.dict())

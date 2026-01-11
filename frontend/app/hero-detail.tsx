@@ -744,45 +744,6 @@ const styles = StyleSheet.create({
   },
   promoteText: { fontSize: 13, fontWeight: '800', color: 'rgba(255, 215, 140, 0.95)' },
   
-  // 5+ Star Indicators
-  fivePlusIndicator: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    marginHorizontal: 20,
-    gap: 6,
-  },
-  fivePlusIndicatorText: {
-    color: COLORS.cream.pure,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  preview5PlusButton: {
-    marginTop: 12,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  preview5PlusGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    gap: 8,
-  },
-  preview5PlusText: {
-    color: COLORS.cream.pure,
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  
   // Error
   errorText: { color: COLORS.cream.pure, fontSize: 18, fontWeight: '700' },
   backBtn: { 

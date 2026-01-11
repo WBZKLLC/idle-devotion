@@ -507,6 +507,7 @@ AWAKENING_COSTS = {
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
+    username_canon: Optional[str] = None  # Canonical username (lowercase, trimmed) for lookups
     password_hash: Optional[str] = None  # Hashed password for secure login
     server_id: str = "server_1"  # Server assignment with default
     

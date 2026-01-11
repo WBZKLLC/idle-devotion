@@ -34,12 +34,17 @@ function MaintenanceScreen() {
 // Session Provider Component - ensures session is restored before rendering
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const hydrateAuth = useGameStore(s => s.hydrateAuth);
+  const registerForceLogout = useGameStore(s => s.registerForceLogout);
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
   const hydrateEntitlements = useEntitlementStore(s => s.hydrateEntitlements);
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
     const restore = async () => {
+      // Register force logout callback with API layer FIRST
+      // This ensures 401 responses trigger proper logout
+      registerForceLogout();
+      
       // Hydrate feature flags (fast - uses cache first, non-blocking)
       hydrateRemoteFeatures().catch(() => {});
       
@@ -52,7 +57,7 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       setIsRestoring(false);
     };
     restore();
-  }, [hydrateRemoteFeatures, hydrateAuth, hydrateEntitlements]);
+  }, [hydrateRemoteFeatures, hydrateAuth, hydrateEntitlements, registerForceLogout]);
 
   // Show loading while restoring session
   if (isRestoring) {

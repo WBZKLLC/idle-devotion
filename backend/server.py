@@ -343,7 +343,7 @@ async def get_user_for_mutation(username: str) -> dict:
     Fetch a user by username for mutation operations.
     
     Combines user lookup + frozen account check in one call.
-    Use this for all state-mutating endpoints.
+    Use this for all state-mutating endpoints (POST/PUT/PATCH/DELETE).
     
     Raises:
         HTTPException: 404 if user not found
@@ -353,6 +353,21 @@ async def get_user_for_mutation(username: str) -> dict:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     assert_account_active(user)
+    return user
+
+async def get_user_readonly(username: str) -> dict:
+    """
+    Fetch a user by username for read-only operations.
+    
+    Does NOT check frozen status - frozen accounts can still view their data.
+    Use this for GET endpoints.
+    
+    Raises:
+        HTTPException: 404 if user not found
+    """
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     return user
 
 def is_super_admin(user: dict) -> bool:

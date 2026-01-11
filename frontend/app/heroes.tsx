@@ -13,8 +13,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { useEntitlementStore } from '../stores/entitlementStore';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../theme/colors';
+
+// CANONICAL combat stats and power helpers
+import { computeCombatStats } from '../lib/combatStats';
+import { computePowerWithMultipliers } from '../lib/power';
 
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {

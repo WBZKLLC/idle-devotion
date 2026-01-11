@@ -1729,8 +1729,14 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️ Index on user.id may already exist: {e}")
     
-    # 3. Migrate existing users: populate username_canon if missing
-    users_without_canon = await db.users.find({"username_canon": {"$exists": False}}).to_list(None)
+    # 3. Migrate existing users: populate username_canon if missing/null/empty
+    users_without_canon = await db.users.find({
+        "$or": [
+            {"username_canon": {"$exists": False}},
+            {"username_canon": None},
+            {"username_canon": ""},
+        ]
+    }).to_list(None)
     if users_without_canon:
         print(f"🔄 Migrating {len(users_without_canon)} users to have username_canon...")
         for user in users_without_canon:
@@ -1743,8 +1749,14 @@ async def startup_event():
                 )
         print(f"✅ Migration complete: {len(users_without_canon)} users updated with username_canon")
     
-    # 4. Migrate legacy users: ensure all have UUID "id" field
-    users_without_uuid = await db.users.find({"id": {"$exists": False}}).to_list(None)
+    # 4. Migrate legacy users: ensure all have UUID "id" field (not null/empty)
+    users_without_uuid = await db.users.find({
+        "$or": [
+            {"id": {"$exists": False}},
+            {"id": None},
+            {"id": ""},
+        ]
+    }).to_list(None)
     if users_without_uuid:
         print(f"🔄 Migrating {len(users_without_uuid)} users to have UUID id...")
         for user in users_without_uuid:

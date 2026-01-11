@@ -4738,32 +4738,29 @@ async def get_blocked_users(
     return {"blocked_users": blocked_users}
 
 
-# ==================== ADMIN MODERATION ENDPOINTS ====================
+# ==================== ADMIN MODERATION ENDPOINTS (JWT-BOUND, ADAM-ONLY) ====================
 
 @api_router.post("/admin/chat/mute")
 async def admin_mute_user(
-    admin_username: str,
+    request: Request,
     target_username: str,
     duration_minutes: int,
-    reason: str
+    reason: str,
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Mute a user"""
-    # Verify admin
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Mute a user (ADAM-ONLY, JWT-BOUND)"""
     target = await db.users.find_one({"username": target_username})
     if not target:
         raise HTTPException(status_code=404, detail="Target user not found")
     
+    target_id = get_user_id(target)
     expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes) if duration_minutes > 0 else None
     
     await db.chat_user_status.update_one(
-        {"user_id": target["id"]},
+        {"user_id": target_id},
         {
             "$set": {
-                "user_id": target["id"],
+                "user_id": target_id,
                 "username": target_username,
                 "is_muted": True,
                 "mute_expires_at": expires_at
@@ -4772,12 +4769,13 @@ async def admin_mute_user(
         upsert=True
     )
     
-    await log_moderation_action(
-        user_id=target["id"],
-        username=target_username,
+    await log_admin_action(
+        admin_user=admin_user,
         action_type="mute",
+        target_user_id=target_id,
+        target_username=target_username,
         reason=reason,
-        issued_by=admin_username,
+        request=request,
         duration_minutes=duration_minutes if duration_minutes > 0 else None
     )
     
@@ -4786,29 +4784,29 @@ async def admin_mute_user(
 
 @api_router.post("/admin/chat/unmute")
 async def admin_unmute_user(
-    admin_username: str,
-    target_username: str
+    request: Request,
+    target_username: str,
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Unmute a user"""
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Unmute a user (ADAM-ONLY, JWT-BOUND)"""
     target = await db.users.find_one({"username": target_username})
     if not target:
         raise HTTPException(status_code=404, detail="Target user not found")
     
+    target_id = get_user_id(target)
+    
     await db.chat_user_status.update_one(
-        {"user_id": target["id"]},
+        {"user_id": target_id},
         {"$set": {"is_muted": False, "mute_expires_at": None}}
     )
     
-    await log_moderation_action(
-        user_id=target["id"],
-        username=target_username,
+    await log_admin_action(
+        admin_user=admin_user,
         action_type="unmute",
+        target_user_id=target_id,
+        target_username=target_username,
         reason="Admin action",
-        issued_by=admin_username
+        request=request
     )
     
     return {"success": True, "message": f"Unmuted {target_username}"}
@@ -4816,27 +4814,25 @@ async def admin_unmute_user(
 
 @api_router.post("/admin/chat/ban")
 async def admin_ban_user(
-    admin_username: str,
+    request: Request,
     target_username: str,
     duration_minutes: Optional[int] = None,  # None = permanent
-    reason: str = "Violation of community guidelines"
+    reason: str = "Violation of community guidelines",
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Ban a user from chat"""
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Ban a user from chat (ADAM-ONLY, JWT-BOUND)"""
     target = await db.users.find_one({"username": target_username})
     if not target:
         raise HTTPException(status_code=404, detail="Target user not found")
     
+    target_id = get_user_id(target)
     expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes) if duration_minutes else None
     
     await db.chat_user_status.update_one(
-        {"user_id": target["id"]},
+        {"user_id": target_id},
         {
             "$set": {
-                "user_id": target["id"],
+                "user_id": target_id,
                 "username": target_username,
                 "is_banned": True,
                 "ban_expires_at": expires_at
@@ -4845,12 +4841,13 @@ async def admin_ban_user(
         upsert=True
     )
     
-    await log_moderation_action(
-        user_id=target["id"],
-        username=target_username,
+    await log_admin_action(
+        admin_user=admin_user,
         action_type="ban",
+        target_user_id=target_id,
+        target_username=target_username,
         reason=reason,
-        issued_by=admin_username,
+        request=request,
         duration_minutes=duration_minutes
     )
     
@@ -4860,29 +4857,29 @@ async def admin_ban_user(
 
 @api_router.post("/admin/chat/unban")
 async def admin_unban_user(
-    admin_username: str,
-    target_username: str
+    request: Request,
+    target_username: str,
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Unban a user from chat"""
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Unban a user from chat (ADAM-ONLY, JWT-BOUND)"""
     target = await db.users.find_one({"username": target_username})
     if not target:
         raise HTTPException(status_code=404, detail="Target user not found")
     
+    target_id = get_user_id(target)
+    
     await db.chat_user_status.update_one(
-        {"user_id": target["id"]},
+        {"user_id": target_id},
         {"$set": {"is_banned": False, "ban_expires_at": None}}
     )
     
-    await log_moderation_action(
-        user_id=target["id"],
-        username=target_username,
+    await log_admin_action(
+        admin_user=admin_user,
         action_type="unban",
+        target_user_id=target_id,
+        target_username=target_username,
         reason="Admin action",
-        issued_by=admin_username
+        request=request
     )
     
     return {"success": True, "message": f"Unbanned {target_username}"}
@@ -4890,27 +4887,25 @@ async def admin_unban_user(
 
 @api_router.post("/admin/chat/shadowban")
 async def admin_shadowban_user(
-    admin_username: str,
+    request: Request,
     target_username: str,
     duration_minutes: Optional[int] = None,
-    reason: str = "Suspicious activity"
+    reason: str = "Suspicious activity",
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Shadowban a user (their messages only visible to them)"""
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Shadowban a user (ADAM-ONLY, JWT-BOUND)"""
     target = await db.users.find_one({"username": target_username})
     if not target:
         raise HTTPException(status_code=404, detail="Target user not found")
     
+    target_id = get_user_id(target)
     expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes) if duration_minutes else None
     
     await db.chat_user_status.update_one(
-        {"user_id": target["id"]},
+        {"user_id": target_id},
         {
             "$set": {
-                "user_id": target["id"],
+                "user_id": target_id,
                 "username": target_username,
                 "is_shadowbanned": True,
                 "shadowban_expires_at": expires_at
@@ -4919,12 +4914,13 @@ async def admin_shadowban_user(
         upsert=True
     )
     
-    await log_moderation_action(
-        user_id=target["id"],
-        username=target_username,
+    await log_admin_action(
+        admin_user=admin_user,
         action_type="shadowban",
+        target_user_id=target_id,
+        target_username=target_username,
         reason=reason,
-        issued_by=admin_username,
+        request=request,
         duration_minutes=duration_minutes
     )
     
@@ -4933,18 +4929,14 @@ async def admin_shadowban_user(
 
 @api_router.get("/admin/chat/reports")
 async def admin_get_reports(
-    admin_username: str,
-    status: str = "pending",
-    limit: int = 50
+    report_status: str = "pending",
+    limit: int = 50,
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Get chat reports"""
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Get chat reports (ADAM-ONLY, JWT-BOUND)"""
     query = {}
-    if status != "all":
-        query["status"] = status
+    if report_status != "all":
+        query["status"] = report_status
     
     reports = await db.chat_reports.find(query).sort("created_at", -1).limit(limit).to_list(limit)
     
@@ -4953,16 +4945,13 @@ async def admin_get_reports(
 
 @api_router.post("/admin/chat/review-report")
 async def admin_review_report(
-    admin_username: str,
+    request: Request,
     report_id: str,
     action: str,  # dismiss, warn, mute, ban
-    notes: Optional[str] = None
+    notes: Optional[str] = None,
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Review and action a report"""
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Review and action a report (ADAM-ONLY, JWT-BOUND)"""
     report = await db.chat_reports.find_one({"id": report_id})
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
@@ -4970,6 +4959,8 @@ async def admin_review_report(
     valid_actions = ["dismiss", "warn", "mute", "ban"]
     if action not in valid_actions:
         raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {', '.join(valid_actions)}")
+    
+    admin_username = admin_user.get("username")
     
     # Update report status
     await db.chat_reports.update_one(
@@ -4991,33 +4982,63 @@ async def admin_review_report(
             {"$inc": {"warning_count": 1}},
             upsert=True
         )
-        await log_moderation_action(
-            user_id=report["reported_user_id"],
-            username=report["reported_username"],
+        await log_admin_action(
+            admin_user=admin_user,
             action_type="warn",
+            target_user_id=report["reported_user_id"],
+            target_username=report["reported_username"],
             reason=f"Report #{report_id}: {report['reason']}",
-            issued_by=admin_username,
+            request=request,
             notes=notes
         )
     elif action == "mute":
-        await admin_mute_user(admin_username, report["reported_username"], 60, f"Report #{report_id}")
+        # Call the mute endpoint directly (already JWT-bound)
+        target = await db.users.find_one({"username": report["reported_username"]})
+        if target:
+            target_id = get_user_id(target)
+            await db.chat_user_status.update_one(
+                {"user_id": target_id},
+                {"$set": {"is_muted": True, "mute_expires_at": datetime.utcnow() + timedelta(hours=1)}},
+                upsert=True
+            )
+            await log_admin_action(
+                admin_user=admin_user,
+                action_type="mute",
+                target_user_id=target_id,
+                target_username=report["reported_username"],
+                reason=f"Report #{report_id}",
+                request=request,
+                duration_minutes=60
+            )
     elif action == "ban":
-        await admin_ban_user(admin_username, report["reported_username"], 1440, f"Report #{report_id}")  # 24hr ban
+        target = await db.users.find_one({"username": report["reported_username"]})
+        if target:
+            target_id = get_user_id(target)
+            await db.chat_user_status.update_one(
+                {"user_id": target_id},
+                {"$set": {"is_banned": True, "ban_expires_at": datetime.utcnow() + timedelta(hours=24)}},
+                upsert=True
+            )
+            await log_admin_action(
+                admin_user=admin_user,
+                action_type="ban",
+                target_user_id=target_id,
+                target_username=report["reported_username"],
+                reason=f"Report #{report_id}",
+                request=request,
+                duration_minutes=1440
+            )
     
     return {"success": True, "message": f"Report reviewed with action: {action}"}
 
 
 @api_router.get("/admin/chat/moderation-log")
 async def admin_get_moderation_log(
-    admin_username: str,
     target_username: Optional[str] = None,
-    limit: int = 100
+    limit: int = 100,
+    admin_user: dict = Depends(require_super_admin),
 ):
-    """Admin: Get moderation action log"""
-    admin = await db.users.find_one({"username": admin_username})
-    if not admin or not admin.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
+    """Admin: Get moderation action log (ADAM-ONLY, JWT-BOUND)"""
     query = {}
     if target_username:
         query["username"] = target_username

@@ -27,9 +27,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { useEntitlementStore } from '../stores/entitlementStore';
 
 // Feature flags (SINGLE SOURCE OF TRUTH)
 import { isFeatureEnabled } from '../lib/features';
+
+// CANONICAL combat stats and power helpers
+import { computeCombatStats } from '../lib/combatStats';
+import { computePowerWithMultipliers } from '../lib/power';
 
 // Centralized API calls (SINGLE SOURCE OF TRUTH for endpoints)
 // getHeroProgression + promoteHeroStar + getUserHeroById - all hero endpoints live in lib/api.ts

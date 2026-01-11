@@ -2519,7 +2519,7 @@ async def bootstrap_super_admin(
 @api_router.get("/user/{username}")
 async def get_user(username: str):
     """Get user data"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     return convert_objectid(user)
 
 @api_router.post("/user/{username}/login")
@@ -2600,7 +2600,7 @@ FRAME_DEFINITIONS = {
 @api_router.get("/user/{username}/frames")
 async def get_user_frames(username: str):
     """Get all frames available to a user based on VIP level and achievements"""
-    user_data = await get_user_for_mutation(username)  # Includes frozen check
+    user_data = await get_user_readonly(username)  # Includes frozen check
     
     vip_level = user_data.get("vip_level", 0)
     unlocked_special = user_data.get("unlocked_frames", [])
@@ -2756,7 +2756,7 @@ CHAT_BUBBLE_DEFINITIONS = {
 @api_router.get("/user/{username}/chat-bubbles")
 async def get_user_chat_bubbles(username: str):
     """Get all chat bubbles available to a user"""
-    user_data = await get_user_for_mutation(username)  # Includes frozen check
+    user_data = await get_user_readonly(username)  # Includes frozen check
     
     vip_level = user_data.get("vip_level", 0)
     equipped_bubble = user_data.get("equipped_chat_bubble", "default")
@@ -3156,7 +3156,7 @@ async def get_all_heroes():
 @api_router.get("/user/{username}/heroes")
 async def get_user_heroes(username: str):
     """Get all heroes owned by user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
     
@@ -3184,7 +3184,7 @@ async def get_user_hero_by_id(username: str, user_hero_id: str):
     This is the canonical single-hero fetch endpoint.
     Returns the enriched hero with hero_data and ascension images.
     """
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Find the user's hero instance by id
     user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
@@ -3258,7 +3258,7 @@ async def create_team(username: str, team_name: str):
 @api_router.get("/team/{username}")
 async def get_user_teams(username: str):
     """Get all teams for a user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
     return [convert_objectid(team) for team in teams]
@@ -3280,7 +3280,7 @@ async def update_team_heroes(team_id: str, hero_ids: List[str]):
 @api_router.get("/team/{username}/by-mode")
 async def get_teams_by_mode(username: str):
     """Get all mode-specific teams for a user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get mode teams from user document
     mode_teams = user.get("mode_teams", {})
@@ -3376,7 +3376,7 @@ async def save_mode_team(username: str, mode: str, slot_1: str = None, slot_2: s
 @api_router.get("/team/{username}/change-logs")
 async def get_team_change_logs(username: str, limit: int = 50):
     """Get team change audit logs for a user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     logs = await db.team_change_logs.find(
         {"user_id": user["id"]}
@@ -3387,7 +3387,7 @@ async def get_team_change_logs(username: str, limit: int = 50):
 @api_router.get("/hero/{username}/change-logs")
 async def get_hero_change_logs(username: str, hero_id: str = None, limit: int = 50):
     """Get hero modification audit logs"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     query = {"user_id": user["id"]}
     if hero_id:
@@ -3504,7 +3504,7 @@ async def claim_idle_rewards(username: str):
 @api_router.get("/idle/status/{username}")
 async def get_idle_status(username: str):
     """Get current idle collection status with VIP rates and progression caps"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))
     idle_max_hours = get_vip_idle_hours(vip_level)
@@ -3669,7 +3669,7 @@ async def instant_collect_idle(username: str):
 @api_router.get("/vip/info/{username}")
 async def get_vip_info(username: str):
     """Get VIP information and benefits - monetary thresholds hidden from users"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     total_spent = user.get("total_spent", 0)
     current_vip = calculate_vip_level(total_spent)
@@ -3704,7 +3704,7 @@ async def get_vip_info(username: str):
 @api_router.get("/vip/comparison/{username}")
 async def get_vip_comparison(username: str):
     """Get VIP tier comparison for store display - monetary thresholds hidden"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     total_spent = user.get("total_spent", 0)
     current_vip = calculate_vip_level(total_spent)
@@ -3809,7 +3809,7 @@ async def vip_purchase(username: str, amount_usd: float):
 @api_router.get("/vip/packages/{username}")
 async def get_vip_packages(username: str):
     """Get available VIP packages for user's current VIP level"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))
     
@@ -3883,7 +3883,7 @@ async def get_crystal_packages():
 @api_router.post("/store/purchase-crystals")
 async def purchase_crystals(username: str, package_id: str):
     """Purchase crystal package with real money (simulated)"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     if package_id not in CRYSTAL_PACKAGES:
         raise HTTPException(status_code=404, detail="Package not found")
@@ -3930,7 +3930,7 @@ async def purchase_crystals(username: str, package_id: str):
 @api_router.get("/store/divine-packages")
 async def get_divine_packages(username: str):
     """Get Divine Package availability for a user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Check if monthly reset is needed
     now = datetime.utcnow()
@@ -4032,7 +4032,7 @@ async def purchase_divine_package(username: str, package_id: str):
 @api_router.get("/user/{username}/cr")
 async def get_character_rating(username: str):
     """Calculate and return user's Character Rating (CR)"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get all user heroes
     user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
@@ -4265,7 +4265,7 @@ async def create_support_ticket(username: str, subject: str, message: str):
 @api_router.get("/support/tickets/{username}")
 async def get_user_tickets(username: str):
     """Get all support tickets for a user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     tickets = await db.support_tickets.find({"user_id": user["id"]}).sort("created_at", -1).to_list(100)
     return [convert_objectid(ticket) for ticket in tickets]
@@ -4315,7 +4315,7 @@ async def send_friend_request(from_username: str, to_username: str):
 @api_router.get("/friends/requests/{username}")
 async def get_friend_requests(username: str):
     """Get pending friend requests for a user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     requests = await db.friend_requests.find({
         "to_user_id": user["id"],
@@ -4365,7 +4365,7 @@ async def accept_friend_request(request_id: str, username: str):
 @api_router.get("/friends/list/{username}")
 async def get_friends_list(username: str):
     """Get list of friends with collection status"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get all friendships
     friendships = await db.friendships.find({
@@ -4436,7 +4436,7 @@ async def collect_friend_currency(friendship_id: str, username: str):
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):
     """Get or create player character"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     player_char = await db.player_characters.find_one({"user_id": user["id"]})
     
@@ -4614,7 +4614,7 @@ async def get_campaign_leaderboard(limit: int = 100):
 @api_router.get("/abyss/progress/{username}")
 async def get_abyss_progress(username: str):
     """Get user's abyss progress (LEGACY - prefer /abyss/{username}/status)"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     progress = await db.abyss_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -4766,7 +4766,7 @@ async def battle_abyss(username: str, level: int, request: AbyssBattleRequest):
 @api_router.get("/arena/record/{username}")
 async def get_arena_record(username: str):
     """Get user's arena record"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     record = await db.arena_records.find_one({"user_id": user["id"]})
     if not record:
@@ -7029,7 +7029,7 @@ async def join_guild(username: str, guild_id: str):
 @api_router.get("/guild/{username}")
 async def get_user_guild(username: str):
     """Get user's guild"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     
@@ -7103,7 +7103,7 @@ class HeroUpgradeRequest(BaseModel):
 @api_router.get("/hero/{user_hero_id}/details")
 async def get_hero_details(user_hero_id: str, username: str):
     """Get detailed hero info including skills and equipment"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     user_hero = await db.user_heroes.find_one({"id": user_hero_id, "user_id": user["id"]})
     if not user_hero:
@@ -7347,7 +7347,7 @@ async def update_team_slots(team_id: str, username: str, slots: TeamSlotUpdate):
 @api_router.get("/team/{username}/full")
 async def get_user_teams_full(username: str):
     """Get all teams with full hero data"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     teams = await db.teams.find({"user_id": user["id"]}).to_list(100)
     
@@ -7804,7 +7804,7 @@ def get_boss_for_guild_level(guild_level: int):
 @api_router.get("/guild/{username}/boss")
 async def get_guild_boss(username: str):
     """Get current guild boss status"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Find user's guild
     guild = await db.guilds.find_one({"member_ids": user["id"]})
@@ -8040,7 +8040,7 @@ async def donate_to_guild(username: str, currency_type: str = "coins", amount: i
 @api_router.get("/guild/{username}/donations")
 async def get_guild_donations(username: str, limit: int = 20):
     """Get recent guild donations"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
@@ -8064,7 +8064,7 @@ async def get_guild_donations(username: str, limit: int = 20):
 @api_router.get("/resource-bag/{username}")
 async def get_resource_bag(username: str):
     """Get user's resource bag (farming tracker)"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get or initialize resource bag
     resource_bag = user.get("resource_bag", {
@@ -8329,7 +8329,7 @@ async def redeem_code(username: str, code: str):
 @api_router.get("/codes/history/{username}")
 async def get_redemption_history(username: str):
     """Get user's code redemption history"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     history = await db.code_redemptions.find({"username": username}).sort("redeemed_at", -1).to_list(50)
     
@@ -8432,7 +8432,7 @@ def calculate_abyss_rewards(level: int, is_first_clear: bool = False) -> dict:
 @api_router.get("/abyss/{username}/status")
 async def get_abyss_status(username: str):
     """Get user's abyss progress"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get user's abyss progress
     abyss_progress = await db.abyss_progress.find_one({"user_id": user["id"]})
@@ -8482,7 +8482,7 @@ async def get_abyss_status(username: str):
 @api_router.get("/abyss/{username}/records")
 async def get_abyss_records(username: str, level: int = None):
     """Get clear records for abyss levels"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     server_id = user.get("server_id", "server_1")
     
@@ -8883,7 +8883,7 @@ async def guild_war_attack(username: str, target_guild_id: str):
 @api_router.get("/guild-war/history/{username}")
 async def get_guild_war_history(username: str, limit: int = 20):
     """Get user's guild war attack history"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     attacks = await db.guild_war_attacks.find(
         {"attacker_user_id": user["id"]}
@@ -8988,7 +8988,7 @@ async def verify_purchase(purchase: PurchaseVerification):
 @api_router.get("/purchase/history/{username}")
 async def get_purchase_history(username: str, limit: int = 20):
     """Get user's purchase history"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     purchases = await db.purchases.find(
         {"user_id": user["id"]}
@@ -9010,7 +9010,7 @@ DAILY_QUESTS = [
 @api_router.get("/daily-quests/{username}")
 async def get_daily_quests(username: str):
     """Get daily quest progress for user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get or create daily quest progress
     today = datetime.utcnow().date().isoformat()
@@ -9151,7 +9151,7 @@ DAILY_LOGIN_REWARDS = generate_daily_login_rewards()
 @api_router.get("/login-rewards/{username}")
 async def get_login_rewards(username: str):
     """Get daily login reward status for user (6-month / 180-day system)"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     login_days = user.get("login_days", 0)
     today = datetime.utcnow().date().isoformat()
@@ -9290,7 +9290,7 @@ BATTLE_PASS_PREMIUM_PLUS_PRICE = 19.99  # Includes 10 level skips
 @api_router.get("/battle-pass/{username}")
 async def get_battle_pass(username: str):
     """Get battle pass progress for user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
     if not bp_data:
@@ -9507,7 +9507,7 @@ async def get_event_banners():
 @api_router.get("/event-banners/{banner_id}")
 async def get_event_banner_details(banner_id: str, username: str):
     """Get detailed info for a specific event banner"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     banner = next((b for b in EVENT_BANNERS if b["id"] == banner_id), None)
     if not banner:
@@ -9680,7 +9680,7 @@ STORY_CHAPTERS = [
 @api_router.get("/story/progress/{username}")
 async def get_story_progress(username: str):
     """Get user's story/campaign progress"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     progress = await db.story_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -9842,7 +9842,7 @@ async def get_crimson_eclipse_banner():
 @api_router.get("/event/crimson-eclipse/shop")
 async def get_event_shop(username: str):
     """Get event shop items with user's purchase history"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get user's event purchases
     purchases = await db.event_purchases.find_one({"user_id": user["id"], "banner_id": "crimson_eclipse_2026_01"})
@@ -10016,7 +10016,7 @@ async def claim_event_milestone(username: str, milestone_pulls: int):
 @api_router.get("/journey/{username}")
 async def get_player_journey(username: str):
     """Get player's first 7-day journey progress"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Calculate account age
     created_at = user.get("created_at")
@@ -10135,7 +10135,7 @@ async def claim_login_reward(username: str, day: int):
 @api_router.get("/journey/{username}/beginner-missions")
 async def get_beginner_missions(username: str):
     """Get beginner missions progress"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get claimed missions
     progress = await db.journey_progress.find_one({"user_id": user["id"]})
@@ -10166,7 +10166,7 @@ async def get_beginner_missions(username: str):
 @api_router.get("/starter-packs")
 async def get_starter_packs(username: str):
     """Get available starter packs for user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Calculate account age
     created_at = user.get("created_at")
@@ -10215,7 +10215,7 @@ from core.launch_banner import (
 @api_router.get("/launch-banner/status/{username}")
 async def get_launch_banner_status(username: str):
     """Get launch exclusive banner status for a user"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get or create launch banner progress
     progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
@@ -10401,7 +10401,7 @@ async def pull_launch_banner(username: str, multi: bool = False):
 @api_router.get("/launch-banner/bundles/{username}")
 async def get_launch_bundles(username: str):
     """Get available bundles for the launch banner"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     progress = await db.launch_banner_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -10503,7 +10503,7 @@ from core.selene_monetization import (
 @api_router.get("/selene-banner/status/{username}")
 async def get_selene_banner_status(username: str):
     """Get Selene banner status - triggers after Stage 2-10"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     # Get or create banner progress
     progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
@@ -10707,7 +10707,7 @@ async def pull_selene_banner(username: str, multi: bool = False):
 @api_router.get("/selene-banner/bundles/{username}")
 async def get_selene_bundles_endpoint(username: str):
     """Get available bundles based on player state"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     progress = await db.selene_banner_progress.find_one({"user_id": user["id"]})
     if not progress:
@@ -10875,7 +10875,7 @@ from core.campaign import (
 @api_router.get("/campaign/chapters")
 async def get_campaign_chapters(username: str):
     """Get all campaign chapters with unlock status"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     progress = await db.campaign_progress.find_one({"user_id": user["id"]})
     completed_chapters = progress.get("completed_chapters", []) if progress else []
@@ -10930,7 +10930,7 @@ async def get_campaign_chapters(username: str):
 @api_router.get("/campaign/chapter/{chapter_id}")
 async def get_campaign_chapter(chapter_id: int, username: str):
     """Get detailed chapter data with all stages"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     if chapter_id not in CHAPTER_DATA:
         raise HTTPException(status_code=404, detail="Chapter not found")
@@ -10990,7 +10990,7 @@ async def get_campaign_chapter(chapter_id: int, username: str):
 @api_router.get("/campaign/stage/{chapter_id}/{stage_num}")
 async def get_campaign_stage(chapter_id: int, stage_num: int, username: str):
     """Get specific stage data with enemies and rewards"""
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    user = await get_user_readonly(username)  # Includes frozen check
     
     stage_data = generate_stage_data(chapter_id, stage_num)
     if not stage_data:

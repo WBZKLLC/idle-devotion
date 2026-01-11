@@ -193,7 +193,7 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
     SECURITY:
     - Returns 401 if not logged in
     - Returns 403 if logged in but not ADAM (via username_canon)
-    - Returns the admin user dict if valid
+    - Returns the admin user dict if valid (includes _auth_jti for audit)
     
     JWT 'sub' is the immutable user_id. We load user by ID, then check username_canon.
     NEVER trust client-provided admin_username - always derive from JWT.
@@ -223,6 +223,9 @@ async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depend
     
     if not is_super_admin(user):
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Attach JWT jti to user dict for audit logging
+    user["_auth_jti"] = payload.get("jti")
     
     # Optional: MFA check for production
     # if user.get("mfa_enabled") and not ADMIN_MFA_BYPASS:

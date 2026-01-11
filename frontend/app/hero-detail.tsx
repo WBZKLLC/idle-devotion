@@ -84,6 +84,9 @@ export default function HeroDetailScreen() {
   // Subscribe to entitlements for reactive stat updates
   const entitlements = useEntitlementStore(s => s.entitlements);
   
+  // Check pack ownership for UX badge display
+  const packOwned = Boolean(entitlements?.['PREMIUM_CINEMATICS_PACK']);
+  
   const [hero, setHero] = useState<any>(null);
   const [heroData, setHeroData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);

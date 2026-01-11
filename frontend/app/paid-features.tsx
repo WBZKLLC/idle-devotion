@@ -207,12 +207,12 @@ export default function PaidFeaturesScreen() {
           {/* DEV Mode - Per-Hero Ownership */}
           {__DEV__ && (
             <View style={styles.devCard}>
-              <Text style={styles.devCardTitle}>DEV: Per-Hero Cinematic Ownership</Text>
+              <Text style={styles.devCardTitle}>DEV: Per-Hero Premium Cinematic Ownership</Text>
               <Text style={styles.devCardSubtitle}>
-                Owning a hero's cinematic grants +10% HP, +5% ATK to that hero.
+                Owning a hero's Premium Cinematic grants +10% HP, +5% ATK to that hero.
               </Text>
               <Text style={styles.devCardSubtitle}>
-                Currently owned: {ownedHeroCount} hero cinematics
+                Currently owned: {ownedHeroCount} hero premium cinematics
               </Text>
 
               {/* Custom Hero ID Input */}

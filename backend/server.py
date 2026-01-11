@@ -1917,7 +1917,7 @@ async def auth_login(request: LoginRequest):
     
     SECURITY:
     - Looks up user via username_canon (prevents case-sensitivity exploits)
-    - JWT 'sub' is the immutable user_id (not username)
+    - JWT 'sub' is ALWAYS the UUID "id" field (never ObjectId)
     """
     username = request.username.strip()
     password = request.password
@@ -1928,6 +1928,16 @@ async def auth_login(request: LoginRequest):
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    # SECURITY: Ensure user has UUID "id" field (migrate if needed)
+    if not user.get("id"):
+        # Legacy user without UUID id - generate one now
+        new_id = str(uuid.uuid4())
+        await db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"id": new_id}}
+        )
+        user["id"] = new_id
     
     # Check if user has a password set
     if not user.get("password_hash"):
@@ -1941,9 +1951,8 @@ async def auth_login(request: LoginRequest):
     if not verify_password(password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     
-    # Create JWT token with immutable user_id as subject (NOT username)
-    user_id = user.get("id") or str(user.get("_id"))
-    token = create_access_token(data={"sub": user_id})
+    # Create JWT token with UUID "id" as subject (NEVER use _id)
+    token = create_access_token(data={"sub": user["id"]})
     
     # Return user data without password hash
     user_data = convert_objectid(user.copy())

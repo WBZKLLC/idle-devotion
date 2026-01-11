@@ -152,7 +152,7 @@ api.interceptors.response.use(
         
       case 403:
         // Forbidden - account frozen, permission denied, etc.
-        _showErrorAlert('Action Blocked', detail);
+        _showErrorAlertOnce('Action Blocked', detail, error);
         break;
         
       case 429:

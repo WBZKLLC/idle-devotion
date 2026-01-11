@@ -112,14 +112,19 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
-    """Create a JWT access token with unique token ID (jti) for traceability"""
+    """Create a JWT access token with unique token ID (jti) for traceability.
+    
+    CRITICAL: exp and iat are stored as integer UNIX timestamps (not datetimes).
+    This ensures jwt.decode() returns consistent int types.
+    """
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS))
+    now = datetime.now(timezone.utc)
+    expire = now + (expires_delta or timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS))
     jti = str(uuid.uuid4())  # Unique token ID for audit/revocation
     to_encode.update({
-        "exp": expire,
+        "exp": int(expire.timestamp()),   # Integer UNIX timestamp
         "jti": jti,
-        "iat": datetime.utcnow(),  # Issued at
+        "iat": int(now.timestamp()),      # Integer UNIX timestamp
     })
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 

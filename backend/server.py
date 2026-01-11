@@ -2818,9 +2818,7 @@ async def get_user_chat_bubbles(username: str):
 @api_router.post("/user/{username}/equip-chat-bubble")
 async def equip_chat_bubble(username: str, bubble_id: str):
     """Equip a chat bubble"""
-    user_data = await db.users.find_one({"username": username})
-    if not user_data:
-        raise HTTPException(status_code=404, detail="User not found")
+    user_data = await get_user_for_mutation(username)  # Includes frozen check
     
     # Validate bubble exists
     if bubble_id not in CHAT_BUBBLE_DEFINITIONS:

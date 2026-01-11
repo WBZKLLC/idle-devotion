@@ -10,7 +10,7 @@ import {
 } from '../lib/authStorage';
 
 // Safe mutation wrapper for consistent error handling
-import { safeMutation } from '../lib/safeMutation';
+import { safeMutation, MutationResult } from '../lib/safeMutation';
 
 // API layer with token setter and global error handling
 import {

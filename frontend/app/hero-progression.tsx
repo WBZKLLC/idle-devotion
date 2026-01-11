@@ -312,33 +312,6 @@ export default function HeroProgressionScreen() {
     if (hydrated && user && heroId) loadHero();
   }, [hydrated, user, heroId, loadHero]);
 
-  const openCinematic = useCallback(() => {
-    if (!heroData) return;
-    
-    // Feature flag gate
-    const cinematicsEnabled = isFeatureEnabled('HERO_CINEMATICS', { 
-      stableId: user?.id ?? user?.username 
-    });
-    if (!cinematicsEnabled) {
-      Alert.alert('Coming Soon', 'Hero cinematics are not yet available.');
-      return;
-    }
-    
-    const heroIdForVideo = heroNameToId(heroData.name);
-    const videoSource = getHeroCinematicVideo(heroIdForVideo);
-    if (!videoSource) {
-      Alert.alert('No Cinematic', 'No cinematic video found for this hero yet.');
-      return;
-    }
-    setCinematicVideoSource(videoSource);
-    setShowCinematicModal(true);
-  }, [heroData, user?.id, user?.username]);
-
-  const closeCinematic = useCallback(() => {
-    setShowCinematicModal(false);
-    setCinematicVideoSource(null);
-  }, []);
-
   const requestPromote = useCallback(() => {
     if (!hero) return;
     if (isMaxStars) {

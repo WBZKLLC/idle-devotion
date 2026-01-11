@@ -40,7 +40,7 @@ const logCine = (...args: any[]) => {
 interface HeroCinematicModalProps {
   visible: boolean;
   onClose: () => void;
-  videoSource: number | null; // require() module ID or null
+  videoSource: number | string | null; // number on native, string URL on web
   heroName?: string;
   heroKey?: string;
 }

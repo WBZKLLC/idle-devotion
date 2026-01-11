@@ -243,10 +243,10 @@ export default function HeroCinematicModal({
                 onClose={handleClose} 
               />
             ) : (
-              /* Video player - MODULE-FIRST approach */
+              /* Video player - normalized source for cross-platform */
               <Video
                 ref={videoRef}
-                source={videoSource}
+                source={normalizedSource as any}
                 style={styles.video}
                 resizeMode={ResizeMode.CONTAIN}
                 shouldPlay={visible && !error}

@@ -2093,26 +2093,25 @@ async def bootstrap_super_admin(
             detail="Admin password must be at least 12 characters"
         )
     
-    # Check if ADAM already exists
-    admin_canon = canonicalize_username(SUPER_ADMIN_USERNAME)
-    existing = await db.users.find_one({"username_canon": admin_canon})
+    # Check if admin account already exists (uses hardcoded SUPER_ADMIN_CANON)
+    existing = await db.users.find_one({"username_canon": SUPER_ADMIN_CANON})
     if existing:
         raise HTTPException(
             status_code=400, 
             detail="Super admin account already exists. Bootstrap can only run once."
         )
     
-    # Create ADAM account
+    # Create admin account with hardcoded canonical name
     admin_user = User(
-        username=SUPER_ADMIN_USERNAME,
-        username_canon=admin_canon,
+        username=SUPER_ADMIN_DISPLAY_NAME,  # Display name only
+        username_canon=SUPER_ADMIN_CANON,   # Hardcoded identity
         password_hash=hash_password(request.password)
     )
     await db.users.insert_one(admin_user.dict())
     
     # Mark as admin
     await db.users.update_one(
-        {"username_canon": admin_canon},
+        {"username_canon": SUPER_ADMIN_CANON},
         {"$set": {"is_admin": True}}
     )
     
@@ -2120,7 +2119,7 @@ async def bootstrap_super_admin(
     token = create_access_token(data={"sub": admin_user.id})
     
     return {
-        "message": f"Super admin '{SUPER_ADMIN_USERNAME}' created successfully",
+        "message": f"Super admin account created successfully",
         "token": token,
         "warning": "Remove SUPER_ADMIN_BOOTSTRAP_TOKEN from environment immediately!"
     }

@@ -133,7 +133,7 @@ api.interceptors.response.use(
           // Clear token immediately (in-memory)
           apiSetAuthToken(null);
           
-          _showErrorAlert('Session Expired', 'Please log in again.');
+          _showErrorAlertOnce('Session Expired', 'Please log in again.', error);
           
           // Trigger logout callback (clears store + persisted storage)
           // Do NOT call API endpoints here to avoid infinite loops

@@ -238,6 +238,9 @@ export default function HeroProgressionScreen() {
     if (!rarityNext) return false;
     return effectiveUnlockedTier === 6;
   }, [effectiveUnlockedTier, rarityNext]);
+  
+  // Subscribe to entitlements for reactive power updates
+  const entitlements = useEntitlementStore(s => s.entitlements);
 
   const calcPower = useCallback((h: any, hd: any, overrideStars?: number) => {
     if (!h || !hd) return 0;
@@ -249,16 +252,15 @@ export default function HeroProgressionScreen() {
       : clampInt(h?.stars ?? 0, 0, MAX_STAR_TIER);
     const awaken = clampInt(h?.awakening_level ?? 0, 0, 99);
 
-    const base_hp = clampInt(hd?.base_hp ?? 1000, 0, 999999999);
-    const base_atk = clampInt(hd?.base_atk ?? 100, 0, 999999999);
-    const base_def = clampInt(hd?.base_def ?? 50, 0, 999999999);
+    // Use canonical combat stats (includes premium cinematic bonus)
+    const stats = computeCombatStats(h, hd);
 
     const levelMult = 1 + (level - 1) * 0.05;
-    const starMult = 1 + starsLocal * 0.1; // stars=0 => no bonus
+    const starMult = 1 + starsLocal * 0.1;
     const awakenMult = 1 + awaken * 0.2;
 
-    return Math.floor((base_hp + base_atk * 3 + base_def * 2) * levelMult * starMult * awakenMult);
-  }, []);
+    return computePowerWithMultipliers(stats, levelMult, starMult, awakenMult);
+  }, [entitlements]);
 
   const currentPower = useMemo(() => calcPower(hero, heroData), [calcPower, hero, heroData]);
 

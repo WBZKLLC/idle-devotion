@@ -623,16 +623,6 @@ export default function HeroProgressionScreen() {
                 );
               })}
             </View>
-
-            {tierIsCinematic && (
-              <View style={styles.cineRow}>
-                <Ionicons name="play-circle" size={18} color="rgba(255,255,255,0.92)" />
-                <Text style={styles.cineText}>5★+ Cinematic available</Text>
-                <Pressable onPress={openCinematic} style={styles.cineBtn}>
-                  <Text style={styles.cineBtnText}>Play</Text>
-                </Pressable>
-              </View>
-            )}
           </GlassCard>
 
           {/* Promotion Panel */}

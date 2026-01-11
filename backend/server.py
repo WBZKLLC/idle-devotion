@@ -171,11 +171,15 @@ def canonicalize_username(username: str) -> str:
     return username.strip().lower()
 
 def is_super_admin(user: dict) -> bool:
-    """Check if user is the super admin (ADAM) via canonical username."""
+    """Check if user is the super admin via canonical username.
+    
+    SECURITY: Uses hardcoded SUPER_ADMIN_CANON ("adam"), NOT an env var.
+    This ensures the super-admin identity cannot be changed by config.
+    """
     if not user:
         return False
     username_canon = user.get("username_canon") or ""
-    return username_canon == canonicalize_username(SUPER_ADMIN_USERNAME)
+    return username_canon == SUPER_ADMIN_CANON
 
 async def require_super_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """

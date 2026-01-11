@@ -6360,9 +6360,10 @@ async def admin_spawn_gift(
 
 
 class AdjustDropRateRequest(BaseModel):
-    banner_type: str  # common, premium, divine, limited
+    banner_type: str  # common, premium, divine, limited, event
     rate_adjustments: dict  # {"SSR": 0.05, "SR": 0.15, ...}
-    reason: str  # REQUIRED - must explain why
+    reason: str  # REQUIRED - must explain why (min 10 chars)
+    confirm_large_change: bool = False  # Required if any rate changes by >50%
 
 @api_router.post("/admin/liveops/adjust-drop-rates")
 async def admin_adjust_drop_rates(
@@ -6375,13 +6376,66 @@ async def admin_adjust_drop_rates(
     
     This is a sensitive operation that affects game economy.
     All changes are logged with full detail.
+    
+    Validation:
+    - banner_type must be in allowed set
+    - Each rate must be 0 <= rate <= 1
+    - Sum of all rates must equal 1.0
+    - Large changes (>50% delta) require confirm_large_change=true
     """
+    # Validate reason
     if not payload.reason or len(payload.reason) < 10:
         raise HTTPException(status_code=400, detail="Detailed reason required (min 10 chars)")
     
-    # Get current rates
+    # Validate banner_type
+    if payload.banner_type not in ALLOWED_BANNER_TYPES:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid banner_type. Must be one of: {', '.join(ALLOWED_BANNER_TYPES)}"
+        )
+    
+    # Validate rate_adjustments structure
+    rates = payload.rate_adjustments
+    if not isinstance(rates, dict) or not rates:
+        raise HTTPException(status_code=400, detail="rate_adjustments must be a non-empty object")
+    
+    # Validate each rate
+    for tier, rate in rates.items():
+        if not isinstance(rate, (int, float)):
+            raise HTTPException(status_code=400, detail=f"Rate for '{tier}' must be numeric")
+        if rate < 0 or rate > 1:
+            raise HTTPException(status_code=400, detail=f"Rate for '{tier}' must be between 0 and 1 (got {rate})")
+    
+    # Validate sum of rates equals 1.0
+    total = sum(float(v) for v in rates.values())
+    if abs(total - 1.0) > 1e-6:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Rates must sum to 1.0 (got {total:.6f})"
+        )
+    
+    # Get current rates for comparison
     current_rates = await db.drop_rates.find_one({"banner_type": payload.banner_type})
     old_rates = current_rates.get("rates", {}) if current_rates else {}
+    
+    # Check for large changes (>50% relative change)
+    has_large_change = False
+    for tier, new_rate in rates.items():
+        old_rate = old_rates.get(tier, 0)
+        if old_rate > 0:
+            change_pct = abs(new_rate - old_rate) / old_rate
+            if change_pct > 0.5:  # >50% change
+                has_large_change = True
+                break
+        elif new_rate > 0.1:  # New tier with significant rate
+            has_large_change = True
+            break
+    
+    if has_large_change and not payload.confirm_large_change:
+        raise HTTPException(
+            status_code=400,
+            detail="Large rate change detected (>50%). Set confirm_large_change=true to proceed."
+        )
     
     # Update rates
     await db.drop_rates.update_one(
@@ -6405,6 +6459,7 @@ async def admin_adjust_drop_rates(
             "banner_type": payload.banner_type,
             "old_rates": old_rates,
             "new_rates": payload.rate_adjustments,
+            "had_large_change": has_large_change,
             "AUDIT_SENSITIVE": True
         },
         reason=payload.reason,

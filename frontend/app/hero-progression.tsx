@@ -118,10 +118,6 @@ export default function HeroProgressionScreen() {
   const [isPromoting, setIsPromoting] = useState(false);
   const [isAscending, setIsAscending] = useState(false);
 
-  // cinematic
-  const [showCinematicModal, setShowCinematicModal] = useState(false);
-  const [cinematicVideoSource, setCinematicVideoSource] = useState<any>(null);
-
   // rollback for optimistic
   const rollbackRef = useRef<{ hero: any } | null>(null);
   

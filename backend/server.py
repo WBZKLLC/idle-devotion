@@ -686,21 +686,257 @@ SUPPORTED_LANGUAGES = [
     "id"   # Indonesian
 ]
 
-# Profanity filter - basic word list (expand as needed)
+# ============================================================================
+# CHAT MODERATION SYSTEM - Production-grade for Google Play / Apple Review
+# ============================================================================
+
+# Configuration constants
+CHAT_CONFIG = {
+    "max_message_length": 500,
+    "max_fetch_limit": 100,
+    "rate_limit_messages_per_minute": 10,
+    "rate_limit_burst": 5,
+    "retention_days": 90,  # Messages older than this are eligible for cleanup
+    "min_message_length": 1,
+    "allowed_chars_pattern": r'^[\w\s\.,!?\'"@#$%&*()+=\-:;<>\[\]{}|/\\~`^\n\r\u00A0-\uFFFF]+$',
+}
+
+# Profanity filter - comprehensive word list
 PROFANITY_LIST = [
-    "fuck", "shit", "ass", "bitch", "damn", "hell", "crap",
-    "bastard", "dick", "pussy", "cock", "fag", "nigger", "cunt",
-    # Add more as needed for different languages
+    # English profanity
+    "fuck", "fucker", "fucking", "fucked", "fck", "f*ck", "f**k",
+    "shit", "shitty", "bullshit", "sh*t", "s**t",
+    "ass", "asshole", "a**hole", "a$$",
+    "bitch", "b*tch", "b**ch",
+    "bastard", "dick", "d*ck", "pussy", "p*ssy", "cock", "c*ck",
+    "cunt", "c*nt", "c**t",
+    # Slurs (critical for app store compliance)
+    "nigger", "n*gger", "n**ger", "nigga", "n*gga",
+    "fag", "faggot", "f*g", "f*ggot",
+    "retard", "retarded", "r*tard",
+    "kike", "k*ke", "spic", "sp*c", "chink", "ch*nk",
+    "tranny", "tr*nny",
+    # Common variations/leetspeak
+    "f4ck", "sh1t", "b1tch", "a55", "d1ck", "c0ck",
+    # Add more as needed
 ]
+
+# Slurs that result in immediate shadowban consideration
+SEVERE_SLURS = [
+    "nigger", "nigga", "faggot", "kike", "spic", "chink", "tranny",
+]
+
+# PII patterns to detect and block
+PII_PATTERNS = [
+    (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', 'email'),  # Email
+    (r'\b(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b', 'phone_us'),  # US phone
+    (r'\b(?:\+?[0-9]{1,3}[-.\s]?)?[0-9]{6,14}\b', 'phone_intl'),  # International phone
+    (r'\b[0-9]{3}[-.\s]?[0-9]{2}[-.\s]?[0-9]{4}\b', 'ssn'),  # SSN pattern
+    (r'\b[0-9]{16}\b', 'credit_card'),  # Credit card (basic)
+]
+
+# URL pattern - block ALL URLs as per config
+URL_PATTERN = re.compile(
+    r'(?:https?://|www\.|ftp://|[a-zA-Z0-9][-a-zA-Z0-9]*\.(?:com|org|net|edu|gov|mil|co|io|app|dev|xyz|info|biz|me|tv|cc|us|uk|ca|au|de|fr|jp|cn|ru|br|in|it|es|nl|se|no|fi|dk|pl|cz|at|ch|be|ie|nz|sg|hk|kr|tw|my|ph|id|th|vn|mx|ar|cl|pe|co|ve|ec|bo|py|uy))[^\s]*',
+    re.IGNORECASE
+)
+
+def detect_pii(message: str) -> Optional[str]:
+    """Detect PII in message, returns type if found"""
+    for pattern, pii_type in PII_PATTERNS:
+        if re.search(pattern, message):
+            return pii_type
+    return None
+
+def detect_url(message: str) -> bool:
+    """Detect URLs in message"""
+    return bool(URL_PATTERN.search(message))
+
+def contains_severe_slur(message: str) -> bool:
+    """Check if message contains severe slurs"""
+    msg_lower = message.lower()
+    for slur in SEVERE_SLURS:
+        if slur in msg_lower:
+            return True
+    return False
 
 def censor_message(message: str) -> str:
     """Censor profanity in message"""
     censored = message
     for word in PROFANITY_LIST:
-        # Case insensitive replacement
-        pattern = re.compile(re.escape(word), re.IGNORECASE)
+        # Case insensitive replacement with word boundaries
+        pattern = re.compile(r'\b' + re.escape(word) + r'\b', re.IGNORECASE)
         censored = pattern.sub("***", censored)
     return censored
+
+def sanitize_chat_message(message: str) -> str:
+    """Sanitize chat message - strip control chars, normalize whitespace"""
+    # Remove control characters except newlines
+    sanitized = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', message)
+    # Normalize whitespace
+    sanitized = re.sub(r'\s+', ' ', sanitized).strip()
+    return sanitized
+
+# Chat moderation models
+class ChatReport(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    reporter_id: str
+    reporter_username: str
+    reported_user_id: str
+    reported_username: str
+    message_id: Optional[str] = None
+    reason: str  # spam, harassment, hate_speech, inappropriate, other
+    details: Optional[str] = None
+    status: str = "pending"  # pending, reviewed, actioned, dismissed
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    reviewed_at: Optional[datetime] = None
+    reviewed_by: Optional[str] = None
+    action_taken: Optional[str] = None
+
+class ChatModerationAction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    username: str
+    action_type: str  # mute, ban, shadowban, warn
+    reason: str
+    duration_minutes: Optional[int] = None  # None = permanent
+    issued_by: str  # admin username or "system"
+    issued_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: Optional[datetime] = None
+    is_active: bool = True
+    notes: Optional[str] = None
+
+class UserChatStatus(BaseModel):
+    """Track user's chat status for moderation"""
+    user_id: str
+    username: str
+    is_muted: bool = False
+    mute_expires_at: Optional[datetime] = None
+    is_banned: bool = False
+    ban_expires_at: Optional[datetime] = None
+    is_shadowbanned: bool = False
+    shadowban_expires_at: Optional[datetime] = None
+    warning_count: int = 0
+    report_count: int = 0
+    blocked_users: List[str] = Field(default_factory=list)  # List of user IDs
+    last_message_at: Optional[datetime] = None
+    messages_in_window: int = 0  # For rate limiting
+    rate_limit_window_start: Optional[datetime] = None
+
+# Rate limiting tracking (in-memory, consider Redis for production scale)
+chat_rate_limits: Dict[str, dict] = {}
+
+def check_chat_rate_limit(user_id: str) -> tuple[bool, Optional[int]]:
+    """Check if user is rate limited. Returns (is_allowed, retry_after_seconds)"""
+    now = datetime.utcnow()
+    window_seconds = 60
+    max_messages = CHAT_CONFIG["rate_limit_messages_per_minute"]
+    
+    if user_id not in chat_rate_limits:
+        chat_rate_limits[user_id] = {
+            "window_start": now,
+            "count": 0
+        }
+    
+    user_limit = chat_rate_limits[user_id]
+    window_elapsed = (now - user_limit["window_start"]).total_seconds()
+    
+    if window_elapsed >= window_seconds:
+        # Reset window
+        user_limit["window_start"] = now
+        user_limit["count"] = 1
+        return (True, None)
+    
+    if user_limit["count"] >= max_messages:
+        retry_after = int(window_seconds - window_elapsed)
+        return (False, retry_after)
+    
+    user_limit["count"] += 1
+    return (True, None)
+
+async def get_user_chat_status(user_id: str) -> Optional[dict]:
+    """Get user's chat moderation status"""
+    status = await db.chat_user_status.find_one({"user_id": user_id})
+    return status
+
+async def is_user_chat_restricted(user_id: str) -> tuple[bool, str]:
+    """Check if user can send messages. Returns (is_restricted, reason)"""
+    status = await get_user_chat_status(user_id)
+    if not status:
+        return (False, "")
+    
+    now = datetime.utcnow()
+    
+    # Check ban
+    if status.get("is_banned"):
+        expires = status.get("ban_expires_at")
+        if expires is None or expires > now:
+            return (True, "You are banned from chat")
+        # Ban expired, clear it
+        await db.chat_user_status.update_one(
+            {"user_id": user_id},
+            {"$set": {"is_banned": False, "ban_expires_at": None}}
+        )
+    
+    # Check mute
+    if status.get("is_muted"):
+        expires = status.get("mute_expires_at")
+        if expires is None or expires > now:
+            return (True, "You are muted")
+        # Mute expired, clear it
+        await db.chat_user_status.update_one(
+            {"user_id": user_id},
+            {"$set": {"is_muted": False, "mute_expires_at": None}}
+        )
+    
+    return (False, "")
+
+async def is_user_shadowbanned(user_id: str) -> bool:
+    """Check if user is shadowbanned"""
+    status = await get_user_chat_status(user_id)
+    if not status:
+        return False
+    
+    if status.get("is_shadowbanned"):
+        expires = status.get("shadowban_expires_at")
+        now = datetime.utcnow()
+        if expires is None or expires > now:
+            return True
+        # Shadowban expired, clear it
+        await db.chat_user_status.update_one(
+            {"user_id": user_id},
+            {"$set": {"is_shadowbanned": False, "shadowban_expires_at": None}}
+        )
+    
+    return False
+
+async def log_moderation_action(
+    user_id: str,
+    username: str,
+    action_type: str,
+    reason: str,
+    issued_by: str,
+    duration_minutes: Optional[int] = None,
+    notes: Optional[str] = None
+):
+    """Log a moderation action for audit trail"""
+    expires_at = None
+    if duration_minutes:
+        expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes)
+    
+    action = ChatModerationAction(
+        user_id=user_id,
+        username=username,
+        action_type=action_type,
+        reason=reason,
+        duration_minutes=duration_minutes,
+        issued_by=issued_by,
+        expires_at=expires_at,
+        notes=notes
+    )
+    
+    await db.chat_moderation_log.insert_one(action.dict())
+    return action
 
 # VIP tier thresholds (spending in USD)
 VIP_TIERS = {

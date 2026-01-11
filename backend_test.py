@@ -255,15 +255,15 @@ class IdentityHardeningTester:
             
         # Test admin endpoint with ADAM's token
         auth_headers = {"Authorization": f"Bearer {self.admin_token}"}
-        success, response = self.make_request("GET", "/god/users?limit=5", headers=auth_headers)
+        success, response = self.make_request("GET", "/admin/user/adam", headers=auth_headers)
         
         if not success:
             self.log_test("E1: Admin Access", False, f"Admin endpoint access failed: {response}")
             return False
             
-        # Check that we get users list
-        if "users" not in response:
-            self.log_test("E1: Admin Access", False, "No users list in admin response")
+        # Check that we get user data
+        if "user" not in response:
+            self.log_test("E1: Admin Access", False, "No user data in admin response")
             return False
             
         self.log_test("E1: Admin Access", True, f"Admin endpoint accessible, returned {len(response['users'])} users")

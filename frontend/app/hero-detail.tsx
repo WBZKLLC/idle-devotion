@@ -81,6 +81,9 @@ export default function HeroDetailScreen() {
   const hydrated = useHydration();
   const { width: screenW } = useWindowDimensions();
   
+  // Subscribe to entitlements for reactive stat updates
+  const entitlements = useEntitlementStore(s => s.entitlements);
+  
   const [hero, setHero] = useState<any>(null);
   const [heroData, setHeroData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -103,7 +106,8 @@ export default function HeroDetailScreen() {
   const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero?.id, hero?.stars, hero?.awakening_level]);
 
   // CANONICAL combat stats with all bonuses applied (cinematic ownership, etc.)
-  const combatStats = useMemo(() => computeCombatStats(hero, heroData), [hero, heroData]);
+  // Re-computes when hero/heroData OR entitlements change
+  const combatStats = useMemo(() => computeCombatStats(hero, heroData), [hero, heroData, entitlements]);
 
   // Enforce tier gating reactively - if hero data changes, clamp selectedTier
   useEffect(() => {

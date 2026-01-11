@@ -4127,20 +4127,54 @@ async def arena_battle(username: str, request: ArenaBattleRequest):
         "win_streak": user_record["win_streak"] + 1 if victory else 0
     }
 
-# ==================== CHAT SYSTEM ====================
+# ==================== CHAT SYSTEM (HARDENED) ====================
+
 @api_router.post("/chat/send")
+@limiter.limit("10/minute")
 async def send_chat_message(
+    request: Request,
     username: str,
     channel_type: str,
     message: str,
+    client_msg_id: Optional[str] = None,  # For idempotency
     language: str = "en",
     channel_id: Optional[str] = None,
     server_region: str = "global"
 ):
-    """Send a chat message"""
+    """
+    Send a chat message (SECURED)
+    
+    Security features:
+    - Server-authoritative: username validated against DB
+    - Rate limited: 10 messages/minute per IP
+    - Input validation: length, characters, PII, URLs
+    - Profanity filtering
+    - Moderation checks: mute/ban/shadowban
+    - Idempotency via client_msg_id
+    """
+    # Validate user exists
     user = await db.users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    user_id = user["id"]
+    
+    # Check rate limit (per-user)
+    is_allowed, retry_after = check_chat_rate_limit(user_id)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429, 
+            detail=f"Rate limited. Try again in {retry_after} seconds",
+            headers={"Retry-After": str(retry_after)}
+        )
+    
+    # Check moderation status (mute/ban)
+    is_restricted, restriction_reason = await is_user_chat_restricted(user_id)
+    if is_restricted:
+        raise HTTPException(status_code=403, detail=restriction_reason)
+    
+    # Check shadowban (silently accept but don't broadcast)
+    is_shadow = await is_user_shadowbanned(user_id)
     
     # Validate channel type
     if channel_type not in ["world", "local", "guild", "private"]:
@@ -4148,22 +4182,68 @@ async def send_chat_message(
     
     # Validate language
     if language not in SUPPORTED_LANGUAGES:
-        language = "en"  # Default to English
+        language = "en"
     
-    # No photos or emojis allowed - check for special characters
-    if any(char in message for char in ['📷', '🖼️', '📸']):
-        raise HTTPException(status_code=400, detail="Photos not allowed in chat")
+    # Sanitize message
+    sanitized_message = sanitize_chat_message(message)
     
-    # Limit message length
-    if len(message) > 500:
-        raise HTTPException(status_code=400, detail="Message too long (max 500 characters)")
+    # Validate message length
+    if len(sanitized_message) < CHAT_CONFIG["min_message_length"]:
+        raise HTTPException(status_code=400, detail="Message too short")
+    
+    if len(sanitized_message) > CHAT_CONFIG["max_message_length"]:
+        raise HTTPException(status_code=400, detail=f"Message too long (max {CHAT_CONFIG['max_message_length']} characters)")
+    
+    # Block URLs
+    if detect_url(sanitized_message):
+        raise HTTPException(status_code=400, detail="URLs are not allowed in chat")
+    
+    # Block PII
+    pii_type = detect_pii(sanitized_message)
+    if pii_type:
+        raise HTTPException(status_code=400, detail="Personal information (emails, phone numbers) not allowed in chat")
+    
+    # Check for severe slurs (auto-shadowban)
+    if contains_severe_slur(sanitized_message):
+        # Auto-shadowban for 24 hours
+        await db.chat_user_status.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "user_id": user_id,
+                    "username": username,
+                    "is_shadowbanned": True,
+                    "shadowban_expires_at": datetime.utcnow() + timedelta(hours=24)
+                }
+            },
+            upsert=True
+        )
+        await log_moderation_action(
+            user_id=user_id,
+            username=username,
+            action_type="shadowban",
+            reason="Auto-detected severe slur",
+            issued_by="system",
+            duration_minutes=1440,  # 24 hours
+            notes=f"Original message contained severe slur"
+        )
+        is_shadow = True
     
     # Censor profanity
-    censored_message = censor_message(message)
+    censored_message = censor_message(sanitized_message)
+    
+    # Idempotency check
+    if client_msg_id:
+        existing = await db.chat_messages.find_one({
+            "sender_id": user_id,
+            "client_msg_id": client_msg_id
+        })
+        if existing:
+            return convert_objectid(existing)
     
     # Create chat message
     chat_msg = ChatMessage(
-        sender_id=user["id"],
+        sender_id=user_id,
         sender_username=username,
         channel_type=channel_type,
         channel_id=channel_id,
@@ -4172,20 +4252,64 @@ async def send_chat_message(
         server_region=server_region
     )
     
-    await db.chat_messages.insert_one(chat_msg.dict())
+    msg_dict = chat_msg.dict()
+    if client_msg_id:
+        msg_dict["client_msg_id"] = client_msg_id
     
-    return convert_objectid(chat_msg.dict())
+    # If shadowbanned, store but mark as hidden
+    if is_shadow:
+        msg_dict["is_shadowbanned"] = True
+    
+    await db.chat_messages.insert_one(msg_dict)
+    
+    return convert_objectid(msg_dict)
+
 
 @api_router.get("/chat/messages")
+@limiter.limit("30/minute")
 async def get_chat_messages(
+    request: Request,
     channel_type: str,
+    username: Optional[str] = None,  # For filtering shadowbanned messages
     channel_id: Optional[str] = None,
     server_region: str = "global",
     limit: int = 50,
     before_timestamp: Optional[str] = None
 ):
-    """Get chat messages for a channel"""
+    """
+    Get chat messages for a channel (SECURED)
+    
+    Security features:
+    - Rate limited: 30 requests/minute per IP
+    - Max limit capped to prevent scraping
+    - Shadowbanned messages only visible to sender
+    - Blocked users filtered
+    """
+    # Cap limit to prevent scraping
+    limit = min(limit, CHAT_CONFIG["max_fetch_limit"])
+    
     query = {"channel_type": channel_type}
+    
+    # Filter shadowbanned messages (only show to the sender)
+    if username:
+        user = await db.users.find_one({"username": username})
+        if user:
+            # Get user's blocked list
+            user_status = await get_user_chat_status(user["id"])
+            blocked_users = user_status.get("blocked_users", []) if user_status else []
+            
+            # Complex query: show non-shadowbanned OR own shadowbanned messages
+            query["$or"] = [
+                {"is_shadowbanned": {"$ne": True}},
+                {"sender_id": user["id"], "is_shadowbanned": True}
+            ]
+            
+            # Filter out messages from blocked users
+            if blocked_users:
+                query["sender_id"] = {"$nin": blocked_users}
+    else:
+        # Anonymous/no user - only show non-shadowbanned
+        query["is_shadowbanned"] = {"$ne": True}
     
     if channel_type == "local":
         query["server_region"] = server_region
@@ -4196,14 +4320,511 @@ async def get_chat_messages(
     
     # Pagination support
     if before_timestamp:
-        query["timestamp"] = {"$lt": datetime.fromisoformat(before_timestamp)}
+        try:
+            query["timestamp"] = {"$lt": datetime.fromisoformat(before_timestamp.replace('Z', '+00:00'))}
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid timestamp format")
     
     messages = await db.chat_messages.find(query).sort("timestamp", -1).limit(limit).to_list(limit)
     
     # Reverse to show oldest first
     messages.reverse()
     
-    return [convert_objectid(msg) for msg in messages]
+    # Remove internal fields before returning
+    result = []
+    for msg in messages:
+        msg_clean = convert_objectid(msg)
+        msg_clean.pop("is_shadowbanned", None)
+        msg_clean.pop("client_msg_id", None)
+        result.append(msg_clean)
+    
+    return result
+
+
+# ==================== CHAT MODERATION ENDPOINTS ====================
+
+@api_router.post("/chat/report")
+async def report_chat_message(
+    reporter_username: str,
+    reported_username: str,
+    reason: str,
+    message_id: Optional[str] = None,
+    details: Optional[str] = None
+):
+    """
+    Report a chat message or user
+    
+    Reasons: spam, harassment, hate_speech, inappropriate, other
+    """
+    # Validate reporter
+    reporter = await db.users.find_one({"username": reporter_username})
+    if not reporter:
+        raise HTTPException(status_code=404, detail="Reporter not found")
+    
+    # Validate reported user
+    reported = await db.users.find_one({"username": reported_username})
+    if not reported:
+        raise HTTPException(status_code=404, detail="Reported user not found")
+    
+    # Validate reason
+    valid_reasons = ["spam", "harassment", "hate_speech", "inappropriate", "other"]
+    if reason not in valid_reasons:
+        raise HTTPException(status_code=400, detail=f"Invalid reason. Must be one of: {', '.join(valid_reasons)}")
+    
+    # Check if message exists (if provided)
+    if message_id:
+        message = await db.chat_messages.find_one({"id": message_id})
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Create report
+    report = ChatReport(
+        reporter_id=reporter["id"],
+        reporter_username=reporter_username,
+        reported_user_id=reported["id"],
+        reported_username=reported_username,
+        message_id=message_id,
+        reason=reason,
+        details=details[:500] if details else None  # Limit details length
+    )
+    
+    await db.chat_reports.insert_one(report.dict())
+    
+    # Increment report count on user status
+    await db.chat_user_status.update_one(
+        {"user_id": reported["id"]},
+        {
+            "$set": {"user_id": reported["id"], "username": reported_username},
+            "$inc": {"report_count": 1}
+        },
+        upsert=True
+    )
+    
+    # Auto-action: If user gets 5+ reports, auto-mute for review
+    user_status = await get_user_chat_status(reported["id"])
+    if user_status and user_status.get("report_count", 0) >= 5:
+        if not user_status.get("is_muted"):
+            await db.chat_user_status.update_one(
+                {"user_id": reported["id"]},
+                {
+                    "$set": {
+                        "is_muted": True,
+                        "mute_expires_at": datetime.utcnow() + timedelta(hours=1)
+                    }
+                }
+            )
+            await log_moderation_action(
+                user_id=reported["id"],
+                username=reported_username,
+                action_type="mute",
+                reason="Auto-muted due to multiple reports",
+                issued_by="system",
+                duration_minutes=60
+            )
+    
+    return {"success": True, "report_id": report.id, "message": "Report submitted successfully"}
+
+
+@api_router.post("/chat/block-user")
+async def block_user(
+    username: str,
+    blocked_username: str
+):
+    """Block a user from appearing in your chat"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    blocked = await db.users.find_one({"username": blocked_username})
+    if not blocked:
+        raise HTTPException(status_code=404, detail="User to block not found")
+    
+    if user["id"] == blocked["id"]:
+        raise HTTPException(status_code=400, detail="Cannot block yourself")
+    
+    await db.chat_user_status.update_one(
+        {"user_id": user["id"]},
+        {
+            "$set": {"user_id": user["id"], "username": username},
+            "$addToSet": {"blocked_users": blocked["id"]}
+        },
+        upsert=True
+    )
+    
+    return {"success": True, "message": f"Blocked {blocked_username}"}
+
+
+@api_router.post("/chat/unblock-user")
+async def unblock_user(
+    username: str,
+    blocked_username: str
+):
+    """Unblock a user"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    blocked = await db.users.find_one({"username": blocked_username})
+    if not blocked:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.chat_user_status.update_one(
+        {"user_id": user["id"]},
+        {"$pull": {"blocked_users": blocked["id"]}}
+    )
+    
+    return {"success": True, "message": f"Unblocked {blocked_username}"}
+
+
+@api_router.get("/chat/blocked-users")
+async def get_blocked_users(username: str):
+    """Get list of blocked users"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    status = await get_user_chat_status(user["id"])
+    blocked_ids = status.get("blocked_users", []) if status else []
+    
+    # Get usernames for blocked IDs
+    blocked_users = []
+    for blocked_id in blocked_ids:
+        blocked_user = await db.users.find_one({"id": blocked_id})
+        if blocked_user:
+            blocked_users.append({
+                "id": blocked_id,
+                "username": blocked_user["username"]
+            })
+    
+    return {"blocked_users": blocked_users}
+
+
+# ==================== ADMIN MODERATION ENDPOINTS ====================
+
+@api_router.post("/admin/chat/mute")
+async def admin_mute_user(
+    admin_username: str,
+    target_username: str,
+    duration_minutes: int,
+    reason: str
+):
+    """Admin: Mute a user"""
+    # Verify admin
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    target = await db.users.find_one({"username": target_username})
+    if not target:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    
+    expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes) if duration_minutes > 0 else None
+    
+    await db.chat_user_status.update_one(
+        {"user_id": target["id"]},
+        {
+            "$set": {
+                "user_id": target["id"],
+                "username": target_username,
+                "is_muted": True,
+                "mute_expires_at": expires_at
+            }
+        },
+        upsert=True
+    )
+    
+    await log_moderation_action(
+        user_id=target["id"],
+        username=target_username,
+        action_type="mute",
+        reason=reason,
+        issued_by=admin_username,
+        duration_minutes=duration_minutes if duration_minutes > 0 else None
+    )
+    
+    return {"success": True, "message": f"Muted {target_username} for {duration_minutes} minutes"}
+
+
+@api_router.post("/admin/chat/unmute")
+async def admin_unmute_user(
+    admin_username: str,
+    target_username: str
+):
+    """Admin: Unmute a user"""
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    target = await db.users.find_one({"username": target_username})
+    if not target:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    
+    await db.chat_user_status.update_one(
+        {"user_id": target["id"]},
+        {"$set": {"is_muted": False, "mute_expires_at": None}}
+    )
+    
+    await log_moderation_action(
+        user_id=target["id"],
+        username=target_username,
+        action_type="unmute",
+        reason="Admin action",
+        issued_by=admin_username
+    )
+    
+    return {"success": True, "message": f"Unmuted {target_username}"}
+
+
+@api_router.post("/admin/chat/ban")
+async def admin_ban_user(
+    admin_username: str,
+    target_username: str,
+    duration_minutes: Optional[int] = None,  # None = permanent
+    reason: str = "Violation of community guidelines"
+):
+    """Admin: Ban a user from chat"""
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    target = await db.users.find_one({"username": target_username})
+    if not target:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    
+    expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes) if duration_minutes else None
+    
+    await db.chat_user_status.update_one(
+        {"user_id": target["id"]},
+        {
+            "$set": {
+                "user_id": target["id"],
+                "username": target_username,
+                "is_banned": True,
+                "ban_expires_at": expires_at
+            }
+        },
+        upsert=True
+    )
+    
+    await log_moderation_action(
+        user_id=target["id"],
+        username=target_username,
+        action_type="ban",
+        reason=reason,
+        issued_by=admin_username,
+        duration_minutes=duration_minutes
+    )
+    
+    duration_str = f"{duration_minutes} minutes" if duration_minutes else "permanently"
+    return {"success": True, "message": f"Banned {target_username} from chat {duration_str}"}
+
+
+@api_router.post("/admin/chat/unban")
+async def admin_unban_user(
+    admin_username: str,
+    target_username: str
+):
+    """Admin: Unban a user from chat"""
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    target = await db.users.find_one({"username": target_username})
+    if not target:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    
+    await db.chat_user_status.update_one(
+        {"user_id": target["id"]},
+        {"$set": {"is_banned": False, "ban_expires_at": None}}
+    )
+    
+    await log_moderation_action(
+        user_id=target["id"],
+        username=target_username,
+        action_type="unban",
+        reason="Admin action",
+        issued_by=admin_username
+    )
+    
+    return {"success": True, "message": f"Unbanned {target_username}"}
+
+
+@api_router.post("/admin/chat/shadowban")
+async def admin_shadowban_user(
+    admin_username: str,
+    target_username: str,
+    duration_minutes: Optional[int] = None,
+    reason: str = "Suspicious activity"
+):
+    """Admin: Shadowban a user (their messages only visible to them)"""
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    target = await db.users.find_one({"username": target_username})
+    if not target:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    
+    expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes) if duration_minutes else None
+    
+    await db.chat_user_status.update_one(
+        {"user_id": target["id"]},
+        {
+            "$set": {
+                "user_id": target["id"],
+                "username": target_username,
+                "is_shadowbanned": True,
+                "shadowban_expires_at": expires_at
+            }
+        },
+        upsert=True
+    )
+    
+    await log_moderation_action(
+        user_id=target["id"],
+        username=target_username,
+        action_type="shadowban",
+        reason=reason,
+        issued_by=admin_username,
+        duration_minutes=duration_minutes
+    )
+    
+    return {"success": True, "message": f"Shadowbanned {target_username}"}
+
+
+@api_router.get("/admin/chat/reports")
+async def admin_get_reports(
+    admin_username: str,
+    status: str = "pending",
+    limit: int = 50
+):
+    """Admin: Get chat reports"""
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if status != "all":
+        query["status"] = status
+    
+    reports = await db.chat_reports.find(query).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return [convert_objectid(r) for r in reports]
+
+
+@api_router.post("/admin/chat/review-report")
+async def admin_review_report(
+    admin_username: str,
+    report_id: str,
+    action: str,  # dismiss, warn, mute, ban
+    notes: Optional[str] = None
+):
+    """Admin: Review and action a report"""
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    report = await db.chat_reports.find_one({"id": report_id})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    valid_actions = ["dismiss", "warn", "mute", "ban"]
+    if action not in valid_actions:
+        raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {', '.join(valid_actions)}")
+    
+    # Update report status
+    await db.chat_reports.update_one(
+        {"id": report_id},
+        {
+            "$set": {
+                "status": "actioned" if action != "dismiss" else "dismissed",
+                "reviewed_at": datetime.utcnow(),
+                "reviewed_by": admin_username,
+                "action_taken": action
+            }
+        }
+    )
+    
+    # Apply action if not dismissed
+    if action == "warn":
+        await db.chat_user_status.update_one(
+            {"user_id": report["reported_user_id"]},
+            {"$inc": {"warning_count": 1}},
+            upsert=True
+        )
+        await log_moderation_action(
+            user_id=report["reported_user_id"],
+            username=report["reported_username"],
+            action_type="warn",
+            reason=f"Report #{report_id}: {report['reason']}",
+            issued_by=admin_username,
+            notes=notes
+        )
+    elif action == "mute":
+        await admin_mute_user(admin_username, report["reported_username"], 60, f"Report #{report_id}")
+    elif action == "ban":
+        await admin_ban_user(admin_username, report["reported_username"], 1440, f"Report #{report_id}")  # 24hr ban
+    
+    return {"success": True, "message": f"Report reviewed with action: {action}"}
+
+
+@api_router.get("/admin/chat/moderation-log")
+async def admin_get_moderation_log(
+    admin_username: str,
+    target_username: Optional[str] = None,
+    limit: int = 100
+):
+    """Admin: Get moderation action log"""
+    admin = await db.users.find_one({"username": admin_username})
+    if not admin or not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if target_username:
+        query["username"] = target_username
+    
+    logs = await db.chat_moderation_log.find(query).sort("issued_at", -1).limit(limit).to_list(limit)
+    
+    return [convert_objectid(log) for log in logs]
+
+
+# ==================== DATA RETENTION & DELETION ====================
+
+@api_router.delete("/chat/user-data/{username}")
+async def delete_user_chat_data(username: str, confirm: bool = False):
+    """
+    Delete all chat data for a user (for account deletion requests)
+    Requires confirm=true to proceed
+    """
+    if not confirm:
+        raise HTTPException(status_code=400, detail="Must set confirm=true to delete data")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_id = user["id"]
+    
+    # Delete all messages by this user
+    msg_result = await db.chat_messages.delete_many({"sender_id": user_id})
+    
+    # Delete user's chat status
+    await db.chat_user_status.delete_one({"user_id": user_id})
+    
+    # Delete reports made by this user
+    await db.chat_reports.delete_many({"reporter_id": user_id})
+    
+    # Keep reports AGAINST this user but anonymize
+    await db.chat_reports.update_many(
+        {"reported_user_id": user_id},
+        {"$set": {"reported_username": "[Deleted User]"}}
+    )
+    
+    return {
+        "success": True,
+        "deleted_messages": msg_result.deleted_count,
+        "message": "Chat data deleted successfully"
+    }
 
 @api_router.get("/chat/translate")
 async def translate_message(message: str, from_lang: str, to_lang: str):

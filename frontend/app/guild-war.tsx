@@ -165,7 +165,9 @@ export default function GuildWarScreen() {
       setIsRegistered(true);
       await loadAllData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to register');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to register');
+      }
     } finally {
       setLoading(false);
     }

@@ -210,7 +210,9 @@ export default function GuildScreen() {
       
       fetchUser();
     } catch (error: any) {
-      Alert.alert('Attack Failed', error.response?.data?.detail || 'Attack failed');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Attack Failed', error.response?.data?.detail || 'Attack failed');
+      }
     } finally {
       setIsAttacking(false);
     }

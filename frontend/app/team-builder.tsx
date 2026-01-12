@@ -16,6 +16,7 @@ import { useEntitlementStore } from '../stores/entitlementStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+import { isErrorHandledGlobally } from '../lib/api';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { getTeamsFull, updateTeamSlots, createTeamFull, setActiveTeam } from '../lib/api';

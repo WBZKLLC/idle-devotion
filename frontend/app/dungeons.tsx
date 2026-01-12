@@ -255,7 +255,9 @@ export default function DungeonsScreen() {
         fetchUser(),
       ]);
     } catch (error: any) {
-      Alert.alert('Battle Failed', error?.message || 'Something went wrong');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Battle Failed', error?.message || 'Something went wrong');
+      }
     } finally {
       setIsBattling(false);
     }

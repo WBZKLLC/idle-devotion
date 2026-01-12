@@ -167,8 +167,10 @@ export default function GuildScreen() {
               Alert.alert('Success', 'You left the guild');
               setGuildData(null);
               loadAvailableGuilds();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to leave guild');
+            } catch (error: any) {
+              if (!isErrorHandledGlobally(error)) {
+                Alert.alert('Error', 'Failed to leave guild');
+              }
             }
           }
         }

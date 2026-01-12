@@ -132,8 +132,10 @@ export default function JourneyScreen() {
       const rewardText = dayData.rewards.map(r => `${r.amount} ${r.type.replace('_', ' ')}`).join(', ');
       Alert.alert('🎁 Reward Claimed!', `Day ${day}: ${rewardText}`);
       await fetchUser();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to claim reward');
+    } catch (error: any) {
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', 'Failed to claim reward');
+      }
     }
   };
 
@@ -151,8 +153,10 @@ export default function JourneyScreen() {
       const rewardText = milestone.rewards.map(r => `${r.amount} ${r.type.replace('_', ' ')}`).join(', ');
       Alert.alert('🏆 Milestone Complete!', `${milestone.name}: ${rewardText}`);
       await fetchUser();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to claim milestone');
+    } catch (error: any) {
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', 'Failed to claim milestone');
+      }
     }
   };
 

@@ -184,7 +184,9 @@ export default function GuildWarScreen() {
       await loadAllData();
       fetchUser();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Attack failed');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Attack failed');
+      }
     } finally {
       setIsAttacking(false);
     }

@@ -232,7 +232,9 @@ export default function GuildScreen() {
       loadGuildData();
       loadGuildLevelInfo();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Donation failed');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Donation failed');
+      }
     } finally {
       setIsDonating(false);
     }

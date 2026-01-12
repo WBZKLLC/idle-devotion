@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 
 // Centralized API wrappers (no raw fetch in screens)
-import { getSeleneBannerStatus, pullSeleneBanner } from '../lib/api';
+import { getSeleneBannerStatus, pullSeleneBanner, isErrorHandledGlobally } from '../lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

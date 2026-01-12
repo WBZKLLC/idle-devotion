@@ -307,7 +307,9 @@ export default function DungeonsScreen() {
         fetchUser(),
       ]);
     } catch (error: any) {
-      Alert.alert('Sweep Failed', error?.message || 'Something went wrong');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Sweep Failed', error?.message || 'Something went wrong');
+      }
     } finally {
       setIsBattling(false);
     }

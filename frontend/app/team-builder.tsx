@@ -176,8 +176,10 @@ export default function TeamBuilderScreen() {
         Alert.alert('Success', 'Team created successfully!');
         loadTeams();
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save team');
+    } catch (error: any) {
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', 'Failed to save team');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -191,8 +193,10 @@ export default function TeamBuilderScreen() {
       await setActiveTeam(selectedTeamId, user?.username || '');
       Alert.alert('Success', 'Team set as active!');
       loadTeams();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to set active team');
+    } catch (error: any) {
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', 'Failed to set active team');
+      }
     }
   };
 

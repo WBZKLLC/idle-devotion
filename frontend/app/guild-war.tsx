@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { isErrorHandledGlobally } from '../lib/api';
 import {
   getGuildWarStatus,
   getGuildWarLeaderboard,

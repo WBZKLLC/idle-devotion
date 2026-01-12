@@ -131,7 +131,9 @@ export default function GuildScreen() {
       setGuildDescription('');
       loadGuildData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to create guild');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to create guild');
+      }
     } finally {
       setIsCreating(false);
     }
@@ -144,7 +146,9 @@ export default function GuildScreen() {
       setShowJoinModal(false);
       loadGuildData();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to join guild');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to join guild');
+      }
     }
   };
 

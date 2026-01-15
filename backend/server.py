@@ -3998,6 +3998,9 @@ async def get_divine_packages(username: str):
 @api_router.post("/store/purchase-divine")
 async def purchase_divine_package(username: str, package_id: str):
     """Purchase Divine Package (limited 3 per month per tier)"""
+    # DEV-ONLY: Simulated purchases blocked in production
+    require_dev_mode()
+    
     user = await get_user_for_mutation(username)  # Includes frozen check
     
     if package_id not in DIVINE_PACKAGES:

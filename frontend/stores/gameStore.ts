@@ -174,12 +174,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Primary auth hydration - called on app boot (idempotent, safe to call multiple times)
   // Loads token from storage, sets axios headers, then fetches user
   hydrateAuth: async () => {
-    console.log('[hydrateAuth] Starting...');
+    dlog('[hydrateAuth] Starting...');
     
     const token = await loadAuthToken();
     
     if (!token) {
-      console.log('[hydrateAuth] No token found, user needs to login');
+      dlog('[hydrateAuth] No token found, user needs to login');
       apiSetAuthToken(null);
       set({ authToken: null, user: null, isHydrated: true });
       return;
@@ -188,7 +188,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Set token on API layer BEFORE any requests
     apiSetAuthToken(token);
     set({ authToken: token });
-    console.log('[hydrateAuth] Token loaded, fetching user...');
+    dlog('[hydrateAuth] Token loaded, fetching user...');
     
     // Fetch user to validate token and populate state
     try {
@@ -196,11 +196,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (!username) throw new Error('No username stored');
       
       const userData = await apiFetchUser(username);
-      console.log('[hydrateAuth] User restored:', userData.username);
+      dlog('[hydrateAuth] User restored:', userData.username);
       set({ user: userData, isHydrated: true });
     } catch (e) {
       // Token invalid or server rejected - hard reset
-      console.log('[hydrateAuth] User fetch failed, clearing auth:', e);
+      dlog('[hydrateAuth] User fetch failed, clearing auth:', e);
       await clearAuthData();
       apiSetAuthToken(null);
       set({ authToken: null, user: null, isHydrated: true });
@@ -249,7 +249,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       try {
         await triggerDailyLogin(user.username);
       } catch (e) {
-        console.log('Daily login call failed:', e);
+        dlog('Daily login call failed:', e);
       }
       
       return { success: true };
@@ -347,7 +347,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     apiSetAuthToken(null);
     // Clear store state
     set({ user: null, userHeroes: [], userHeroesById: {}, allHeroes: [], authToken: null, needsPassword: false });
-    console.log('[logout] User logged out, auth and storage cleared, epoch bumped');
+    dlog('[logout] User logged out, auth and storage cleared, epoch bumped');
   },
 
   /**
@@ -361,7 +361,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   registerForceLogout: () => {
     const { logout } = get();
     apiSetForceLogoutCallback(async () => {
-      console.log('[API] Force logout triggered by 401');
+      dlog('[API] Force logout triggered by 401');
       await logout();  // Clears storage + in-memory token + store
       // Navigation to login is handled by the auth state change in the app
     });

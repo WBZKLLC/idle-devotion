@@ -50,6 +50,8 @@ export function hasEntitlement(key: string): boolean {
  * Require entitlement or show paywall
  * Use this for guarding premium actions/navigation
  * 
+ * Phase 3.10: Triggers background freshness check before evaluating
+ * 
  * @returns true if entitled, false if blocked (and redirected to paywall)
  */
 export function requireEntitlement(
@@ -61,6 +63,9 @@ export function requireEntitlement(
     paywallRoute?: string;
   }
 ): boolean {
+  // Phase 3.10: Fire-and-forget freshness check
+  triggerFreshnessCheck();
+  
   const isEntitled = hasEntitlement(key);
   
   if (isEntitled) {

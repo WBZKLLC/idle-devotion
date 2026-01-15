@@ -62,7 +62,7 @@ export default function PaidFeaturesScreen() {
   const [customHeroId, setCustomHeroId] = useState('');
 
   const item = useMemo(() => ENTITLEMENTS.PREMIUM_CINEMATICS_PACK, []);
-  const packOwned = Boolean(entitlements?.['PREMIUM_CINEMATICS_PACK']);
+  const packOwned = useHasEntitlement(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
 
   // Count how many heroes have premium cinematics owned
   const ownedHeroCount = useMemo(() => {

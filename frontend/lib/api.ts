@@ -145,6 +145,9 @@ api.interceptors.response.use(
           // Show global UX once; mark handled ONLY if we actually show it
           _showErrorAlertOnce('Session Expired', 'Please log in again.', error);
           
+          // Track force logout event
+          track(Events.FORCE_LOGOUT_401);
+          
           // Deterministic logout: let the callback clear persisted storage + in-memory token
           // Fallback: if callback is not registered, clear in-memory token here
           if (_forceLogoutCallback) {

@@ -170,7 +170,7 @@ export default function HeroDetailScreen() {
     return [color, `${color}88`];
   };
 
-  // Loading state with 2Dlive shell
+  // Loading state with 2Dlive shell + skeleton
   if (!hydrated || isLoading) {
     return (
       <View style={styles.container}>
@@ -182,7 +182,10 @@ export default function HeroDetailScreen() {
         <SanctumAtmosphere />
         <DivineOverlays vignette grain />
         <SafeAreaView style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.gold.primary} />
+          {/* Phase 3.19.1: Skeleton loading state */}
+          <GlassCard>
+            <HeroDetailHeaderSkeleton />
+          </GlassCard>
         </SafeAreaView>
       </View>
     );

@@ -207,9 +207,14 @@ export default function HeroDetailScreen() {
         <SafeAreaView style={styles.centerContainer}>
           <Ionicons name="alert-circle" size={48} color={COLORS.gold.primary} />
           <Text style={styles.errorText}>Hero not found</Text>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backBtnText}>Go Back</Text>
-          </TouchableOpacity>
+          {/* Phase 3.19.2: Canonical SecondaryButton */}
+          <SecondaryButton
+            title="Go Back"
+            onPress={() => router.back()}
+            variant="outline"
+            size="md"
+            style={{ marginTop: 16 }}
+          />
         </SafeAreaView>
       </View>
     );

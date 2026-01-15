@@ -51,6 +51,8 @@ interface PaywallProps {
  * 
  * Wraps PurchaseButton with product info display.
  * This is the ONLY paywall UI - no alternate purchase surfaces.
+ * 
+ * Phase 3.19.4: Structure: Header → Benefits → Trust → Price → Purchase → Restore → Not Now
  */
 export const Paywall: React.FC<PaywallProps> = ({
   productKey = 'PREMIUM_CINEMATICS_PACK',
@@ -58,12 +60,28 @@ export const Paywall: React.FC<PaywallProps> = ({
   onPurchaseComplete,
   onDismiss,
   showNotNow = true,
+  isFirstPurchase = false,
 }) => {
   const product = PRODUCTS[productKey];
   const isOwned = useHasEntitlement(product.entitlementKey);
+  const { restorePurchases } = useEntitlementStore();
+  const [isRestoring, setIsRestoring] = React.useState(false);
   
   // Dismiss handler - use onDismiss if provided, otherwise fall back to onClose
   const handleDismiss = onDismiss || onClose;
+  
+  // Handle restore purchases
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      await restorePurchases();
+      toast.success('Purchases restored successfully!');
+    } catch (error) {
+      toast.error('Could not restore purchases. Please try again.');
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   // If already owned, show success screen
   if (isOwned) {
@@ -86,8 +104,8 @@ export const Paywall: React.FC<PaywallProps> = ({
   return (
     <View style={styles.container}>
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.primary]} style={styles.gradient}>
-        <ScrollView contentContainerStyle={styles.content}>
-          {/* Header */}
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* === SECTION 1: Header === */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.closeIcon} onPress={onClose}>
               <Ionicons name="close" size={28} color={COLORS.cream.pure} />
@@ -98,25 +116,62 @@ export const Paywall: React.FC<PaywallProps> = ({
               <Text style={styles.subtitle}>{product.description}</Text>
             </View>
           </View>
+          
+          {/* === Phase 3.19.4: First Purchase Badge === */}
+          {isFirstPurchase && (
+            <View style={styles.firstPurchaseBadge}>
+              <Ionicons name="gift" size={16} color={COLORS.navy.darkest} />
+              <Text style={styles.firstPurchaseText}>First Purchase</Text>
+            </View>
+          )}
 
-          {/* Benefits - shown based on product */}
+          {/* === SECTION 2: Benefits (3-6 bullets) === */}
           <View style={styles.benefitsContainer}>
             <Text style={styles.benefitsTitle}>What You Get</Text>
             {getBenefitsForProduct(productKey).map((benefit, index) => (
               <View key={index} style={styles.benefitRow}>
-                <Ionicons name={benefit.icon as any} size={20} color={COLORS.gold.primary} />
+                <View style={styles.benefitIcon}>
+                  <Ionicons name={benefit.icon as any} size={18} color={COLORS.gold.primary} />
+                </View>
                 <Text style={styles.benefitText}>{benefit.text}</Text>
               </View>
             ))}
           </View>
 
-          {/* Price Display */}
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceLabel}>Price</Text>
-            <Text style={styles.priceValue}>{product.priceFallback}</Text>
+          {/* === SECTION 3: Trust / Reassurance Row === */}
+          <View style={styles.trustContainer}>
+            <View style={styles.trustRow}>
+              <Ionicons name="shield-checkmark" size={14} color={COLORS.success} />
+              <Text style={styles.trustText}>
+                {Platform.OS === 'ios' ? 'Secure purchase via App Store' : 
+                 Platform.OS === 'android' ? 'Secure purchase via Google Play' : 
+                 'Secure checkout'}
+              </Text>
+            </View>
+            <View style={styles.trustRow}>
+              <Ionicons name="refresh" size={14} color={COLORS.gold.light} />
+              <Text style={styles.trustText}>Restore purchases anytime</Text>
+            </View>
+            {!product.isSubscription && (
+              <View style={styles.trustRow}>
+                <Ionicons name="infinite" size={14} color={COLORS.gold.light} />
+                <Text style={styles.trustText}>One-time purchase. Keep forever.</Text>
+              </View>
+            )}
           </View>
 
-          {/* Canonical Purchase Button - ALL purchase logic is here */}
+          {/* === SECTION 4: Price Display with Ethical Anchoring === */}
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceLabel}>Price</Text>
+            <View style={styles.priceRight}>
+              <Text style={styles.priceValue}>{product.priceFallback}</Text>
+              {!product.isSubscription && (
+                <Text style={styles.priceNote}>One-time</Text>
+              )}
+            </View>
+          </View>
+
+          {/* === SECTION 5: Purchase Button (canonical) === */}
           <View style={styles.purchaseContainer}>
             <PurchaseButton
               productKey={productKey}
@@ -124,8 +179,31 @@ export const Paywall: React.FC<PaywallProps> = ({
               style={styles.purchaseButtonStyle}
             />
           </View>
+          
+          {/* === Phase 3.19.4: First Purchase Reassurance === */}
+          {isFirstPurchase && (
+            <Text style={styles.firstPurchaseReassurance}>
+              If anything goes wrong, you can restore purchases.
+            </Text>
+          )}
 
-          {/* Phase 3.18.1: "Not now" exit affordance - reduces friction */}
+          {/* === SECTION 6: Restore Purchases === */}
+          <View style={styles.restoreContainer}>
+            <SecondaryButton
+              title={isRestoring ? "Restoring..." : "Restore Purchases"}
+              onPress={handleRestore}
+              disabled={isRestoring}
+              loading={isRestoring}
+              variant="ghost"
+              size="sm"
+              leftIcon={<Ionicons name="refresh" size={14} color={COLORS.gold.primary} />}
+            />
+            <Text style={styles.restoreHint}>
+              Reinstalling? Switching devices? Restore here.
+            </Text>
+          </View>
+
+          {/* === SECTION 7: "Not now" exit affordance === */}
           {showNotNow && (
             <Pressable
               onPress={handleDismiss}

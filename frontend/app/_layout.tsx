@@ -48,9 +48,12 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
   const fetchUser = useGameStore(s => s.fetchUser);
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
   const hydrateEntitlements = useEntitlementStore(s => s.hydrateEntitlements);
-  const refreshEntitlements = useEntitlementStore(s => s.refreshFromServer);
+  const ensureFreshEntitlements = useEntitlementStore(s => s.ensureFreshEntitlements);
   const initNetworkListener = useNetworkStore(s => s.initNetworkListener);
   const [isRestoring, setIsRestoring] = useState(true);
+  
+  // Phase 3.14: App resume reconciliation (entitlements freshness on foreground)
+  useAppResumeReconcile();
 
   useEffect(() => {
     // Validate config and init telemetry (runs once on app start, not at module-load)

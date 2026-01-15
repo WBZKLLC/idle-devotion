@@ -11321,7 +11321,7 @@ class PurchaseVerifyRequest(BaseModel):
     transaction_id: Optional[str] = None
     receipt_data: Optional[str] = None
 
-@api_router.post("/purchases/verify")
+@app.post("/api/purchases/verify")
 async def verify_purchase(request: Request, body: PurchaseVerifyRequest):
     """
     Verify a purchase and grant entitlement.

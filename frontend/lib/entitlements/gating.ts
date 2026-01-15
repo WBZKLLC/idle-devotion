@@ -90,6 +90,8 @@ export function requireEntitlement(
           { 
             text: 'View Store', 
             // Phase 3.11: Use canonical navigation
+            // NOTE: No productKey = routes to general paywall hub (documented policy)
+            // This is intentional - generic gating shows all purchase options
             onPress: () => goToPaywall({ source }) 
           },
         ]

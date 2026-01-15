@@ -20,6 +20,9 @@ import {
   migrateLegacyKey 
 } from '../lib/entitlements';
 
+// Debug logging helpers - only log in development
+const dlog = (...args: any[]) => { if (__DEV__) console.log(...args); };
+
 const STORAGE_KEY = '@idledevotion/entitlements/v3';
 const LEGACY_STORAGE_KEY = '@idledevotion/entitlements/v2';
 

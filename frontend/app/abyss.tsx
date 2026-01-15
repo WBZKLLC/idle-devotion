@@ -129,7 +129,9 @@ export default function AbyssScreen() {
         }, 1500);
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Attack failed');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Attack failed');
+      }
     } finally {
       setIsAttacking(false);
     }

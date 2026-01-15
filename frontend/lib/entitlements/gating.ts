@@ -113,13 +113,30 @@ export function canAccessHeroCinematic(heroId: string): boolean {
 }
 
 /**
- * Require premium cinematic access or show paywall
+ * Require premium cinematic access or handle denial
+ * 
+ * CANONICAL GATE for all cinematic access checks.
+ * All code paths that need cinematic access MUST use this function.
+ * 
+ * @param heroId - Hero to check access for
+ * @param options.onDenied - Called when access is denied (default: shows alert)
+ * @returns true if access granted, false if denied
  */
-export function requireCinematicAccess(heroId: string): boolean {
+export function requireCinematicAccess(
+  heroId: string,
+  options?: { onDenied?: () => void }
+): boolean {
   if (canAccessHeroCinematic(heroId)) {
     return true;
   }
   
+  // Access denied - call custom handler or show default alert
+  if (options?.onDenied) {
+    options.onDenied();
+    return false;
+  }
+  
+  // Default: use standard requireEntitlement alert
   return requireEntitlement(
     ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK,
     {

@@ -205,7 +205,9 @@ export default function AdminPanelScreen() {
               setBanReason('');
               searchUsers(); // Refresh
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.detail || 'Failed to ban user');
+              if (!isErrorHandledGlobally(error)) {
+                Alert.alert('Error', error.response?.data?.detail || 'Failed to ban user');
+              }
             } finally {
               setProcessing(false);
             }

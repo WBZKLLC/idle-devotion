@@ -6,6 +6,7 @@
  * 1. No direct verifyPurchase() calls outside purchase-flow.ts
  * 2. No ad-hoc purchase state flags (isPurchasing, purchaseLoading, etc.)
  * 3. No raw product/entitlement strings outside allowed files
+ * 4. Phase 3.11: No direct router.push to paywall routes outside navigation.ts
  * 
  * ALLOWED FILES for product strings:
  * - products.ts
@@ -64,6 +65,18 @@ const LEGACY_PAYWALL_PATTERNS = [
   /react-native-purchases-ui/,
   /useRevenueCatStore/,
 ];
+
+// Phase 3.11: Direct paywall navigation patterns (forbidden outside navigation.ts)
+const DIRECT_PAYWALL_NAVIGATION_PATTERNS = [
+  /router\.(push|navigate|replace)\s*\(\s*['"`]\/paid-features/,
+  /router\.(push|navigate|replace)\s*\(\s*['"`]\/store/,
+  /router\.(push|navigate|replace)\s*\([^)]*paywall/i,
+];
+
+// Files allowed to have direct paywall navigation (only navigation.ts)
+const ALLOWED_PAYWALL_NAVIGATION_FILES = new Set([
+  'navigation.ts', // The canonical source
+]);
 
 // Files allowed to have legacy paywall patterns (none - they're deprecated)
 const ALLOWED_LEGACY_PAYWALL_FILES = new Set([

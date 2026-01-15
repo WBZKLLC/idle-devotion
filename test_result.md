@@ -632,7 +632,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Entitlements TTL + Refresh Discipline (Phase 3.10)"
+    - "Canonical Premium Navigation (Phase 3.11)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

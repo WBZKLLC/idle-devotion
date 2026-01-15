@@ -3,6 +3,8 @@
 // Server-side enforcement is separate (backend must also reject)
 // 
 // NOTE: This file imports entitlementStore dynamically to avoid circular deps
+// 
+// PHASE 3.10: Premium gates now trigger ensureFreshEntitlements() for staleness check
 
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
@@ -20,6 +22,16 @@ function getEntitlementStore() {
     _entitlementStore = require('../../stores/entitlementStore').useEntitlementStore;
   }
   return _entitlementStore;
+}
+
+/**
+ * Phase 3.10: Fire-and-forget freshness check for premium gates
+ * Called at gate entry, does NOT block - just triggers background refresh if stale
+ */
+function triggerFreshnessCheck(): void {
+  const store = getEntitlementStore();
+  // Fire and forget - don't await
+  store.getState().ensureFreshEntitlements('gate').catch(() => {});
 }
 
 /**

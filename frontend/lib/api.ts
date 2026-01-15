@@ -4,6 +4,7 @@
 
 import axios, { AxiosError } from 'axios';
 import { Alert } from 'react-native';
+import { track, Events } from './telemetry/events';
 
 const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
 const API_BASE = RAW

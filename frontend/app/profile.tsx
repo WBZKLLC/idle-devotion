@@ -30,6 +30,8 @@ import COLORS from '../theme/colors';
 import ProfileFrame, { FRAME_DEFINITIONS, getAvailableFrames } from '../components/ProfileFrame';
 // Phase 3.11: Canonical navigation
 import { goToPaywall } from '../lib/entitlements/navigation';
+// Phase 3.18: Toast for success feedback
+import { toast } from '../components/ui/Toast';
 
 export default function ProfileScreen() {
   const router = useRouter();

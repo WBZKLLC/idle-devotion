@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { useHasEntitlement } from '../lib/entitlements/gating';
 import { ENTITLEMENT_KEYS } from '../lib/entitlements/types';
+import { goToPaywall } from '../lib/entitlements/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';

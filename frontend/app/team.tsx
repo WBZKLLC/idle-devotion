@@ -42,7 +42,7 @@ export default function TeamScreen() {
       setSelectedHeroes(selectedHeroes.filter((id) => id !== heroId));
     } else {
       if (selectedHeroes.length >= 6) {
-        Alert.alert('Team Full', 'Maximum 6 heroes per team');
+        toast.warning('Maximum 6 heroes per team');
         return;
       }
       setSelectedHeroes([...selectedHeroes, heroId]);
@@ -136,7 +136,7 @@ export default function TeamScreen() {
                       styles.teamSlot,
                       hero && { borderColor: RARITY_COLORS[hero.hero_data?.rarity || 'SR'] },
                     ]}
-                    onPress={() => !hero && Alert.alert('Add Hero', 'Tap a hero below to add them to this slot')}
+                    onPress={() => !hero && toast.info('Tap a hero below to add them to this slot')}
                   >
                     {hero ? (
                       <>

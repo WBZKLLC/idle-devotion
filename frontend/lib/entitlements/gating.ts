@@ -7,8 +7,8 @@
 // PHASE 3.10: Premium gates now trigger ensureFreshEntitlements() for staleness check
 // PHASE 3.11: Uses canonical navigation helper instead of direct router.push
 // PHASE 3.13: Emits telemetry for gate denied/allowed events (only here, guards enforce)
+// PHASE 3.18.4: No blocking alerts - navigation only, optional toast for context
 
-import { Alert } from 'react-native';
 import { 
   ENTITLEMENT_KEYS, 
   PREMIUM_CINEMATIC_OWNED_PREFIX,
@@ -17,6 +17,7 @@ import {
 } from './types';
 import { goToPaywall, getPaywallRoute, type PaywallSource } from './navigation';
 import { track, Events } from '../telemetry/events';
+import { toast } from '../../components/ui/Toast';
 
 // Dynamic import to avoid circular dependency
 let _entitlementStore: any = null;

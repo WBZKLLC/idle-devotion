@@ -9,6 +9,8 @@
  * - Network fail = retryable state (shows "Try again")
  * - Verify fail (non-network) = non-retryable error
  * - Success = UI updates via useHasEntitlement
+ * 
+ * Phase 3.18.2: Toast cadence for success/fail feedback
  */
 
 import React, { useCallback, useEffect } from 'react';
@@ -32,6 +34,8 @@ import {
 } from '../lib/entitlements/purchase-flow';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import COLORS from '../theme/colors';
+// Phase 3.18.2: Toast for purchase feedback
+import { toast } from './ui/Toast';
 
 interface PurchaseButtonProps {
   /** Which product to purchase (defaults to PREMIUM_CINEMATICS_PACK) */

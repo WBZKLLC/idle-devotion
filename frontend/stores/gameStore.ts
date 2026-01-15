@@ -599,16 +599,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 }));
 
 // Hook to handle session restoration
+// Pure selector hook - NO side effects
+// _layout.tsx is the ONLY place that performs restoration
 export const useHydration = () => {
-  const { isHydrated, restoreSession, user } = useGameStore();
-  
-  useEffect(() => {
-    console.log('useHydration: isHydrated=', isHydrated, 'user=', user?.username);
-    if (!isHydrated) {
-      console.log('useHydration: calling restoreSession');
-      restoreSession();
-    }
-  }, [isHydrated]);
-  
-  return isHydrated;
+  return useGameStore(s => s.isHydrated);
 };

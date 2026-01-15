@@ -186,15 +186,17 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
 
   /**
    * Clear all entitlement state (on logout)
+   * Bumps epoch to invalidate any in-flight requests
    */
   clear: () => {
     dlog('[entitlementStore] Clearing state');
-    set({
+    set((s) => ({
       snapshot: null,
       entitlementsByKey: createEmptyEntitlementsMap(),
       lastRefreshAt: null,
       refreshError: null,
-    });
+      entitlementEpoch: s.entitlementEpoch + 1,  // Bump to invalidate in-flight requests
+    }));
     storageRemove(STORAGE_KEY).catch(() => {});
   },
 

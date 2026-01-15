@@ -117,11 +117,19 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
       return;
     }
     
+    const epochAtStart = get().entitlementEpoch;
     dlog('[entitlementStore] Refreshing from server, reason:', reason);
     set({ isRefreshing: true, refreshError: null });
     
     try {
       const snap = await getEntitlementsSnapshotApi();
+      
+      // Epoch check: ignore late response if clear() was called (logout)
+      if (get().entitlementEpoch !== epochAtStart) {
+        dlog('[entitlementStore] Epoch mismatch - discarding stale response');
+        set({ isRefreshing: false });
+        return;
+      }
       
       // Strict normalization: fill missing keys as not_owned
       const normalized = { ...createEmptyEntitlementsMap(), ...snap.entitlements };
@@ -139,6 +147,13 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
       dlog('[entitlementStore] Refreshed from server:', snap.version);
       
     } catch (e: any) {
+      // Epoch check before setting error state
+      if (get().entitlementEpoch !== epochAtStart) {
+        dlog('[entitlementStore] Epoch mismatch in error handler - discarding');
+        set({ isRefreshing: false });
+        return;
+      }
+      
       const errorMsg = e?.response?.data?.detail || e?.message || 'Failed to refresh entitlements';
       console.error('[entitlementStore] Refresh error:', errorMsg);
       set({

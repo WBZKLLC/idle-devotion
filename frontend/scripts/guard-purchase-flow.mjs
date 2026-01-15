@@ -182,6 +182,21 @@ function checkFile(filePath) {
         }
       }
     }
+    
+    // Phase 3.11: Check for direct paywall navigation (should use goToPaywall())
+    if (!ALLOWED_PAYWALL_NAVIGATION_FILES.has(fileName)) {
+      for (const pattern of DIRECT_PAYWALL_NAVIGATION_PATTERNS) {
+        if (pattern.test(line)) {
+          violations.push({
+            file: filePath.replace(FRONTEND_ROOT, ''),
+            line: lineNum,
+            type: 'DIRECT_PAYWALL_NAVIGATION',
+            content: line.trim().substring(0, 80),
+          });
+          break;
+        }
+      }
+    }
   }
   
   return violations;

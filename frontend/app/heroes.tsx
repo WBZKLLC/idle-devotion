@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  ActivityIndicator,
   Pressable,
   Platform,
 } from 'react-native';
@@ -42,6 +41,10 @@ import {
   SanctumAtmosphere,
   GlassCard,
 } from '../components/DivineShell';
+
+// Phase 3.19.1: Loading + Empty state components
+import { HeroGridSkeleton } from '../components/ui/Skeleton';
+import { FilterNoResultsEmpty, NoHeroesEmpty } from '../components/ui/EmptyState';
 
 // Sanctum background (matches your existing setup)
 const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');

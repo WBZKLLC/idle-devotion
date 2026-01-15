@@ -26,15 +26,31 @@ export function track(event: string, props: Record<string, any> = {}) {
 
 // Pre-defined event names for consistency
 export const Events = {
+  // App lifecycle
   APP_START: 'app_start',
+  
+  // Auth events
   LOGIN_SUCCESS: 'login_success',
   LOGIN_FAILURE: 'login_failure',
   FORCE_LOGOUT_401: 'force_logout_401',
+  
+  // Game events
   GACHA_PULL: 'gacha_pull',
+  SCREEN_VIEW: 'screen_view',
+  
+  // Purchase events
   PURCHASE_ATTEMPT: 'purchase_attempt',
   PURCHASE_SUCCESS: 'purchase_success',
   PURCHASE_FAILURE: 'purchase_failure',
-  SCREEN_VIEW: 'screen_view',
+  
+  // Phase 3.13: Premium navigation & gating telemetry
+  // ONLY emit from: navigation.ts, gating.ts
+  PAYWALL_OPENED: 'paywall_opened',
+  STORE_OPENED: 'store_opened',
+  PREMIUM_GATE_DENIED: 'premium_gate_denied',
+  PREMIUM_GATE_ALLOWED: 'premium_gate_allowed',
+  
+  // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',
 } as const;

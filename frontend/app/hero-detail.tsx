@@ -83,10 +83,8 @@ export default function HeroDetailScreen() {
   const { width: screenW } = useWindowDimensions();
   
   // Subscribe to entitlements for reactive stat updates
-  const { useHasEntitlement } = require('../lib/entitlements/gating');
-  
-  // Check pack ownership for UX badge display
-  const packOwned = useHasEntitlement('PREMIUM_CINEMATICS_PACK');
+  // Check pack ownership for UX badge display - use canonical gating hook
+  const packOwned = useHasEntitlement(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
   
   const [hero, setHero] = useState<any>(null);
   const [heroData, setHeroData] = useState<any>(null);

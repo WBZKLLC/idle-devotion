@@ -11673,6 +11673,19 @@ async def verify_purchase_endpoint(body: PurchaseVerifyRequest, current_user: di
     
     return response
 
+
+def normalize_entitlement_status(raw_status: str) -> EntitlementStatus:
+    """
+    Safely normalize entitlement status to a known enum value.
+    Unknown statuses map to 'pending' to prevent frontend crashes.
+    """
+    try:
+        return EntitlementStatus(raw_status)
+    except ValueError:
+        print(f"⚠️ Unknown entitlement status '{raw_status}' - mapping to 'pending'")
+        return EntitlementStatus.pending
+
+
 async def build_entitlements_snapshot(user_doc: dict) -> EntitlementsSnapshot:
     """Build entitlements snapshot from user document"""
     user_entitlements = user_doc.get("entitlements", {})
@@ -11684,7 +11697,7 @@ async def build_entitlements_snapshot(user_doc: dict) -> EntitlementsSnapshot:
             ent_data = user_entitlements[key]
             entitlements_map[key] = ServerEntitlement(
                 key=key,
-                status=EntitlementStatus(ent_data.get("status", "owned")),
+                status=normalize_entitlement_status(ent_data.get("status", "owned")),
                 granted_at=ent_data.get("granted_at"),
                 expires_at=ent_data.get("expires_at"),
                 transaction_id=ent_data.get("transaction_id"),
@@ -11702,7 +11715,7 @@ async def build_entitlements_snapshot(user_doc: dict) -> EntitlementsSnapshot:
         if key.startswith("PREMIUM_CINEMATIC_OWNED:"):
             entitlements_map[key] = ServerEntitlement(
                 key=key,
-                status=EntitlementStatus(ent_data.get("status", "owned")),
+                status=normalize_entitlement_status(ent_data.get("status", "owned")),
                 granted_at=ent_data.get("granted_at"),
                 expires_at=ent_data.get("expires_at"),
                 transaction_id=ent_data.get("transaction_id"),

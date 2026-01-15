@@ -101,45 +101,69 @@ SUPER_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("SUPER_ADMIN_BOOTSTRAP_TOKEN", None
 SERVER_DEV_MODE = os.environ.get("SERVER_DEV_MODE", "true").lower() == "true"
 
 # =============================================================================
-# PHASE 3.15: PRODUCTION ENVIRONMENT ASSERTIONS
+# PHASE 3.15: PRODUCTION ENVIRONMENT ASSERTIONS (P0 Revision A)
 # =============================================================================
 # When SERVER_DEV_MODE=false, the server REQUIRES payment verification secrets.
-# This ensures production cannot start without proper security configuration.
+# This runs at MODULE LOAD TIME - before FastAPI app is created, before routes
+# are wired, and before any requests can be served.
+#
+# FAIL-FAST: If required secrets are missing, the server will not start.
 
 REVENUECAT_SECRET_KEY = os.environ.get("REVENUECAT_SECRET_KEY", None)
 REVENUECAT_WEBHOOK_SECRET = os.environ.get("REVENUECAT_WEBHOOK_SECRET", None)
 
 def assert_production_config():
     """
-    FAIL-FAST: Validate production configuration at startup.
+    FAIL-FAST: Validate production configuration at module load.
     If SERVER_DEV_MODE=false, payment verification secrets MUST be configured.
+    
+    This runs BEFORE the FastAPI app is created, ensuring the server
+    cannot accept requests without proper security configuration.
+    
+    SECURITY: Never prints secret values, only their presence/absence.
     """
     missing = []
+    warnings = []
     
+    # REQUIRED secrets for production
     if not REVENUECAT_SECRET_KEY:
         missing.append("REVENUECAT_SECRET_KEY")
     if not REVENUECAT_WEBHOOK_SECRET:
         missing.append("REVENUECAT_WEBHOOK_SECRET")
     
+    # RECOMMENDED: JWT_SECRET_KEY should be stable in production
+    # (auto-generated is fine but changes on restart = token invalidation)
+    jwt_key = os.environ.get("JWT_SECRET_KEY", None)
+    if not jwt_key:
+        warnings.append("JWT_SECRET_KEY not set (auto-generated key will invalidate tokens on restart)")
+    
+    # Print warnings (non-fatal)
+    for warn in warnings:
+        print(f"⚠️  {warn}")
+    
+    # Check for missing required secrets
     if missing:
         error_msg = (
-            "🚨 PRODUCTION CONFIGURATION ERROR 🚨\n"
-            f"SERVER_DEV_MODE=false but missing required secrets:\n"
-            f"  - {chr(10).join(f'• {s}' for s in missing)}\n"
+            "\n🚨 PRODUCTION CONFIGURATION ERROR 🚨\n"
+            "SERVER_DEV_MODE=false but missing required secrets:\n"
+            + "\n".join(f"  • {s}" for s in missing) + "\n\n"
             "Production server CANNOT start without payment verification.\n"
-            "Either set these environment variables or use SERVER_DEV_MODE=true for development."
+            "Either set these environment variables or use SERVER_DEV_MODE=true for development.\n"
         )
         print(error_msg)
-        raise RuntimeError(error_msg)
+        raise RuntimeError("Production configuration incomplete - see above for details")
     
     print("✅ Production configuration validated: all required secrets present")
 
-# Log SERVER_DEV_MODE at startup (prevents accidental production misconfiguration)
+# =============================================================================
+# STARTUP VALIDATION (runs at module load, before FastAPI app creation)
+# =============================================================================
 if SERVER_DEV_MODE:
     print("⚠️  SERVER_DEV_MODE=TRUE (simulated purchases ENABLED - do not use in production)")
 else:
     print("🔒 SERVER_DEV_MODE=FALSE (simulated purchases DISABLED)")
     # Phase 3.15: Assert production config when not in dev mode
+    # This will raise RuntimeError and prevent server from starting if secrets are missing
     assert_production_config()
 
 # SECURITY: Reserved usernames that can NEVER be registered via normal registration

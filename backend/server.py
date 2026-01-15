@@ -97,6 +97,9 @@ ADMIN_MFA_BYPASS = os.environ.get("ADMIN_MFA_BYPASS", "true").lower() == "true" 
 # Bootstrap token for one-time ADAM creation (set in env, use once, then remove)
 SUPER_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("SUPER_ADMIN_BOOTSTRAP_TOKEN", None)
 
+# Server dev mode - allows simulated purchases (MUST be false in production)
+SERVER_DEV_MODE = os.environ.get("SERVER_DEV_MODE", "true").lower() == "true"
+
 # SECURITY: Reserved usernames that can NEVER be registered via normal registration
 # "adam" is ALWAYS reserved - this is hardcoded and cannot be changed
 RESERVED_USERNAMES_CANON = frozenset({SUPER_ADMIN_CANON})

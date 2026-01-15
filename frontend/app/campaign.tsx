@@ -165,9 +165,11 @@ export default function CampaignScreen() {
       // Use centralized API wrapper
       const data = await getCampaignChapters(user.username);
       setChapters(data.chapters || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading chapters:', error);
-      Alert.alert('Error', 'Failed to load campaign data');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', 'Failed to load campaign data');
+      }
     } finally {
       setLoading(false);
     }

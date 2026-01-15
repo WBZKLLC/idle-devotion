@@ -38,7 +38,7 @@ import { computePowerWithMultipliers } from '../lib/power';
 
 // Centralized API calls (SINGLE SOURCE OF TRUTH for endpoints)
 // getHeroProgression + promoteHeroStar + getUserHeroById - all hero endpoints live in lib/api.ts
-import { getHeroProgression, promoteHeroStar, getUserHeroById } from '../lib/api';
+import { getHeroProgression, promoteHeroStar, getUserHeroById, isErrorHandledGlobally } from '../lib/api';
 
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {

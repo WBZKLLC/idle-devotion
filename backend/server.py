@@ -3893,6 +3893,9 @@ async def get_crystal_packages():
 @api_router.post("/store/purchase-crystals")
 async def purchase_crystals(username: str, package_id: str):
     """Purchase crystal package with real money (simulated)"""
+    # DEV-ONLY: Simulated purchases blocked in production
+    require_dev_mode()
+    
     user = await get_user_readonly(username)  # Includes frozen check
     
     if package_id not in CRYSTAL_PACKAGES:

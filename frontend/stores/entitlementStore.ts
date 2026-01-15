@@ -73,7 +73,7 @@ function getUser(): any {
   return _getUser();
 }
 
-type RefreshReason = 'startup' | 'post_purchase' | 'manual' | 'gate';
+type RefreshReason = 'startup' | 'post_purchase' | 'manual' | 'gate' | 'app_resume';
 
 interface EntitlementStoreState {
   // Server snapshot (source of truth when available)

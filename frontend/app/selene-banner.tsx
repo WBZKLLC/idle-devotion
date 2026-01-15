@@ -19,6 +19,8 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { getSeleneBannerStatus, pullSeleneBanner, isErrorHandledGlobally } from '../lib/api';
+// Phase 3.18.7: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

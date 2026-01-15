@@ -405,6 +405,18 @@ backend:
         agent: "testing"
         comment: "🔐 IDENTITY HARDENING TESTING COMPLETE: Comprehensive security testing of authentication system refactor completed successfully. All 14 tests passed (100% success rate). TESTED SCENARIOS: (A) New User Registration - SecTest6198 registered successfully with JWT token, username_canon correctly populated as lowercase 'sectest6198'. (B) Case-Insensitive Login - All variations work: 'adam', 'ADAM', 'Adam' all authenticate successfully. (C) Reserved Username Protection - Registration with 'adam' and 'ADAM' correctly rejected with 'reserved' error (case-insensitive protection working). (D) JWT Authentication - Token verification successful, user ID present in JWT payload (7a6ae566-59df-4187-aa35-65836091f6f8). (E) Admin Endpoint Access - ADAM token successfully accesses GET /api/admin/user/adam, regular user token correctly denied with 403 Forbidden. (F) Chat Endpoint Authentication - Chat message sent successfully via POST /api/chat/send with server-authoritative sender ID derived from JWT. SECURITY VERIFICATION: (1) JWT 'sub' now contains immutable user_id instead of username ✅ (2) Login uses username_canon for case-insensitive lookup ✅ (3) Registration populates username_canon and reserves 'adam' ✅ (4) get_current_user loads user by ID from JWT ✅ (5) Admin endpoints require super admin via username_canon check ✅ (6) All authenticated endpoints work with new JWT structure ✅. Identity Hardening implementation is SECURE and FUNCTIONAL - critical security refactor successfully deployed."
 
+  - task: "AuthEpoch Expansion - Prevent race conditions in async store actions"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/stores/gameStore.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "🔒 PHASE 3.9 IMPLEMENTATION: Applied authEpoch guards to ALL async store actions that mutate state after API calls. Files modified: gameStore.ts (login, getUserHeroById, refreshHeroesAfterGacha + logout now clears entitlementStore), entitlementStore.ts (added entitlementEpoch field, guards on refreshFromServer). Created guard-auth-epoch.mjs static analysis script to prevent future regressions. Added to npm run guard chain. All 12 guards pass. Pattern: capture epoch at start → await API → check epoch → set state. This prevents stale in-flight responses from corrupting state after logout. TESTING RECOMMENDED: (A) Login, trigger gacha pull, quickly logout - verify no hero state corruption. (B) Login, trigger entitlements refresh, logout - verify clean state. (C) Run npm run guard - all guards should pass."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

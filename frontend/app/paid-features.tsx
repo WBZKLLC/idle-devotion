@@ -93,32 +93,53 @@ export default function PaidFeaturesScreen() {
     );
   };
 
-  // DEV: Grant/revoke pack
+  // DEV: Grant/revoke pack (guarded by ENABLE_DEV_TOOLS)
   const handleDevGrantPack = async () => {
-    await grantDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
-    Alert.alert('DEV Mode', 'Granted PREMIUM_CINEMATICS_PACK entitlement.');
+    if (!ENABLE_DEV_TOOLS) return;
+    try {
+      await grantDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
+      Alert.alert('DEV Mode', 'Granted PREMIUM_CINEMATICS_PACK entitlement.');
+    } catch (e: any) {
+      // Silently fail - DEV tools shouldn't spam alerts on errors
+      if (__DEV__) console.warn('[DEV] Grant pack failed:', e.message);
+    }
   };
 
   const handleDevRevokePack = async () => {
-    await revokeDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
-    Alert.alert('DEV Mode', 'Revoked PREMIUM_CINEMATICS_PACK entitlement.');
+    if (!ENABLE_DEV_TOOLS) return;
+    try {
+      await revokeDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
+      Alert.alert('DEV Mode', 'Revoked PREMIUM_CINEMATICS_PACK entitlement.');
+    } catch (e: any) {
+      if (__DEV__) console.warn('[DEV] Revoke pack failed:', e.message);
+    }
   };
 
-  // DEV: Grant per-hero premium cinematic ownership
+  // DEV: Grant per-hero premium cinematic ownership (guarded)
   const handleDevGrantHero = async (heroId: string) => {
+    if (!ENABLE_DEV_TOOLS) return;
     if (!heroId.trim()) {
       Alert.alert('Error', 'Please enter a hero ID');
       return;
     }
-    await setHeroPremiumCinematicOwned(heroId.trim(), true);
-    Alert.alert('DEV Mode', `Granted premium cinematic ownership for: ${heroId.trim()}`);
-    setCustomHeroId('');
+    try {
+      await setHeroPremiumCinematicOwned(heroId.trim(), true);
+      Alert.alert('DEV Mode', `Granted premium cinematic ownership for: ${heroId.trim()}`);
+      setCustomHeroId('');
+    } catch (e: any) {
+      if (__DEV__) console.warn('[DEV] Grant hero failed:', e.message);
+    }
   };
 
-  // DEV: Revoke per-hero premium cinematic ownership
+  // DEV: Revoke per-hero premium cinematic ownership (guarded)
   const handleDevRevokeHero = async (heroId: string) => {
-    await setHeroPremiumCinematicOwned(heroId, false);
-    Alert.alert('DEV Mode', `Revoked premium cinematic ownership for: ${heroId}`);
+    if (!ENABLE_DEV_TOOLS) return;
+    try {
+      await setHeroPremiumCinematicOwned(heroId, false);
+      Alert.alert('DEV Mode', `Revoked premium cinematic ownership for: ${heroId}`);
+    } catch (e: any) {
+      if (__DEV__) console.warn('[DEV] Revoke hero failed:', e.message);
+    }
   };
 
   // Check if a hero has premium cinematic owned

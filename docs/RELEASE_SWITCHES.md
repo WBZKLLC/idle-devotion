@@ -33,6 +33,16 @@ This document is the **canonical reference** for all configuration switches that
 
 ## 🚨 CRITICAL: Frontend Configuration
 
+### `EXPO_PUBLIC_ENV`
+| Value | Behavior |
+|-------|----------|
+| `development` | Dev mode - throws on config errors |
+| `staging` | Staging mode - logs errors, doesn't crash |
+| `production` | Production mode - logs errors, doesn't crash, stricter validations |
+| *(not set)* | Falls back to `__DEV__` (dev vs non-dev) |
+
+**Production requirement:** `EXPO_PUBLIC_ENV=production` (explicit is better than implicit)
+
 ### `EXPO_PUBLIC_BACKEND_URL`
 - **Required:** Always
 - **Dev value:** `http://localhost:8001/api` or `https://<tunnel>.exp.direct/api`

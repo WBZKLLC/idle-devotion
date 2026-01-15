@@ -11262,6 +11262,46 @@ class EntitlementsSnapshot(BaseModel):
 # Use these helpers to enforce entitlements on premium endpoints
 # ═══════════════════════════════════════════════════════════════════════════
 
+def require_dev_mode():
+    """
+    Block endpoint in production. Use for simulated purchase endpoints.
+    Raises 403 if SERVER_DEV_MODE is false.
+    """
+    if not SERVER_DEV_MODE:
+        raise HTTPException(
+            status_code=403,
+            detail="Simulated purchases disabled in production. Set SERVER_DEV_MODE=true for development."
+        )
+
+
+import re
+_VALID_HERO_ID_PATTERN = re.compile(r'^[a-zA-Z0-9_-]{1,64}$')
+_MAX_ENTITLEMENT_KEY_LENGTH = 128
+
+def validate_entitlement_key(key: str) -> str:
+    """
+    Validate and sanitize entitlement key.
+    Raises 400 if key is invalid.
+    Returns the validated key.
+    """
+    if not key or len(key) > _MAX_ENTITLEMENT_KEY_LENGTH:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid entitlement key length (max {_MAX_ENTITLEMENT_KEY_LENGTH})"
+        )
+    
+    # For hero-specific keys, validate hero_id portion
+    if key.startswith("PREMIUM_CINEMATIC_OWNED:"):
+        hero_id = key[len("PREMIUM_CINEMATIC_OWNED:"):]
+        if not _VALID_HERO_ID_PATTERN.match(hero_id):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid hero_id in entitlement key (alphanumeric, underscore, hyphen only)"
+            )
+    
+    return key
+
+
 async def require_entitlement(username: str, entitlement_key: str) -> bool:
     """
     Check if user has an active entitlement. Raises 403 if not.
@@ -11270,6 +11310,9 @@ async def require_entitlement(username: str, entitlement_key: str) -> bool:
     Example:
         await require_entitlement(current_user["username"], "PREMIUM_CINEMATICS_PACK")
     """
+    # Validate key format
+    validate_entitlement_key(entitlement_key)
+    
     user_doc = await get_user_readonly(username)
     if not user_doc:
         raise HTTPException(status_code=403, detail="User not found")

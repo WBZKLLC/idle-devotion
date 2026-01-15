@@ -19,6 +19,16 @@ import {
 // Safe mutation wrapper for consistent error handling
 import { safeMutation, MutationResult } from '../lib/safeMutation';
 
+// Entitlement store for clearing on logout (lazy import to avoid circular deps)
+let _clearEntitlements: (() => void) | null = null;
+function getClearEntitlements() {
+  if (!_clearEntitlements) {
+    const { useEntitlementStore } = require('./entitlementStore');
+    _clearEntitlements = () => useEntitlementStore.getState().clear();
+  }
+  return _clearEntitlements;
+}
+
 // API layer with token setter and global error handling
 import {
   getUserHeroes,

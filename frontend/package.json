@@ -23,7 +23,8 @@
     "guard:auth-epoch": "node scripts/guard-auth-epoch.mjs",
     "guard:refresh-discipline": "node scripts/guard-entitlements-refresh-discipline.mjs",
     "guard:env-detection": "node scripts/guard-env-detection.mjs",
-    "guard": "npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection",
+    "guard:no-error-alerts": "node scripts/guard-no-error-alerts.mjs",
+    "guard": "npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts",
     "reencode:cinematics": "bash scripts/reencode-cinematics.sh",
     "verify:cinematics": "bash scripts/verify-cinematics-codecs.sh"
   },

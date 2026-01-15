@@ -235,7 +235,8 @@ export default function DungeonsScreen() {
     
     const stageConfig = STAGE_TYPES[selectedType];
     if (userStamina < stageConfig.staminaCost) {
-      Alert.alert('Not Enough Stamina', `You need ${stageConfig.staminaCost} stamina to enter this dungeon.`);
+      // Phase 3.18.5: Toast instead of blocking Alert
+      toast.warning(`Not enough stamina. Need ${stageConfig.staminaCost} ⚡`);
       return;
     }
 
@@ -257,7 +258,7 @@ export default function DungeonsScreen() {
       ]);
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Battle Failed', error?.message || 'Something went wrong');
+        toast.error('Battle failed. Try again.');
       }
     } finally {
       setIsBattling(false);
@@ -271,12 +272,12 @@ export default function DungeonsScreen() {
     const totalStamina = stageConfig.staminaCost * sweepCount;
     
     if (userStamina < totalStamina) {
-      Alert.alert('Not Enough Stamina', `You need ${totalStamina} stamina for ${sweepCount} sweeps.`);
+      toast.warning(`Not enough stamina. Need ${totalStamina} ⚡ for ${sweepCount} sweeps.`);
       return;
     }
 
     if (!isStageCleared(stageId)) {
-      Alert.alert('Stage Not Cleared', 'You must clear this stage manually first before you can sweep it.');
+      toast.info('Clear the stage first to unlock sweep.');
       return;
     }
 
@@ -294,13 +295,11 @@ export default function DungeonsScreen() {
       // Use centralized API wrapper
       const result = await sweepDungeonStageByType(user.username, stageTypeMap[selectedType], stageId, sweepCount);
       
-      Alert.alert(
-        '✨ Sweep Complete!',
-        `Completed ${result.sweeps}x runs!\n\n` +
-        Object.entries(result.total_rewards || {})
-          .map(([key, val]) => `+${(val as number).toLocaleString()} ${key.replace(/_/g, ' ')}`)
-          .join('\n')
-      );
+      // Phase 3.18.5: Toast with summary
+      const rewardSummary = Object.entries(result.total_rewards || {})
+        .map(([key, val]) => `+${(val as number).toLocaleString()} ${key.replace(/_/g, ' ')}`)
+        .join(', ');
+      toast.success(`Sweep complete! ${rewardSummary}`);
       
       await Promise.all([
         loadUserProgress(),
@@ -309,7 +308,7 @@ export default function DungeonsScreen() {
       ]);
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Sweep Failed', error?.message || 'Something went wrong');
+        toast.error('Sweep failed. Try again.');
       }
     } finally {
       setIsBattling(false);

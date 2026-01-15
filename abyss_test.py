@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://secureapp-13.preview.emergentagent.com/api"
+BASE_URL = "https://notify-revamp-2.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 SERVER_ID = "server_1"

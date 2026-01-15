@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://secureapp-13.preview.emergentagent.com/api"
+BASE_URL = "https://notify-revamp-2.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

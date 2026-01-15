@@ -8914,80 +8914,15 @@ PRODUCT_REWARDS = {
 }
 
 @api_router.post("/purchase/verify")
-async def verify_purchase(purchase: PurchaseVerification):
-    """Verify and process a RevenueCat purchase"""
-    user = await db.users.find_one({"username": purchase.username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Check if transaction already processed
-    existing = await db.purchases.find_one({"transaction_id": purchase.transaction_id})
-    if existing:
-        return {"success": True, "message": "Purchase already processed", "duplicate": True}
-    
-    # Get product rewards
-    rewards = PRODUCT_REWARDS.get(purchase.product_id)
-    if not rewards:
-        raise HTTPException(status_code=400, detail="Unknown product")
-    
-    # Process based on reward type
-    result = {"success": True, "rewards": {}}
-    
-    if rewards["type"] == "crystals":
-        await db.users.update_one(
-            {"username": purchase.username},
-            {"$inc": {"crystals": rewards["amount"]}}
-        )
-        result["rewards"]["crystals"] = rewards["amount"]
-    
-    elif rewards["type"] == "divine_essence":
-        await db.users.update_one(
-            {"username": purchase.username},
-            {"$inc": {"divine_essence": rewards["amount"]}}
-        )
-        result["rewards"]["divine_essence"] = rewards["amount"]
-    
-    elif rewards["type"] == "battle_pass":
-        # Update battle pass status
-        await db.battle_pass_status.update_one(
-            {"user_id": user["id"]},
-            {
-                "$set": {
-                    "is_premium": True,
-                    "tier": rewards["tier"],
-                    "purchase_date": datetime.utcnow().isoformat()
-                },
-                "$inc": {"level": rewards.get("bonus_levels", 0)}
-            },
-            upsert=True
-        )
-        
-        if rewards.get("crystals", 0) > 0:
-            await db.users.update_one(
-                {"username": purchase.username},
-                {"$inc": {"crystals": rewards["crystals"]}}
-            )
-            result["rewards"]["crystals"] = rewards["crystals"]
-        
-        result["rewards"]["battle_pass"] = rewards["tier"]
-        result["rewards"]["bonus_levels"] = rewards.get("bonus_levels", 0)
-    
-    # Record purchase
-    await db.purchases.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": user["id"],
-        "username": purchase.username,
-        "product_id": purchase.product_id,
-        "transaction_id": purchase.transaction_id,
-        "platform": purchase.platform,
-        "timestamp": datetime.utcnow().isoformat(),
-        "rewards": result["rewards"]
-    })
-    
-    # VIP level is calculated purely from total_spent USD
-    # No separate VIP XP system - VIP is a purchase-only reward
-    
-    return result
+async def verify_purchase_legacy(purchase: PurchaseVerification):
+    """
+    DEPRECATED: Legacy purchase verification endpoint.
+    Use /api/purchases/verify with RevenueCat integration instead.
+    """
+    raise HTTPException(
+        status_code=410,
+        detail="Deprecated. Use /api/purchases/verify with proper receipt verification."
+    )
 
 @api_router.get("/purchase/history/{username}")
 async def get_purchase_history(username: str, limit: int = 20):

@@ -21,6 +21,7 @@ import {
   adminMuteUser,
   adminBanUser,
   adminDeleteAccount,
+  isErrorHandledGlobally,
 } from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';

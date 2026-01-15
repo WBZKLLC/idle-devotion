@@ -7,6 +7,7 @@
  * 2. No ad-hoc purchase state flags (isPurchasing, purchaseLoading, etc.)
  * 3. No raw product/entitlement strings outside allowed files
  * 4. Phase 3.11: No direct router.push to paywall routes outside navigation.ts
+ * 5. Phase 3.13: No direct premium telemetry outside navigation.ts/gating.ts
  * 
  * ALLOWED FILES for product strings:
  * - products.ts
@@ -75,9 +76,28 @@ const DIRECT_PAYWALL_NAVIGATION_PATTERNS = [
   /router\.(push|navigate|replace)\s*\([^)]*paywall/i,
 ];
 
+// Phase 3.13: Direct premium telemetry patterns (forbidden outside navigation.ts/gating.ts)
+const DIRECT_PREMIUM_TELEMETRY_PATTERNS = [
+  /track\s*\(\s*Events\.PAYWALL_OPENED/,
+  /track\s*\(\s*Events\.STORE_OPENED/,
+  /track\s*\(\s*Events\.PREMIUM_GATE_DENIED/,
+  /track\s*\(\s*Events\.PREMIUM_GATE_ALLOWED/,
+  /track\s*\(\s*['"]paywall_opened['"]/,
+  /track\s*\(\s*['"]store_opened['"]/,
+  /track\s*\(\s*['"]premium_gate_denied['"]/,
+  /track\s*\(\s*['"]premium_gate_allowed['"]/,
+];
+
 // Files allowed to have direct paywall navigation (only navigation.ts)
 const ALLOWED_PAYWALL_NAVIGATION_FILES = new Set([
   'navigation.ts', // The canonical source
+]);
+
+// Files allowed to emit premium telemetry
+const ALLOWED_PREMIUM_TELEMETRY_FILES = new Set([
+  'navigation.ts', // paywall_opened, store_opened
+  'gating.ts',     // premium_gate_denied, premium_gate_allowed
+]);
 ]);
 
 // Files allowed to have legacy paywall patterns (none - they're deprecated)

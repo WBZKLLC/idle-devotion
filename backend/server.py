@@ -11321,7 +11321,7 @@ class PurchaseVerifyRequest(BaseModel):
     receipt_data: Optional[str] = None
 
 @app.post("/api/purchases/verify")
-async def verify_purchase(request: Request, body: PurchaseVerifyRequest):
+async def verify_purchase_endpoint(body: PurchaseVerifyRequest, current_user: dict = Depends(get_current_user)):
     """
     Verify a purchase and grant entitlement.
     Idempotent: same idempotency_key returns same result.
@@ -11332,9 +11332,7 @@ async def verify_purchase(request: Request, body: PurchaseVerifyRequest):
     3. Grant entitlement if valid
     4. Return updated snapshot
     """
-    user = await authenticate_request(request)
-    user_doc = await get_user_for_mutation(user["username"])
-    username = user["username"]
+    username = current_user["username"]
     
     # Check idempotency - if we've seen this key, return cached result
     purchase_cache = db.purchase_idempotency
@@ -11361,7 +11359,7 @@ async def verify_purchase(request: Request, body: PurchaseVerifyRequest):
     }
     
     # Update user's entitlements
-    await users_collection.update_one(
+    await db.users.update_one(
         {"username": username},
         {
             "$set": {
@@ -11372,12 +11370,12 @@ async def verify_purchase(request: Request, body: PurchaseVerifyRequest):
     )
     
     # Get updated snapshot
-    updated_user = await get_user_for_read(username)
+    updated_user = await get_user_readonly(username)
     snapshot = await build_entitlements_snapshot(updated_user)
     
     response = {
         "success": True,
-        "entitlements_snapshot": snapshot.dict(),
+        "entitlements_snapshot": snapshot.model_dump(),
         "message": f"Entitlement {body.entitlement_key} granted",
     }
     

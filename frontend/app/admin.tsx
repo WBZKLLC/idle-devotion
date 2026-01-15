@@ -155,7 +155,9 @@ export default function AdminPanelScreen() {
       setNewVIPLevel('');
       searchUsers(); // Refresh
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to set VIP');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to set VIP');
+      }
     } finally {
       setProcessing(false);
     }

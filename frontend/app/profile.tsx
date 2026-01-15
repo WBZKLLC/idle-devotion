@@ -142,7 +142,8 @@ export default function ProfileScreen() {
 
   const handleRedeemCode = async () => {
     if (!codeInput.trim()) {
-      Alert.alert('Error', 'Please enter a code');
+      // Phase 3.18.4: Toast for validation
+      toast.warning('Please enter a code');
       return;
     }
     if (!user) return;

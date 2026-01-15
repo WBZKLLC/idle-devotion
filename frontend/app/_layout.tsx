@@ -46,6 +46,7 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
   const fetchUser = useGameStore(s => s.fetchUser);
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
   const hydrateEntitlements = useEntitlementStore(s => s.hydrateEntitlements);
+  const refreshEntitlements = useEntitlementStore(s => s.refreshFromServer);
   const initNetworkListener = useNetworkStore(s => s.initNetworkListener);
   const [isRestoring, setIsRestoring] = useState(true);
 
@@ -68,13 +69,23 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       // Hydrate auth from storage - ALWAYS runs, no conditional
       await hydrateAuth().catch(() => {});
       
-      // Hydrate paid entitlements from storage
+      // Hydrate paid entitlements from cache first (fast)
       await hydrateEntitlements().catch(() => {});
       
       setIsRestoring(false);
     };
     restore();
   }, [hydrateRemoteFeatures, hydrateAuth, hydrateEntitlements, registerForceLogout]);
+
+  // After restore complete + user is logged in: refresh entitlements from server
+  // This is a separate effect so it runs AFTER hydrateAuth completes
+  useEffect(() => {
+    if (!isRestoring && user) {
+      // User is logged in - get fresh entitlements from server
+      // Non-blocking: don't await, just fire and forget
+      refreshEntitlements('startup').catch(() => {});
+    }
+  }, [isRestoring, user, refreshEntitlements]);
 
   // Initialize network listener (returns cleanup function)
   useEffect(() => {

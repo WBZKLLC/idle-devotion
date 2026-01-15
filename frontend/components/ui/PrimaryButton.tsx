@@ -1,14 +1,16 @@
 // /app/frontend/components/ui/PrimaryButton.tsx
 // Design system primary button - use for main CTAs
+// Phase 3.19.2: Added accessibility, leftIcon/rightIcon, pressed state
 
 import React from 'react';
 import {
-  TouchableOpacity,
+  Pressable,
   Text,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
+  View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT, TOUCH_TARGET, COLORS } from './tokens';
@@ -18,11 +20,15 @@ interface PrimaryButtonProps {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  /** @deprecated Use leftIcon instead */
   icon?: React.ReactNode;
   variant?: 'gold' | 'blue' | 'green' | 'purple';
   size?: 'sm' | 'md' | 'lg';
   style?: ViewStyle;
   textStyle?: TextStyle;
+  testID?: string;
 }
 
 const VARIANTS = {

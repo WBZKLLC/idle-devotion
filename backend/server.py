@@ -11365,6 +11365,43 @@ async def require_cinematic_access(username: str, hero_id: str) -> bool:
     )
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# PREMIUM CONTENT ENDPOINTS (Server-gated)
+# These demonstrate the 403 enforcement pattern
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/hero/{hero_id}/cinematic/access")
+async def check_cinematic_access(hero_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Check if user can access hero's premium cinematic.
+    Returns 200 if entitled, 403 if not.
+    
+    Use this before streaming/downloading cinematic content.
+    """
+    await require_cinematic_access(current_user["username"], hero_id)
+    return {"access": True, "hero_id": hero_id}
+
+
+@app.get("/api/hero/{hero_id}/cinematic/url")
+async def get_cinematic_url(hero_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get the cinematic video URL for a hero.
+    Server-gated: returns 403 if user doesn't own the cinematic.
+    
+    In production, this would return a signed/time-limited URL.
+    """
+    # ENFORCE: User must have cinematic access
+    await require_cinematic_access(current_user["username"], hero_id)
+    
+    # Return the video URL (in production, this would be a signed URL)
+    # For now, return the static asset path
+    return {
+        "hero_id": hero_id,
+        "video_url": f"/assets/videos/hero_5plus/{hero_id}_cinematic.mp4",
+        "expires_in": 3600,  # URL valid for 1 hour (if using signed URLs)
+    }
+
+
 @app.get("/api/entitlements/snapshot")
 async def get_entitlements_snapshot(current_user: dict = Depends(get_current_user)):
     """

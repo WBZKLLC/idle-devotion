@@ -142,11 +142,12 @@ export default function HomeScreen() {
 
   const handleInstantCollect = async () => {
     if (!user || (user.vip_level || 0) < 1) {
-      Alert.alert('VIP Required', 'VIP 1+ can use Instant Collect to claim 2 hours of rewards instantly!');
+      // Phase 3.18.4: Toast for VIP requirement
+      toast.info('VIP 1+ can use Instant Collect to claim 2 hours of rewards instantly!');
       return;
     }
     if (instantCooldown > 0) {
-      Alert.alert('On Cooldown', `Instant Collect available in ${formatCooldown(instantCooldown)}`);
+      toast.warning(`Instant Collect available in ${formatCooldown(instantCooldown)}`);
       return;
     }
     if (isClaiming) return;
@@ -173,13 +174,14 @@ export default function HomeScreen() {
       } else {
         // Extract cooldown from error message if present
         const errorMsg = data.detail || 'Instant collect on cooldown';
-        Alert.alert('Cannot Collect', errorMsg);
+        // Phase 3.18.4: Toast for errors
+        toast.warning(errorMsg);
         // Refresh cooldown state
         loadInstantCooldown();
       }
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Failed to instant collect');
+        toast.error(error?.message || 'Failed to instant collect');
       }
     } finally {
       setIsClaiming(false);

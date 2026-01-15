@@ -107,16 +107,14 @@ export async function safeMutation<T>(
   } = opts;
 
   // Fast-fail if offline - don't attempt network calls
+  // Fast-fail if offline - NO alert (offline banner is the UX)
   if (!isOnline()) {
     const offlineError = new Error('OFFLINE');
-    const detail = 'No internet connection. Please check your connection and try again.';
-    
-    if (showErrorAlert) {
-      Alert.alert('Offline', detail);
-    }
+    const detail = 'No internet connection';
     
     if (onError) onError(offlineError);
     
+    // Return silently - OfflineBanner is the global UX for this
     return { ok: false, error: offlineError, detail };
   }
 

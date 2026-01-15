@@ -77,6 +77,7 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
   lastRefreshAt: null,
   isRefreshing: false,
   refreshError: null,
+  entitlementEpoch: 0,  // Bumped on clear() to invalidate in-flight requests
 
   /**
    * Hydrate from cached snapshot on app startup

@@ -120,21 +120,22 @@ export default function GuildScreen() {
 
   const handleCreateGuild = async () => {
     if (!guildName.trim()) {
-      Alert.alert('Error', 'Please enter a guild name');
+      // Phase 3.18.5: Toast for validation
+      toast.warning('Please enter a guild name');
       return;
     }
     
     setIsCreating(true);
     try {
       await createGuildApi(user?.username || '', guildName.trim());
-      Alert.alert('Success!', 'Guild created successfully!');
+      toast.success('Guild created!');
       setShowCreateModal(false);
       setGuildName('');
       setGuildDescription('');
       loadGuildData();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to create guild');
+        toast.error(error.response?.data?.detail || 'Failed to create guild');
       }
     } finally {
       setIsCreating(false);
@@ -144,17 +145,18 @@ export default function GuildScreen() {
   const handleJoinGuild = async (guildId: string) => {
     try {
       await joinGuildApi(user?.username || '', guildId);
-      Alert.alert('Success!', 'Joined guild successfully!');
+      toast.success('Joined guild!');
       setShowJoinModal(false);
       loadGuildData();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to join guild');
+        toast.error(error.response?.data?.detail || 'Failed to join guild');
       }
     }
   };
 
   const handleLeaveGuild = async () => {
+    // ALERT_ALLOWED: destructive_confirm
     Alert.alert(
       'Leave Guild',
       'Are you sure you want to leave the guild?',
@@ -166,12 +168,12 @@ export default function GuildScreen() {
           onPress: async () => {
             try {
               await leaveGuildApi(user?.username || '');
-              Alert.alert('Success', 'You left the guild');
+              toast.success('You left the guild');
               setGuildData(null);
               loadAvailableGuilds();
             } catch (error: any) {
               if (!isErrorHandledGlobally(error)) {
-                Alert.alert('Error', 'Failed to leave guild');
+                toast.error('Failed to leave guild');
               }
             }
           }

@@ -9344,6 +9344,9 @@ async def claim_battle_pass_reward(username: str, track: str, level: int):
 @api_router.post("/battle-pass/{username}/purchase")
 async def purchase_battle_pass(username: str, tier: str = "premium"):
     """Purchase battle pass (simulated)"""
+    # DEV-ONLY: Simulated purchases blocked in production
+    require_dev_mode()
+    
     user = await get_user_for_mutation(username)  # Includes frozen check
     
     bp_data = await db.battle_pass.find_one({"user_id": user["id"]})

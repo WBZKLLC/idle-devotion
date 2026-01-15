@@ -153,11 +153,12 @@ export async function safeMutation<T>(
       onError(error);
     }
     
-    // Only show alert if:
+    // Only show toast if:
     // 1. showErrorAlert is true
     // 2. Error was NOT already handled by global interceptor
+    // Phase 3.18.4: Use toast instead of blocking Alert
     if (showErrorAlert && !isErrorHandledGlobally(error)) {
-      Alert.alert('Error', errorMessage || detail);
+      toast.error(errorMessage || detail);
     }
     
     return { ok: false, error, detail };

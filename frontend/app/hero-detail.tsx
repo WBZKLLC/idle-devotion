@@ -47,6 +47,8 @@ import {
 
 // Phase 3.19.1: Loading skeleton component
 import { HeroDetailHeaderSkeleton } from '../components/ui/Skeleton';
+// Phase 3.19.2: Canonical button components
+import { SecondaryButton } from '../components/ui/SecondaryButton';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'N': '#9e9e9e',

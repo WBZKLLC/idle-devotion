@@ -163,12 +163,12 @@ export default function GuildWarScreen() {
     try {
       setLoading(true);
       const result = await registerGuildWar(user.username);
-      Alert.alert('⚔️ Registered!', result.message);
+      toast.success(result.message || 'Registered for Guild War!');
       setIsRegistered(true);
       await loadAllData();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to register');
+        toast.error(error.response?.data?.detail || 'Failed to register');
       }
     } finally {
       setLoading(false);
@@ -187,7 +187,7 @@ export default function GuildWarScreen() {
       fetchUser();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Attack failed');
+        toast.error(error.response?.data?.detail || 'Attack failed');
       }
     } finally {
       setIsAttacking(false);

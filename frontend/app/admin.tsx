@@ -223,6 +223,7 @@ export default function AdminPanelScreen() {
   const deleteUserAccount = async () => {
     if (!selectedUser || !user) return;
     
+    // ALERT_ALLOWED: destructive_confirm
     Alert.alert(
       '⚠️ Delete Account',
       `Are you absolutely sure you want to DELETE ${selectedUser.username}'s account? This will permanently remove all their data and CANNOT be undone!`,
@@ -235,13 +236,13 @@ export default function AdminPanelScreen() {
             setProcessing(true);
             try {
               await adminDeleteAccount(selectedUser.username, user.username);
-              Alert.alert('Deleted', `${selectedUser.username}'s account has been deleted`);
+              toast.success(`${selectedUser.username}'s account has been deleted`);
               setShowActionModal(false);
               setSelectedUser(null);
               setSearchResults([]);
             } catch (error: any) {
               if (!isErrorHandledGlobally(error)) {
-                Alert.alert('Error', error.response?.data?.detail || 'Failed to delete account');
+                toast.error(error.response?.data?.detail || 'Failed to delete account');
               }
             } finally {
               setProcessing(false);

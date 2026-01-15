@@ -105,15 +105,12 @@ export default function EquipmentScreen() {
     try {
       // Use centralized API wrapper
       const result = await apiEnhanceEquipment(user.username, equipmentId, [{ id: 'enhance_stone', qty: levels }]);
-      Alert.alert(
-        '✨ Enhanced!',
-        `Level ${result.new_level}\n${result.gold_spent} Gold\n${result.stones_spent} Stones`
-      );
+      toast.success(`Enhanced! Level ${result.new_level} — ${result.gold_spent} Gold, ${result.stones_spent} Stones`);
       fetchUser();
       loadData();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Enhancement failed');
+        toast.error(error?.message || 'Enhancement failed');
       }
     }
   };

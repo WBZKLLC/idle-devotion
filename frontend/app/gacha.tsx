@@ -77,7 +77,7 @@ export default function GachaScreen() {
     const currency = currencyType === 'gems' ? user.gems : user.coins;
 
     if (currency < cost) {
-      Alert.alert('Insufficient Funds', `You need ${cost} ${currencyType} to pull`);
+      toast.warning(`You need ${cost} ${currencyType} to pull`);
       return;
     }
 
@@ -95,7 +95,7 @@ export default function GachaScreen() {
       setShowResult(true);
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to pull gacha');
+        toast.error(error.response?.data?.detail || 'Failed to pull gacha');
       }
     }
   };

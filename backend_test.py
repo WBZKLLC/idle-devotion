@@ -285,6 +285,11 @@ class BackendTester:
         print(f"Test User: {TEST_USERNAME}")
         print()
         
+        # First, ensure test user exists
+        if not self.create_test_user():
+            print("❌ Failed to create test user - aborting tests")
+            return False
+        
         # Test sequence - authentication first, then authenticated endpoints
         tests = [
             ("Authentication Login", self.test_authentication_login),

@@ -444,6 +444,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         refreshUser: true,
         fetchUserFn: fetchUser,
         onSuccess: async () => {
+          // Track successful gacha pull
+          track(Events.GACHA_PULL, { type: pullType, currency: currencyType });
           // Also refresh heroes after gacha
           await fetchUserHeroes();
         },

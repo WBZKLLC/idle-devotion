@@ -53,7 +53,7 @@ export function openPremiumCinematic(
   
   // TODO: When cinematics are re-enabled, open the modal here
   // For now, return not_implemented
-  console.log('[openPremiumCinematic] Cinematics playback not yet implemented');
+  if (__DEV__) console.log('[openPremiumCinematic] Cinematics playback not yet implemented');
   return { success: false, reason: 'not_implemented' };
 }
 

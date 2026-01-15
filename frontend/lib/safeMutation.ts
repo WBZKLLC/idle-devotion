@@ -99,12 +99,12 @@ export async function safeMutation<T>(
   } = opts;
 
   try {
-    console.log(`[safeMutation] Starting: ${actionName}`);
+    if (__DEV__) console.log(`[safeMutation] Starting: ${actionName}`);
     
     // Execute the mutation - ALWAYS await server response
     const data = await fn();
     
-    console.log(`[safeMutation] Success: ${actionName}`);
+    if (__DEV__) console.log(`[safeMutation] Success: ${actionName}`);
     
     // Refresh user state from server (authoritative source)
     if (refreshUser && fetchUserFn) {

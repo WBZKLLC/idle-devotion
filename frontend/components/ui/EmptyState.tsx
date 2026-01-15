@@ -1,11 +1,12 @@
 // /app/frontend/components/ui/EmptyState.tsx
 // Phase 3.19.1: Themed empty state component with optional CTA
+// Phase 3.19.2: Updated to use canonical button components
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import COLORS from '../../theme/colors';
+import { PrimaryButton } from './PrimaryButton';
+import { SecondaryButton } from './SecondaryButton';
 
 interface EmptyStateAction {
   label: string;
@@ -57,29 +58,37 @@ export function EmptyState({
         <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>{subtitle}</Text>
       )}
 
-      {/* Primary Action */}
+      {/* Primary Action - using canonical button */}
       {action && (
-        <TouchableOpacity onPress={action.onPress} style={styles.actionButton}>
+        <View style={styles.actionButton}>
           {action.variant === 'secondary' ? (
-            <View style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>{action.label}</Text>
-            </View>
+            <SecondaryButton
+              title={action.label}
+              onPress={action.onPress}
+              variant="outline"
+              size="md"
+            />
           ) : (
-            <LinearGradient
-              colors={[COLORS.gold.primary, COLORS.gold.dark]}
-              style={styles.primaryButton}
-            >
-              <Text style={styles.primaryButtonText}>{action.label}</Text>
-            </LinearGradient>
+            <PrimaryButton
+              title={action.label}
+              onPress={action.onPress}
+              variant="gold"
+              size="md"
+            />
           )}
-        </TouchableOpacity>
+        </View>
       )}
 
-      {/* Secondary Action */}
+      {/* Secondary Action - using canonical ghost button */}
       {secondaryAction && (
-        <TouchableOpacity onPress={secondaryAction.onPress} style={styles.secondaryAction}>
-          <Text style={styles.secondaryActionText}>{secondaryAction.label}</Text>
-        </TouchableOpacity>
+        <View style={styles.secondaryAction}>
+          <SecondaryButton
+            title={secondaryAction.label}
+            onPress={secondaryAction.onPress}
+            variant="ghost"
+            size="sm"
+          />
+        </View>
       )}
     </View>
   );

@@ -11305,7 +11305,7 @@ async def get_entitlements_snapshot(current_user: dict = Depends(get_current_use
     return EntitlementsSnapshot(
         server_time=datetime.now(timezone.utc).isoformat(),
         version=version,
-        username=user["username"],
+        username=current_user["username"],
         entitlements=entitlements_map,
         ttl_seconds=300,
         source="database",

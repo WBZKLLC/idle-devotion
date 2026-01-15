@@ -129,6 +129,7 @@ export default function HomeScreen() {
     try {
       const rewards = await claimIdleRewards();
       if (rewards?.gold_earned) {
+        // ALERT_ALLOWED: rewards_modal
         Alert.alert('Rewards Collected', `+${rewards.gold_earned.toLocaleString()} Gold`, [{ text: 'Continue' }]);
       }
       // Reload idle status to reset timer
@@ -165,6 +166,7 @@ export default function HomeScreen() {
         if (resources.crystals > 0) rewardsText += `💎 +${resources.crystals.toLocaleString()} Crystals\n`;
         if (resources.stamina > 0) rewardsText += `⚡ +${resources.stamina} Stamina\n`;
         
+        // ALERT_ALLOWED: rewards_modal
         Alert.alert('⚡ Instant Collect!', rewardsText, [{ text: 'Nice!' }]);
         
         // Set 4 hour cooldown
@@ -244,6 +246,7 @@ export default function HomeScreen() {
       if (!result.success) {
         if (result.error === 'NEEDS_PASSWORD') {
           // Legacy account - prompt to set password (KEEP as Alert - user decision required)
+          // ALERT_ALLOWED: legacy_account_flow
           Alert.alert(
             'Account Security Upgrade',
             'This account was created before passwords were required. Please set a password to secure your account.',
@@ -263,6 +266,7 @@ export default function HomeScreen() {
           );
         } else if (result.error?.includes('Invalid username')) {
           // User doesn't exist - offer to register (KEEP as Alert - user decision required)
+          // ALERT_ALLOWED: legacy_account_flow
           Alert.alert(
             'Account Not Found',
             'No account with this username exists. Would you like to create a new account?',

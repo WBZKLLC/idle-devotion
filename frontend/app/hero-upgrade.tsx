@@ -89,7 +89,9 @@ export default function HeroUpgradeScreen() {
       );
       loadHeroDetails();
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to promote');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Failed to promote');
+      }
     } finally {
       setIsUpgrading(false);
     }

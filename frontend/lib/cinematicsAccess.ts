@@ -17,6 +17,8 @@
 
 import { isFeatureEnabled } from './features';
 import { useEntitlementStore } from '../stores/entitlementStore';
+import { useHasEntitlement, hasEntitlement, canAccessHeroCinematic } from './entitlements/gating';
+import { ENTITLEMENT_KEYS, premiumCinematicOwnedKey } from './entitlements/types';
 
 /**
  * Check if user can access cinematics system (synchronous check)
@@ -25,8 +27,8 @@ import { useEntitlementStore } from '../stores/entitlementStore';
  * @returns true if user has paid AND feature flag is enabled
  */
 export function canAccessCinematics(stableId?: string): boolean {
-  const store = useEntitlementStore.getState();
-  const hasPack = store.hasEntitlement('PREMIUM_CINEMATICS_PACK');
+  // Use canonical gating helper
+  const hasPack = hasEntitlement(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
   if (!hasPack) return false;
   
   return isFeatureEnabled('HERO_CINEMATICS', { stableId });
@@ -36,8 +38,8 @@ export function canAccessCinematics(stableId?: string): boolean {
  * Hook version for reactive updates
  */
 export function useCanAccessCinematics(stableId?: string): boolean {
-  const entitlements = useEntitlementStore(s => s.entitlements);
-  const hasPack = Boolean(entitlements['PREMIUM_CINEMATICS_PACK']);
+  // Use canonical gating hook
+  const hasPack = useHasEntitlement(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
   if (!hasPack) return false;
   
   return isFeatureEnabled('HERO_CINEMATICS', { stableId });
@@ -51,15 +53,18 @@ export function useCanAccessCinematics(stableId?: string): boolean {
  */
 export function hasHeroPremiumCinematicOwned(heroId: string): boolean {
   if (!heroId) return false;
-  return useEntitlementStore.getState().hasHeroPremiumCinematicOwned(heroId);
+  // Use canonical gating helper
+  return canAccessHeroCinematic(heroId);
 }
 
 /**
  * Hook version for reactive per-hero ownership check
  */
 export function useHasHeroPremiumCinematicOwned(heroId: string): boolean {
-  const entitlements = useEntitlementStore(s => s.entitlements);
-  if (!heroId) return false;
-  const key = `PREMIUM_CINEMATIC_OWNED:${heroId}`;
-  return Boolean(entitlements[key]);
+  // Use canonical gating hook with dynamic key
+  const key = premiumCinematicOwnedKey(heroId);
+  const hasHero = useHasEntitlement(key);
+  const hasPack = useHasEntitlement(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
+  // User has access if they own the pack OR own the individual hero cinematic
+  return hasHero || hasPack;
 }

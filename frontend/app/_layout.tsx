@@ -6,7 +6,9 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { useGameStore } from '../stores/gameStore';
 import { useFeatureStore } from '../stores/featureStore';
 import { useEntitlementStore } from '../stores/entitlementStore';
+import { useNetworkStore } from '../stores/networkStore';
 import { isFeatureEnabled } from '../lib/features';
+import { OfflineBanner } from '../components/OfflineBanner';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 

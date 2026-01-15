@@ -20,6 +20,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Sidebar from '../components/Sidebar';
+// Phase 3.11: Canonical store navigation
+import { goToStore } from '../lib/entitlements/navigation';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../lib/api';

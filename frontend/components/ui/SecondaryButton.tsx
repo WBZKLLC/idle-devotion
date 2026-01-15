@@ -127,12 +127,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: RADIUS.lg,
   },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   textBase: {
     fontWeight: FONT_WEIGHT.semibold,
     textAlign: 'center',
   },
-  textWithIcon: {
+  leftIcon: {
+    marginRight: SPACING.sm,
+  },
+  rightIcon: {
     marginLeft: SPACING.sm,
+  },
+  pressed: {
+    transform: [{ scale: 0.98 }],
   },
   disabled: {
     opacity: 0.5,
@@ -146,6 +157,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.gold.primary,
     backgroundColor: 'transparent',
   },
+  outlineContainerPressed: {
+    backgroundColor: 'rgba(201, 162, 39, 0.1)',
+  },
   outlineText: {
     color: COLORS.gold.primary,
   },
@@ -153,12 +167,18 @@ const styles = StyleSheet.create({
   ghostContainer: {
     backgroundColor: 'transparent',
   },
+  ghostContainerPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
   ghostText: {
     color: COLORS.gold.primary,
   },
   // Subtle variant
   subtleContainer: {
     backgroundColor: 'rgba(255, 215, 0, 0.1)',
+  },
+  subtleContainerPressed: {
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
   },
   subtleText: {
     color: COLORS.gold.light,

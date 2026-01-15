@@ -94,10 +94,11 @@ export default function ProfileScreen() {
       await equipFrameApi(user.username, frameId);
       setEquippedFrame(frameId);
       await loadUserFrames();
-      Alert.alert('Success', 'Frame equipped successfully!');
+      // Phase 3.18: Use toast instead of Alert for success
+      toast.success('Frame equipped!');
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to equip frame');
+        toast.error(error.response?.data?.detail || 'Failed to equip frame');
       }
     } finally {
       setLoadingFrames(false);
@@ -111,10 +112,10 @@ export default function ProfileScreen() {
       await unequipFrameApi(user.username);
       setEquippedFrame('default');
       await loadUserFrames();
-      Alert.alert('Success', 'Frame unequipped');
+      toast.info('Frame unequipped');
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to unequip frame');
+        toast.error(error.response?.data?.detail || 'Failed to unequip frame');
       }
     } finally {
       setLoadingFrames(false);

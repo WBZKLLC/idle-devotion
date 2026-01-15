@@ -5,15 +5,16 @@
 // NOTE: This file imports entitlementStore dynamically to avoid circular deps
 // 
 // PHASE 3.10: Premium gates now trigger ensureFreshEntitlements() for staleness check
+// PHASE 3.11: Uses canonical navigation helper instead of direct router.push
 
 import { Alert } from 'react-native';
-import { router } from 'expo-router';
 import { 
   ENTITLEMENT_KEYS, 
   PREMIUM_CINEMATIC_OWNED_PREFIX,
   isEntitlementOwned,
   type ServerEntitlement,
 } from './types';
+import { goToPaywall, getPaywallRoute, type PaywallSource } from './navigation';
 
 // Dynamic import to avoid circular dependency
 let _entitlementStore: any = null;

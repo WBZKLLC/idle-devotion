@@ -104,7 +104,12 @@ export default function PurchaseButton({
       // Retry verification with same idempotency key
       const result = await verifyAndApplyPurchase();
       if (!result.success && !result.shouldRetry) {
+        // Phase 3.18.2: Non-retryable error toast
+        toast.error('Verification failed. If you were charged, use Restore Purchases.');
         onPurchaseError?.(result.error);
+      } else if (!result.success && result.shouldRetry) {
+        // Phase 3.18.2: Network error toast (retryable)
+        toast.warning('Connection issue. Try again when online.');
       }
       return;
     }
@@ -122,6 +127,7 @@ export default function PurchaseButton({
         console.log('[PurchaseButton] Test mode - simulating IAP completion');
         const result = await verifyAndApplyPurchase('test_txn_' + Date.now());
         if (!result.success && !result.shouldRetry) {
+          toast.error('Verification failed. If you were charged, use Restore Purchases.');
           onPurchaseError?.(result.error);
         }
       } else {
@@ -145,6 +151,7 @@ export default function PurchaseButton({
               onPress: async () => {
                 const result = await verifyAndApplyPurchase('simulated_txn_' + Date.now());
                 if (!result.success && !result.shouldRetry) {
+                  toast.error('Verification failed. If you were charged, use Restore Purchases.');
                   onPurchaseError?.(result.error);
                 }
               },
@@ -154,6 +161,7 @@ export default function PurchaseButton({
       }
     } catch (e: any) {
       console.error('[PurchaseButton] Error:', e.message);
+      toast.error('Something went wrong. Please try again.');
       onPurchaseError?.(e.message);
     }
   }, [isRetryable, testMode, onPurchaseError]);

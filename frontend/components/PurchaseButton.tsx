@@ -223,12 +223,12 @@ export default function PurchaseButton({
   // Default purchasable state
   return (
     <TouchableOpacity
-      style={styles.button}
+      style={[styles.button, style]}
       onPress={handlePurchase}
       activeOpacity={0.8}
     >
-      <Text style={styles.buttonText}>{GOLDEN_PATH_PRODUCT.displayName}</Text>
-      <Text style={styles.priceText}>{GOLDEN_PATH_PRODUCT.price}</Text>
+      <Text style={styles.buttonText}>{product.displayName}</Text>
+      <Text style={styles.priceText}>{product.priceFallback}</Text>
     </TouchableOpacity>
   );
 }

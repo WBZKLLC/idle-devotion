@@ -175,6 +175,7 @@ export function canAccessHeroCinematic(heroId: string): boolean {
  * All code paths that need cinematic access MUST use this function.
  * 
  * Phase 3.10: Triggers background freshness check before evaluating
+ * Phase 3.13: Emits telemetry for gate outcomes
  * 
  * @param heroId - Hero to check access for
  * @param options.onDenied - Called when access is denied (default: shows alert)
@@ -187,9 +188,16 @@ export function requireCinematicAccess(
   // Phase 3.10: Fire-and-forget freshness check
   triggerFreshnessCheck();
   
+  const requiredKey = ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK;
+  
   if (canAccessHeroCinematic(heroId)) {
+    // Phase 3.13: Track allowed (sampled)
+    trackGateAllowed(requiredKey, 'cinematic_gate');
     return true;
   }
+  
+  // Phase 3.13: Track denied (always)
+  trackGateDenied(requiredKey, 'cinematic_gate', heroId);
   
   // Access denied - call custom handler or show default alert
   if (options?.onDenied) {
@@ -198,13 +206,25 @@ export function requireCinematicAccess(
   }
   
   // Default: use standard requireEntitlement alert (freshness already triggered)
-  return requireEntitlement(
-    ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK,
-    {
-      alertTitle: 'Premium Cinematic',
-      alertMessage: 'Unlock this cinematic with the Premium Cinematics Pack or purchase it individually.',
-    }
+  // Note: requireEntitlement will NOT double-emit telemetry because we already tracked above
+  // and the entitlement check will fail again
+  Alert.alert(
+    'Premium Cinematic',
+    'Unlock this cinematic with the Premium Cinematics Pack or purchase it individually.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      { 
+        text: 'View Store', 
+        onPress: () => goToPaywall({ 
+          productKey: 'PREMIUM_CINEMATICS_PACK',
+          source: 'cinematic_gate',
+          heroId,
+        }) 
+      },
+    ]
   );
+  
+  return false;
 }
 
 /**

@@ -108,8 +108,8 @@ export default function HeroDetailScreen() {
   const unlockedTier = useMemo(() => unlockedTierForHero(hero), [hero?.id, hero?.stars, hero?.awakening_level]);
 
   // CANONICAL combat stats with all bonuses applied (cinematic ownership, etc.)
-  // Re-computes when hero/heroData OR entitlements change
-  const combatStats = useMemo(() => computeCombatStats(hero, heroData), [hero, heroData, entitlements]);
+  // Re-computes when hero/heroData changes - entitlements from hook trigger re-render
+  const combatStats = useMemo(() => computeCombatStats(hero, heroData), [hero, heroData, packOwned]);
 
   // Enforce tier gating reactively - if hero data changes, clamp selectedTier
   useEffect(() => {

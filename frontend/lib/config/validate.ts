@@ -1,26 +1,65 @@
 // /app/frontend/lib/config/validate.ts
 // Startup config validation - catches misconfig early
 // Phase 3.15: Enhanced with production build assertions
+// Phase 3.15 P0 Revision B: Explicit environment detection via EXPO_PUBLIC_ENV
 
 /**
- * Detect if this is likely a production/release build
- * Uses Expo's __DEV__ flag as primary indicator
+ * Environment modes for explicit control
+ * EXPO_PUBLIC_ENV takes precedence over __DEV__ for production detection
  */
-function isProductionBuild(): boolean {
-  return !__DEV__;
+type EnvironmentMode = 'development' | 'staging' | 'production';
+
+/**
+ * Get the explicit environment mode
+ * Priority:
+ * 1. EXPO_PUBLIC_ENV if set (explicit control)
+ * 2. __DEV__ as fallback (dev vs non-dev)
+ */
+function getEnvironmentMode(): EnvironmentMode {
+  const explicitEnv = process.env.EXPO_PUBLIC_ENV?.toLowerCase();
+  
+  if (explicitEnv === 'production') return 'production';
+  if (explicitEnv === 'staging') return 'staging';
+  if (explicitEnv === 'development') return 'development';
+  
+  // Fallback to __DEV__ if no explicit env set
+  return __DEV__ ? 'development' : 'production';
+}
+
+/**
+ * Detect if this is a production environment
+ * Uses explicit EXPO_PUBLIC_ENV if set, falls back to __DEV__
+ */
+function isProductionEnvironment(): boolean {
+  return getEnvironmentMode() === 'production';
+}
+
+/**
+ * Detect if this is a development environment
+ */
+function isDevelopmentEnvironment(): boolean {
+  return getEnvironmentMode() === 'development';
 }
 
 /**
  * Validate critical configuration at startup
- * In dev: throws immediately on missing config
- * In prod: logs error but doesn't crash (graceful degradation)
+ * 
+ * Behavior by environment:
+ * - development: throws on errors (fail-fast for devs)
+ * - staging: logs errors but doesn't crash
+ * - production: logs errors but doesn't crash (graceful degradation)
  * 
  * Phase 3.15: Enhanced with production-specific validations
+ * Phase 3.15 P0 Revision B: Uses EXPO_PUBLIC_ENV for explicit control
  */
 export function validateConfig(): void {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const isProd = isProductionBuild();
+  const envMode = getEnvironmentMode();
+  const isProd = isProductionEnvironment();
+
+  // Log the environment mode for debugging
+  console.log(`[config] Environment mode: ${envMode} (EXPO_PUBLIC_ENV=${process.env.EXPO_PUBLIC_ENV ?? 'not set'}, __DEV__=${__DEV__})`);
 
   // ==========================================================================
   // REQUIRED: Backend URL
@@ -61,6 +100,13 @@ export function validateConfig(): void {
   }
 
   // ==========================================================================
+  // P0 Revision B: Warn if production build without explicit EXPO_PUBLIC_ENV
+  // ==========================================================================
+  if (!__DEV__ && !process.env.EXPO_PUBLIC_ENV) {
+    warnings.push('Release build detected but EXPO_PUBLIC_ENV not set - assuming production (set explicitly for clarity)');
+  }
+
+  // ==========================================================================
   // Report warnings (logged but don't prevent startup)
   // ==========================================================================
   if (warnings.length > 0) {
@@ -74,18 +120,18 @@ export function validateConfig(): void {
   if (errors.length > 0) {
     const message = `[config] Configuration errors:\n${errors.map(e => `  ❌ ${e}`).join('\n')}`;
     
-    if (__DEV__) {
+    if (isDevelopmentEnvironment()) {
       // In dev, throw to make it obvious
       throw new Error(message);
     } else {
-      // In prod, log but don't crash - app may still partially work
+      // In staging/prod, log but don't crash - app may still partially work
       console.error(message);
     }
   }
 
   // Success
   if (errors.length === 0) {
-    console.log(`[config] ✅ Configuration validated (${isProd ? 'production' : 'development'} mode)`);
+    console.log(`[config] ✅ Configuration validated (${envMode} mode)`);
   }
 }
 
@@ -99,3 +145,8 @@ export function getBackendUrl(): string {
   }
   return url.replace(/\/$/, ''); // Remove trailing slash
 }
+
+/**
+ * Export environment helpers for use elsewhere
+ */
+export { getEnvironmentMode, isProductionEnvironment, isDevelopmentEnvironment };

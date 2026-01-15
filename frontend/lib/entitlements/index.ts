@@ -14,6 +14,17 @@ export {
   getPendingPurchase,
 } from './purchase-flow';
 
+// Phase 3.11: Canonical navigation helpers
+export {
+  goToPaywall,
+  goToStore,
+  goToPurchaseSuccess,
+  getPaywallRoute,
+  getStoreRoute,
+  type PaywallSource,
+  type GoToPaywallOptions,
+} from './navigation';
+
 // Legacy exports (for backwards compatibility with existing code)
 export { 
   premiumCinematicOwnedKey,

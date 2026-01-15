@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
+// Phase 3.18.3: Toast for summon feedback
+import { toast } from '../components/ui/Toast';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { pullGacha } from '../lib/api';

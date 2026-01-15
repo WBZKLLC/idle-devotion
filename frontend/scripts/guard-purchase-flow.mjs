@@ -146,6 +146,21 @@ function checkFile(filePath) {
         content: line.trim().substring(0, 80),
       });
     }
+    
+    // Check for legacy RevenueCat paywall patterns (deprecated)
+    if (!ALLOWED_LEGACY_PAYWALL_FILES.has(fileName)) {
+      for (const pattern of LEGACY_PAYWALL_PATTERNS) {
+        if (pattern.test(line)) {
+          violations.push({
+            file: filePath.replace(FRONTEND_ROOT, ''),
+            line: lineNum,
+            type: 'LEGACY_PAYWALL',
+            content: line.trim().substring(0, 80),
+          });
+          break;
+        }
+      }
+    }
   }
   
   return violations;

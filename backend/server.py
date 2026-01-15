@@ -11259,7 +11259,7 @@ async def get_entitlements_snapshot(current_user: dict = Depends(get_current_use
     Get server-authoritative entitlements snapshot for authenticated user.
     Client should cache this but revalidate on startup and post-purchase.
     """
-    user_doc = await get_user_for_read(current_user["username"])
+    user_doc = await get_user_readonly(current_user["username"])
     
     # Build entitlements map from user document
     user_entitlements = user_doc.get("entitlements", {})

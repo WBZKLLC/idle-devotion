@@ -487,6 +487,33 @@ frontend:
         agent: "main"
         comment: "✅ IMPLEMENTED: Complete 12-chapter campaign system with 21 stages per chapter (20 regular + boss). Features: chapter unlock progression, stage completion tracking, first-clear rewards, 3-star system, story dialogues, sweep functionality for cleared stages, and milestone rewards. Backend APIs: GET /api/campaign/chapters, GET /api/campaign/chapter/{id}, POST /api/campaign/stage/{chapter}/{stage}/complete, POST /api/campaign/stage/{chapter}/{stage}/sweep. Tested with user Adam - Stage 1-1 completion working correctly."
 
+  - task: "Entitlements TTL + Refresh Discipline (Phase 3.10)"
+    implemented: true
+    working: true
+    file: "/app/frontend/stores/entitlementStore.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "🔄 PHASE 3.10: Server-time-based staleness checks with ensureFreshEntitlements() canonical entry point. All guards pass."
+      - working: true
+        agent: "testing"
+        comment: "✅ Backend verified: server_time, ttl_seconds, and entitlements structure correct."
+
+  - task: "Canonical Premium Navigation (Phase 3.11)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/lib/entitlements/navigation.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "🧭 PHASE 3.11: Created goToPaywall({ productKey, source, heroId? }) and goToStore(source) helpers. Updated all paywall navigation in: openPremiumCinematic.ts, gating.ts, profile.tsx, battle-pass.tsx, index.tsx. Guard script extended to detect DIRECT_PAYWALL_NAVIGATION violations. All 12 guards pass."
+
 frontend:
   - task: "Campaign Mode UI (Story mode screen)"
     implemented: true

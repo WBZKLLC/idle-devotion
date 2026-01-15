@@ -643,6 +643,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Smart post-gacha refresh: targeted if few heroes, full roster if many
   // Known response shape: result.heroes[].id = user-hero instance UUID
   refreshHeroesAfterGacha: async (result: any) => {
+    const epochAtStart = get().authEpoch;
     const heroes = Array.isArray(result?.heroes) ? result.heroes : [];
     
     if (__DEV__ && !Array.isArray(result?.heroes)) {
@@ -663,11 +664,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (uniqueIds.length > 0 && uniqueIds.length <= 3) {
       if (__DEV__) console.log('[refreshHeroesAfterGacha] Targeted refresh for', uniqueIds.length, 'heroes:', uniqueIds);
       for (const id of uniqueIds) {
+        // Epoch check before each async call
+        if (get().authEpoch !== epochAtStart) {
+          dlog('[refreshHeroesAfterGacha] Epoch mismatch - aborting');
+          return;
+        }
         await get().getUserHeroById(id, { forceRefresh: true });
       }
       return;
     }
 
+    // Epoch check before full roster fetch
+    if (get().authEpoch !== epochAtStart) {
+      dlog('[refreshHeroesAfterGacha] Epoch mismatch - aborting');
+      return;
+    }
+    
     if (__DEV__) console.log('[refreshHeroesAfterGacha] Full roster refresh (', uniqueIds.length, 'heroes)');
     await get().fetchUserHeroes();
   },

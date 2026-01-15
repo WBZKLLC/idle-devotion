@@ -119,6 +119,21 @@ export const Paywall: React.FC<PaywallProps> = ({
             />
           </View>
 
+          {/* Phase 3.18.1: "Not now" exit affordance - reduces friction */}
+          {showNotNow && (
+            <Pressable
+              onPress={handleDismiss}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss paywall"
+              style={({ pressed }) => [
+                styles.notNowButton,
+                pressed && styles.notNowPressed,
+              ]}
+            >
+              <Text style={styles.notNowText}>Not now</Text>
+            </Pressable>
+          )}
+
           {/* Platform Note */}
           {Platform.OS === 'web' && (
             <Text style={styles.platformNote}>

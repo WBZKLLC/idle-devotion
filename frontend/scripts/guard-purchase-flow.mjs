@@ -55,6 +55,22 @@ const ADHOC_STATE_PATTERNS = [
   /\bsetPurchaseLoading\b/,
 ];
 
+// Legacy paywall patterns that should NOT be used (blocked everywhere)
+const LEGACY_PAYWALL_PATTERNS = [
+  /RevenueCatUI/,
+  /presentPaywall\s*\(/,
+  /presentPaywallIfNeeded/,
+  /react-native-purchases-ui/,
+  /useRevenueCatStore/,
+];
+
+// Files allowed to have legacy paywall patterns (none - they're deprecated)
+const ALLOWED_LEGACY_PAYWALL_FILES = new Set([
+  // Paywall.tsx exports deprecated stubs that warn - this is intentional
+  'Paywall.tsx',
+]);
+];
+
 // Direct verifyPurchase calls (only allowed in purchase-flow.ts)
 const VERIFY_CALL_PATTERN = /verifyPurchase\s*\(/;
 const ALLOWED_VERIFY_FILES = new Set(['purchase-flow.ts', 'api.ts']);

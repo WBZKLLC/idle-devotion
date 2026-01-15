@@ -56,6 +56,7 @@ interface EntitlementStoreState {
   // Actions
   hydrateEntitlements: () => Promise<void>;
   refreshFromServer: (reason: 'startup' | 'post_purchase' | 'manual') => Promise<void>;
+  applySnapshot: (snap: EntitlementsSnapshot) => void;  // Apply snapshot directly (from verify response)
   clear: () => void;
   
   // Read helpers (use gating.ts instead for screens)

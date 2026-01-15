@@ -1,11 +1,12 @@
 // /app/frontend/lib/api.ts
 // SINGLE SOURCE OF TRUTH for all backend API calls
 // Screens should import from here to prevent endpoint string drift
+// Phase 3.18.6: Global error handler uses toast instead of Alert
 
 import axios, { AxiosError } from 'axios';
-import { Alert } from 'react-native';
 import { track, Events } from './telemetry/events';
 import type { EntitlementsSnapshot } from './entitlements/types';
+import { toast } from '../components/ui/Toast';
 
 const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
 const API_BASE = RAW

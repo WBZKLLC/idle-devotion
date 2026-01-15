@@ -262,6 +262,7 @@ export default function HeroManagerScreen() {
     // Check if hero is already in another slot
     const existingSlotIndex = slots.findIndex(s => s.heroId === userHero.id);
     if (existingSlotIndex !== -1) {
+      // ALERT_ALLOWED: destructive_confirm
       Alert.alert(
         'Hero Already Assigned',
         `${userHero.hero_data?.name || 'This hero'} is already in Slot ${existingSlotIndex + 1}. Swap positions?`,
@@ -325,6 +326,7 @@ export default function HeroManagerScreen() {
     const heroData = slots[slotNumber - 1].heroData;
     if (!heroData) return;
     
+    // ALERT_ALLOWED: destructive_confirm
     Alert.alert(
       'Remove Hero',
       `Remove ${heroData.hero_data?.name || heroData.hero_info?.name || 'this hero'} from Slot ${slotNumber}?`,
@@ -641,6 +643,7 @@ export default function HeroManagerScreen() {
                       style={[styles.modeCard, isSelected && styles.modeCardSelected]}
                       onPress={() => {
                         if (hasChanges) {
+                          // ALERT_ALLOWED: destructive_confirm
                           Alert.alert(
                             'Unsaved Changes',
                             'You have unsaved changes. Save before switching modes?',
@@ -866,6 +869,7 @@ export default function HeroManagerScreen() {
                 <TouchableOpacity
                   style={styles.clearLogsButton}
                   onPress={() => {
+                    // ALERT_ALLOWED: destructive_confirm
                     Alert.alert('Clear History', 'Clear all change history?', [
                       { text: 'Cancel', style: 'cancel' },
                       { text: 'Clear', style: 'destructive', onPress: () => setChangeLogs([]) },

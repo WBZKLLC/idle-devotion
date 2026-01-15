@@ -84,13 +84,14 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
 
   // After restore complete + user is logged in: refresh entitlements from server
   // This is a separate effect so it runs AFTER hydrateAuth completes
+  // Phase 3.14: Use ensureFreshEntitlements for consistent discipline
   useEffect(() => {
     if (!isRestoring && user) {
-      // User is logged in - get fresh entitlements from server
-      // Non-blocking: don't await, just fire and forget
-      refreshEntitlements('startup').catch(() => {});
+      // User is logged in - ensure entitlements are fresh (uses TTL discipline)
+      // Non-blocking: fire and forget
+      ensureFreshEntitlements('startup').catch(() => {});
     }
-  }, [isRestoring, user, refreshEntitlements]);
+  }, [isRestoring, user, ensureFreshEntitlements]);
 
   // Initialize network listener (returns cleanup function)
   useEffect(() => {

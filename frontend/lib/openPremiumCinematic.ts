@@ -8,13 +8,14 @@
  * 
  * This file:
  * - Calls requireCinematicAccess() - the SINGLE canonical gate
- * - If denied, routes to canonical paywall (paid-features)
+ * - If denied, routes via goToPaywall() - the SINGLE canonical navigation
  * - If allowed, opens the cinematic modal
  * 
  * This file does NOT:
  * - Implement its own entitlement checks (uses gating.ts only)
  * - Implement purchase logic
  * - Show its own alerts (gating.ts or paywall handles that)
+ * - Use direct router.push() for paywall (uses navigation.ts)
  * 
  * Requirements for playback:
  * 1. User has PREMIUM_CINEMATICS_PACK entitlement (global pack) OR
@@ -22,8 +23,8 @@
  * 2. HERO_CINEMATICS feature flag is enabled
  */
 
-import { router } from 'expo-router';
 import { requireCinematicAccess } from './entitlements/gating';
+import { goToPaywall } from './entitlements/navigation';
 import { isFeatureEnabled } from './features';
 
 export interface OpenCinematicResult {
@@ -52,9 +53,13 @@ export function openPremiumCinematic(
   }
   
   // Use SINGLE CANONICAL GATE - all policy logic lives in gating.ts
-  // On denial, route to canonical paywall (no alert here)
+  // On denial, route via CANONICAL NAVIGATION (no direct router.push)
   const hasAccess = requireCinematicAccess(heroId, {
-    onDenied: () => router.push('/paid-features'),
+    onDenied: () => goToPaywall({
+      productKey: 'PREMIUM_CINEMATICS_PACK',
+      source: 'cinematic_gate',
+      heroId,
+    }),
   });
   
   if (!hasAccess) {

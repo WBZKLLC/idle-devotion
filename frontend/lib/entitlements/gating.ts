@@ -81,6 +81,7 @@ export function hasEntitlement(key: string): boolean {
  * 
  * Phase 3.10: Triggers background freshness check before evaluating
  * Phase 3.11: Uses canonical navigation helper for paywall routing
+ * Phase 3.13: Emits telemetry for gate outcomes
  * 
  * @returns true if entitled, false if blocked (and redirected to paywall)
  */
@@ -96,18 +97,23 @@ export function requireEntitlement(
   // Phase 3.10: Fire-and-forget freshness check
   triggerFreshnessCheck();
   
-  const isEntitled = hasEntitlement(key);
-  
-  if (isEntitled) {
-    return true;
-  }
-  
   const {
     alertTitle = 'Premium Feature',
     alertMessage = 'This feature requires a premium purchase.',
     showPaywall = true,
     source = 'gating_alert',
   } = options ?? {};
+  
+  const isEntitled = hasEntitlement(key);
+  
+  if (isEntitled) {
+    // Phase 3.13: Track allowed (sampled)
+    trackGateAllowed(key, source);
+    return true;
+  }
+  
+  // Phase 3.13: Track denied (always)
+  trackGateDenied(key, source);
   
   Alert.alert(
     alertTitle,

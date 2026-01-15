@@ -292,6 +292,7 @@ export default function ChatScreen() {
   const handleBlockUser = async (usernameToBlock: string) => {
     if (!user) return;
     
+    // KEEP as Alert - this is a destructive confirmation
     Alert.alert(
       'Block User',
       `Are you sure you want to block ${usernameToBlock}? You won't see their messages anymore.`,
@@ -304,17 +305,17 @@ export default function ChatScreen() {
             try {
               // Server derives current user from JWT - do NOT pass username
               await blockChatUser(usernameToBlock);
-              Alert.alert('Blocked', `${usernameToBlock} has been blocked`);
+              toast.success(`${usernameToBlock} has been blocked`);
               await loadMessages(); // Refresh to hide their messages
             } catch (error: any) {
               const status = error.response?.status;
               if (status === 401) {
                 if (!isErrorHandledGlobally(error)) {
-                  Alert.alert('Authentication Required', 'Please log in to block users');
+                  toast.warning('Please log in to block users');
                 }
               } else {
                 if (!isErrorHandledGlobally(error)) {
-                  Alert.alert('Error', error.response?.data?.detail || 'Failed to block user');
+                  toast.error(error.response?.data?.detail || 'Failed to block user');
                 }
               }
             }
@@ -330,10 +331,10 @@ export default function ChatScreen() {
       await equipChatBubble(user.username, bubbleId);
       await loadUserBubble();
       setShowBubbleModal(false);
-      Alert.alert('Success', 'Chat bubble equipped!');
+      toast.success('Chat bubble equipped!');
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to equip bubble');
+        toast.error(error.response?.data?.detail || 'Failed to equip bubble');
       }
     }
   };

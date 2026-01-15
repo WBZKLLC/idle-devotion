@@ -45,6 +45,9 @@ import {
   GlassCard,
 } from '../components/DivineShell';
 
+// Phase 3.19.1: Loading skeleton component
+import { HeroDetailHeaderSkeleton } from '../components/ui/Skeleton';
+
 const RARITY_COLORS: { [key: string]: string } = {
   'N': '#9e9e9e',
   'R': '#4caf50',

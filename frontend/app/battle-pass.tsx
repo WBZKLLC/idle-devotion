@@ -94,8 +94,18 @@ export default function BattlePassScreen() {
       Alert.alert('Locked', `Reach tier ${tier} to claim this reward`);
       return;
     }
+    
+    // For premium claims, show informational message and route to paywall if needed
+    // Note: Server enforces actual PREMIUM entitlement check
     if (isPremium && !passData.has_premium) {
-      Alert.alert('Premium Required', 'Upgrade to Premium Pass to claim this reward');
+      Alert.alert(
+        'Premium Pass Required', 
+        'Upgrade to Premium Pass to claim premium rewards.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'View Premium', onPress: () => router.push('/paid-features') },
+        ]
+      );
       return;
     }
 

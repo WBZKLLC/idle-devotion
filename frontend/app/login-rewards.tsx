@@ -13,6 +13,7 @@ import {
   Easing,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { isErrorHandledGlobally } from '../lib/api';
 import { getLoginRewardsStatus, claimLoginReward } from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';

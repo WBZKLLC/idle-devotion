@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useGameStore } from '../stores/gameStore';
+import { isErrorHandledGlobally } from '../lib/api';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';

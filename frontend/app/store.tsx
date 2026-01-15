@@ -11,6 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
+import { isErrorHandledGlobally } from '../lib/api';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 // import { CustomPaywall, presentNativePaywall } from '../components/Paywall';

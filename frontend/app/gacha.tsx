@@ -13,6 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
+import { isErrorHandledGlobally } from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 

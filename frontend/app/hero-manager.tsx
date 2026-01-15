@@ -15,6 +15,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { isErrorHandledGlobally } from '../lib/api';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';

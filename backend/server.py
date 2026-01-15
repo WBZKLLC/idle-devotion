@@ -11384,6 +11384,13 @@ async def check_cinematic_access(hero_id: str, current_user: dict = Depends(get_
     
     Use this before streaming/downloading cinematic content.
     """
+    # Validate hero_id format to prevent key pollution
+    if not _VALID_HERO_ID_PATTERN.match(hero_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid hero_id format (alphanumeric, underscore, hyphen only, max 64 chars)"
+        )
+    
     await require_cinematic_access(current_user["username"], hero_id)
     return {"access": True, "hero_id": hero_id}
 

@@ -93,21 +93,16 @@ export default function BattlePassScreen() {
   const claimReward = async (tier: number, isPremium: boolean) => {
     if (!passData) return;
     if (tier > passData.current_tier) {
-      Alert.alert('Locked', `Reach tier ${tier} to claim this reward`);
+      // Phase 3.18.5: Toast instead of blocking Alert
+      toast.info(`Reach tier ${tier} to claim this reward`);
       return;
     }
     
-    // For premium claims, show informational message and route to paywall if needed
+    // For premium claims, route to paywall if needed (non-blocking)
     // Note: Server enforces actual PREMIUM entitlement check
     if (isPremium && !passData.has_premium) {
-      Alert.alert(
-        'Premium Pass Required', 
-        'Upgrade to Premium Pass to claim premium rewards.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'View Premium', onPress: () => goToPaywall({ productKey: 'PREMIUM_SUBSCRIPTION', source: 'battle_pass' }) },
-        ]
-      );
+      toast.premium('Premium required to claim this track.');
+      goToPaywall({ productKey: 'PREMIUM_SUBSCRIPTION', source: 'battle_pass' });
       return;
     }
 
@@ -125,7 +120,7 @@ export default function BattlePassScreen() {
     ));
 
     const rewardData = isPremium ? reward.premium_reward : reward.free_reward;
-    Alert.alert('Claimed!', `+${rewardData.amount} ${rewardData.type.replace('_', ' ')}`);
+    toast.success(`+${rewardData.amount} ${rewardData.type.replace('_', ' ')}`);
   };
 
   const claimAll = () => {
@@ -140,7 +135,7 @@ export default function BattlePassScreen() {
     });
 
     if (claimed === 0) {
-      Alert.alert('Nothing to Claim', 'All available rewards have been claimed');
+      toast.info('All available rewards already claimed');
       return;
     }
 
@@ -150,7 +145,7 @@ export default function BattlePassScreen() {
         : r
     ));
 
-    Alert.alert('Success!', `Claimed ${claimed} rewards!`);
+    toast.success(`Claimed ${claimed} rewards!`);
   };
 
   const getRewardIcon = (type: string) => {

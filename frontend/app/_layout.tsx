@@ -83,7 +83,12 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
     return <MaintenanceScreen />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <OfflineBanner />
+      {children}
+    </>
+  );
 }
 
 export default function Layout() {

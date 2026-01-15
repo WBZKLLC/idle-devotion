@@ -137,6 +137,7 @@ export default function PurchaseButton({
         // 3. Then call verifyAndApplyPurchase(transactionId)
         
         // For now, show placeholder message
+        // ALERT_ALLOWED: purchase_confirm
         Alert.alert(
           'Purchase Flow',
           'This would open the native purchase UI.\n\nTransaction ID would be passed to verifyAndApplyPurchase() on completion.',

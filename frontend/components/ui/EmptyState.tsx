@@ -215,37 +215,8 @@ const styles = StyleSheet.create({
   actionButton: {
     marginTop: 24,
   },
-  primaryButton: {
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 16,
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: '#0A0B10',
-  },
-  secondaryButton: {
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 140, 0.3)',
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: 'rgba(255, 215, 140, 0.92)',
-  },
   secondaryAction: {
-    marginTop: 12,
-    paddingVertical: 8,
-  },
-  secondaryActionText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: 'rgba(255, 215, 140, 0.75)',
+    marginTop: 8,
   },
 });
 

@@ -158,6 +158,9 @@ export default function ProfileScreen() {
         rewards: result.rewards
       });
       
+      // Phase 3.18: Show success toast for emotional cadence
+      toast.success('Code redeemed successfully!', { duration: 3000 });
+      
       // Refresh user data to update currencies
       await fetchUser();
       setCodeInput('');
@@ -166,6 +169,8 @@ export default function ProfileScreen() {
         success: false,
         message: error.response?.data?.detail || 'Failed to redeem code'
       });
+      // Phase 3.18: Show error toast
+      toast.error(error.response?.data?.detail || 'Failed to redeem code');
     } finally {
       setIsRedeeming(false);
     }

@@ -5,7 +5,7 @@
 /**
  * Entitlement status from server
  */
-export type EntitlementStatus = 'owned' | 'not_owned' | 'pending' | 'revoked';
+export type EntitlementStatus = 'owned' | 'not_owned' | 'expired' | 'pending' | 'revoked' | 'grace_period';
 
 /**
  * Known entitlement keys (finite set, type-safe)

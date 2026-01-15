@@ -31,6 +31,9 @@ import COLORS from '../theme/colors';
 import { router } from 'expo-router';
 // Phase 3.18.5: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.19.1: Skeleton + Empty state components
+import { GuildItemSkeleton } from '../components/ui/Skeleton';
+import { NoGuildEmpty } from '../components/ui/EmptyState';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();

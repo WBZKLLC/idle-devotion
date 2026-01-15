@@ -134,7 +134,7 @@ function checkFile(filePath) {
 }
 
 function main() {
-  console.log('🔒 Checking purchase flow patterns...\\n');
+  console.log('🔒 Checking purchase flow patterns...\n');
   
   const allFiles = [
     ...getAllTsxFiles(APP_DIR),
@@ -152,16 +152,16 @@ function main() {
   
   if (allViolations.length === 0) {
     console.log('✅ No purchase flow violations found.');
-    console.log('   All screens use PurchaseButton and canonical products.\\n');
+    console.log('   All screens use PurchaseButton and canonical products.\n');
     process.exit(0);
   }
   
-  console.log('❌ FORBIDDEN: Purchase flow drift detected!\\n');
+  console.log('❌ FORBIDDEN: Purchase flow drift detected!\n');
   console.log('Rules:');
   console.log('  - Use PRODUCTS from lib/entitlements/products.ts');
   console.log('  - Use PurchaseButton component for all purchases');
   console.log('  - Use usePurchaseStore for purchase state (not ad-hoc flags)');
-  console.log('  - Only purchase-flow.ts may call verifyPurchase()\\n');
+  console.log('  - Only purchase-flow.ts may call verifyPurchase()\n');
   
   for (const v of allViolations) {
     console.log(`  [${v.type}] ${v.file}:${v.line}`);
@@ -169,7 +169,7 @@ function main() {
     console.log('');
   }
   
-  console.log(`\\nTotal violations: ${allViolations.length}`);
+  console.log(`\nTotal violations: ${allViolations.length}`);
   process.exit(1);
 }
 

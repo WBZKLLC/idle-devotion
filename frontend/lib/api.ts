@@ -1309,3 +1309,44 @@ export async function claimIdle(username: string) {
   const res = await api.post(`/idle/claim`, null, { params: { username: u } });
   return res.data;
 }
+
+// ─────────────────────────────────────────────────────────────
+// ENTITLEMENTS SNAPSHOT
+// GET /api/entitlements/snapshot
+// Server-authoritative entitlement state
+// ─────────────────────────────────────────────────────────────
+
+import type { EntitlementsSnapshot } from './entitlements/types';
+
+export async function getEntitlementsSnapshot(): Promise<EntitlementsSnapshot> {
+  const res = await api.get('/entitlements/snapshot');
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PURCHASE VERIFICATION WITH IDEMPOTENCY
+// POST /api/purchases/verify
+// Returns updated entitlements snapshot on success
+// ─────────────────────────────────────────────────────────────
+
+export interface PurchaseVerifyRequest {
+  product_id: string;
+  entitlement_key: string;
+  idempotency_key: string;
+  platform: 'ios' | 'android' | 'web';
+  transaction_id?: string;
+  receipt_data?: string;
+}
+
+export interface PurchaseVerifyResponse {
+  success: boolean;
+  entitlements_snapshot: EntitlementsSnapshot;
+  message?: string;
+}
+
+export async function verifyPurchase(
+  request: PurchaseVerifyRequest
+): Promise<PurchaseVerifyResponse> {
+  const res = await api.post('/purchases/verify', request);
+  return res.data;
+}

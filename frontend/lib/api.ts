@@ -1272,21 +1272,9 @@ export async function fetchAllHeroesCatalog() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PURCHASE VERIFY (RevenueCatService.ts)
+// PURCHASE VERIFY (Legacy - deprecated, use verifyPurchase from below)
 // ─────────────────────────────────────────────────────────────
-
-export async function verifyPurchase(payload: {
-  username: string;
-  productId: string;
-  transactionId: string;
-  platform?: 'ios' | 'android' | 'web';
-  receipt?: string;
-  [k: string]: any;
-}) {
-  // Keep wire shape flexible for RevenueCat payload evolution
-  const res = await api.post(`/purchase/verify`, payload);
-  return res.data;
-}
+// Removed: duplicate function - see PURCHASE VERIFICATION WITH IDEMPOTENCY below
 
 // ─────────────────────────────────────────────────────────────
 // REMOTE FEATURE FLAGS

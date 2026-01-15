@@ -46,12 +46,17 @@ function MaintenanceScreen() {
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const hydrateAuth = useGameStore(s => s.hydrateAuth);
   const registerForceLogout = useGameStore(s => s.registerForceLogout);
+  const user = useGameStore(s => s.user);
+  const fetchUser = useGameStore(s => s.fetchUser);
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
   const hydrateEntitlements = useEntitlementStore(s => s.hydrateEntitlements);
   const initNetworkListener = useNetworkStore(s => s.initNetworkListener);
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
+    // Track app start
+    track(Events.APP_START);
+    
     const restore = async () => {
       // Register force logout callback with API layer FIRST
       // This ensures 401 responses trigger proper logout
@@ -76,6 +81,11 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = initNetworkListener();
     return unsubscribe;
   }, [initNetworkListener]);
+
+  // Update Sentry user context when user changes
+  useEffect(() => {
+    sentrySetUser(user ? { username: user.username } : undefined);
+  }, [user?.username]);
 
   // Show loading while restoring session
   if (isRestoring) {

@@ -77,20 +77,23 @@ export function hasEntitlement(key: string): boolean {
 }
 
 /**
- * Require entitlement or show paywall
+ * Require entitlement or navigate to paywall
  * Use this for guarding premium actions/navigation
  * 
  * Phase 3.10: Triggers background freshness check before evaluating
  * Phase 3.11: Uses canonical navigation helper for paywall routing
  * Phase 3.13: Emits telemetry for gate outcomes
+ * Phase 3.18.4: No blocking alert - navigates to paywall directly, optional info toast
  * 
  * @returns true if entitled, false if blocked (and redirected to paywall)
  */
 export function requireEntitlement(
   key: string,
   options?: {
+    /** @deprecated - no longer used (alerts removed) */
     alertTitle?: string;
-    alertMessage?: string;
+    /** Optional toast message when denied (non-blocking) */
+    toastMessage?: string;
     showPaywall?: boolean;
     source?: PaywallSource;
   }
@@ -99,10 +102,9 @@ export function requireEntitlement(
   triggerFreshnessCheck();
   
   const {
-    alertTitle = 'Premium Feature',
-    alertMessage = 'This feature requires a premium purchase.',
+    toastMessage,
     showPaywall = true,
-    source = 'gating_alert',
+    source = 'gating_check',
   } = options ?? {};
   
   const isEntitled = hasEntitlement(key);
@@ -116,22 +118,15 @@ export function requireEntitlement(
   // Phase 3.13: Track denied (always)
   trackGateDenied(key, source);
   
-  Alert.alert(
-    alertTitle,
-    alertMessage,
-    showPaywall
-      ? [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'View Store', 
-            // Phase 3.11: Use canonical navigation
-            // NOTE: No productKey = routes to general paywall hub (documented policy)
-            // This is intentional - generic gating shows all purchase options
-            onPress: () => goToPaywall({ source }) 
-          },
-        ]
-      : [{ text: 'OK' }]
-  );
+  // Phase 3.18.4: Optional toast for context (non-blocking)
+  if (toastMessage) {
+    toast.info(toastMessage);
+  }
+  
+  // Navigate to paywall directly (no blocking alert)
+  if (showPaywall) {
+    goToPaywall({ source });
+  }
   
   return false;
 }

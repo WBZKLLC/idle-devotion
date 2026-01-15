@@ -356,6 +356,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     await clearAuthData();
     // Clear in-memory token
     apiSetAuthToken(null);
+    // Clear Sentry user context
+    sentrySetUser(undefined);
     // Clear store state
     set({ user: null, userHeroes: [], userHeroesById: {}, allHeroes: [], authToken: null, needsPassword: false });
     dlog('[logout] User logged out, auth and storage cleared, epoch bumped');

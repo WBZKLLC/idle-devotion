@@ -170,8 +170,8 @@ api.interceptors.response.use(
         if (!_isLoggingOut) {
           _isLoggingOut = true;
           
-          // Show global UX once; mark handled ONLY if we actually show it
-          _showErrorAlertOnce('Session Expired', 'Please log in again.', error);
+          // Phase 3.18.6: Toast for session expiry (non-blocking)
+          _showErrorToastOnce('info', 'Session expired. Please log in again.', error);
           
           // Track force logout event
           track(Events.FORCE_LOGOUT_401);
@@ -195,36 +195,36 @@ api.interceptors.response.use(
         
       case 403:
         // Forbidden - account frozen, permission denied, etc.
-        _showErrorAlertOnce('Action Blocked', detail, error);
+        _showErrorToastOnce('error', detail, error);
         break;
         
       case 429:
         // Rate limited
         const retryMsg = retryAfter 
           ? `Please wait ${retryAfter} seconds and try again.`
-          : 'Please slow down and try again.';
-        _showErrorAlertOnce('Too Many Requests', retryMsg, error);
+          : 'Too many requests. Please slow down.';
+        _showErrorToastOnce('warning', retryMsg, error);
         break;
         
       case 400:
       case 422:
         // Validation / bad request - show server detail
-        _showErrorAlertOnce('Request Error', detail, error);
+        _showErrorToastOnce('warning', detail, error);
         break;
         
       case 404:
         // Not found - only show if it's a user-facing request
         // (Some 404s are expected during data loading)
-        _showErrorAlertOnce('Not Found', detail, error);
+        _showErrorToastOnce('error', detail, error);
         break;
         
       default:
         if (status && status >= 500) {
           // Server error
-          _showErrorAlertOnce('Server Error', 'Something went wrong. Please try again later.', error);
+          _showErrorToastOnce('error', 'Something went wrong. Please try again later.', error);
         } else if (!status) {
           // Network error (no response)
-          _showErrorAlertOnce('Network Error', 'Please check your connection and try again.', error);
+          _showErrorToastOnce('error', 'Please check your connection and try again.', error);
         }
         // Other 4xx errors are still marked as handled but may not show alert
         break;

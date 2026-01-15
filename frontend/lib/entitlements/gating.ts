@@ -1,18 +1,37 @@
 // /app/frontend/lib/entitlements/gating.ts
 // Entitlement gating helpers - enforce premium access at UI/navigation level
 // Server-side enforcement is separate (backend must also reject)
+// 
+// NOTE: This file imports entitlementStore dynamically to avoid circular deps
 
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
-import { useEntitlementStore } from '../../stores/entitlementStore';
-import { EntitlementKeys } from './types';
+import { 
+  ENTITLEMENT_KEYS, 
+  PREMIUM_CINEMATIC_OWNED_PREFIX,
+  isEntitlementOwned,
+  type ServerEntitlement,
+} from './types';
+
+// Dynamic import to avoid circular dependency
+let _entitlementStore: any = null;
+function getEntitlementStore() {
+  if (!_entitlementStore) {
+    _entitlementStore = require('../../stores/entitlementStore').useEntitlementStore;
+  }
+  return _entitlementStore;
+}
 
 /**
- * Check if user has a specific entitlement
- * Use this for simple boolean checks in UI
+ * Check if user has a specific entitlement (owned + not expired)
+ * Uses server_time for expiry checks
  */
 export function hasEntitlement(key: string): boolean {
-  return useEntitlementStore.getState().hasEntitlement(key);
+  const store = getEntitlementStore();
+  const state = store.getState();
+  const entitlement = state.entitlementsByKey[key];
+  const serverTime = state.snapshot?.server_time || new Date().toISOString();
+  return isEntitlementOwned(entitlement, serverTime);
 }
 
 /**
@@ -62,23 +81,27 @@ export function requireEntitlement(
 
 /**
  * Hook version of hasEntitlement for reactive components
+ * Must be called at top level of component
  */
 export function useHasEntitlement(key: string): boolean {
-  return useEntitlementStore(s => s.hasEntitlement(key));
+  const store = getEntitlementStore();
+  const entitlement = store((s: any) => s.entitlementsByKey[key]);
+  const serverTime = store((s: any) => s.snapshot?.server_time) || new Date().toISOString();
+  return isEntitlementOwned(entitlement, serverTime);
 }
 
 /**
  * Check premium cinematics pack ownership
  */
 export function hasPremiumCinematicsPack(): boolean {
-  return hasEntitlement(EntitlementKeys.PREMIUM_CINEMATICS_PACK);
+  return hasEntitlement(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
 }
 
 /**
  * Check specific hero cinematic ownership
  */
 export function hasHeroCinematic(heroId: string): boolean {
-  return hasEntitlement(EntitlementKeys.premiumCinematicOwned(heroId));
+  return hasEntitlement(`${PREMIUM_CINEMATIC_OWNED_PREFIX}${heroId}`);
 }
 
 /**
@@ -98,7 +121,7 @@ export function requireCinematicAccess(heroId: string): boolean {
   }
   
   return requireEntitlement(
-    EntitlementKeys.PREMIUM_CINEMATICS_PACK,
+    ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK,
     {
       alertTitle: 'Premium Cinematic',
       alertMessage: 'Unlock this cinematic with the Premium Cinematics Pack or purchase it individually.',
@@ -110,5 +133,12 @@ export function requireCinematicAccess(heroId: string): boolean {
  * Check Pro subscription status
  */
 export function hasProSubscription(): boolean {
-  return hasEntitlement(EntitlementKeys.PRO_SUBSCRIPTION);
+  return hasEntitlement(ENTITLEMENT_KEYS.PREMIUM);
+}
+
+/**
+ * Check No Ads status
+ */
+export function hasNoAds(): boolean {
+  return hasEntitlement(ENTITLEMENT_KEYS.NO_ADS);
 }

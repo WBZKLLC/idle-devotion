@@ -9,6 +9,15 @@ import { useEntitlementStore } from '../stores/entitlementStore';
 import { useNetworkStore } from '../stores/networkStore';
 import { isFeatureEnabled } from '../lib/features';
 import { OfflineBanner } from '../components/OfflineBanner';
+import { AppErrorBoundary } from '../components/AppErrorBoundary';
+import { initSentry, sentrySetUser } from '../lib/telemetry/sentry';
+import { track, Events } from '../lib/telemetry/events';
+import { validateConfig } from '../lib/config/validate';
+
+// Initialize on module load (earliest possible)
+validateConfig();
+initSentry();
+
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 

@@ -100,6 +100,12 @@ SUPER_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("SUPER_ADMIN_BOOTSTRAP_TOKEN", None
 # Server dev mode - allows simulated purchases (MUST be false in production)
 SERVER_DEV_MODE = os.environ.get("SERVER_DEV_MODE", "true").lower() == "true"
 
+# Log SERVER_DEV_MODE at startup (prevents accidental production misconfiguration)
+if SERVER_DEV_MODE:
+    print("⚠️  SERVER_DEV_MODE=TRUE (simulated purchases ENABLED - do not use in production)")
+else:
+    print("🔒 SERVER_DEV_MODE=FALSE (simulated purchases DISABLED)")
+
 # SECURITY: Reserved usernames that can NEVER be registered via normal registration
 # "adam" is ALWAYS reserved - this is hardcoded and cannot be changed
 RESERVED_USERNAMES_CANON = frozenset({SUPER_ADMIN_CANON})

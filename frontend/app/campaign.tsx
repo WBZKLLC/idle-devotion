@@ -220,7 +220,9 @@ export default function CampaignScreen() {
       await loadChapterStages(selectedChapter);
 
     } catch (error: any) {
-      Alert.alert('Battle Failed', error?.message || 'Unable to complete stage');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Battle Failed', error?.message || 'Unable to complete stage');
+      }
       setShowBattleModal(false);
     } finally {
       setIsBattling(false);

@@ -175,7 +175,9 @@ export default function AdminPanelScreen() {
       setShowMuteModal(false);
       searchUsers(); // Refresh
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to mute user');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to mute user');
+      }
     } finally {
       setProcessing(false);
     }

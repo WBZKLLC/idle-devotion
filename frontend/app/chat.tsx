@@ -245,7 +245,7 @@ export default function ChatScreen() {
 
   const handleReportMessage = (msg: ChatMessage) => {
     if (msg.sender_username === user?.username) {
-      Alert.alert('Error', 'You cannot report your own message');
+      toast.warning('You cannot report your own message');
       return;
     }
     setReportTarget(msg);
@@ -256,7 +256,7 @@ export default function ChatScreen() {
 
   const submitReport = async () => {
     if (!user || !reportTarget || !selectedReason) {
-      Alert.alert('Error', 'Please select a reason');
+      toast.warning('Please select a reason');
       return;
     }
     
@@ -270,18 +270,18 @@ export default function ChatScreen() {
         details: reportDetails.trim() || undefined,
       });
       
-      Alert.alert('Report Submitted', 'Thank you for helping keep our community safe. We will review this report.');
+      toast.success('Report submitted. Thank you for helping keep our community safe.');
       setShowReportModal(false);
       setReportTarget(null);
     } catch (error: any) {
       const status = error.response?.status;
       if (status === 401) {
         if (!isErrorHandledGlobally(error)) {
-          Alert.alert('Authentication Required', 'Please log in to report messages');
+          toast.warning('Please log in to report messages');
         }
       } else {
         if (!isErrorHandledGlobally(error)) {
-          Alert.alert('Error', error.response?.data?.detail || 'Failed to submit report');
+          toast.error(error.response?.data?.detail || 'Failed to submit report');
         }
       }
     } finally {

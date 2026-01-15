@@ -160,10 +160,9 @@ class BackendTester:
             return False
             
         try:
-            url = f"{BACKEND_URL}/gacha/pull"
+            url = f"{BACKEND_URL}/gacha/pull?username={TEST_USERNAME}"
             headers = {"Authorization": f"Bearer {self.auth_token}"}
             payload = {
-                "username": TEST_USERNAME,
                 "currency_type": "coins",
                 "pull_type": "single"
             }

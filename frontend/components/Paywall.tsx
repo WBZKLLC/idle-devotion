@@ -322,6 +322,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold', 
     color: COLORS.navy.darkest 
   },
+  
+  // Phase 3.18.1: "Not now" exit affordance styles
+  notNowButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    alignItems: 'center',
+  },
+  notNowPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.99 }],
+  },
+  notNowText: {
+    color: 'rgba(255,255,255,0.82)',
+    fontWeight: '700',
+    fontSize: 14,
+  },
 });
 
 export default Paywall;

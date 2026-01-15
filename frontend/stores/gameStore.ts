@@ -506,7 +506,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   claimIdleRewards: async () => {
-    const { user, fetchUser } = get();
+    const { user, fetchUser, authEpoch } = get();
+    const epochAtStart = authEpoch;
     if (!user) throw new Error('No user found');
     
     const result = await safeMutation(
@@ -518,6 +519,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     );
     
+    // Epoch check: ignore late response if user logged out
+    if (get().authEpoch !== epochAtStart) return null;
+    
     if (!result.ok) {
       throw new Error(result.detail || 'Failed to claim idle rewards');
     }
@@ -526,30 +530,45 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   fetchCR: async () => {
-    const { user } = get();
+    const { user, authEpoch } = get();
+    const epochAtStart = authEpoch;
     if (!user) throw new Error('No user found');
     
     try {
       const data = await getUserCR(user.username);
+      // Epoch check: ignore late response if user logged out
+      if (get().authEpoch !== epochAtStart) return { cr: 0, hero_count: 0 };
       return data;
     } catch (error) {
-      console.error('Failed to fetch CR:', error);
+      if (__DEV__) console.error('Failed to fetch CR:', error);
       return { cr: 0, hero_count: 0 };
     }
   },
 
   updateProfilePicture: async (heroId: string) => {
-    const { user } = get();
+    const { user, authEpoch } = get();
+    const epochAtStart = authEpoch;
     if (!user) throw new Error('No user found');
     
     set({ isLoading: true });
     try {
       await setProfilePicture(user.username, heroId);
       
+      // Epoch check: don't refresh if user logged out
+      if (get().authEpoch !== epochAtStart) {
+        set({ isLoading: false });
+        return;
+      }
+      
       // Refresh user data
       await get().fetchUser();
       set({ isLoading: false });
     } catch (error: any) {
+      // Epoch check before setting error state
+      if (get().authEpoch !== epochAtStart) {
+        set({ isLoading: false });
+        return;
+      }
       set({ error: error.response?.data?.detail || 'Failed to update profile picture', isLoading: false });
       throw error;
     }

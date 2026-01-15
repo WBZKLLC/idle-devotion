@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Image } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Image, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
 // Phase 3.18.3: Toast for summon feedback
@@ -9,6 +10,9 @@ import { toast } from '../components/ui/Toast';
 // Phase 3.19.1: Skeleton + Empty state components
 import { BannerSkeleton } from '../components/ui/Skeleton';
 import { NoBannersEmpty } from '../components/ui/EmptyState';
+// Phase 3.19.2: Canonical button components
+import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { SecondaryButton } from '../components/ui/SecondaryButton';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { pullGacha } from '../lib/api';

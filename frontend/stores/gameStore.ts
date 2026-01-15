@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
 
+// Debug logging helpers - only log in development
+const dlog = (...args: any[]) => { if (__DEV__) console.log(...args); };
+
 // Auth storage helpers (canonical source for token persistence)
 import { 
   saveAuthData, 

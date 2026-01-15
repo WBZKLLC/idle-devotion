@@ -123,6 +123,7 @@ export default function StoreScreen() {
   };
 
   const purchaseCrystals = async (packageId: string, packageName: string, price: number) => {
+    // KEEP as Alert - this is a purchase confirmation (user decision required)
     Alert.alert(
       'Purchase Crystals',
       `Purchase ${packageName} for $${price.toFixed(2)}?\n\n(This is a simulation - no real payment)`,
@@ -134,17 +135,16 @@ export default function StoreScreen() {
             try {
               // Use centralized API wrapper (critical for monetization)
               const result = await apiPurchaseCrystals(user?.username || '', packageId);
-              Alert.alert(
-                'Purchase Successful!',
-                `You received ${result.crystals_received} crystals!\n` +
-                (result.first_purchase_bonus ? `First Purchase Bonus: +${result.first_purchase_bonus}!\n` : '') +
-                `\nTotal Crystals: ${result.new_crystal_total}`
+              // Phase 3.18.4: Success toast instead of blocking alert
+              toast.premium(
+                `+${result.crystals_received} crystals!` +
+                (result.first_purchase_bonus ? ` (Bonus: +${result.first_purchase_bonus})` : '')
               );
               fetchUser();
               loadStoreData();
             } catch (error: any) {
               if (!isErrorHandledGlobally(error)) {
-                Alert.alert('Error', error?.message || 'Purchase failed');
+                toast.error(error?.message || 'Purchase failed');
               }
             }
           }
@@ -156,10 +156,11 @@ export default function StoreScreen() {
   const purchaseDivinePackage = async (packageId: string, packageName: string, price: number) => {
     const purchaseInfo = divinePackages?.user_purchases?.[packageId];
     if (purchaseInfo?.remaining <= 0) {
-      Alert.alert('Limit Reached', `You've purchased the maximum of 3 ${packageName} packages this month.`);
+      toast.warning(`You've purchased the maximum of 3 ${packageName} packages this month.`);
       return;
     }
     
+    // KEEP as Alert - this is a purchase confirmation (user decision required)
     Alert.alert(
       'Purchase Divine Package',
       `Purchase ${packageName} for $${price.toFixed(2)}?\n\n` +
@@ -174,18 +175,15 @@ export default function StoreScreen() {
             try {
               // Use centralized API wrapper (critical for monetization)
               const result = await apiPurchaseDivine(user?.username || '', packageId);
-              Alert.alert(
-                'Divine Package Purchased!',
-                `Divine Essence: +${result.divine_essence_received}\n` +
-                `Crystals: +${result.crystals_received}\n` +
-                `New VIP Level: ${result.new_vip_level}\n\n` +
-                `${result.purchases_remaining} purchases remaining this month`
+              // Phase 3.18.4: Success toast
+              toast.premium(
+                `Divine: +${result.divine_essence_received}, Crystals: +${result.crystals_received}`
               );
               fetchUser();
               loadStoreData();
             } catch (error: any) {
               if (!isErrorHandledGlobally(error)) {
-                Alert.alert('Error', error?.message || 'Purchase failed');
+                toast.error(error?.message || 'Purchase failed');
               }
             }
           }

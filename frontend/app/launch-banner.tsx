@@ -138,7 +138,7 @@ export default function LaunchBannerScreen() {
     const cost = multi ? (bannerData?.gems_cost_multi || 2700) : (bannerData?.gems_cost_single || 300);
     
     if ((user.gems || 0) < cost) {
-      Alert.alert('Not Enough Gems', `You need ${cost} gems for this pull. You have ${user.gems || 0}.`);
+      toast.warning(`You need ${cost} gems. You have ${user.gems || 0}.`);
       return;
     }
     
@@ -157,7 +157,7 @@ export default function LaunchBannerScreen() {
       await fetchUser();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Pull failed');
+        toast.error(error.response?.data?.detail || 'Pull failed');
       }
     } finally {
       setPulling(false);

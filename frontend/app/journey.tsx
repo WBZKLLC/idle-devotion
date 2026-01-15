@@ -132,11 +132,11 @@ export default function JourneyScreen() {
       setJourneyDays(prev => prev.map(d => d.day === day ? { ...d, claimed: true } : d));
       
       const rewardText = dayData.rewards.map(r => `${r.amount} ${r.type.replace('_', ' ')}`).join(', ');
-      Alert.alert('🎁 Reward Claimed!', `Day ${day}: ${rewardText}`);
+      toast.success(`Day ${day}: ${rewardText}`);
       await fetchUser();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', 'Failed to claim reward');
+        toast.error('Failed to claim reward');
       }
     }
   };
@@ -153,11 +153,11 @@ export default function JourneyScreen() {
       setMilestones(prev => prev.map(m => m.id === milestoneId ? { ...m, claimed: true } : m));
       
       const rewardText = milestone.rewards.map(r => `${r.amount} ${r.type.replace('_', ' ')}`).join(', ');
-      Alert.alert('🏆 Milestone Complete!', `${milestone.name}: ${rewardText}`);
+      toast.success(`${milestone.name}: ${rewardText}`);
       await fetchUser();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', 'Failed to claim milestone');
+        toast.error('Failed to claim milestone');
       }
     }
   };

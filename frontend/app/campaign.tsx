@@ -170,7 +170,7 @@ export default function CampaignScreen() {
     } catch (error: any) {
       console.error('Error loading chapters:', error);
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', 'Failed to load campaign data');
+        toast.error('Failed to load campaign data');
       }
     } finally {
       setLoading(false);
@@ -189,7 +189,7 @@ export default function CampaignScreen() {
     } catch (error: any) {
       console.error('Error loading stages:', error);
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', 'Failed to load chapter stages');
+        toast.error('Failed to load chapter stages');
       }
     } finally {
       setLoading(false);
@@ -223,7 +223,7 @@ export default function CampaignScreen() {
 
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Battle Failed', error?.message || 'Unable to complete stage');
+        toast.error(error?.message || 'Unable to complete stage');
       }
       setShowBattleModal(false);
     } finally {

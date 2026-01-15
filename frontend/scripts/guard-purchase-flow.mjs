@@ -230,7 +230,8 @@ function main() {
   console.log('  - Use PRODUCTS from lib/entitlements/products.ts');
   console.log('  - Use PurchaseButton component for all purchases');
   console.log('  - Use usePurchaseStore for purchase state (not ad-hoc flags)');
-  console.log('  - Only purchase-flow.ts may call verifyPurchase()\n');
+  console.log('  - Only purchase-flow.ts may call verifyPurchase()');
+  console.log('  - Use goToPaywall() from lib/entitlements/navigation.ts for paywall navigation\n');
   
   for (const v of allViolations) {
     console.log(`  [${v.type}] ${v.file}:${v.line}`);

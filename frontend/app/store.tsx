@@ -95,7 +95,7 @@ export default function StoreScreen() {
   //   }
   // };
   const handleShowPaywall = () => {
-    Alert.alert('Coming Soon', 'Pro subscriptions will be available in the full release!');
+    toast.info('Pro subscriptions will be available in the full release!');
   };
 
   const loadStoreData = async () => {
@@ -123,7 +123,7 @@ export default function StoreScreen() {
   };
 
   const purchaseCrystals = async (packageId: string, packageName: string, price: number) => {
-    // KEEP as Alert - this is a purchase confirmation (user decision required)
+    // ALERT_ALLOWED: purchase_confirm
     Alert.alert(
       'Purchase Crystals',
       `Purchase ${packageName} for $${price.toFixed(2)}?\n\n(This is a simulation - no real payment)`,
@@ -160,7 +160,7 @@ export default function StoreScreen() {
       return;
     }
     
-    // KEEP as Alert - this is a purchase confirmation (user decision required)
+    // ALERT_ALLOWED: purchase_confirm
     Alert.alert(
       'Purchase Divine Package',
       `Purchase ${packageName} for $${price.toFixed(2)}?\n\n` +

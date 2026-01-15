@@ -29,6 +29,7 @@ class BackendTester:
         self.session = requests.Session()
         self.auth_token = None
         self.test_results = []
+        self.test_user_created = False
         
     def log_test(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
@@ -42,6 +43,39 @@ class BackendTester:
             "success": success,
             "details": details
         })
+        
+    def create_test_user(self) -> bool:
+        """Create a test user for authentication testing"""
+        try:
+            url = f"{BACKEND_URL}/user/register"
+            payload = {
+                "username": TEST_USERNAME,
+                "password": TEST_PASSWORD
+            }
+            
+            response = self.session.post(url, json=payload, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "token" in data:
+                    self.test_user_created = True
+                    self.log_test("User Creation", True, f"Test user {TEST_USERNAME} created successfully")
+                    return True
+                else:
+                    self.log_test("User Creation", False, "No token in registration response")
+                    return False
+            elif response.status_code == 400 and "already exists" in response.text.lower():
+                # User already exists, that's fine for testing
+                self.test_user_created = True
+                self.log_test("User Creation", True, f"Test user {TEST_USERNAME} already exists")
+                return True
+            else:
+                self.log_test("User Creation", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("User Creation", False, f"Exception: {str(e)}")
+            return False
         
     def test_authentication_login(self) -> bool:
         """Test 1: POST /api/auth/login - verify login returns valid JWT token"""

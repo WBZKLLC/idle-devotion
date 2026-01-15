@@ -160,6 +160,8 @@ function normalizeSource(source: PaywallSource): PaywallSource {
  * POLICY: If productKey is omitted, routes to general paywall hub.
  * This is deterministic and documented - Paywall component shows all products.
  * 
+ * TELEMETRY: Emits 'paywall_opened' event (with 1.5s dedupe window)
+ * 
  * @example
  * // From cinematic gate (specific product)
  * goToPaywall({ productKey: 'PREMIUM_CINEMATICS_PACK', source: 'cinematic_gate', heroId: hero.id });
@@ -180,6 +182,17 @@ export function goToPaywall(opts: GoToPaywallOptions): void {
   const cleanReturnTo = sanitizeReturnTo(returnTo);
   
   dlog('goToPaywall:', { productKey, source, heroId, returnTo: cleanReturnTo });
+  
+  // Phase 3.13: Emit telemetry (with dedupe to prevent spam)
+  if (shouldEmitPaywallEvent()) {
+    track(Events.PAYWALL_OPENED, {
+      source,
+      productKey: productKey ?? null,
+      heroId: heroId ?? null,
+      returnTo: cleanReturnTo ?? null,
+      isHub: !productKey,  // True if going to general hub (no specific product)
+    });
+  }
   
   // Build query params
   const params = new URLSearchParams();
@@ -212,19 +225,25 @@ export function goToPaywall(opts: GoToPaywallOptions): void {
     ? `${PAYWALL_ROUTE}?${queryString}` 
     : PAYWALL_ROUTE;
   
-  // TODO: Add telemetry/analytics event here
-  // track(Events.PAYWALL_VIEWED, { productKey, source, heroId });
-  
   router.push(route as any);
 }
 
 /**
  * Navigate to the general store/shop screen
  * Use this for browsing, not for specific premium denial flows
+ * 
+ * TELEMETRY: Emits 'store_opened' event (with 1.5s dedupe window)
  */
 export function goToStore(source?: PaywallSource): void {
   const normalizedSource = source ? normalizeSource(source) : 'store';
   dlog('goToStore:', { source: normalizedSource });
+  
+  // Phase 3.13: Emit telemetry (with dedupe to prevent spam)
+  if (shouldEmitStoreEvent()) {
+    track(Events.STORE_OPENED, {
+      source: normalizedSource,
+    });
+  }
   
   router.push(`${STORE_ROUTE}?source=${normalizedSource}` as any);
 }

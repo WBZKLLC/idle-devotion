@@ -175,8 +175,8 @@ class BackendTester:
                 
             data = response.json()
             
-            # Verify response structure
-            required_fields = ["heroes", "user_resources"]
+            # Verify response structure - check for key fields that indicate gacha pull worked
+            required_fields = ["heroes", "pulled_heroes_count", "new_pity_counter"]
             for field in required_fields:
                 if field not in data:
                     self.log_test("Gacha Endpoint", False, f"Missing field in response: {field}")
@@ -187,13 +187,16 @@ class BackendTester:
                 self.log_test("Gacha Endpoint", False, "Heroes field is not an array")
                 return False
                 
-            # Verify user resources updated
-            if not isinstance(data["user_resources"], dict):
-                self.log_test("Gacha Endpoint", False, "User resources field is not an object")
-                return False
-                
+            # Verify currency spent fields exist
+            currency_fields = ["crystals_spent", "coins_spent", "divine_spent"]
+            for field in currency_fields:
+                if field not in data:
+                    self.log_test("Gacha Endpoint", False, f"Missing currency field: {field}")
+                    return False
+                    
             heroes_count = len(data["heroes"])
-            self.log_test("Gacha Endpoint", True, f"Gacha pull successful - {heroes_count} heroes returned")
+            coins_spent = data.get("coins_spent", 0)
+            self.log_test("Gacha Endpoint", True, f"Gacha pull successful - {heroes_count} heroes returned, {coins_spent} coins spent")
             return True
             
         except Exception as e:

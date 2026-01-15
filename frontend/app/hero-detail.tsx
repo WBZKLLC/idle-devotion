@@ -807,6 +807,7 @@ const styles = StyleSheet.create({
   
   // Error
   errorText: { color: COLORS.cream.pure, fontSize: 18, fontWeight: '700' },
+  errorSubtext: { color: 'rgba(255, 255, 255, 0.5)', fontSize: 13, fontWeight: '500', textAlign: 'center', marginTop: 8, maxWidth: 260 },
   backBtn: { 
     backgroundColor: 'rgba(255, 215, 140, 0.92)', 
     paddingHorizontal: 24, 

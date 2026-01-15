@@ -586,7 +586,7 @@ export default function HomeScreen() {
                 <Text style={[styles.quickLinkText, { color: COLORS.cream.pure }]}>Gear</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickLink} onPress={() => router.push('/store')}>
+            <TouchableOpacity style={styles.quickLink} onPress={() => goToStore('store')}>
               <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.quickLinkGradient}>
                 <Ionicons name="cart" size={22} color={COLORS.gold.light} />
                 <Text style={styles.quickLinkText}>Store</Text>

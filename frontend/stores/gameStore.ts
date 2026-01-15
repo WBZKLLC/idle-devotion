@@ -362,6 +362,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   logout: async () => {
     // Bump epoch FIRST to invalidate any in-flight requests
     get().bumpAuthEpoch();
+    // Clear entitlements (bumps its own epoch)
+    getClearEntitlements()();
     // Clear persisted storage
     await clearAuthData();
     // Clear in-memory token

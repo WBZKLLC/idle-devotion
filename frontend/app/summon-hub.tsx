@@ -158,6 +158,11 @@ export default function SummonHubScreen() {
       toast.warning(`You need ${cost.toLocaleString()} ${currencyName}`);
       return; 
     }
+    
+    // Phase 3.19.3: Track pity before pull for recap
+    setPityBefore(getPityCounter());
+    setLastPullType(pullType);
+    
     setIsLoading(true);
     try {
       // Use centralized API wrapper

@@ -72,7 +72,7 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
   // Initialize RevenueCat SDK
   initialize: async () => {
     if (get().isInitialized) {
-      console.log('[RevenueCat] Already initialized');
+      dlog('[RevenueCat] Already initialized');
       return;
     }
 
@@ -81,14 +81,14 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
     try {
       // Check if we're on a supported platform
       if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
-        console.log('[RevenueCat] Platform not supported:', Platform.OS);
+        dlog('[RevenueCat] Platform not supported:', Platform.OS);
         set({ isInitialized: true, isLoading: false });
         return;
       }
 
       // Check if Purchases is available (native module loaded)
       if (!Purchases || typeof Purchases.configure !== 'function') {
-        console.log('[RevenueCat] Native module not available - running in development/web mode');
+        dlog('[RevenueCat] Native module not available - running in development/web mode');
         set({ isInitialized: true, isLoading: false });
         return;
       }
@@ -97,16 +97,16 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
       try {
         Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
       } catch (e) {
-        console.log('[RevenueCat] Could not set log level:', e);
+        dlog('[RevenueCat] Could not set log level:', e);
       }
 
       // Configure RevenueCat
       await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
-      console.log('[RevenueCat] Configured successfully');
+      dlog('[RevenueCat] Configured successfully');
 
       // Listen for customer info updates
       Purchases.addCustomerInfoUpdateListener((customerInfo) => {
-        console.log('[RevenueCat] Customer info updated');
+        dlog('[RevenueCat] Customer info updated');
         const isPro = typeof customerInfo.entitlements.active[PRO_ENTITLEMENT_ID] !== 'undefined';
         set({ customerInfo, isPro });
       });
@@ -129,9 +129,9 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
         packages,
       });
 
-      console.log('[RevenueCat] Initialization complete');
-      console.log('[RevenueCat] Pro status:', isPro);
-      console.log('[RevenueCat] Available packages:', packages.length);
+      dlog('[RevenueCat] Initialization complete');
+      dlog('[RevenueCat] Pro status:', isPro);
+      dlog('[RevenueCat] Available packages:', packages.length);
     } catch (error: any) {
       console.error('[RevenueCat] Initialization error:', error);
       set({
@@ -170,7 +170,7 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
         packages,
       });
 
-      console.log('[RevenueCat] Offerings loaded:', offerings);
+      dlog('[RevenueCat] Offerings loaded:', offerings);
     } catch (error: any) {
       console.error('[RevenueCat] Error getting offerings:', error);
       set({
@@ -194,12 +194,12 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
         isPro,
       });
 
-      console.log('[RevenueCat] Purchase successful, Pro status:', isPro);
+      dlog('[RevenueCat] Purchase successful, Pro status:', isPro);
       return isPro;
     } catch (error: any) {
       // Handle user cancellation gracefully
       if (error.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
-        console.log('[RevenueCat] Purchase cancelled by user');
+        dlog('[RevenueCat] Purchase cancelled by user');
         set({ isLoading: false });
         return false;
       }
@@ -227,7 +227,7 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
         isPro,
       });
 
-      console.log('[RevenueCat] Restore successful, Pro status:', isPro);
+      dlog('[RevenueCat] Restore successful, Pro status:', isPro);
       return isPro;
     } catch (error: any) {
       console.error('[RevenueCat] Restore error:', error);
@@ -258,7 +258,7 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
       const { customerInfo } = await Purchases.logIn(userId);
       const isPro = typeof customerInfo.entitlements.active[PRO_ENTITLEMENT_ID] !== 'undefined';
       set({ customerInfo, isPro });
-      console.log('[RevenueCat] User logged in:', userId);
+      dlog('[RevenueCat] User logged in:', userId);
     } catch (error: any) {
       console.error('[RevenueCat] Error setting user ID:', error);
     }
@@ -269,7 +269,7 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
     try {
       const customerInfo = await Purchases.logOut();
       set({ customerInfo, isPro: false });
-      console.log('[RevenueCat] User logged out');
+      dlog('[RevenueCat] User logged out');
     } catch (error: any) {
       console.error('[RevenueCat] Error logging out:', error);
     }

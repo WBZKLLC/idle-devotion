@@ -106,6 +106,20 @@ export async function safeMutation<T>(
     errorMessage,
   } = opts;
 
+  // Fast-fail if offline - don't attempt network calls
+  if (!isOnline()) {
+    const offlineError = new Error('OFFLINE');
+    const detail = 'No internet connection. Please check your connection and try again.';
+    
+    if (showErrorAlert) {
+      Alert.alert('Offline', detail);
+    }
+    
+    if (onError) onError(offlineError);
+    
+    return { ok: false, error: offlineError, detail };
+  }
+
   try {
     if (__DEV__) console.log(`[safeMutation] Starting: ${actionName}`);
     

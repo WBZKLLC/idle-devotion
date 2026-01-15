@@ -87,12 +87,12 @@ export default function PaidFeaturesScreen() {
 
   // DEV: Grant/revoke pack
   const handleDevGrantPack = async () => {
-    await grantDev('PREMIUM_CINEMATICS_PACK');
+    await grantDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
     Alert.alert('DEV Mode', 'Granted PREMIUM_CINEMATICS_PACK entitlement.');
   };
 
   const handleDevRevokePack = async () => {
-    await revokeDev('PREMIUM_CINEMATICS_PACK');
+    await revokeDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
     Alert.alert('DEV Mode', 'Revoked PREMIUM_CINEMATICS_PACK entitlement.');
   };
 

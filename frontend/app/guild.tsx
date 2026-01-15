@@ -268,7 +268,12 @@ export default function GuildScreen() {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
         <SafeAreaView style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.gold.primary} />
+          {/* Phase 3.19.1: Guild loading skeleton */}
+          <View style={{ padding: 16, width: '100%' }}>
+            <GuildItemSkeleton />
+            <GuildItemSkeleton />
+            <GuildItemSkeleton />
+          </View>
         </SafeAreaView>
       </LinearGradient>
     );

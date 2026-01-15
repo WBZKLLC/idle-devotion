@@ -11403,6 +11403,13 @@ async def get_cinematic_url(hero_id: str, current_user: dict = Depends(get_curre
     
     In production, this would return a signed/time-limited URL.
     """
+    # Validate hero_id format to prevent key pollution
+    if not _VALID_HERO_ID_PATTERN.match(hero_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid hero_id format (alphanumeric, underscore, hyphen only, max 64 chars)"
+        )
+    
     # ENFORCE: User must have cinematic access
     await require_cinematic_access(current_user["username"], hero_id)
     

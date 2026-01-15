@@ -223,12 +223,18 @@ export default function ChatScreen() {
         setTimeout(() => setRateLimitMessage(null), 5000);
       } else if (status === 403) {
         // Muted or banned
-        Alert.alert('Chat Restricted', detail);
+        if (!isErrorHandledGlobally(error)) {
+          Alert.alert('Chat Restricted', detail);
+        }
       } else if (status === 400) {
         // Validation error (PII, URL, etc.)
-        Alert.alert('Message Blocked', detail);
+        if (!isErrorHandledGlobally(error)) {
+          Alert.alert('Message Blocked', detail);
+        }
       } else {
-        Alert.alert('Error', detail);
+        if (!isErrorHandledGlobally(error)) {
+          Alert.alert('Error', detail);
+        }
       }
     } finally {
       setSending(false);

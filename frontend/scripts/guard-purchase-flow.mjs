@@ -219,6 +219,21 @@ function checkFile(filePath) {
         }
       }
     }
+    
+    // Phase 3.13: Check for direct premium telemetry (should only be in navigation.ts/gating.ts)
+    if (!ALLOWED_PREMIUM_TELEMETRY_FILES.has(fileName)) {
+      for (const pattern of DIRECT_PREMIUM_TELEMETRY_PATTERNS) {
+        if (pattern.test(line)) {
+          violations.push({
+            file: filePath.replace(FRONTEND_ROOT, ''),
+            line: lineNum,
+            type: 'DIRECT_PREMIUM_TELEMETRY',
+            content: line.trim().substring(0, 80),
+          });
+          break;
+        }
+      }
+    }
   }
   
   return violations;

@@ -22,6 +22,8 @@ import { router } from 'expo-router';
 import Sidebar from '../components/Sidebar';
 // Phase 3.11: Canonical store navigation
 import { goToStore } from '../lib/entitlements/navigation';
+// Phase 3.18.4: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../lib/api';

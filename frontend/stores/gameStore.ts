@@ -448,6 +448,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         refreshUser: true,
         fetchUserFn: fetchUser,
         onSuccess: async () => {
+          // Epoch check: ignore if user logged out during pull
+          if (get().authEpoch !== epochAtStart) return;
           // Track successful gacha pull
           track(Events.GACHA_PULL, { type: pullType, currency: currencyType });
           // Also refresh heroes after gacha
@@ -455,6 +457,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
       }
     );
+    
+    // Epoch check before setting state
+    if (get().authEpoch !== epochAtStart) return null;
     
     set({ isLoading: false });
     
@@ -468,7 +473,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   upgradeHero: async (heroInstanceId: string) => {
-    const { user, fetchUser, fetchUserHeroes } = get();
+    const { user, fetchUser, fetchUserHeroes, authEpoch } = get();
+    const epochAtStart = authEpoch;
     if (!user) throw new Error('No user found');
     
     set({ isLoading: true, error: null });
@@ -480,11 +486,16 @@ export const useGameStore = create<GameState>((set, get) => ({
         refreshUser: true,
         fetchUserFn: fetchUser,
         onSuccess: async () => {
+          // Epoch check: ignore if user logged out during upgrade
+          if (get().authEpoch !== epochAtStart) return;
           // Also refresh heroes after upgrade
           await fetchUserHeroes();
         },
       }
     );
+    
+    // Epoch check before setting state
+    if (get().authEpoch !== epochAtStart) return;
     
     set({ isLoading: false });
     

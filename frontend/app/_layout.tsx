@@ -136,6 +136,8 @@ export default function Layout() {
         <SessionProvider>
           <TabsWithSafeArea />
         </SessionProvider>
+        {/* Phase 3.18: Global toast notifications */}
+        <ToastProvider />
       </SafeAreaProvider>
     </AppErrorBoundary>
   );

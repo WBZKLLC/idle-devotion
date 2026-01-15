@@ -1,33 +1,44 @@
 /**
  * openPremiumCinematic.ts
  * 
- * Future-proof placeholder for Premium Cinematic playback.
+ * CANONICAL ROUTER for premium cinematic access.
  * 
- * Currently: Cinematics are DISABLED. This function will navigate to
- * the paywall if the user doesn't have access.
+ * INVARIANT: This is the ONLY entry point for cinematic playback.
+ * ───────────────────────────────────────────────────────────────
  * 
- * Future: When payments are enabled, this will open the cinematic modal
- * for heroes with owned premium cinematics.
+ * This file:
+ * - Calls requireCinematicAccess() from lib/entitlements/gating.ts
+ * - If denied, routes to canonical paywall (paid-features)
+ * - If allowed, opens the cinematic modal
+ * 
+ * This file does NOT:
+ * - Implement purchase logic
+ * - Check entitlements directly (uses gating helpers only)
+ * - Show its own alerts (paywall handles that)
  * 
  * Requirements for playback:
- * 1. User has PREMIUM_CINEMATICS_PACK entitlement (global pack)
+ * 1. User has PREMIUM_CINEMATICS_PACK entitlement (global pack) OR
+ *    User has PREMIUM_CINEMATIC_OWNED:<heroId> entitlement (per-hero)
  * 2. HERO_CINEMATICS feature flag is enabled
- * 3. User has PREMIUM_CINEMATIC_OWNED:<heroId> entitlement (per-hero)
  */
 
 import { router } from 'expo-router';
-import { canAccessCinematics, hasHeroPremiumCinematicOwned } from './cinematicsAccess';
+import { 
+  canAccessHeroCinematic, 
+  hasPremiumCinematicsPack 
+} from './entitlements/gating';
+import { isFeatureEnabled } from './features';
 
 export interface OpenCinematicResult {
   success: boolean;
-  reason?: 'no_pack' | 'feature_disabled' | 'hero_not_owned' | 'not_implemented';
+  reason?: 'no_entitlement' | 'feature_disabled' | 'not_implemented';
 }
 
 /**
  * Attempt to open the premium cinematic for a hero.
  * 
- * Currently: Always navigates to paywall or shows error.
- * Future: Will open the cinematic modal.
+ * This is the CANONICAL entry point for cinematic playback.
+ * All screens must use this function - no direct modal opening.
  * 
  * @param heroId - The hero's stable ID
  * @param stableId - User's stable ID for feature flag rollout
@@ -37,29 +48,38 @@ export function openPremiumCinematic(
   heroId: string,
   stableId?: string
 ): OpenCinematicResult {
-  // Check if user can access cinematics system (pack + feature flag)
-  if (!canAccessCinematics(stableId)) {
-    // Navigate to paywall
-    router.push('/paid-features');
-    return { success: false, reason: 'no_pack' };
+  // Check feature flag first (fast fail)
+  if (!isFeatureEnabled('HERO_CINEMATICS', { stableId })) {
+    if (__DEV__) console.log('[openPremiumCinematic] Feature flag disabled');
+    return { success: false, reason: 'feature_disabled' };
   }
   
-  // Check if user owns this hero's cinematic
-  if (!hasHeroPremiumCinematicOwned(heroId)) {
-    // Navigate to paywall
+  // Check entitlement using CANONICAL gating helper
+  // This checks both pack ownership AND per-hero ownership
+  const hasAccess = hasPremiumCinematicsPack() || canAccessHeroCinematic(heroId);
+  
+  if (!hasAccess) {
+    // Route to canonical paywall - DO NOT show alerts here
+    // Paywall will handle purchase UX
     router.push('/paid-features');
-    return { success: false, reason: 'hero_not_owned' };
+    return { success: false, reason: 'no_entitlement' };
   }
   
-  // TODO: When cinematics are re-enabled, open the modal here
+  // User has access - open the cinematic
+  // TODO: When cinematics modal is wired, open it here
   // For now, return not_implemented
-  if (__DEV__) console.log('[openPremiumCinematic] Cinematics playback not yet implemented');
+  if (__DEV__) {
+    console.log('[openPremiumCinematic] Access granted, but playback not yet implemented');
+  }
+  
   return { success: false, reason: 'not_implemented' };
 }
 
 /**
  * Check if a hero's cinematic can be played (all requirements met)
- * This is a convenience wrapper for UI to show "playable" state.
+ * Use this for UI state (show play button vs lock icon).
+ * 
+ * This does NOT navigate or show any UI - it's a pure check.
  * 
  * @param heroId - The hero's stable ID
  * @param stableId - User's stable ID for feature flag rollout
@@ -69,5 +89,11 @@ export function canPlayHeroCinematic(
   heroId: string,
   stableId?: string
 ): boolean {
-  return canAccessCinematics(stableId) && hasHeroPremiumCinematicOwned(heroId);
+  // Feature flag must be enabled
+  if (!isFeatureEnabled('HERO_CINEMATICS', { stableId })) {
+    return false;
+  }
+  
+  // Must have entitlement (pack OR hero-specific)
+  return hasPremiumCinematicsPack() || canAccessHeroCinematic(heroId);
 }

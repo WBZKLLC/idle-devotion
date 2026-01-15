@@ -104,7 +104,7 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <OfflineBanner />
+      <OfflineBanner onRetry={() => fetchUser().catch(() => {})} />
       {children}
     </>
   );
@@ -112,11 +112,13 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
 
 export default function Layout() {
   return (
-    <SafeAreaProvider>
-      <SessionProvider>
-        <TabsWithSafeArea />
-      </SessionProvider>
-    </SafeAreaProvider>
+    <AppErrorBoundary>
+      <SafeAreaProvider>
+        <SessionProvider>
+          <TabsWithSafeArea />
+        </SessionProvider>
+      </SafeAreaProvider>
+    </AppErrorBoundary>
   );
 }
 

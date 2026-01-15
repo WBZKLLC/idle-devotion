@@ -148,6 +148,8 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
   /**
    * Refresh entitlements from server
    * This is the ONLY way to get authoritative entitlement state
+   * 
+   * Phase 3.10: Also checks global authEpoch for cross-store invalidation
    */
   refreshFromServer: async (reason) => {
     if (get().isRefreshing) {
@@ -156,6 +158,8 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
     }
     
     const epochAtStart = get().entitlementEpoch;
+    const authEpochAtStart = getAuthEpoch();  // Global auth epoch for cross-store check
+    
     dlog('[entitlementStore] Refreshing from server, reason:', reason);
     set({ isRefreshing: true, refreshError: null });
     
@@ -164,7 +168,14 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
       
       // Epoch check: ignore late response if clear() was called (logout)
       if (get().entitlementEpoch !== epochAtStart) {
-        dlog('[entitlementStore] Epoch mismatch - discarding stale response');
+        dlog('[entitlementStore] Local epoch mismatch - discarding stale response');
+        set({ isRefreshing: false });
+        return;
+      }
+      
+      // Global auth epoch check: ignore if user logged out during request
+      if (getAuthEpoch() !== authEpochAtStart) {
+        dlog('[entitlementStore] Auth epoch mismatch - discarding stale response');
         set({ isRefreshing: false });
         return;
       }
@@ -186,7 +197,7 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
       
     } catch (e: any) {
       // Epoch check before setting error state
-      if (get().entitlementEpoch !== epochAtStart) {
+      if (get().entitlementEpoch !== epochAtStart || getAuthEpoch() !== authEpochAtStart) {
         dlog('[entitlementStore] Epoch mismatch in error handler - discarding');
         set({ isRefreshing: false });
         return;

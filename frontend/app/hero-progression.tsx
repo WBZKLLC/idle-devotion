@@ -323,15 +323,15 @@ export default function HeroProgressionScreen() {
   const requestPromote = useCallback(() => {
     if (!hero) return;
     if (isMaxStars) {
-      Alert.alert('Max Stars', 'This hero is already at maximum stars.');
+      toast.info('This hero is already at maximum stars.');
       return;
     }
     if (!shardsNeededForNext) {
-      Alert.alert('Cannot Promote', 'Missing shard cost data.');
+      toast.warning('Missing shard cost data.');
       return;
     }
     if (shards < shardsNeededForNext) {
-      Alert.alert('Not enough shards', `Need ${shardsNeededForNext} shards. You have ${shards}.`);
+      toast.warning(`Need ${shardsNeededForNext} shards. You have ${shards}.`);
       return;
     }
     setShowConfirmPromote(true);
@@ -380,18 +380,19 @@ export default function HeroProgressionScreen() {
       // Compute newTier using authoritative server values
       const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars, duplicates: remaining });
       if (newTier > effectiveUnlockedTier) {
+        // ALERT_ALLOWED: rewards_modal
         Alert.alert(
           'Star Promoted! 🌟',
           `New tier art unlocked: ${labelForTier(newTier)}\n\nReturn to Hero Detail to preview your new art!`
         );
       } else {
-        Alert.alert('Star Promoted! 🌟', `Now at ${newStars} star(s). Keep collecting shards!`);
+        toast.success(`Star Promoted! Now at ${newStars} star(s).`);
       }
     } catch (e: any) {
       // Rollback to canonical pre-optimistic hero state
       if (rollbackRef.current?.hero) setLocalHeroOverride(rollbackRef.current.hero);
       if (!isErrorHandledGlobally(e)) {
-        Alert.alert('Promotion failed', e?.response?.data?.detail || 'Unable to promote this hero right now.');
+        toast.error(e?.response?.data?.detail || 'Unable to promote this hero right now.');
       }
     } finally {
       rollbackRef.current = null;
@@ -415,7 +416,7 @@ export default function HeroProgressionScreen() {
   // --- Ascension: UI-only placeholder (endpoint may not exist yet) ---
   const tryAscend = useCallback(async () => {
     setShowConfirmAscend(false);
-    Alert.alert('Coming Soon', 'Rarity ascension is planned but not wired yet.');
+    toast.info('Rarity ascension is planned but not wired yet.');
   }, []);
 
   // ----------------------------

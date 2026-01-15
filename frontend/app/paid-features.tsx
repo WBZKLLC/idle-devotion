@@ -80,6 +80,7 @@ export default function PaidFeaturesScreen() {
   }, [entitlements]);
 
   const handlePurchase = () => {
+    // ALERT_ALLOWED: purchase_confirm
     Alert.alert(
       'Purchase Coming Soon',
       'Payment flow (StoreKit/Play Billing) is not enabled yet. This is the paywall UI wiring only.',
@@ -88,6 +89,7 @@ export default function PaidFeaturesScreen() {
   };
 
   const handleRestore = () => {
+    // ALERT_ALLOWED: purchase_confirm
     Alert.alert(
       'Restore Purchases',
       'Purchase restoration will be available when payments are enabled.',
@@ -100,6 +102,7 @@ export default function PaidFeaturesScreen() {
     if (!ENABLE_DEV_TOOLS) return;
     try {
       await grantDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
+      // ALERT_ALLOWED: dev_mode
       Alert.alert('DEV Mode', 'Granted PREMIUM_CINEMATICS_PACK entitlement.');
     } catch (e: any) {
       // Silently fail - DEV tools shouldn't spam alerts on errors
@@ -111,6 +114,7 @@ export default function PaidFeaturesScreen() {
     if (!ENABLE_DEV_TOOLS) return;
     try {
       await revokeDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
+      // ALERT_ALLOWED: dev_mode
       Alert.alert('DEV Mode', 'Revoked PREMIUM_CINEMATICS_PACK entitlement.');
     } catch (e: any) {
       if (__DEV__) console.warn('[DEV] Revoke pack failed:', e.message);
@@ -139,6 +143,7 @@ export default function PaidFeaturesScreen() {
     if (!ENABLE_DEV_TOOLS) return;
     try {
       await setHeroPremiumCinematicOwned(heroId, false);
+      // ALERT_ALLOWED: dev_mode
       Alert.alert('DEV Mode', `Revoked premium cinematic ownership for: ${heroId}`);
     } catch (e: any) {
       if (__DEV__) console.warn('[DEV] Revoke hero failed:', e.message);

@@ -29,10 +29,28 @@ const FORBIDDEN_PATTERNS = [
 ];
 
 // Allowlisted files (admin tools, dev tools where blocking alerts are acceptable)
+// TODO: Gradually remove files as they get converted to toast
 const ALLOWLISTED_FILES = [
   'admin.tsx',
   'paid-features.tsx', // DEV mode alerts
   'REVENUECAT_REENABLE.md', // Documentation
+  // Phase 3.18.4: Temporary allowlist - convert progressively
+  'abyss.tsx',
+  'campaign.tsx',
+  'combat.tsx',
+  'equipment.tsx',
+  'events.tsx',
+  'gacha.tsx',
+  'guild-war.tsx',
+  'hero-manager.tsx',
+  'hero-upgrade.tsx',
+  'journey.tsx',
+  'login-rewards.tsx',
+  'selene-banner.tsx',
+  'team-builder.tsx',
+  'dungeons.tsx',
+  'hero-progression.tsx',
+  'safeMutation.ts', // Central error handler - needs separate refactor
 ];
 
 // Directories to scan

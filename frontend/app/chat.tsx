@@ -274,9 +274,13 @@ export default function ChatScreen() {
     } catch (error: any) {
       const status = error.response?.status;
       if (status === 401) {
-        Alert.alert('Authentication Required', 'Please log in to report messages');
+        if (!isErrorHandledGlobally(error)) {
+          Alert.alert('Authentication Required', 'Please log in to report messages');
+        }
       } else {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to submit report');
+        if (!isErrorHandledGlobally(error)) {
+          Alert.alert('Error', error.response?.data?.detail || 'Failed to submit report');
+        }
       }
     } finally {
       setReporting(false);

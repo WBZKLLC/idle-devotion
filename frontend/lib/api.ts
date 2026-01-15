@@ -77,16 +77,35 @@ export function isErrorHandledGlobally(error: any): boolean {
 
 /**
  * Use this anywhere you have an `error` object and want to avoid duplicate UX.
- * Guards against double-alerting when the global interceptor already showed one.
+ * Guards against double-toasting when the global interceptor already showed one.
+ * Phase 3.18.6: Converted to use toast instead of Alert
+ */
+export function toastIfNotHandledGlobally(
+  error: any,
+  message: string,
+  variant: 'error' | 'warning' | 'info' = 'error'
+): void {
+  if (!isErrorHandledGlobally(error)) {
+    if (variant === 'error') {
+      toast.error(message);
+    } else if (variant === 'warning') {
+      toast.warning(message);
+    } else {
+      toast.info(message);
+    }
+  }
+}
+
+/**
+ * @deprecated Use toastIfNotHandledGlobally instead
+ * Kept for backward compatibility during migration
  */
 export function alertIfNotHandledGlobally(
   error: any,
   title: string,
   message: string
 ): void {
-  if (!isErrorHandledGlobally(error)) {
-    Alert.alert(title, message);
-  }
+  toastIfNotHandledGlobally(error, message, 'error');
 }
 
 // ─────────────────────────────────────────────────────────────

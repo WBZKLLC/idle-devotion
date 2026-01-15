@@ -344,16 +344,27 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   login: async () => {
-    const { user } = get();
+    const { user, authEpoch } = get();
+    const epochAtStart = authEpoch;
     if (!user) throw new Error('No user found');
     
     set({ isLoading: true });
     try {
       const data = await triggerDailyLogin(user.username);
+      // Epoch check: ignore if user logged out during request
+      if (get().authEpoch !== epochAtStart) {
+        set({ isLoading: false });
+        return null;
+      }
       await get().fetchUser();
       set({ isLoading: false });
       return data;
     } catch (error) {
+      // Epoch check before setting error state
+      if (get().authEpoch !== epochAtStart) {
+        set({ isLoading: false });
+        return null;
+      }
       set({ error: 'Failed to login', isLoading: false });
       throw error;
     }

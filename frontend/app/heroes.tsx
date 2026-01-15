@@ -268,9 +268,14 @@ export default function HeroesScreen() {
 
         {/* Grid */}
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="rgba(255, 215, 140, 0.92)" />
-            <Text style={styles.loadingText}>Loading heroes...</Text>
+          <ScrollView style={styles.gridScroll} contentContainerStyle={styles.gridContent}>
+            {/* Phase 3.19.1: Skeleton loading state */}
+            <HeroGridSkeleton count={9} />
+          </ScrollView>
+        ) : userHeroes.length === 0 ? (
+          <View style={styles.emptyStateContainer}>
+            {/* Phase 3.19.1: Empty state for no heroes */}
+            <NoHeroesEmpty onSummon={() => router.push('/summon-hub')} />
           </View>
         ) : (
           <ScrollView style={styles.gridScroll} contentContainerStyle={styles.gridContent}>

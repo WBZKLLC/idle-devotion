@@ -420,6 +420,18 @@ backend:
         agent: "testing"
         comment: "✅ AUTHEPOCH BACKEND SUPPORT TESTING COMPLETE: Comprehensive testing of backend endpoints that support the AuthEpoch system completed successfully. All 5 tests passed (100% success rate). TESTED ENDPOINTS: (1) Authentication Login - POST /api/auth/login with TestUser123/testpass123 successfully returns valid JWT token (248 chars). (2) Token Verification - GET /api/auth/verify with Bearer token successfully returns user data for TestUser123. (3) Gacha Endpoint - POST /api/gacha/pull with username=TestUser123, currency_type=coins, pull_type=single successfully returns heroes array and resource updates (1 hero returned, 1000 coins spent). (4) Entitlements Snapshot - GET /api/entitlements/snapshot with auth token successfully returns entitlements data structure (6 entitlements). (5) User Profile - GET /api/user/TestUser123 with auth token successfully returns complete user data (Crystals: 300, Coins: 7000, Gold: 5000). TECHNICAL VERIFICATION: All backend endpoints that the AuthEpoch frontend guards depend on are functional and return correct data structures. The epoch guard functionality is client-side only (zustand stores) and validated by static analysis script npm run guard:auth-epoch which already passes. Backend support for AuthEpoch system is fully operational."
 
+  - task: "Entitlements TTL + Refresh Discipline (Phase 3.10)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/stores/entitlementStore.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "🔄 PHASE 3.10 IMPLEMENTATION: Server-time-based staleness checks with canonical refresh entry point. (1) Added isStale() - uses server_time not device time, TTL clamped 30s-3600s. (2) Added ensureFreshEntitlements(reason) - canonical refresh with guards. (3) Updated refreshFromServer() to check global authEpoch. (4) Updated gating.ts - requireEntitlement() and requireCinematicAccess() now fire-and-forget freshness check. STALENESS: estimated_server_now > server_time + ttl_seconds. All 12 guards pass."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

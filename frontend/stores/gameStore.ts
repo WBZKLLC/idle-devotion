@@ -336,13 +336,15 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   logout: async () => {
-    // Clear persisted storage FIRST (critical for force logout)
+    // Bump epoch FIRST to invalidate any in-flight requests
+    get().bumpAuthEpoch();
+    // Clear persisted storage
     await clearAuthData();
     // Clear in-memory token
     apiSetAuthToken(null);
     // Clear store state
     set({ user: null, userHeroes: [], userHeroesById: {}, allHeroes: [], authToken: null, needsPassword: false });
-    console.log('[logout] User logged out, auth and storage cleared');
+    console.log('[logout] User logged out, auth and storage cleared, epoch bumped');
   },
 
   /**

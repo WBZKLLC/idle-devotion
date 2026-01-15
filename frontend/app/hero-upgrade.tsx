@@ -70,7 +70,9 @@ export default function HeroUpgradeScreen() {
       loadHeroDetails();
       fetchUser();
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to level up');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Failed to level up');
+      }
     } finally {
       setIsUpgrading(false);
     }

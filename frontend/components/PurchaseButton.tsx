@@ -80,6 +80,9 @@ export default function PurchaseButton({
   // Handle success state
   useEffect(() => {
     if (isVerified) {
+      // Phase 3.18.2: Success toast - premium feel
+      toast.premium('Premium access is now active.');
+      
       // Post-purchase reconciliation (belt + suspenders)
       refreshEntitlements('post_purchase').catch(() => {});
       onPurchaseComplete?.();

@@ -44,10 +44,17 @@ function _shouldShowAlert(): boolean {
   return true;
 }
 
-function _showErrorAlertOnce(title: string, message: string, error?: any) {
+function _showErrorToastOnce(variant: 'error' | 'warning' | 'info', message: string, error?: any) {
   if (!_shouldShowAlert()) return;
   if (error) markErrorHandled(error); // ONLY mark when we actually show global UX
-  Alert.alert(title, message);
+  // Phase 3.18.6: Use toast instead of Alert for non-blocking UX
+  if (variant === 'error') {
+    toast.error(message);
+  } else if (variant === 'warning') {
+    toast.warning(message);
+  } else {
+    toast.info(message);
+  }
 }
 
 /**

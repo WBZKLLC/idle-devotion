@@ -594,6 +594,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Use forceRefresh: true after upgrade/promotion to bypass cache
   getUserHeroById: async (id: string, opts?: { forceRefresh?: boolean }) => {
     const forceRefresh = opts?.forceRefresh === true;
+    const epochAtStart = get().authEpoch;
 
     // 1) Check cache first (unless forced)
     const existing = get().selectUserHeroById(id);
@@ -611,6 +612,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         `[GameStore.getUserHeroById] Failed to ensure hero. username=${user.username} id=${id}. ` +
         `Original: ${e?.message ?? String(e)}`
       );
+    }
+
+    // Epoch check: ignore late response if user logged out
+    if (get().authEpoch !== epochAtStart) {
+      dlog('[getUserHeroById] Epoch mismatch - discarding stale response');
+      throw new Error('Session changed during request');
     }
 
     // 3) Cache the result (merge into both list + map)

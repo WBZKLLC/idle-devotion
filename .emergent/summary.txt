@@ -1,33 +1,26 @@
 <analysis>
-**original_problem_statement**:
-The user's goal is a comprehensive security and stability overhaul of the application for Production Readiness. This session focused on implementing a server-authoritative entitlements and monetization system, ensuring it is extra-strict and resilient to client-side exploits and race conditions.
 
-Key phases implemented:
-1.  **Section 3.6: Server-Authoritative Entitlements System**: Create the foundational backend and frontend for a secure, server-driven IAP and entitlements system. This includes strict server-side verification, client-side caching, and drift-prevention guards.
-2.  **Section 3.7: RevenueCat Webhook Scaffold**: Implement a backend webhook to handle asynchronous entitlement updates from RevenueCat, such as renewals and expirations, ensuring the server remains the source of truth.
-3.  **Section 3.8: Canonical Purchase UX Wiring**: Unify all purchase-related UI into a single, canonical component () and flow to prevent divergent implementations. This involved a repo-wide sweep and refactoring of all premium/paywall entry points.
+**original_problem_statement**: The user's goal is a comprehensive security, stability, and UX overhaul of the application for Production Readiness. The agent has completed a series of hardening phases (3.6 through 3.17), implementing a server-authoritative entitlements system, strict client-side guards against race conditions and architectural drift, and creating extensive release documentation and validation scripts.
 
-The current task is the beginning of the next phase:
-**Phase 3.9 — AuthEpoch Expansion (strict)**: Systematically apply an  guard to every asynchronous store action that mutates state after an API call. This prevents race conditions where a late API response from a previous session (before logout) incorrectly modifies the current user's state.
+The current task is **Phase 3.18 — UX Coding Completion Gate**, which focuses on improving the user experience of premium features, standardizing UI components, and clarifying the purchase flow.
+
+**PRODUCT REQUIREMENTS** (for current phase):
+1.  **Unified Premium Surface Spec**: Document and standardize the behavior of every premium entrypoint in .
+2.  **Paywall UX Polish**: Improve the paywall with clear benefit bullets, pricing clarity, and an always-visible Not now option.
+3.  **Store Information Architecture**: Structure the store into logical sections (Recommended, Best Value, etc.) to be scalable.
+4.  **UX Consistency Pass**: Create a small design system of reusable UI components (, , etc.) and refactor high-traffic screens to use them.
+5.  **Emotional Cadence**: Add clear success/celebration states after a purchase and silent, non-intrusive toasts for entitlement updates.
+6.  **First-Time User Experience (FTUE)**: Define and guide the user through a first 5 minutes checklist to improve retention.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application now has a robust, extra-strict server-authoritative entitlements system.
-- **Backend ()**:
-    - : Returns a user's complete, server-verified entitlement state.
-    - : A strict endpoint that verifies IAP receipts. It requires a  to be set in the environment to grant entitlements; otherwise, it fails safely. It is idempotent using a unique index on .
-    - : An idempotent webhook handler for RevenueCat events (e.g., purchases, expirations), protected by a signature check in production.
-    - **Policy Enforcement**: Legacy purchase endpoints are disabled (return ), and all simulated dev purchase endpoints are gated to run only when .
-    - **Gating**: A reusable helper, , is used to enforce server-side 403 checks on premium endpoints, such as Battle Pass claims and cinematic access.
-- **Frontend**:
-    - **Canonical Purchase Flow**: All IAP purchases are channeled through a single  component and a  state machine. A legacy  component has been refactored to be a thin wrapper around this canonical flow.
-    - **Centralized Product Definitions**: A single source of truth for product metadata exists at .
-    - **State Management**:  acts as a client-side cache for the server snapshot.  manages the IAP state machine.
-    - **Gating Helpers**:  and  provide a consistent way for UI components to check for permissions. The  helper now uses a single canonical gate to check access and route to a paywall if denied.
-    - **Drift-Prevention Guards**: Multiple scripts in  run as part of 
+The application is in a heavily hardened, pre-release state.
+- **Backend & Frontend Monetization Core**: A complete, server-authoritative entitlements system is in place, featuring strict receipt verification, webhook handling, and comprehensive client-side caching with TTL and race-condition () protection.
+- **Canonical Patterns**: All purchase, paywall navigation, and telemetry events are funneled through single, canonical helper functions, preventing architectural drift.
+- **Guardrails**: A suite of 14 static analysis scripts (
 > frontend@1.0.0 guard
-> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection
 
 
 > frontend@1.0.0 guard:hero
@@ -92,233 +85,430 @@ The application now has a robust, extra-strict server-authoritative entitlements
 🔒 Checking purchase flow patterns...
 
 ✅ No purchase flow violations found.
-   All screens use PurchaseButton and canonical products. to statically prevent regressions, such as direct API calls from UI, use of raw product strings, or use of legacy paywall patterns.
-- **AuthEpoch System**: The  value in  is incremented on logout. Guards have been applied to  and  to invalidate stale API responses. Work has begun to expand this to all other async store actions.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.) automatically enforces these patterns, ensuring no regressions related to entitlements, purchases, navigation, or environment configuration.
+- **Release Readiness**: Extensive documentation exists in the  folder, including a  and . A set of  scripts in  exists to automate release candidate smoke tests.
+- **UX Foundation**: The agent has just begun Phase 3.18 by creating the initial files for a component-based design system in  (, , , etc.) and the spec document .
 
 **Last working item**:
-    - Last item agent was working: **Phase 3.9 - AuthEpoch Expansion**. The agent was systematically auditing  to identify all asynchronous actions that perform API calls and mutate state, and then applying the  guard pattern to them. The work involved adding the epoch check at the start of the function and after any  before a  call.
-    - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? manual testing by curl. After the implementation is complete, the agent should test by logging in, triggering a long-running async action (like a gacha pull), quickly logging out, and ensuring no state from the previous session's action is applied to the new (empty) state.
-    - User Testing Done: N
+- Last item agent was working: **Phase 3.18 - UX Coding Completion Gate**, specifically step 4: UX consistency pass. The agent was creating the foundational files for a small design system layer.
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? Frontend testing agent. After the new UI components are created and integrated into several screens, the frontend testing agent should be used to verify that the UI still functions correctly and that there are no visual regressions.
+- User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: (P1) The cinematic video feature for 5+ star heroes is non-functional due to an incompatible video codec. The  script needs to be run.
-  - Issue 2: (P1)  still contains some client-side logic () based on VIP level to determine premium status for the UI, which could be confusing. It should be refactored to rely solely on  for all premium-related UI states to align with the canonical system.
+- Issue 1: (P1) The cinematic video feature for 5+ star heroes is non-functional due to an incompatible video codec. This remains a known issue.
+- Issue 2: (P1)  may still contain client-side UI logic that is not fully aligned with the canonical  pattern, leading to potential UI drift. This should be reviewed during the UX consistency pass.
 
-  Issues Detail:
-  - Issue 1:
-     - Attempted fixes: None in this session.
-     - Next debug checklist:
-       - Run the script at .
-       - Verify that the cinematic videos in  play correctly on web and mobile.
-     - Why fix this issue and what will be achieved with the fix? This restores a broken premium feature for players.
-     - Status:  NOT STARTED
-     - Is recurring issue? Y/N: N
-     - Should Test frontend/backend/both after fix? frontend
-     - Blocked on other issue: None
-  - Issue 2:
-     - Attempted fixes: The agent renamed the variable to  to distinguish it from the real entitlement and made the claim button route to the paywall. However, the underlying logic still exists.
-     - Next debug checklist:
-       - Open .
-       - Remove all logic that checks  to determine if the battle pass is premium.
-       - Use  as the single source of truth for all UI elements related to the premium track.
-     - Why fix this issue and what will be achieved with the fix? To eliminate UI state drift and ensure the UI is a perfect reflection of the server-authoritative entitlement state.
-     - Status: NOT STARTED
-     - Is recurring issue? Y/N: N
-     - Should Test frontend/backend/both after fix? frontend
-     - Blocked on other issue: None
+Issues Detail:
+- Issue 1:
+- Attempted fixes: None.
+- Next debug checklist: Run the script at  and verify playback.
+- Why fix this issue and what will be achieved with the fix? This restores a broken premium feature.
+- Status: NOT STARTED
+- Is recurring issue? N
+- Should Test frontend/backend/both after fix? frontend
+- Blocked on other issue: None
+- Issue 2:
+- Attempted fixes: Some refactoring was done previously, but a full audit is needed.
+- Next debug checklist: Audit  during the UX consistency pass (Task 1 below) to ensure all premium UI relies solely on .
+- Why fix this issue and what will be achieved with the fix? Ensures the UI is a perfect reflection of the server-authoritative state, eliminating confusion.
+- Status: NOT STARTED
+- Is recurring issue? N
+- Should Test frontend/backend/both after fix? frontend
+- Blocked on other issue: None
 
 **In progress Task List**:
-  - Task 1: (P0) Complete the AuthEpoch Expansion (Phase 3.9).
-  
-  Task Detail:
-  - Task 1: 
-     - Where to resume: The agent has already identified the async functions in  that need guards and has started applying the pattern. Resume by applying the  check to the remaining functions: , , , , , and .
-     - What will be achieved with this? Prevents state corruption from stale in-flight API responses after a user logs out, increasing app stability.
-     - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? frontend
-     - Blocked on something: None
+- Task 1: (P0) Complete Phase 3.18 - UX Coding Completion Gate.
+
+Task Detail:
+- Task 1:
+- Where to resume: The agent just created the foundational files for the design system in . The next step is to create the  component as intended, and then begin integrating these new components (, , , etc.) into high-traffic screens like , , and the paywall.
+- What will be achieved with this? A more consistent, polished, and user-friendly interface across the application, fulfilling the Phase 3.18 requirements.
+- Status: IN PROGRESS
+- Should Test frontend/backend/both after fix? frontend
+- Blocked on something: None
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   **P0: Create Guardrail for AuthEpoch**: Implement a static analysis script () to detect async store actions that mutate state after an API call without an  check. Add this to the 
-> frontend@1.0.0 guard
-> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow
+- **Upcoming Tasks (as part of Phase 3.18):**
+    - **P0: Paywall UX Polish**: Refactor the paywall component to use the new UI components and implement the required UX improvements (benefit bullets, pricing clarity, Not now button).
+    - **P0: Store IA**: Create a  layout component.
+    - **P0: Emotional Cadence**: Implement the  component for purchase success and entitlement updates.
+    - **P1: FTUE**: Implement the first 5 minutes onboarding checklist.
 
-
-> frontend@1.0.0 guard:hero
-> node scripts/guard-no-hero-list-fallback.mjs
-
-[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
-
-> frontend@1.0.0 guard:tier
-> node scripts/guard-no-direct-tier-imports.mjs
-
-[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
-
-> frontend@1.0.0 guard:select-hero
-> node scripts/guard-select-user-hero-by-id.mjs
-
-[guard:selectUserHeroById] ✅ O(1) selector enforced.
-
-> frontend@1.0.0 guard:user-heroes-map
-> node scripts/guard-user-heroes-map-sync.mjs
-
-[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
-
-> frontend@1.0.0 guard:feature-flags
-> node scripts/guard-feature-flags.mjs
-
-[guard:feature-flags] Checking feature flag architecture...
-[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
-
-> frontend@1.0.0 guard:hero-signature
-> node scripts/guard-get-user-hero-signature.mjs
-
-[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
-[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
-
-> frontend@1.0.0 guard:no-free-cinematics
-> node scripts/guard-no-free-cinematics.mjs
-
-✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
-
-> frontend@1.0.0 guard:no-inline-power
-> node scripts/guard-no-inline-power.mjs
-
-✅ guard-no-inline-power: No inline power formulas in app/ screens.
-
-> frontend@1.0.0 guard:no-paid-wording
-> node scripts/guard-no-paid-wording.mjs
-
-✅ guard-no-paid-wording: No forbidden paid wording found.
-
-> frontend@1.0.0 guard:entitlements-access
-> node scripts/guard-entitlements-access.mjs
-
-🔒 Checking entitlement store access patterns...
-
-✅ No direct entitlement store access found.
-   All screens use gating helpers correctly.
-
-
-> frontend@1.0.0 guard:purchase-flow
-> node scripts/guard-purchase-flow.mjs
-
-🔒 Checking purchase flow patterns...
-
-✅ No purchase flow violations found.
-   All screens use PurchaseButton and canonical products. chain.
-    *   **P1: Phase 3.10 — Entitlements Cache TTL + Refresh Discipline**: Implement logic to use the  from the entitlements snapshot. Create a helper  that checks for staleness and triggers a non-blocking background refresh.
-    *   **P1: Phase 3.11 — Canonical “Premium Navigation” Routing**: Create a single exported helper, , and refactor all premium denial routes to use it, ensuring a single, consistent paywall entry point.
-*   **Future Tasks:**
-    *   **P2: Walter-required Testing**: Perform end-to-end testing on real devices, which was deferred. This includes:
+- **Future Tasks (Paused):**
+    - **P0: Walter-required Testing**: Perform end-to-end testing on real devices, which was deferred by the user. This is a critical step before a real launch.
         - Real device IAP purchase flow.
         - RevenueCat sandbox webhook delivery test.
         - Production environment sanity checks (, secrets are set).
-    *   **P2: Fix Web Video Asset Compatibility**: Run the  script to fix broken cinematic playback.
 
 **Completed work in this session**
-- **Section 3.6 - Server-Authoritative Entitlements System**: Fully implemented. The backend is now the source of truth, with strict verification and idempotency.
-- **Section 3.7 - RevenueCat Webhook Scaffold**: A secure, idempotent webhook handler for RevenueCat is in place.
-- **Section 3.8 - Canonical Purchase UX & Repo-Wide Sweep**: All purchase CTAs and paywalls have been unified into a single, canonical flow using . A repo-wide sweep was conducted to find and refactor all premium entry points. Drift-prevention guards were created and are active.
-- **Backend Policy Enforcement**: Legacy/insecure purchase endpoints have been disabled, and server-side entitlement gating is enforced on all relevant premium features.
+- **Phases 3.9-3.17 (Production Hardening)**: A massive amount of work was completed to make the app production-ready from a security and stability standpoint.
+    - **Phase 3.9**:  guards applied repo-wide to prevent race conditions.
+    - **Phase 3.10**: Entitlements cache TTL and disciplined refresh logic implemented.
+    - **Phase 3.11**: Canonical navigation helper () created and wired up.
+    - **Phase 3.12**: Premium surface verification sweep completed.
+    - **Phase 3.13**: Premium navigation telemetry with deduplication added.
+    - **Phase 3.14**: App resume reconciliation hook for entitlement freshness implemented.
+    - **Phase 3.15**: Release hardening gates for both frontend and backend added.
+    - **Phase 3.16**: Release Runbook and Rollback plan documentation created.
+    - **Phase 3.17**: Release Candidate validation matrix and automated check scripts created.
+- **Phase 3.18 (Started)**:
+    -  created.
+    - Foundational design system components created in .
 
 **Earlier issues found/mentioned but not fixed**
-   - Issue 1: The cinematic video feature for 5+ star heroes is known to be broken. The video files fail to load due to an incompatible codec. The frontend gracefully handles the error, but the feature is non-functional.
-     - Why to solve this issue and what will be achieved with this? Fixing this will restore a premium cosmetic feature for players who have acquired high-tier heroes.
-     - Should Test frontend/backend/both after fix: frontend
-     - Is recurring issue? N
+- The cinematic video codec issue and the  UI logic issue are known but have not been prioritized over the architectural hardening work. They are listed in the Pending/In progress Issue list.
 
 **Known issue recurrence from previous fork**
-  - None.
+- None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Server-Authoritative State**: The core principle that the client is a dumb renderer of server state, especially for monetization.
-- **Canonical Components & Flows**: The practice of creating a single, reusable component () and logic () for a critical action to prevent implementation drift.
-- **Drift-Prevention Guards**: Using static analysis scripts () to enforce architectural rules and patterns at CI/pre-commit time.
-- **Idempotency**: Implemented in the backend for  and  to safely handle network retries.
-- **AuthEpoch**: A client-side state-invalidation mechanism to prevent race conditions from stale async requests after a user's session changes (e.g., logout).
-- **Policy as Code**: Implementing business rules (e.g., dev-only endpoints, disable legacy APIs) directly in the application logic with clear gates.
+- **Server-Authoritative State**: The backend is the source of truth for all monetization and entitlements.
+- **Canonical Patterns**: Using single, reusable functions/components for critical actions like navigation (), state management, and telemetry to prevent drift.
+- **Drift-Prevention Guards**: A comprehensive suite of static analysis scripts that run as part of 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers. to enforce architectural rules at pre-commit/CI time.
+- **AuthEpoch**: A client-side state-invalidation mechanism to prevent race conditions after user session changes.
+- **Release Hardening**: Adding fail-fast assertions and explicit environment checks to prevent misconfigurations in production.
+- **Component-Based Design System**: The emerging pattern of creating a small, reusable set of UI components (, ) to ensure UX consistency.
 
 **key DB schema**
-- **purchase_idempotency** collection: A unique index was created on  to ensure purchase verification is idempotent.
-- **revenuecat_webhook_events** collection: A unique index was created on  to ensure webhook events are processed only once.
+- No changes to the DB schema in this session.
 
 **changes in tech stack**
-- No new packages were added. The session focused on architectural patterns and hardening using the existing stack.
+- No changes to the core tech stack. The focus was on architectural patterns and process.
 
 **All files of reference**
-- : The heart of the new strict backend logic.
-- : The canonical frontend state machine for purchases.
-- : The single UI component for all purchases.
-- : Currently being modified for the  expansion.
-- : An example of the drift-prevention guards.
+- : The new directory for the design system components.
+- : The new home for critical release and UX documentation.
+- : Contains the numerous new guardrail and RC scripts.
+- : The canonical helper for all paywall navigation.
+- : The heart of the client-side entitlement caching logic.
 
 **Areas that need refactoring**:
-- : This file still exists but is a remnant of a previous integration. While the active  was canonicalized, this store should be audited and likely removed to prevent future confusion.
-- : Still uses client-side checks () to determine premium UI state, which can drift from the server-authoritative entitlement. It should be refactored to only use .
+- : Still exists as a remnant and should be audited and likely removed to prevent future confusion, as noted in the initial analysis.
 
 **key api endpoints**
-- : **Strictly Gated.** Verifies IAP receipts and grants entitlements. Requires .
-- : **NEW & Gated.** Handles entitlement updates from RevenueCat.
-- : Fetches the user's complete entitlement state.
-- : **Gated.** Checks entitlement before allowing access.
-- : **DEPRECATED** (returns 410 Gone).
-- Various simulated purchase endpoints (e.g., ): **DEV-Only.**
+- No new API endpoints were created. The session focused on hardening the client-side architecture.
 
 **Critical Info for New Agent**
-- The user is highly technical and expects extra-strict implementations. Adhere to canonical patterns and do not introduce alternative logic paths.
-- The highest priority is completing the **Phase 3.9: AuthEpoch Expansion** in .
-- After completing Phase 3.9, the next steps are clear: create a guard for it, then implement Phase 3.10 (TTL Refresh) and 3.11 (Canonical Navigation).
-- Do not handle secrets in chat. All secrets (, etc.) are expected to be loaded from server environment variables.
+- **Walter-required tasks are PAUSED**. The user does not have access to a personal computer to perform real-device testing. Do not attempt to start these tasks.
+- The immediate priority is to continue and complete **Phase 3.18 - UX Coding Completion Gate**. Resume by creating the  component and then integrating the new UI components from  into the main application screens.
+- The project now has **14 passing guardrail scripts**. Always run 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers. in the  directory after making changes to ensure no architectural rules have been violated.
 
 **documents created in this job**
-- /app/frontend/lib/entitlements/purchase-flow.ts
-- /app/frontend/components/PurchaseButton.tsx
-- /app/frontend/lib/entitlements/products.ts
-- /app/frontend/scripts/guard-entitlements-access.mjs
-- /app/frontend/scripts/guard-purchase-flow.mjs
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+========================================
+Backend Environment Variables
+========================================
+[0;31m✗[0m SERVER_DEV_MODE: NOT SET (REQUIRED)
+[0;31m✗[0m REVENUECAT_SECRET_KEY: NOT SET (REQUIRED)
+[0;31m✗[0m REVENUECAT_WEBHOOK_SECRET: NOT SET (REQUIRED)
+[1;33m○[0m JWT_SECRET_KEY: NOT SET (optional)
+[0;31m✗[0m MONGO_URL: NOT SET (REQUIRED)
+
+
+========================================
+Frontend Environment Variables
+========================================
+[0;31m✗[0m EXPO_PUBLIC_ENV: NOT SET (REQUIRED)
+[0;31m✗[0m EXPO_PUBLIC_BACKEND_URL: NOT SET (REQUIRED)
+[1;33m○[0m EXPO_PUBLIC_SENTRY_DSN: NOT SET (optional)
+[1;33m○[0m EXPO_PUBLIC_ANALYTICS_ENABLED: NOT SET (optional)
+[1;33m○[0m EXPO_PUBLIC_REVENUECAT_API_KEY: NOT SET (optional)
+
+
+========================================
+Summary
+========================================
+[0;31m✗ Some required environment variables are missing[0m
+- ========================================
+Backend Smoke Tests
+Base URL: http://localhost:8001/api
+========================================
+
+--- Health Check ---
+Testing: GET /health... [0;31m✗ FAIL[0m (expected 200, got 404)
+
+--- Authentication ---
+Testing: POST /auth/login (valid)... [0;32m✓ PASS[0m (HTTP 200)
+[0;32m✓ Got auth token[0m
+Testing: GET /auth/verify (with token)... [0;32m✓ PASS[0m (HTTP 200)
+
+--- Entitlements ---
+Testing: GET /entitlements/snapshot... [0;32m✓ PASS[0m (HTTP 200)
+Checking: server_time field... [0;32m✓ PRESENT[0m
+Checking: ttl_seconds field... [0;32m✓ PRESENT[0m
+Checking: version field... [0;32m✓ PRESENT[0m
+Checking: entitlements field... [0;32m✓ PRESENT[0m
+
+--- Feature Flags ---
+Testing: GET /v1/features... [0;32m✓ PASS[0m (HTTP 200)
+
+========================================
+Summary
+========================================
+Passed: [0;32m8[0m
+Failed: [0;31m1[0m
+
+[0;31mSome tests failed. Review before deploying.[0m
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Confirmed the repo sweep was adequate and gave the go-ahead for the next phase: **3.9 AuthEpoch expansion**, providing a detailed plan and minimum coverage list. (IN PROGRESS)
-2.  **User**: Made a final revision request for  to use a single canonical gating function instead of re-implementing checks. (RESOLVED)
-3.  **User**: Reviewed the agent's repo-wide sweep hardening and identified four must refactor/harden items to prevent drift. (RESOLVED)
-4.  **User**: Asked for the output of two  commands to perform a repo-wide sweep review. (RESOLVED)
-5.  **User**: Confirmed the paywall canonicalization was complete and approved the final summary. (RESOLVED)
-6.  **User**: Pointed out that the legacy  component was a policy violation risk and must be neutralized by replacing its internals with the canonical flow. (RESOLVED)
-7.  **User**: Confirmed the repo-wide sweep was complete and the summary was accurate, but noted the legacy  needed attention. (RESOLVED)
-8.  **User**: Provided a set of  commands for a repo-wide sweep to find and refactor all remaining premium/paywall entry points into the canonical flow. (RESOLVED)
-9.  **User**: Confirmed that the canonical purchase UX (Section 3.8) was implemented and asked for the next step, which is the repo-wide sweep. (RESOLVED)
-10. **User**: Provided the full plan for Section 3.8, including creating a canonical  file, wiring  everywhere, and adding more drift-prevention guards. (RESOLVED)
+1.  **User (LATEST)**: Initiated Phase 3.18 (UX Coding Completion Gate) and provided a detailed checklist of tasks. (IN PROGRESS)
+2.  **User**: Confirmed their readiness for the next installment of tasks. (ADDRESSED)
+3.  **User**: Paused all Walter-required (real device testing) tasks, stating they cannot be completed at this time. (ACKNOWLEDGED)
+4.  **User**: Confirmed Phase 3.17 (Release Candidate Validation Matrix) was adequate and complete. (RESOLVED)
+5.  **User**: Initiated Phase 3.17, providing the requirements for the validation matrix, documentation, and helper scripts. (RESOLVED)
+6.  **User**: Confirmed Phase 3.16 (Release Runbook) was adequate and complete. (RESOLVED)
+7.  **User**: Initiated Phase 3.16 and provided P0 revisions for Phase 3.15 to make it more production-proof. (RESOLVED)
+8.  **User**: Confirmed Phase 3.15 (Release Hardening) was mostly adequate but needed P0 revisions. (RESOLVED)
+9.  **User**: Initiated Phase 3.15, providing requirements for production assertions and documentation. (RESOLVED)
+10. **User**: Confirmed Phase 3.14 (App Resume Reconciliation) was adequate and complete. (RESOLVED)
 
 **Project Health Check:**
 - **Broken**:
     - Web video playback for cinematics (due to incompatible video codecs).
 - **Hardened / Improved**:
-    - The entire entitlements and purchase system is now server-authoritative and extra-strict.
-    - Numerous drift-prevention guards are in place to maintain architectural integrity.
-    - Legacy purchase/paywall systems have been neutralized.
+    - The entire application architecture has been significantly hardened for production.
 - **Mocked**:
-    - The RevenueCat integration in  is scaffolded. It checks for the presence of  but does not perform actual API calls to RevenueCat, instead returning mock success/failure.
+    - The RevenueCat integration in  is still scaffolded and does not make live calls.
 
 **3rd Party Integrations**
-*   **RevenueCat**: Architecturally central to the new IAP flow. The backend is built to interact with it, and a webhook handler is ready, but it's functionally mocked pending API keys.
-*   **Sentry**: For crash reporting.
-*   **@react-native-community/netinfo**: For network detection.
-*   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).
-*   **axios**: Used for frontend API calls.
-*   **zustand**: For frontend state management.
+- **RevenueCat**: Architecturally central but functionally mocked. The system is built to interact with it, but no API keys are configured.
+- **Sentry**: For crash reporting.
+- **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).
+- **Zustand**: For frontend state management.
 
 **Testing status**
-  - Testing agent used after significant changes: NO
-  - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: None.
-  - Known regressions: None.
+- Testing agent used after significant changes: NO (not since the latest UX component work started).
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: A suite of release candidate scripts were created in .
+- Known regressions: None.
 
 **Credentials to test flow:**
 - **Super Admin**:
@@ -326,6 +516,6 @@ The application now has a robust, extra-strict server-authoritative entitlements
     - Password: 
 
 **What agent forgot to execute**
-- The agent has not yet implemented the recommended guardrail script for the  pattern. This was suggested by the user as part of the Phase 3.9 plan.
+- The agent stated its next action was to create a  component, but the subsequent tool call created a batch of other UI components instead. The  component is still pending creation as part of Phase 3.18.
 
 </analysis>

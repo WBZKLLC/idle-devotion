@@ -43,7 +43,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "BACKEND_URL": "https://premium-gatekeeper.preview.emergentagent.com",
+      "BACKEND_URL": "https://secureapp-13.preview.emergentagent.com",
       "REVENUECAT_API_KEY": "",
       "router": {},
       "eas": {

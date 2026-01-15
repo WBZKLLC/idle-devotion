@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
   loader: { marginTop: 40 },
   
   // Pro Banner Styles
-  proBanner: { marginBottom: 16, borderRadius: 16, overflow: 'hidden' },
+  proBanner: { marginBottom: 8, borderRadius: 16, overflow: 'hidden' },
   proBannerGradient: { padding: 16 },
   proBannerContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   proBannerText: { flex: 1 },
@@ -710,6 +710,10 @@ const styles = StyleSheet.create({
   proBannerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   proBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
   proBadgeText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  
+  // Phase 3.19.4: Restore Row
+  restoreRow: { alignItems: 'center', marginBottom: 16 },
+  restoreHint: { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4 },
   
   firstPurchaseBanner: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, marginBottom: 20, gap: 12 },
   bannerTextContainer: { flex: 1 },

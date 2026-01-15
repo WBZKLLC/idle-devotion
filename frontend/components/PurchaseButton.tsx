@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 import { usePurchaseStore } from '../stores/purchaseStore';
 import { useHasEntitlement } from '../lib/entitlements/gating';
+import { PRODUCTS, type ProductKey } from '../lib/entitlements/products';
 import {
   startPurchaseFlow,
   verifyAndApplyPurchase,

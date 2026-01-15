@@ -41,25 +41,33 @@ export function SecondaryButton({
   onPress,
   disabled = false,
   loading = false,
-  icon,
+  leftIcon,
+  rightIcon,
+  icon, // deprecated, use leftIcon
   variant = 'outline',
   size = 'md',
   style,
   textStyle,
+  testID,
 }: SecondaryButtonProps) {
   const sizeConfig = SIZES[size];
+  const isDisabled = disabled || loading;
+  const resolvedLeftIcon = leftIcon || icon;
 
   const variantStyles = {
     outline: {
       container: styles.outlineContainer,
+      containerPressed: styles.outlineContainerPressed,
       text: styles.outlineText,
     },
     ghost: {
       container: styles.ghostContainer,
+      containerPressed: styles.ghostContainerPressed,
       text: styles.ghostText,
     },
     subtle: {
       container: styles.subtleContainer,
+      containerPressed: styles.subtleContainerPressed,
       text: styles.subtleText,
     },
   };
@@ -67,39 +75,49 @@ export function SecondaryButton({
   const currentVariant = variantStyles[variant];
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.7}
-      style={[
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
+      accessibilityLabel={title}
+      testID={testID}
+      style={({ pressed }) => [
         styles.base,
         currentVariant.container,
         { height: sizeConfig.height, paddingHorizontal: sizeConfig.paddingHorizontal },
-        disabled && styles.disabled,
+        pressed && !isDisabled && currentVariant.containerPressed,
+        pressed && !isDisabled && styles.pressed,
+        isDisabled && styles.disabled,
         style,
       ]}
     >
       {loading ? (
         <ActivityIndicator color={COLORS.gold.primary} size="small" />
       ) : (
-        <>
-          {icon && <>{icon}</>}
+        <View style={styles.content}>
+          {resolvedLeftIcon && <View style={styles.leftIcon}>{resolvedLeftIcon}</View>}
           <Text
             style={[
               styles.textBase,
               currentVariant.text,
               { fontSize: sizeConfig.fontSize },
-              icon && styles.textWithIcon,
-              disabled && styles.disabledText,
+              isDisabled && styles.disabledText,
               textStyle,
             ]}
           >
             {title}
           </Text>
-        </>
+          {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
+}
+
+/** Convenience wrapper for ghost variant */
+export function GhostButton(props: Omit<SecondaryButtonProps, 'variant'>) {
+  return <SecondaryButton {...props} variant="ghost" />;
 }
 
 const styles = StyleSheet.create({

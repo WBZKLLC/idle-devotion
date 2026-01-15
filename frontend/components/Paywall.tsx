@@ -50,9 +50,14 @@ export const Paywall: React.FC<PaywallProps> = ({
   productKey = 'PREMIUM_CINEMATICS_PACK',
   onClose,
   onPurchaseComplete,
+  onDismiss,
+  showNotNow = true,
 }) => {
   const product = PRODUCTS[productKey];
   const isOwned = useHasEntitlement(product.entitlementKey);
+  
+  // Dismiss handler - use onDismiss if provided, otherwise fall back to onClose
+  const handleDismiss = onDismiss || onClose;
 
   // If already owned, show success screen
   if (isOwned) {

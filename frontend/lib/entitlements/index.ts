@@ -21,6 +21,7 @@ export {
   goToPurchaseSuccess,
   getPaywallRoute,
   getStoreRoute,
+  KNOWN_SOURCES,
   type PaywallSource,
   type GoToPaywallOptions,
 } from './navigation';

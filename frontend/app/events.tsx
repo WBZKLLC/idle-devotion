@@ -118,7 +118,9 @@ export default function EventsScreen() {
         await fetchUser();
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.response?.data?.detail || 'Failed to perform summon');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.response?.data?.detail || 'Failed to perform summon');
+      }
     } finally {
       setIsPulling(false);
     }

@@ -92,7 +92,9 @@ export default function GachaScreen() {
       
       setShowResult(true);
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to pull gacha');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to pull gacha');
+      }
     }
   };
 

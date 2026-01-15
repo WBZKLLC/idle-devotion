@@ -91,7 +91,9 @@ export default function CombatScreen() {
       setShowingTurns(true);
       playTurnAnimations(result.turns);
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to start battle');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Failed to start battle');
+      }
       setIsBattling(false);
     } finally {
       setIsLoading(false);

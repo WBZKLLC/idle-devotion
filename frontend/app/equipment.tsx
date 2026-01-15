@@ -110,7 +110,9 @@ export default function EquipmentScreen() {
       fetchUser();
       loadData();
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Enhancement failed');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Enhancement failed');
+      }
     }
   };
 

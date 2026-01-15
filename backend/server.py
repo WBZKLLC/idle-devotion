@@ -11320,19 +11320,75 @@ class PurchaseVerifyRequest(BaseModel):
     transaction_id: Optional[str] = None
     receipt_data: Optional[str] = None
 
+# RevenueCat configuration (read from environment)
+REVENUECAT_SECRET_KEY = os.environ.get("REVENUECAT_SECRET_KEY")
+REVENUECAT_PROJECT_ID = os.environ.get("REVENUECAT_PROJECT_ID", "")
+
+async def verify_with_revenuecat(username: str, entitlement_key: str) -> dict:
+    """
+    Verify entitlement with RevenueCat API.
+    Returns: {"active": bool, "expires_at": str|None, "product_id": str|None}
+    """
+    import httpx
+    
+    # RevenueCat uses app_user_id - we use username
+    app_user_id = username
+    
+    url = f"https://api.revenuecat.com/v1/subscribers/{app_user_id}"
+    headers = {
+        "Authorization": f"Bearer {REVENUECAT_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, headers=headers, timeout=10.0)
+        
+        if resp.status_code == 404:
+            # User not found in RevenueCat - no active entitlements
+            return {"active": False, "expires_at": None, "product_id": None}
+        
+        if resp.status_code != 200:
+            raise HTTPException(
+                status_code=502,
+                detail=f"RevenueCat API error: {resp.status_code}"
+            )
+        
+        data = resp.json()
+        subscriber = data.get("subscriber", {})
+        entitlements = subscriber.get("entitlements", {})
+        
+        # Check if the requested entitlement is active
+        ent = entitlements.get(entitlement_key)
+        if not ent:
+            return {"active": False, "expires_at": None, "product_id": None}
+        
+        # Check expiration
+        expires_at = ent.get("expires_date")
+        is_active = ent.get("expires_date") is None or datetime.fromisoformat(expires_at.replace("Z", "+00:00")) > datetime.now(timezone.utc)
+        
+        return {
+            "active": is_active,
+            "expires_at": expires_at,
+            "product_id": ent.get("product_identifier"),
+        }
+
 @app.post("/api/purchases/verify")
 async def verify_purchase_endpoint(body: PurchaseVerifyRequest, current_user: dict = Depends(get_current_user)):
     """
     Verify a purchase and grant entitlement.
     Idempotent: same idempotency_key returns same result.
     
-    In production, this would:
-    1. Check idempotency key hasn't been used
-    2. Verify receipt with Apple/Google/RevenueCat
-    3. Grant entitlement if valid
-    4. Return updated snapshot
+    STRICT: Requires REVENUECAT_SECRET_KEY to be configured.
+    Without it, returns 503 Service Unavailable.
     """
     username = current_user["username"]
+    
+    # STRICT: Deny if RevenueCat not configured
+    if not REVENUECAT_SECRET_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail="Receipt verification not configured. Set REVENUECAT_SECRET_KEY in server environment."
+        )
     
     # Check idempotency - if we've seen this key, return cached result
     purchase_cache = db.purchase_idempotency
@@ -11345,16 +11401,54 @@ async def verify_purchase_endpoint(body: PurchaseVerifyRequest, current_user: di
         # Return cached result (idempotent)
         return existing["response"]
     
-    # TODO: In production, verify receipt with RevenueCat/Apple/Google here
-    # For now, we trust the client and grant the entitlement
+    # Verify with RevenueCat
+    try:
+        rc_result = await verify_with_revenuecat(username, body.entitlement_key)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"RevenueCat verification failed: {str(e)}"
+        )
     
-    # Grant the entitlement
     now = datetime.now(timezone.utc)
+    
+    if not rc_result["active"]:
+        # RevenueCat says NOT active - deny
+        response = {
+            "success": False,
+            "message": f"Entitlement {body.entitlement_key} not active in RevenueCat",
+            "entitlements_snapshot": None,
+        }
+        
+        # Still cache the denial for idempotency
+        try:
+            await purchase_cache.insert_one({
+                "username": username,
+                "idempotency_key": body.idempotency_key,
+                "response": response,
+                "created_at": now,
+                "expires_at": now + timedelta(hours=24),
+            })
+        except Exception:
+            # Race condition - another request inserted first
+            existing = await purchase_cache.find_one({
+                "username": username,
+                "idempotency_key": body.idempotency_key,
+            })
+            if existing:
+                return existing["response"]
+        
+        return response
+    
+    # RevenueCat confirms active - grant entitlement
     entitlement_data = {
         "status": "owned",
         "granted_at": now.isoformat(),
+        "expires_at": rc_result["expires_at"],
         "transaction_id": body.transaction_id,
-        "product_id": body.product_id,
+        "product_id": rc_result["product_id"] or body.product_id,
         "reason": "purchase",
     }
     
@@ -11380,13 +11474,26 @@ async def verify_purchase_endpoint(body: PurchaseVerifyRequest, current_user: di
     }
     
     # Cache the result for idempotency (TTL: 24 hours)
-    await purchase_cache.insert_one({
-        "username": username,
-        "idempotency_key": body.idempotency_key,
-        "response": response,
-        "created_at": now,
-        "expires_at": now + timedelta(hours=24),
-    })
+    # Handle race condition with duplicate key
+    try:
+        await purchase_cache.insert_one({
+            "username": username,
+            "idempotency_key": body.idempotency_key,
+            "response": response,
+            "created_at": now,
+            "expires_at": now + timedelta(hours=24),
+        })
+    except Exception as e:
+        # Duplicate key error - another request inserted first, fetch and return that
+        if "duplicate key" in str(e).lower() or "E11000" in str(e):
+            existing = await purchase_cache.find_one({
+                "username": username,
+                "idempotency_key": body.idempotency_key,
+            })
+            if existing:
+                return existing["response"]
+        # Other error - log but don't fail the purchase
+        print(f"⚠️ Idempotency cache insert warning: {e}")
     
     return response
 

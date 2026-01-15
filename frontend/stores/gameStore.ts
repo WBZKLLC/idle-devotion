@@ -390,16 +390,17 @@ export const useGameStore = create<GameState>((set, get) => ({
         "This should be used only by roster screens (e.g. /heroes), not hero-detail."
       );
     }
-    const { user } = get();
-    if (!user) return;
     
     set({ isLoading: true });
     try {
       // Uses centralized API wrapper from lib/api.ts
       const heroes = await getUserHeroes(user.username);
+      // Ignore if logout happened during request
+      if (get().authEpoch !== epochAtStart) return;
       setUserHeroesState(set, heroes);
       set({ isLoading: false });
     } catch (error) {
+      if (get().authEpoch !== epochAtStart) return;
       set({ error: 'Failed to fetch heroes', isLoading: false });
       console.error('Failed to fetch heroes:', error);
     }

@@ -307,9 +307,13 @@ export default function ChatScreen() {
             } catch (error: any) {
               const status = error.response?.status;
               if (status === 401) {
-                Alert.alert('Authentication Required', 'Please log in to block users');
+                if (!isErrorHandledGlobally(error)) {
+                  Alert.alert('Authentication Required', 'Please log in to block users');
+                }
               } else {
-                Alert.alert('Error', error.response?.data?.detail || 'Failed to block user');
+                if (!isErrorHandledGlobally(error)) {
+                  Alert.alert('Error', error.response?.data?.detail || 'Failed to block user');
+                }
               }
             }
           }

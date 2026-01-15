@@ -696,3 +696,31 @@ agent_communication:
     message: "✅ ENTITLEMENTS TTL + REFRESH DISCIPLINE (PHASE 3.10) TESTING COMPLETE: Comprehensive backend testing of server-time-based staleness checks completed successfully. All 3 tests passed (100% success rate). TESTED SCENARIOS: (1) Entitlements Snapshot API Structure - GET /api/entitlements/snapshot returns correct structure with server_time (ISO8601 format), ttl_seconds (300), version (integer), and entitlements object containing all expected keys (PREMIUM, NO_ADS, PREMIUM_CINEMATICS_PACK, STARTER_PACK). Each entitlement has valid status field. (2) Fresh Server Time Verification - Multiple requests return fresh server_time proving it's not cached. Time difference confirmed: 1.57s between consecutive requests demonstrates server-authoritative timestamps. (3) Entitlements Data Consistency - All entitlements have valid status values (not_owned), proper key fields, and consistent data structure. Status distribution: 4 not_owned entitlements for new user. TECHNICAL VERIFICATION: Backend provides correct data structure for client-side staleness calculations. Authentication working with EntitlementTester/TestPass123!. Server-time-based TTL system fully functional - backend supports Phase 3.10 client-side staleness checks. The staleness check itself is client-side (isStale() and ensureFreshEntitlements() in entitlementStore.ts) and this test validates the backend provides the correct data structure for those calculations."
   - agent: "main"
     message: "🧭 PHASE 3.11 - CANONICAL PREMIUM NAVIGATION COMPLETE: Created single entry point for all paywall/store navigation to prevent drift. CHANGES: (1) Created lib/entitlements/navigation.ts with goToPaywall(), goToStore(), goToPurchaseSuccess(), getPaywallRoute(), getStoreRoute(). (2) Updated openPremiumCinematic.ts to use goToPaywall() instead of router.push('/paid-features'). (3) Updated gating.ts - requireEntitlement() now uses goToPaywall() with source tracking. (4) Updated profile.tsx - 'Premium Features' button uses goToPaywall({ source: 'profile' }). (5) Updated battle-pass.tsx - Premium pass alert uses goToPaywall({ productKey: 'PREMIUM_SUBSCRIPTION', source: 'battle_pass' }). (6) Updated index.tsx - Store quick link uses goToStore('store'). (7) Updated guard-purchase-flow.mjs to detect DIRECT_PAYWALL_NAVIGATION violations (blocks router.push to /paid-features or /store outside navigation.ts). (8) Exported navigation helpers from entitlements/index.ts. ALL 12 GUARDS PASS. PATTERN: Only navigation.ts contains actual route strings. Screens use goToPaywall({ productKey, source, heroId? }) or goToStore(source)."
+  - task: "Phase 3.18 Alert-to-Toast UX Overhaul"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/*.tsx, /app/frontend/components/ui/Toast.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Phase 3.18 UX overhaul complete. Replaced 85 Alert.alert() calls with non-blocking toast notifications. Kept only confirmation alerts (purchase, destructive, logout, rewards_modal, legacy_account_flow, dev_mode). Guard script now passes with 0 violations. Files modified: hero-manager.tsx, hero-progression.tsx, index.tsx, paid-features.tsx, profile.tsx, resource-bag.tsx, store.tsx, team.tsx."
+
+agent_communication:
+  - agent: "main"
+    message: "Phase 3.18 Alert-to-Toast completion. All guard scripts pass (0 violations). Please test: 1) Basic app navigation and login 2) Toast notifications appear for info/error/success events 3) Confirmation alerts still appear for destructive actions (logout, purchases) 4) No blocking alerts for validation errors or info messages."
+
+test_plan:
+  current_focus:
+    - "Phase 3.18 Alert-to-Toast UX Overhaul"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true

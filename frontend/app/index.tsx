@@ -212,15 +212,16 @@ export default function HomeScreen() {
   const handleStartGame = async () => {
     const trimmedUsername = username.trim();
     if (!trimmedUsername) { 
-      Alert.alert('Enter Username', 'Please enter a username to begin'); 
+      // Phase 3.18.4: Toast for validation
+      toast.warning('Please enter a username to begin');
       return; 
     }
     if (!password) {
-      Alert.alert('Enter Password', 'Please enter a password to secure your account');
+      toast.warning('Please enter a password to secure your account');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Password Too Short', 'Password must be at least 6 characters');
+      toast.warning('Password must be at least 6 characters');
       return;
     }
     
@@ -229,7 +230,7 @@ export default function HomeScreen() {
     if (isRegistering) {
       // Registration flow
       if (password !== confirmPassword) {
-        Alert.alert('Password Mismatch', 'Passwords do not match');
+        toast.error('Passwords do not match');
         return;
       }
       
@@ -242,7 +243,7 @@ export default function HomeScreen() {
       const result = await loginWithPassword(trimmedUsername, password);
       if (!result.success) {
         if (result.error === 'NEEDS_PASSWORD') {
-          // Legacy account - prompt to set password
+          // Legacy account - prompt to set password (KEEP as Alert - user decision required)
           Alert.alert(
             'Account Security Upgrade',
             'This account was created before passwords were required. Please set a password to secure your account.',
@@ -254,14 +255,14 @@ export default function HomeScreen() {
                   if (!setResult.success) {
                     setAuthError(setResult.error || 'Failed to set password');
                   } else {
-                    Alert.alert('Success', 'Password set successfully! Your account is now secure.');
+                    toast.success('Password set successfully! Your account is now secure.');
                   }
                 }
               }
             ]
           );
         } else if (result.error?.includes('Invalid username')) {
-          // User doesn't exist - offer to register
+          // User doesn't exist - offer to register (KEEP as Alert - user decision required)
           Alert.alert(
             'Account Not Found',
             'No account with this username exists. Would you like to create a new account?',

@@ -17,6 +17,8 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+// Phase 3.18.7: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 
 // Centralized API wrappers (no raw axios in screens)
 import {
@@ -122,7 +124,7 @@ export default function ArenaScreen() {
   const startBattle = async (opponent: ArenaOpponent) => {
     if (!user || !record) return;
     if (record.tickets <= 0) {
-      Alert.alert('No Tickets', 'You need arena tickets to battle. Wait for regeneration or purchase more.');
+      toast.warning('You need arena tickets to battle. Wait for regeneration or purchase more.');
       return;
     }
 

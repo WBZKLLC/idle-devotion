@@ -292,7 +292,7 @@ export default function ChatScreen() {
   const handleBlockUser = async (usernameToBlock: string) => {
     if (!user) return;
     
-    // KEEP as Alert - this is a destructive confirmation
+    // ALERT_ALLOWED: destructive_confirm
     Alert.alert(
       'Block User',
       `Are you sure you want to block ${usernameToBlock}? You won't see their messages anymore.`,
@@ -360,6 +360,7 @@ export default function ChatScreen() {
     const showMessageOptions = () => {
       if (isOwn) return;
       
+      // ALERT_ALLOWED: destructive_confirm
       Alert.alert(
         msg.sender_username,
         'What would you like to do?',

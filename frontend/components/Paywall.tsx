@@ -8,6 +8,8 @@
  * 
  * DO NOT add RevenueCat native paywall logic here.
  * DO NOT implement purchase state or verification here.
+ * 
+ * Phase 3.19.4: Enhanced with trust signals, restore purchases, and first-purchase framing.
  */
 
 import React from 'react';
@@ -24,8 +26,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { PRODUCTS, type ProductKey } from '../lib/entitlements/products';
-import { useHasEntitlement } from '../lib/entitlements/gating';
+import { useHasEntitlement, useEntitlementStore } from '../lib/entitlements/gating';
 import PurchaseButton from './PurchaseButton';
+import { SecondaryButton } from './ui/SecondaryButton';
+import { toast } from './ui/Toast';
 
 interface PaywallProps {
   /** Product to display/purchase (defaults to PREMIUM_CINEMATICS_PACK) */
@@ -38,6 +42,8 @@ interface PaywallProps {
   onDismiss?: () => void;
   /** Show the "Not now" exit affordance (default: true) */
   showNotNow?: boolean;
+  /** Flag indicating if this is user's first purchase ever (for first-purchase framing) */
+  isFirstPurchase?: boolean;
 }
 
 /**

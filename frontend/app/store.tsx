@@ -388,6 +388,20 @@ export default function StoreScreen() {
               </View>
             </LinearGradient>
           </TouchableOpacity>
+          
+          {/* Phase 3.19.4: Restore Purchases Button */}
+          <View style={styles.restoreRow}>
+            <SecondaryButton
+              title={isRestoring ? "Restoring..." : "Restore Purchases"}
+              onPress={handleRestorePurchases}
+              disabled={isRestoring}
+              loading={isRestoring}
+              variant="ghost"
+              size="sm"
+              leftIcon={<Ionicons name="refresh" size={14} color={COLORS.gold.primary} />}
+            />
+            <Text style={styles.restoreHint}>Switching devices? Reinstalling?</Text>
+          </View>
 
           {/* Currency Display */}
           <View style={styles.currencyBar}>

@@ -18,6 +18,8 @@ import {
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
+// Phase 3.18.4: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 import {
   getChatBubbles,
   getChatMessages,

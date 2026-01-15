@@ -11730,3 +11730,204 @@ async def setup_purchase_idempotency_index():
     except Exception as e:
         if "already exists" not in str(e).lower():
             print(f"⚠️ purchase_idempotency index warning: {e}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# REVENUECAT WEBHOOK ENDPOINT
+# Server-authoritative entitlement updates via RevenueCat webhooks
+# https://www.revenuecat.com/docs/integrations/webhooks
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Webhook authorization header name
+REVENUECAT_WEBHOOK_AUTH_HEADER = os.environ.get("REVENUECAT_WEBHOOK_AUTH_HEADER", "X-RevenueCat-Webhook-Authorization")
+REVENUECAT_WEBHOOK_SECRET = os.environ.get("REVENUECAT_WEBHOOK_SECRET")
+
+# Event types we handle
+RC_EVENT_INITIAL_PURCHASE = "INITIAL_PURCHASE"
+RC_EVENT_RENEWAL = "RENEWAL"
+RC_EVENT_CANCELLATION = "CANCELLATION"
+RC_EVENT_UNCANCELLATION = "UNCANCELLATION"
+RC_EVENT_EXPIRATION = "EXPIRATION"
+RC_EVENT_PRODUCT_CHANGE = "PRODUCT_CHANGE"
+RC_EVENT_BILLING_ISSUE = "BILLING_ISSUE"
+RC_EVENT_TRANSFER = "TRANSFER"
+
+# Mapping of RC entitlement IDs to our entitlement keys
+RC_ENTITLEMENT_MAP = {
+    "premium": "PREMIUM",
+    "premium_cinematics": "PREMIUM_CINEMATICS_PACK",
+    "no_ads": "NO_ADS",
+    "starter_pack": "STARTER_PACK",
+}
+
+
+class RevenueCatWebhookEvent(BaseModel):
+    """RevenueCat webhook event payload"""
+    api_version: str = "1.0"
+    event: dict
+
+
+@app.post("/api/webhooks/revenuecat")
+async def revenuecat_webhook(request: Request, event: RevenueCatWebhookEvent):
+    """
+    Handle RevenueCat webhook events.
+    Updates entitlements based on subscription/purchase events.
+    
+    Must be idempotent (same event ID = same result).
+    Returns 200 quickly to avoid RC retries.
+    """
+    # Verify webhook signature
+    if REVENUECAT_WEBHOOK_SECRET:
+        auth_header = request.headers.get(REVENUECAT_WEBHOOK_AUTH_HEADER, "")
+        if auth_header != REVENUECAT_WEBHOOK_SECRET:
+            raise HTTPException(status_code=401, detail="Invalid webhook authorization")
+    else:
+        # No secret configured - log warning but allow in dev
+        if not SERVER_DEV_MODE:
+            raise HTTPException(
+                status_code=503,
+                detail="Webhook secret not configured. Set REVENUECAT_WEBHOOK_SECRET."
+            )
+        print("⚠️ RevenueCat webhook received without signature verification (dev mode)")
+    
+    event_data = event.event
+    event_id = event_data.get("id")
+    event_type = event_data.get("type")
+    
+    if not event_id or not event_type:
+        raise HTTPException(status_code=400, detail="Missing event id or type")
+    
+    # Idempotency check - have we processed this event?
+    webhook_events = db.revenuecat_webhook_events
+    existing = await webhook_events.find_one({"event_id": event_id})
+    if existing:
+        # Already processed - return success (idempotent)
+        return {"status": "ok", "message": "Event already processed", "event_id": event_id}
+    
+    # Extract user info
+    app_user_id = event_data.get("app_user_id")
+    if not app_user_id:
+        # Try subscriber info
+        subscriber_info = event_data.get("subscriber_info", {})
+        app_user_id = subscriber_info.get("original_app_user_id") or event_data.get("original_app_user_id")
+    
+    if not app_user_id:
+        raise HTTPException(status_code=400, detail="Missing app_user_id")
+    
+    # app_user_id is the username in our system
+    username = app_user_id
+    
+    # Get entitlement info
+    entitlement_id = None
+    product_id = event_data.get("product_id")
+    
+    # Try to get entitlement from entitlement_identifiers or subscriber info
+    entitlement_ids = event_data.get("entitlement_ids") or event_data.get("entitlement_identifiers") or []
+    if entitlement_ids:
+        entitlement_id = entitlement_ids[0]  # Use first entitlement
+    
+    # Map RC entitlement to our key
+    our_entitlement_key = RC_ENTITLEMENT_MAP.get(entitlement_id, entitlement_id)
+    
+    if not our_entitlement_key:
+        # No entitlement to update - just log and return
+        print(f"⚠️ RevenueCat webhook: No entitlement mapping for {entitlement_id}")
+        await webhook_events.insert_one({
+            "event_id": event_id,
+            "event_type": event_type,
+            "username": username,
+            "processed_at": datetime.now(timezone.utc),
+            "result": "skipped_no_mapping",
+        })
+        return {"status": "ok", "message": "No entitlement mapping", "event_id": event_id}
+    
+    # Validate entitlement key
+    try:
+        validate_entitlement_key(our_entitlement_key)
+    except HTTPException:
+        print(f"⚠️ RevenueCat webhook: Invalid entitlement key {our_entitlement_key}")
+        return {"status": "error", "message": "Invalid entitlement key", "event_id": event_id}
+    
+    now = datetime.now(timezone.utc)
+    result = "processed"
+    
+    # Process based on event type
+    if event_type in [RC_EVENT_INITIAL_PURCHASE, RC_EVENT_RENEWAL, RC_EVENT_UNCANCELLATION]:
+        # Grant or extend entitlement
+        expires_at = event_data.get("expiration_at_ms")
+        if expires_at:
+            expires_at = datetime.fromtimestamp(expires_at / 1000, tz=timezone.utc).isoformat()
+        
+        entitlement_data = {
+            "status": "owned",
+            "granted_at": now.isoformat(),
+            "expires_at": expires_at,
+            "transaction_id": event_data.get("transaction_id") or event_data.get("store_transaction_id"),
+            "product_id": product_id,
+            "reason": event_type.lower(),
+        }
+        
+        await db.users.update_one(
+            {"username": username},
+            {
+                "$set": {f"entitlements.{our_entitlement_key}": entitlement_data},
+                "$inc": {"entitlements_version": 1},
+            }
+        )
+        result = "entitlement_granted"
+        
+    elif event_type in [RC_EVENT_CANCELLATION, RC_EVENT_EXPIRATION]:
+        # Mark as expired (don't delete - keep history)
+        await db.users.update_one(
+            {"username": username},
+            {
+                "$set": {
+                    f"entitlements.{our_entitlement_key}.status": "expired",
+                    f"entitlements.{our_entitlement_key}.expired_at": now.isoformat(),
+                    f"entitlements.{our_entitlement_key}.reason": event_type.lower(),
+                },
+                "$inc": {"entitlements_version": 1},
+            }
+        )
+        result = "entitlement_expired"
+        
+    elif event_type == RC_EVENT_BILLING_ISSUE:
+        # Mark as grace period / billing issue
+        await db.users.update_one(
+            {"username": username},
+            {
+                "$set": {
+                    f"entitlements.{our_entitlement_key}.billing_issue": True,
+                    f"entitlements.{our_entitlement_key}.billing_issue_at": now.isoformat(),
+                },
+            }
+        )
+        result = "billing_issue_flagged"
+    
+    # Record that we processed this event (idempotency)
+    await webhook_events.insert_one({
+        "event_id": event_id,
+        "event_type": event_type,
+        "username": username,
+        "entitlement_key": our_entitlement_key,
+        "product_id": product_id,
+        "processed_at": now,
+        "result": result,
+    })
+    
+    print(f"✅ RevenueCat webhook processed: {event_type} for {username} -> {our_entitlement_key} ({result})")
+    
+    return {"status": "ok", "event_id": event_id, "result": result}
+
+
+# Create index for webhook event idempotency
+@app.on_event("startup")
+async def setup_webhook_event_index():
+    try:
+        await db.revenuecat_webhook_events.create_index("event_id", unique=True)
+        await db.revenuecat_webhook_events.create_index("username")
+        await db.revenuecat_webhook_events.create_index("processed_at")
+        print("✅ Created revenuecat_webhook_events indexes")
+    except Exception as e:
+        if "already exists" not in str(e).lower():
+            print(f"⚠️ revenuecat_webhook_events index warning: {e}")

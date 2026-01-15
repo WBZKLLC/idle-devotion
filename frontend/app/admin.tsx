@@ -95,10 +95,14 @@ export default function AdminPanelScreen() {
       }
     } catch (error: any) {
       if (error.response?.status === 404) {
-        Alert.alert('Not Found', 'User not found');
+        if (!isErrorHandledGlobally(error)) {
+          Alert.alert('Not Found', 'User not found');
+        }
         setSearchResults([]);
       } else {
-        Alert.alert('Error', 'Failed to search users');
+        if (!isErrorHandledGlobally(error)) {
+          Alert.alert('Error', 'Failed to search users');
+        }
       }
     } finally {
       setLoading(false);

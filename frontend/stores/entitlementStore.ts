@@ -1,186 +1,291 @@
 /**
- * Entitlement Store
+ * Entitlement Store - Server Truth Model
  * 
- * Manages paid feature entitlements (offline-first, cached).
- * Supports both global keys (PREMIUM_CINEMATICS_PACK) and
- * dynamic per-hero keys (PREMIUM_CINEMATIC_OWNED:<heroId>).
- * 
- * MIGRATION: Automatically migrates old keys (PAID_CINEMATICS_PACK,
- * CINEMATIC_OWNED:*) to new format on hydration.
- * 
- * Future: will integrate with StoreKit/Play Billing for real purchases.
+ * STRICT INVARIANTS:
+ * - Store NEVER grants entitlements - only server can grant
+ * - Store caches server snapshots for UX (offline/fast reads)
+ * - All reads go through gating helpers, not direct store access
+ * - Refresh from server on: startup, post-purchase, manual
  */
 
 import { create } from 'zustand';
 import { storageGet, storageSet, storageRemove } from '../lib/storage';
 import { 
-  premiumCinematicOwnedKey, 
+  type EntitlementsSnapshot, 
+  type ServerEntitlement,
+  type EntitlementKey,
+  ENTITLEMENT_KEYS,
+  createEmptyEntitlementsMap,
+  premiumCinematicOwnedKey,
+  PREMIUM_CINEMATIC_OWNED_PREFIX,
+} from '../lib/entitlements/types';
+import { 
   LEGACY_PACK_KEY, 
   LEGACY_OWNED_PREFIX,
   migrateLegacyKey 
-} from '../lib/entitlements';
+} from '../lib/entitlements/legacy';
 
-// Debug logging helpers - only log in development
+// Debug logging helpers
 const dlog = (...args: any[]) => { if (__DEV__) console.log(...args); };
 
-const STORAGE_KEY = '@idledevotion/entitlements/v3';
-const LEGACY_STORAGE_KEY = '@idledevotion/entitlements/v2';
+const STORAGE_KEY = '@idledevotion/entitlements/v4';
+const LEGACY_STORAGE_KEY = '@idledevotion/entitlements/v3';
 
-interface EntitlementState {
-  // Dynamic map: supports any string key (global or per-hero)
-  entitlements: Record<string, boolean>;
-  isHydrated: boolean;
+// API import (lazy to avoid circular deps at module load)
+let _getEntitlementsSnapshot: (() => Promise<EntitlementsSnapshot>) | null = null;
+async function getEntitlementsSnapshotApi(): Promise<EntitlementsSnapshot> {
+  if (!_getEntitlementsSnapshot) {
+    const api = await import('../lib/api');
+    _getEntitlementsSnapshot = api.getEntitlementsSnapshot;
+  }
+  return _getEntitlementsSnapshot();
+}
+
+interface EntitlementStoreState {
+  // Server snapshot (source of truth when available)
+  snapshot: EntitlementsSnapshot | null;
+  
+  // Normalized map for O(1) lookups
+  entitlementsByKey: Record<string, ServerEntitlement>;
+  
+  // Refresh metadata
+  lastRefreshAt: number | null;
+  isRefreshing: boolean;
+  refreshError: string | null;
   
   // Actions
   hydrateEntitlements: () => Promise<void>;
+  refreshFromServer: (reason: 'startup' | 'post_purchase' | 'manual') => Promise<void>;
+  clear: () => void;
   
-  // Generic entitlement checks
+  // Read helpers (use gating.ts instead for screens)
   hasEntitlement: (key: string) => boolean;
-  setEntitlement: (key: string, value: boolean) => Promise<void>;
   
-  // Convenience: per-hero premium cinematic ownership
-  hasHeroPremiumCinematicOwned: (heroId: string) => boolean;
-  setHeroPremiumCinematicOwned: (heroId: string, owned: boolean) => Promise<void>;
-  
-  // DEV-only helpers
-  grantEntitlementDevOnly: (key: string) => Promise<void>;
-  revokeEntitlementDevOnly: (key: string) => Promise<void>;
-  clearAllEntitlementsDevOnly: () => Promise<void>;
+  // DEV ONLY - grants for testing (guarded by __DEV__)
+  devGrantEntitlement: (key: string) => void;
+  devRevokeEntitlement: (key: string) => void;
+  devClearAll: () => void;
 }
 
-/**
- * Migrate legacy entitlements to new format
- */
-function migrateEntitlements(oldEntitlements: Record<string, boolean>): Record<string, boolean> {
-  const newEntitlements: Record<string, boolean> = {};
-  let migrated = false;
-  
-  for (const [key, value] of Object.entries(oldEntitlements)) {
-    const newKey = migrateLegacyKey(key);
-    if (newKey !== key) {
-      migrated = true;
-      if (__DEV__) {
-        dlog(`[entitlementStore] Migrating ${key} -> ${newKey}`);
-      }
-    }
-    newEntitlements[newKey] = value;
-  }
-  
-  if (migrated && __DEV__) {
-    dlog('[entitlementStore] Migration complete');
-  }
-  
-  return newEntitlements;
-}
+export const useEntitlementStore = create<EntitlementStoreState>((set, get) => ({
+  snapshot: null,
+  entitlementsByKey: createEmptyEntitlementsMap(),
+  lastRefreshAt: null,
+  isRefreshing: false,
+  refreshError: null,
 
-export const useEntitlementStore = create<EntitlementState>((set, get) => ({
-  entitlements: {},
-  isHydrated: false,
-
+  /**
+   * Hydrate from cached snapshot on app startup
+   * Does NOT grant - only restores last known server state
+   */
   hydrateEntitlements: async () => {
+    dlog('[entitlementStore] Hydrating from cache...');
+    
     try {
-      // Try new storage key first
-      let raw = await storageGet(STORAGE_KEY);
-      let needsMigration = false;
-      
-      // If not found, try legacy key
-      if (!raw) {
-        raw = await storageGet(LEGACY_STORAGE_KEY);
-        if (raw) {
-          needsMigration = true;
-          if (__DEV__) {
-            dlog('[entitlementStore] Found legacy storage, will migrate');
-          }
-        }
+      // Try to load cached snapshot
+      const cached = await storageGet(STORAGE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached) as EntitlementsSnapshot;
+        const normalized = { ...createEmptyEntitlementsMap(), ...parsed.entitlements };
+        set({
+          snapshot: parsed,
+          entitlementsByKey: normalized,
+        });
+        dlog('[entitlementStore] Hydrated from cache:', Object.keys(normalized).length, 'keys');
       }
       
-      if (!raw) {
-        set({ isHydrated: true });
-        return;
-      }
+      // Migrate legacy data if present
+      await migrateLegacyData(set, get);
       
-      const parsed = JSON.parse(raw);
-      let entitlements = parsed?.entitlements ?? {};
-      
-      // Migrate legacy keys to new format
-      entitlements = migrateEntitlements(entitlements);
-      
-      set({ entitlements, isHydrated: true });
-      
-      // If we migrated, save to new storage and clean up
-      if (needsMigration) {
-        await storageSet(STORAGE_KEY, JSON.stringify({ entitlements }));
-        await storageRemove(LEGACY_STORAGE_KEY);
-        if (__DEV__) {
-          dlog('[entitlementStore] Migrated to new storage key');
-        }
-      }
-      
-      if (__DEV__) {
-        dlog('[entitlementStore] Hydrated:', Object.keys(entitlements));
-      }
     } catch (e) {
       console.error('[entitlementStore] Hydration error:', e);
-      set({ isHydrated: true });
     }
   },
 
-  hasEntitlement: (key: string) => Boolean(get().entitlements[key]),
-
-  setEntitlement: async (key: string, value: boolean) => {
-    const current = get().entitlements;
-    const next = { ...current };
-    if (value) {
-      next[key] = true;
-    } else {
-      delete next[key];
-    }
-    set({ entitlements: next });
-    await storageSet(STORAGE_KEY, JSON.stringify({ entitlements: next }));
-    if (__DEV__) {
-      dlog(`[entitlementStore] Set ${key} = ${value}`);
-    }
-  },
-
-  // Convenience: per-hero premium cinematic ownership
-  hasHeroPremiumCinematicOwned: (heroId: string) => {
-    const key = premiumCinematicOwnedKey(heroId);
-    return Boolean(get().entitlements[key]);
-  },
-
-  setHeroPremiumCinematicOwned: async (heroId: string, owned: boolean) => {
-    const key = premiumCinematicOwnedKey(heroId);
-    await get().setEntitlement(key, owned);
-  },
-
-  // DEV ONLY: Grant entitlement for testing
-  grantEntitlementDevOnly: async (key: string) => {
-    if (!__DEV__) {
-      console.warn('[entitlementStore] grantEntitlementDevOnly called in production!');
+  /**
+   * Refresh entitlements from server
+   * This is the ONLY way to get authoritative entitlement state
+   */
+  refreshFromServer: async (reason) => {
+    if (get().isRefreshing) {
+      dlog('[entitlementStore] Already refreshing, skipping');
       return;
     }
-    await get().setEntitlement(key, true);
+    
+    dlog('[entitlementStore] Refreshing from server, reason:', reason);
+    set({ isRefreshing: true, refreshError: null });
+    
+    try {
+      const snap = await getEntitlementsSnapshotApi();
+      
+      // Strict normalization: fill missing keys as not_owned
+      const normalized = { ...createEmptyEntitlementsMap(), ...snap.entitlements };
+      
+      set({
+        snapshot: snap,
+        entitlementsByKey: normalized,
+        lastRefreshAt: Date.now(),
+        isRefreshing: false,
+      });
+      
+      // Persist for offline cache
+      await storageSet(STORAGE_KEY, JSON.stringify(snap));
+      
+      dlog('[entitlementStore] Refreshed from server:', snap.version);
+      
+    } catch (e: any) {
+      const errorMsg = e?.response?.data?.detail || e?.message || 'Failed to refresh entitlements';
+      console.error('[entitlementStore] Refresh error:', errorMsg);
+      set({
+        isRefreshing: false,
+        refreshError: errorMsg,
+      });
+    }
+  },
+
+  /**
+   * Clear all entitlement state (on logout)
+   */
+  clear: () => {
+    dlog('[entitlementStore] Clearing state');
+    set({
+      snapshot: null,
+      entitlementsByKey: createEmptyEntitlementsMap(),
+      lastRefreshAt: null,
+      refreshError: null,
+    });
+    storageRemove(STORAGE_KEY).catch(() => {});
+  },
+
+  /**
+   * Check if user has entitlement (internal use)
+   * Screens should use gating helpers instead
+   */
+  hasEntitlement: (key: string) => {
+    const { entitlementsByKey, snapshot } = get();
+    const entitlement = entitlementsByKey[key];
+    if (!entitlement || entitlement.status !== 'owned') return false;
+    
+    // Check expiry using server time
+    if (entitlement.expires_at && snapshot?.server_time) {
+      const expiresAt = new Date(entitlement.expires_at).getTime();
+      const serverNow = new Date(snapshot.server_time).getTime();
+      if (serverNow > expiresAt) return false;
+    }
+    
+    return true;
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // DEV ONLY METHODS - For testing paywalls/features
+  // These should NEVER be called in production code paths
+  // ═══════════════════════════════════════════════════════════
+
+  devGrantEntitlement: (key: string) => {
+    if (!__DEV__) {
+      console.warn('[entitlementStore] devGrantEntitlement called in production - BLOCKED');
+      return;
+    }
+    
+    const { entitlementsByKey } = get();
+    const updated = {
+      ...entitlementsByKey,
+      [key]: {
+        key,
+        status: 'owned' as const,
+        granted_at: new Date().toISOString(),
+        reason: 'admin' as const,
+      },
+    };
+    
+    // Create fake snapshot for dev
+    const fakeSnapshot: EntitlementsSnapshot = {
+      server_time: new Date().toISOString(),
+      version: Date.now(),
+      username: 'DEV_USER',
+      entitlements: updated,
+      source: 'database',
+    };
+    
+    set({ 
+      entitlementsByKey: updated,
+      snapshot: fakeSnapshot,
+    });
     dlog('[entitlementStore] DEV: Granted', key);
   },
 
-  // DEV ONLY: Revoke entitlement for testing
-  revokeEntitlementDevOnly: async (key: string) => {
+  devRevokeEntitlement: (key: string) => {
     if (!__DEV__) {
-      console.warn('[entitlementStore] revokeEntitlementDevOnly called in production!');
+      console.warn('[entitlementStore] devRevokeEntitlement called in production - BLOCKED');
       return;
     }
-    await get().setEntitlement(key, false);
+    
+    const { entitlementsByKey } = get();
+    const updated = {
+      ...entitlementsByKey,
+      [key]: {
+        key,
+        status: 'not_owned' as const,
+      },
+    };
+    
+    set({ entitlementsByKey: updated });
     dlog('[entitlementStore] DEV: Revoked', key);
   },
 
-  // DEV ONLY: Clear all entitlements
-  clearAllEntitlementsDevOnly: async () => {
+  devClearAll: () => {
     if (!__DEV__) {
-      console.warn('[entitlementStore] clearAllEntitlementsDevOnly called in production!');
+      console.warn('[entitlementStore] devClearAll called in production - BLOCKED');
       return;
     }
-    set({ entitlements: {} });
-    await storageRemove(STORAGE_KEY);
+    
+    set({ 
+      entitlementsByKey: createEmptyEntitlementsMap(),
+      snapshot: null,
+    });
+    storageRemove(STORAGE_KEY).catch(() => {});
     dlog('[entitlementStore] DEV: Cleared all entitlements');
   },
 }));
+
+/**
+ * Migrate legacy entitlement data to new format
+ */
+async function migrateLegacyData(
+  set: (state: Partial<EntitlementStoreState>) => void,
+  get: () => EntitlementStoreState
+) {
+  try {
+    const legacyData = await storageGet(LEGACY_STORAGE_KEY);
+    if (!legacyData) return;
+    
+    dlog('[entitlementStore] Migrating legacy data...');
+    
+    const legacy = JSON.parse(legacyData);
+    const { entitlementsByKey } = get();
+    const updated = { ...entitlementsByKey };
+    
+    // Migrate each legacy key
+    for (const [oldKey, value] of Object.entries(legacy)) {
+      if (value) {
+        const newKey = migrateLegacyKey(oldKey);
+        updated[newKey] = {
+          key: newKey,
+          status: 'owned',
+          granted_at: new Date().toISOString(),
+          reason: 'unknown',
+        };
+        dlog('[entitlementStore] Migrated:', oldKey, '->', newKey);
+      }
+    }
+    
+    set({ entitlementsByKey: updated });
+    
+    // Remove legacy data after migration
+    await storageRemove(LEGACY_STORAGE_KEY);
+    dlog('[entitlementStore] Legacy migration complete');
+    
+  } catch (e) {
+    console.error('[entitlementStore] Legacy migration error:', e);
+  }
+}

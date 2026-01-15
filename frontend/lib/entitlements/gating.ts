@@ -135,6 +135,8 @@ export function canAccessHeroCinematic(heroId: string): boolean {
  * CANONICAL GATE for all cinematic access checks.
  * All code paths that need cinematic access MUST use this function.
  * 
+ * Phase 3.10: Triggers background freshness check before evaluating
+ * 
  * @param heroId - Hero to check access for
  * @param options.onDenied - Called when access is denied (default: shows alert)
  * @returns true if access granted, false if denied
@@ -143,6 +145,9 @@ export function requireCinematicAccess(
   heroId: string,
   options?: { onDenied?: () => void }
 ): boolean {
+  // Phase 3.10: Fire-and-forget freshness check
+  triggerFreshnessCheck();
+  
   if (canAccessHeroCinematic(heroId)) {
     return true;
   }
@@ -153,7 +158,7 @@ export function requireCinematicAccess(
     return false;
   }
   
-  // Default: use standard requireEntitlement alert
+  // Default: use standard requireEntitlement alert (freshness already triggered)
   return requireEntitlement(
     ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK,
     {

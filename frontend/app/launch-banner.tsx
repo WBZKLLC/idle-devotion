@@ -18,6 +18,8 @@ import { getLaunchBannerStatus, pullLaunchBanner } from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+// Phase 3.18.7: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 
 // Aethon Launch Banner - 72 Hour Limited
 export default function LaunchBannerScreen() {

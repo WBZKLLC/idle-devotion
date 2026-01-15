@@ -18,6 +18,8 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { isErrorHandledGlobally } from '../lib/api';
+// Phase 3.18.7: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

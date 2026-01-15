@@ -34,15 +34,6 @@ import {
   purchaseDivine as apiPurchaseDivine,
 } from '../lib/api';
 
-// Centralized API wrappers (no raw fetch in screens - critical for monetization)
-import {
-  getCrystalPackages,
-  getDivinePackages,
-  getVipInfo,
-  purchaseCrystals as apiPurchaseCrystals,
-  purchaseDivine as apiPurchaseDivine,
-} from '../lib/api';
-
 interface CrystalPackage {
   id: string;
   price_usd: number;

@@ -237,7 +237,9 @@ export default function AdminPanelScreen() {
               setSelectedUser(null);
               setSearchResults([]);
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.detail || 'Failed to delete account');
+              if (!isErrorHandledGlobally(error)) {
+                Alert.alert('Error', error.response?.data?.detail || 'Failed to delete account');
+              }
             } finally {
               setProcessing(false);
             }

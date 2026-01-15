@@ -217,8 +217,8 @@ export default function ChatScreen() {
       const detail = error.response?.data?.detail || 'Failed to send message';
       
       if (status === 401) {
-        // Not authenticated
-        Alert.alert('Authentication Required', 'Please log in to send messages');
+        // Not authenticated - Phase 3.18.4: Use warning toast
+        toast.warning('Please log in to send messages');
       } else if (status === 429) {
         // Rate limited
         setRateLimitMessage(detail);
@@ -226,16 +226,16 @@ export default function ChatScreen() {
       } else if (status === 403) {
         // Muted or banned
         if (!isErrorHandledGlobally(error)) {
-          Alert.alert('Chat Restricted', detail);
+          toast.error(detail);
         }
       } else if (status === 400) {
         // Validation error (PII, URL, etc.)
         if (!isErrorHandledGlobally(error)) {
-          Alert.alert('Message Blocked', detail);
+          toast.warning(detail);
         }
       } else {
         if (!isErrorHandledGlobally(error)) {
-          Alert.alert('Error', detail);
+          toast.error(detail);
         }
       }
     } finally {

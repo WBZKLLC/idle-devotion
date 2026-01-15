@@ -193,7 +193,7 @@ export default function HeroDetailScreen() {
     );
   }
 
-  // Error state with 2Dlive shell
+  // Error state with 2Dlive shell - Phase 3.19.5: deterministic path out
   if (!hero || !heroData) {
     return (
       <View style={styles.container}>
@@ -207,14 +207,22 @@ export default function HeroDetailScreen() {
         <SafeAreaView style={styles.centerContainer}>
           <Ionicons name="alert-circle" size={48} color={COLORS.gold.primary} />
           <Text style={styles.errorText}>Hero not found</Text>
-          {/* Phase 3.19.2: Canonical SecondaryButton */}
-          <SecondaryButton
-            title="Go Back"
-            onPress={() => router.back()}
-            variant="outline"
-            size="md"
-            style={{ marginTop: 16 }}
-          />
+          <Text style={styles.errorSubtext}>This hero may have been removed or the link is invalid.</Text>
+          {/* Phase 3.19.5: Deterministic navigation - Primary: Go Home, Secondary: Go Back */}
+          <View style={{ gap: 10, marginTop: 16, width: '80%' }}>
+            <PrimaryButton
+              title="Go Home"
+              onPress={() => router.replace('/')}
+              variant="gold"
+              size="md"
+            />
+            <SecondaryButton
+              title="Go Back"
+              onPress={() => router.back()}
+              variant="ghost"
+              size="sm"
+            />
+          </View>
         </SafeAreaView>
       </View>
     );

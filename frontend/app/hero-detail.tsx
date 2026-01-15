@@ -13,7 +13,8 @@ import {
   Alert,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
-import { useEntitlementStore } from '../stores/entitlementStore';
+import { useHasEntitlement } from '../lib/entitlements/gating';
+import { ENTITLEMENT_KEYS } from '../lib/entitlements/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';

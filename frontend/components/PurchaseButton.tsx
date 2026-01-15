@@ -33,32 +33,33 @@ import {
 import { useEntitlementStore } from '../stores/entitlementStore';
 import COLORS from '../theme/colors';
 
-// Golden path product config
-const GOLDEN_PATH_PRODUCT = {
-  productId: 'premium_cinematics_pack',
-  entitlementKey: 'PREMIUM_CINEMATICS_PACK',
-  displayName: 'Premium Cinematics Pack',
-  price: '$9.99', // Display only - actual price comes from IAP SDK
-};
-
 interface PurchaseButtonProps {
+  /** Which product to purchase (defaults to PREMIUM_CINEMATICS_PACK) */
+  productKey?: ProductKey;
   onPurchaseComplete?: () => void;
   onPurchaseError?: (error: string) => void;
   testMode?: boolean; // For testing without real IAP
+  /** Custom button style */
+  style?: object;
 }
 
 export default function PurchaseButton({
+  productKey = 'PREMIUM_CINEMATICS_PACK',
   onPurchaseComplete,
   onPurchaseError,
   testMode = false,
+  style,
 }: PurchaseButtonProps) {
+  // Get product from canonical source
+  const product = PRODUCTS[productKey];
+  
   // Purchase state from store
   const purchaseState = usePurchaseStore(s => s.state);
   const errorCode = usePurchaseStore(s => s.errorCode);
   const errorMessage = usePurchaseStore(s => s.errorMessage);
   
   // Check if already owned
-  const isOwned = useHasEntitlement(GOLDEN_PATH_PRODUCT.entitlementKey);
+  const isOwned = useHasEntitlement(product.entitlementKey);
   
   // Refresh entitlements on mount (belt + suspenders)
   const refreshEntitlements = useEntitlementStore(s => s.refreshFromServer);

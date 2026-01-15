@@ -249,6 +249,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       set({ user, authToken: token, isLoading: false });
       
+      // Track login success and set Sentry user
+      track(Events.LOGIN_SUCCESS, { username: user.username });
+      sentrySetUser({ username: user.username });
+      
       // Trigger daily login
       try {
         await triggerDailyLogin(user.username);
@@ -259,6 +263,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { success: true };
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || 'Login failed';
+      
+      // Track login failure
+      track(Events.LOGIN_FAILURE, { error: errorMessage });
       
       // Check if this is a legacy account needing password
       if (error.response?.status === 403) {

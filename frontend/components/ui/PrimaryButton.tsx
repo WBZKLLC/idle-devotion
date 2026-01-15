@@ -114,18 +114,32 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
   },
+  pressed: {
+    transform: [{ scale: 0.98 }],
+  },
   gradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: RADIUS.lg,
   },
+  gradientPressed: {
+    opacity: 0.9,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   text: {
     color: 'white',
     fontWeight: FONT_WEIGHT.bold,
     textAlign: 'center',
   },
-  textWithIcon: {
+  leftIcon: {
+    marginRight: SPACING.sm,
+  },
+  rightIcon: {
     marginLeft: SPACING.sm,
   },
 });

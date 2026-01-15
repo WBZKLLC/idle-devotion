@@ -7,6 +7,7 @@
 // 3. If productKey is omitted, defaults to PAYWALL_HUB (documented policy)
 // 4. source MUST be a known PaywallSource (no arbitrary strings in prod)
 // 5. returnTo is sanitized (must start with /, max 256 chars)
+// 6. Telemetry is ONLY emitted from this file (guards enforce)
 //
 // This ensures:
 // - Analytics/telemetry for all premium funnels
@@ -17,9 +18,41 @@
 
 import { router } from 'expo-router';
 import { type ProductKey, getProduct } from './products';
+import { track, Events } from '../telemetry/events';
 
 // Debug logging
 const dlog = (...args: any[]) => { if (__DEV__) console.log('[navigation]', ...args); };
+
+// ==============================================================
+// TELEMETRY DEDUPE - Prevent spam from double-taps/rerenders
+// ==============================================================
+const DEDUPE_WINDOW_MS = 1500; // 1.5 seconds
+let lastPaywallOpenedAt = 0;
+let lastStoreOpenedAt = 0;
+
+function shouldEmitPaywallEvent(): boolean {
+  const now = Date.now();
+  if (now - lastPaywallOpenedAt < DEDUPE_WINDOW_MS) {
+    dlog('paywall_opened dedupe - skipping');
+    return false;
+  }
+  lastPaywallOpenedAt = now;
+  return true;
+}
+
+function shouldEmitStoreEvent(): boolean {
+  const now = Date.now();
+  if (now - lastStoreOpenedAt < DEDUPE_WINDOW_MS) {
+    dlog('store_opened dedupe - skipping');
+    return false;
+  }
+  lastStoreOpenedAt = now;
+  return true;
+}
+
+// ==============================================================
+// TYPES
+// ==============================================================
 
 /**
  * Source of the paywall navigation (for analytics + debugging)

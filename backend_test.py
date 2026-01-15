@@ -14,8 +14,8 @@ from typing import Dict, Any, Optional
 
 # Configuration
 BACKEND_URL = "https://premium-gatekeeper.preview.emergentagent.com/api"
-TEST_USERNAME = "Adam"
-TEST_PASSWORD = "Adam123!"
+TEST_USERNAME = "EntitlementTester"
+TEST_PASSWORD = "TestPass123!"
 
 class BackendTester:
     def __init__(self):

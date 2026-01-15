@@ -79,6 +79,7 @@ export default function ResourceBagScreen() {
   const useConsumable = async (item: ResourceItem) => {
     if (item.type !== 'consumable' || item.amount <= 0) return;
     
+    // ALERT_ALLOWED: purchase_confirm
     Alert.alert(
       `Use ${item.name}?`,
       item.description,
@@ -92,7 +93,8 @@ export default function ResourceBagScreen() {
               r.id === item.id ? { ...r, amount: r.amount - 1 } : r
             ));
             setSelectedItem(null);
-            Alert.alert('Used!', `${item.name} activated!`);
+            // Phase 3.18.4: Toast for success feedback
+            toast.success(`${item.name} activated!`);
           }
         },
       ]

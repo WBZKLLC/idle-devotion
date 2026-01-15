@@ -123,6 +123,7 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
+    // ALERT_ALLOWED: logout_confirm
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',

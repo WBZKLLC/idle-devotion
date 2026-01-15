@@ -4,6 +4,10 @@ import { useEffect } from 'react';
 // Debug logging helpers - only log in development
 const dlog = (...args: any[]) => { if (__DEV__) console.log(...args); };
 
+// Telemetry
+import { track, Events } from '../lib/telemetry/events';
+import { sentrySetUser } from '../lib/telemetry/sentry';
+
 // Auth storage helpers (canonical source for token persistence)
 import { 
   saveAuthData, 

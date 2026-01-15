@@ -182,7 +182,9 @@ export default function StoreScreen() {
               fetchUser();
               loadStoreData();
             } catch (error: any) {
-              Alert.alert('Error', error?.message || 'Purchase failed');
+              if (!isErrorHandledGlobally(error)) {
+                Alert.alert('Error', error?.message || 'Purchase failed');
+              }
             }
           }
         }

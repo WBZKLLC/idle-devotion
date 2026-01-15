@@ -49,48 +49,63 @@ export function PrimaryButton({
   onPress,
   disabled = false,
   loading = false,
-  icon,
+  leftIcon,
+  rightIcon,
+  icon, // deprecated, use leftIcon
   variant = 'gold',
   size = 'md',
   style,
   textStyle,
+  testID,
 }: PrimaryButtonProps) {
   const sizeConfig = SIZES[size];
   const colors = VARIANTS[variant];
+  const isDisabled = disabled || loading;
+  const resolvedLeftIcon = leftIcon || icon;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.8}
-      style={[styles.container, style]}
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
+      accessibilityLabel={title}
+      testID={testID}
+      style={({ pressed }) => [
+        styles.container,
+        pressed && !isDisabled && styles.pressed,
+        style,
+      ]}
     >
-      <LinearGradient
-        colors={disabled ? ['#6B7280', '#4B5563'] : colors}
-        style={[
-          styles.gradient,
-          { height: sizeConfig.height, paddingHorizontal: sizeConfig.paddingHorizontal },
-        ]}
-      >
-        {loading ? (
-          <ActivityIndicator color="white" size="small" />
-        ) : (
-          <>
-            {icon && <>{icon}</>}
-            <Text
-              style={[
-                styles.text,
-                { fontSize: sizeConfig.fontSize },
-                icon && styles.textWithIcon,
-                textStyle,
-              ]}
-            >
-              {title}
-            </Text>
-          </>
-        )}
-      </LinearGradient>
-    </TouchableOpacity>
+      {({ pressed }) => (
+        <LinearGradient
+          colors={isDisabled ? ['#6B7280', '#4B5563'] : colors}
+          style={[
+            styles.gradient,
+            { height: sizeConfig.height, paddingHorizontal: sizeConfig.paddingHorizontal },
+            pressed && !isDisabled && styles.gradientPressed,
+          ]}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : (
+            <View style={styles.content}>
+              {resolvedLeftIcon && <View style={styles.leftIcon}>{resolvedLeftIcon}</View>}
+              <Text
+                style={[
+                  styles.text,
+                  { fontSize: sizeConfig.fontSize },
+                  textStyle,
+                ]}
+              >
+                {title}
+              </Text>
+              {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+            </View>
+          )}
+        </LinearGradient>
+      )}
+    </Pressable>
   );
 }
 

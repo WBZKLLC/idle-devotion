@@ -5,7 +5,12 @@
  * - Store NEVER grants entitlements - only server can grant
  * - Store caches server snapshots for UX (offline/fast reads)
  * - All reads go through gating helpers, not direct store access
- * - Refresh from server on: startup, post-purchase, manual
+ * - Refresh from server on: startup, post-purchase, manual, gate (stale check)
+ * 
+ * PHASE 3.10 - TTL DISCIPLINE:
+ * - Staleness uses server_time (not device time) 
+ * - ensureFreshEntitlements() is the canonical refresh entry point
+ * - Fast reads from cache, disciplined refresh on gates
  */
 
 import { create } from 'zustand';
@@ -31,6 +36,13 @@ const dlog = (...args: any[]) => { if (__DEV__) console.log(...args); };
 const STORAGE_KEY = '@idledevotion/entitlements/v4';
 const LEGACY_STORAGE_KEY = '@idledevotion/entitlements/v3';
 
+// Default TTL if server doesn't provide one (5 minutes)
+const DEFAULT_TTL_SECONDS = 300;
+// Minimum TTL to prevent runaway refreshes (30 seconds)
+const MIN_TTL_SECONDS = 30;
+// Maximum TTL to ensure eventual consistency (1 hour)
+const MAX_TTL_SECONDS = 3600;
+
 // API import (lazy to avoid circular deps at module load)
 let _getEntitlementsSnapshot: (() => Promise<EntitlementsSnapshot>) | null = null;
 async function getEntitlementsSnapshotApi(): Promise<EntitlementsSnapshot> {
@@ -40,6 +52,28 @@ async function getEntitlementsSnapshotApi(): Promise<EntitlementsSnapshot> {
   }
   return _getEntitlementsSnapshot();
 }
+
+// Lazy import for gameStore to avoid circular deps
+let _getAuthEpoch: (() => number) | null = null;
+function getAuthEpoch(): number {
+  if (!_getAuthEpoch) {
+    const { useGameStore } = require('./gameStore');
+    _getAuthEpoch = () => useGameStore.getState().authEpoch;
+  }
+  return _getAuthEpoch();
+}
+
+// Lazy import to check if user is logged in
+let _getUser: (() => any) | null = null;
+function getUser(): any {
+  if (!_getUser) {
+    const { useGameStore } = require('./gameStore');
+    _getUser = () => useGameStore.getState().user;
+  }
+  return _getUser();
+}
+
+type RefreshReason = 'startup' | 'post_purchase' | 'manual' | 'gate';
 
 interface EntitlementStoreState {
   // Server snapshot (source of truth when available)
@@ -58,9 +92,13 @@ interface EntitlementStoreState {
   
   // Actions
   hydrateEntitlements: () => Promise<void>;
-  refreshFromServer: (reason: 'startup' | 'post_purchase' | 'manual') => Promise<void>;
+  refreshFromServer: (reason: RefreshReason) => Promise<void>;
+  ensureFreshEntitlements: (reason: RefreshReason) => Promise<void>;  // Phase 3.10: Canonical refresh entry
   applySnapshot: (snap: EntitlementsSnapshot) => void;  // Apply snapshot directly (from verify response)
   clear: () => void;
+  
+  // Staleness check (Phase 3.10)
+  isStale: () => boolean;
   
   // Read helpers (use gating.ts instead for screens)
   hasEntitlement: (key: string) => boolean;

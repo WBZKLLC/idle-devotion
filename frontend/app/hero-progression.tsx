@@ -18,7 +18,6 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
-  Alert,
   Modal,
   Platform,
 } from 'react-native';
@@ -28,6 +27,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { useEntitlementStore } from '../stores/entitlementStore';
+// Phase 3.18.7: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 
 // Feature flags (SINGLE SOURCE OF TRUTH)
 import { isFeatureEnabled } from '../lib/features';

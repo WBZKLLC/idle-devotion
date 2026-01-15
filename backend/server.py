@@ -10690,6 +10690,9 @@ async def get_selene_bundles_endpoint(username: str):
 @api_router.post("/selene-banner/purchase-bundle/{username}")
 async def purchase_selene_bundle(username: str, bundle_id: str):
     """Purchase a bundle (simulated - integrates with RevenueCat in production)"""
+    # DEV-ONLY: Simulated purchases blocked in production
+    require_dev_mode()
+    
     user = await get_user_for_mutation(username)  # Includes frozen check
     
     bundle = DYNAMIC_BUNDLES.get(bundle_id)

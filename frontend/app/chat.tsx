@@ -330,7 +330,9 @@ export default function ChatScreen() {
       setShowBubbleModal(false);
       Alert.alert('Success', 'Chat bubble equipped!');
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to equip bubble');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to equip bubble');
+      }
     }
   };
 

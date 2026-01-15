@@ -145,6 +145,27 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
   },
 
   /**
+   * Apply a snapshot directly (used by purchase verify flow)
+   * Skips network call - uses snapshot returned from verify endpoint
+   */
+  applySnapshot: (snap: EntitlementsSnapshot) => {
+    dlog('[entitlementStore] Applying snapshot directly, version:', snap.version);
+    
+    // Strict normalization
+    const normalized = { ...createEmptyEntitlementsMap(), ...snap.entitlements };
+    
+    set({
+      snapshot: snap,
+      entitlementsByKey: normalized,
+      lastRefreshAt: Date.now(),
+      refreshError: null,
+    });
+    
+    // Persist for offline cache
+    storageSet(STORAGE_KEY, JSON.stringify(snap)).catch(() => {});
+  },
+
+  /**
    * Clear all entitlement state (on logout)
    */
   clear: () => {

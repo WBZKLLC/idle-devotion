@@ -15,6 +15,8 @@ import { track, Events } from '../lib/telemetry/events';
 import { validateConfig } from '../lib/config/validate';
 // Phase 3.14: App resume reconciliation
 import { useAppResumeReconcile } from '../hooks/useAppResumeReconcile';
+// Phase 3.18: Toast provider for success/error notifications
+import { ToastProvider } from '../components/ui/ToastProvider';
 
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';

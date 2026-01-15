@@ -78,7 +78,9 @@ export default function LoginRewardsScreen() {
       fetchUser();
     } catch (error: any) {
       const errorMsg = error?.response?.data?.detail || 'Failed to claim reward';
-      Alert.alert('Error', errorMsg);
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', errorMsg);
+      }
     } finally {
       setIsClaiming(false);
     }

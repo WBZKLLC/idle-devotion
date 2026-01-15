@@ -589,6 +589,7 @@ export default function HeroProgressionScreen() {
                     key={tier}
                     onPress={() => {
                       if (locked) {
+                        // ALERT_ALLOWED: rewards_modal
                         Alert.alert(
                           isAwakening ? 'Awakening Preview' : 'Locked Tier',
                           isAwakening

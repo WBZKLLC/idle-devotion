@@ -11253,7 +11253,7 @@ class EntitlementsSnapshot(BaseModel):
     ttl_seconds: Optional[int] = 300
     source: Optional[str] = "database"
 
-@api_router.get("/entitlements/snapshot")
+@app.get("/api/entitlements/snapshot")
 async def get_entitlements_snapshot(request: Request):
     """
     Get server-authoritative entitlements snapshot for authenticated user.

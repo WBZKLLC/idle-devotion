@@ -11253,6 +11253,118 @@ class EntitlementsSnapshot(BaseModel):
     ttl_seconds: Optional[int] = 300
     source: Optional[str] = "database"
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SERVER-SIDE ENTITLEMENT GATING
+# Use these helpers to enforce entitlements on premium endpoints
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def require_entitlement(username: str, entitlement_key: str) -> bool:
+    """
+    Check if user has an active entitlement. Raises 403 if not.
+    Use this as a guard on premium endpoints.
+    
+    Example:
+        await require_entitlement(current_user["username"], "PREMIUM_CINEMATICS_PACK")
+    """
+    user_doc = await get_user_readonly(username)
+    if not user_doc:
+        raise HTTPException(status_code=403, detail="User not found")
+    
+    user_entitlements = user_doc.get("entitlements", {})
+    
+    # Check direct entitlement key
+    ent = user_entitlements.get(entitlement_key)
+    if not ent:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Entitlement required: {entitlement_key}"
+        )
+    
+    if ent.get("status") != "owned":
+        raise HTTPException(
+            status_code=403,
+            detail=f"Entitlement not active: {entitlement_key}"
+        )
+    
+    # Check expiry
+    expires_at = ent.get("expires_at")
+    if expires_at:
+        try:
+            exp_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if exp_dt < datetime.now(timezone.utc):
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Entitlement expired: {entitlement_key}"
+                )
+        except ValueError:
+            pass  # Invalid date format, assume not expired
+    
+    return True
+
+
+async def has_entitlement(username: str, entitlement_key: str) -> bool:
+    """
+    Check if user has an active entitlement. Returns bool (no exception).
+    Use for conditional logic, not access control.
+    """
+    try:
+        await require_entitlement(username, entitlement_key)
+        return True
+    except HTTPException:
+        return False
+
+
+async def require_cinematic_access(username: str, hero_id: str) -> bool:
+    """
+    Check if user can access a hero's premium cinematic.
+    User needs either:
+    - PREMIUM_CINEMATICS_PACK (full pack)
+    - PREMIUM_CINEMATIC_OWNED:{hero_id} (individual purchase)
+    
+    Raises 403 if not entitled.
+    """
+    user_doc = await get_user_readonly(username)
+    if not user_doc:
+        raise HTTPException(status_code=403, detail="User not found")
+    
+    user_entitlements = user_doc.get("entitlements", {})
+    
+    # Check for full pack
+    pack_ent = user_entitlements.get("PREMIUM_CINEMATICS_PACK")
+    if pack_ent and pack_ent.get("status") == "owned":
+        # Check expiry
+        expires_at = pack_ent.get("expires_at")
+        if not expires_at:
+            return True
+        try:
+            exp_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if exp_dt >= datetime.now(timezone.utc):
+                return True
+        except ValueError:
+            return True  # Invalid date, assume valid
+    
+    # Check for individual hero cinematic
+    hero_key = f"PREMIUM_CINEMATIC_OWNED:{hero_id}"
+    hero_ent = user_entitlements.get(hero_key)
+    if hero_ent and hero_ent.get("status") == "owned":
+        # Check expiry
+        expires_at = hero_ent.get("expires_at")
+        if not expires_at:
+            return True
+        try:
+            exp_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if exp_dt >= datetime.now(timezone.utc):
+                return True
+        except ValueError:
+            return True
+    
+    raise HTTPException(
+        status_code=403,
+        detail=f"Premium cinematic access required for hero: {hero_id}"
+    )
+
+
 @app.get("/api/entitlements/snapshot")
 async def get_entitlements_snapshot(current_user: dict = Depends(get_current_user)):
     """

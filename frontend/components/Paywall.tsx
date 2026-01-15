@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,6 +34,10 @@ interface PaywallProps {
   onClose: () => void;
   /** Called after successful purchase */
   onPurchaseComplete?: () => void;
+  /** Called when user taps "Not now" - defaults to onClose if not provided */
+  onDismiss?: () => void;
+  /** Show the "Not now" exit affordance (default: true) */
+  showNotNow?: boolean;
 }
 
 /**

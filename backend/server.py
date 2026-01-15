@@ -100,11 +100,47 @@ SUPER_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("SUPER_ADMIN_BOOTSTRAP_TOKEN", None
 # Server dev mode - allows simulated purchases (MUST be false in production)
 SERVER_DEV_MODE = os.environ.get("SERVER_DEV_MODE", "true").lower() == "true"
 
+# =============================================================================
+# PHASE 3.15: PRODUCTION ENVIRONMENT ASSERTIONS
+# =============================================================================
+# When SERVER_DEV_MODE=false, the server REQUIRES payment verification secrets.
+# This ensures production cannot start without proper security configuration.
+
+REVENUECAT_SECRET_KEY = os.environ.get("REVENUECAT_SECRET_KEY", None)
+REVENUECAT_WEBHOOK_SECRET = os.environ.get("REVENUECAT_WEBHOOK_SECRET", None)
+
+def assert_production_config():
+    """
+    FAIL-FAST: Validate production configuration at startup.
+    If SERVER_DEV_MODE=false, payment verification secrets MUST be configured.
+    """
+    missing = []
+    
+    if not REVENUECAT_SECRET_KEY:
+        missing.append("REVENUECAT_SECRET_KEY")
+    if not REVENUECAT_WEBHOOK_SECRET:
+        missing.append("REVENUECAT_WEBHOOK_SECRET")
+    
+    if missing:
+        error_msg = (
+            "🚨 PRODUCTION CONFIGURATION ERROR 🚨\n"
+            f"SERVER_DEV_MODE=false but missing required secrets:\n"
+            f"  - {chr(10).join(f'• {s}' for s in missing)}\n"
+            "Production server CANNOT start without payment verification.\n"
+            "Either set these environment variables or use SERVER_DEV_MODE=true for development."
+        )
+        print(error_msg)
+        raise RuntimeError(error_msg)
+    
+    print("✅ Production configuration validated: all required secrets present")
+
 # Log SERVER_DEV_MODE at startup (prevents accidental production misconfiguration)
 if SERVER_DEV_MODE:
     print("⚠️  SERVER_DEV_MODE=TRUE (simulated purchases ENABLED - do not use in production)")
 else:
     print("🔒 SERVER_DEV_MODE=FALSE (simulated purchases DISABLED)")
+    # Phase 3.15: Assert production config when not in dev mode
+    assert_production_config()
 
 # SECURITY: Reserved usernames that can NEVER be registered via normal registration
 # "adam" is ALWAYS reserved - this is hardcoded and cannot be changed

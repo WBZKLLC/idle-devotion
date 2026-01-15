@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
 
+// Debug logging helpers - only log in development
+const dlog = (...args: any[]) => { if (__DEV__) console.log(...args); };
+const dwarn = (...args: any[]) => { if (__DEV__) console.warn(...args); };
+
 // Safely import RevenueCat - may not be available in Expo Go
 let Purchases: any = null;
 let LOG_LEVEL: any = { VERBOSE: 'VERBOSE' };
@@ -12,7 +16,7 @@ try {
   LOG_LEVEL = RNPurchases.LOG_LEVEL || LOG_LEVEL;
   PURCHASES_ERROR_CODE = RNPurchases.PURCHASES_ERROR_CODE || PURCHASES_ERROR_CODE;
 } catch (e) {
-  console.log('[RevenueCat] Native module not available:', e);
+  dwarn('[RevenueCat] Native module not available:', e);
 }
 
 // Types

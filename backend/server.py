@@ -9300,6 +9300,10 @@ async def claim_battle_pass_reward(username: str, track: str, level: int):
     
     user = await get_user_for_mutation(username)  # Includes frozen check
     
+    # For premium track, enforce PREMIUM entitlement (server-authoritative)
+    if track == "premium":
+        await require_entitlement(username, "PREMIUM")
+    
     bp_data = await db.battle_pass.find_one({"user_id": user["id"]})
     if not bp_data:
         raise HTTPException(status_code=400, detail="Battle pass data not found")

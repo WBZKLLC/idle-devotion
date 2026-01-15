@@ -35,14 +35,106 @@ const DIVINE_RATES = {
 };
 
 export default function SummonHubScreen() {
-  const { user, fetchUser } = useGameStore();
+  const router = useRouter();
+  const { user, fetchUser, userHeroes } = useGameStore();
   const hydrated = useHydration();
   const [selectedBanner, setSelectedBanner] = useState<'common' | 'premium' | 'divine'>('common');
   const [isLoading, setIsLoading] = useState(false);
   const [pullResults, setPullResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [lastPullType, setLastPullType] = useState<'single' | 'multi'>('single');
+  const [pityBefore, setPityBefore] = useState(0);
 
   useEffect(() => { if (hydrated && user) fetchUser(); }, [hydrated, user?.username]);
+
+  // =============================================================================
+  // Phase 3.19.3: Summon Result Analysis Helpers
+  // =============================================================================
+  
+  // Rarity priority for "best hero" selection
+  const RARITY_PRIORITY: Record<string, number> = {
+    'UR+': 6, 'UR': 5, 'SSR+': 4, 'SSR': 3, 'SR': 2, 'R': 1, 'N': 0
+  };
+
+  // Analyze summon results
+  const resultAnalysis = useMemo(() => {
+    const heroes = pullResults.filter(r => !r.is_filler);
+    const fillers = pullResults.filter(r => r.is_filler);
+    
+    // Count new vs duplicates (new heroes have is_new flag from backend)
+    const newHeroes = heroes.filter(h => h.is_new);
+    const duplicates = heroes.filter(h => !h.is_new);
+    
+    // Find best hero by rarity then stars
+    const bestHero = heroes.length > 0 
+      ? heroes.reduce((best, current) => {
+          const bestPriority = RARITY_PRIORITY[best.rarity] || 0;
+          const currentPriority = RARITY_PRIORITY[current.rarity] || 0;
+          if (currentPriority > bestPriority) return current;
+          if (currentPriority === bestPriority && (current.stars || 0) > (best.stars || 0)) return current;
+          return best;
+        })
+      : null;
+    
+    // Calculate total shards/currency gained from fillers
+    const shardCount = fillers.filter(f => f.type?.includes('shard')).length;
+    const currencyGains = fillers.filter(f => !f.type?.includes('shard'));
+    
+    // Check if any hero hit promotion threshold (would need backend to tell us)
+    const promotionReady = heroes.find(h => h.promotion_ready);
+    
+    return {
+      heroes,
+      newHeroes,
+      duplicates,
+      fillers,
+      bestHero,
+      shardCount,
+      currencyGains,
+      promotionReady,
+      hasNewHero: newHeroes.length > 0,
+      totalHeroes: heroes.length,
+      pityReset: getPityCounter() === 0 && pityBefore > 0,
+    };
+  }, [pullResults, pityBefore]);
+
+  // Determine primary CTA
+  const getPrimaryCTA = () => {
+    if (resultAnalysis.hasNewHero && resultAnalysis.bestHero?.hero_id) {
+      return {
+        label: 'View Hero',
+        action: () => {
+          setShowResults(false);
+          // Find the user hero by hero_id
+          const userHero = userHeroes.find(h => h.hero_data?.id === resultAnalysis.bestHero.hero_id);
+          if (userHero) {
+            router.push(`/hero-detail?id=${userHero.id}&tier=1`);
+          } else {
+            router.push('/heroes');
+          }
+        },
+        icon: 'person',
+      };
+    }
+    if (resultAnalysis.promotionReady) {
+      return {
+        label: 'Upgrade Now',
+        action: () => {
+          setShowResults(false);
+          router.push('/hero-progression');
+        },
+        icon: 'arrow-up-circle',
+      };
+    }
+    return {
+      label: 'Go to Heroes',
+      action: () => {
+        setShowResults(false);
+        router.push('/heroes');
+      },
+      icon: 'people',
+    };
+  };
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {

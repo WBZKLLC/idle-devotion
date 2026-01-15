@@ -52,6 +52,7 @@ export function hasEntitlement(key: string): boolean {
  * Use this for guarding premium actions/navigation
  * 
  * Phase 3.10: Triggers background freshness check before evaluating
+ * Phase 3.11: Uses canonical navigation helper for paywall routing
  * 
  * @returns true if entitled, false if blocked (and redirected to paywall)
  */
@@ -61,7 +62,7 @@ export function requireEntitlement(
     alertTitle?: string;
     alertMessage?: string;
     showPaywall?: boolean;
-    paywallRoute?: string;
+    source?: PaywallSource;
   }
 ): boolean {
   // Phase 3.10: Fire-and-forget freshness check
@@ -77,7 +78,7 @@ export function requireEntitlement(
     alertTitle = 'Premium Feature',
     alertMessage = 'This feature requires a premium purchase.',
     showPaywall = true,
-    paywallRoute = '/store',
+    source = 'gating_alert',
   } = options ?? {};
   
   Alert.alert(
@@ -88,7 +89,8 @@ export function requireEntitlement(
           { text: 'Cancel', style: 'cancel' },
           { 
             text: 'View Store', 
-            onPress: () => router.push(paywallRoute as any) 
+            // Phase 3.11: Use canonical navigation
+            onPress: () => goToPaywall({ source }) 
           },
         ]
       : [{ text: 'OK' }]

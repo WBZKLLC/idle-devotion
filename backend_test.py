@@ -17,7 +17,7 @@ import time
 from typing import Dict, Any, Optional
 
 # Backend URL from environment
-BACKEND_URL = "https://crash-shield.preview.emergentagent.com/api"
+BACKEND_URL = "https://premium-gatekeeper.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_USERNAME = "adam"

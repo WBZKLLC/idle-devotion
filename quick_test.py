@@ -6,7 +6,7 @@ Quick Backend API Status Check
 import requests
 import json
 
-BASE_URL = "https://crash-shield.preview.emergentagent.com/api"
+BASE_URL = "https://premium-gatekeeper.preview.emergentagent.com/api"
 TEST_USERNAME = "testplayer"
 
 def test_endpoint(method, endpoint, **kwargs):

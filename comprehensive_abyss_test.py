@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://crash-shield.preview.emergentagent.com/api"
+BASE_URL = "https://premium-gatekeeper.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

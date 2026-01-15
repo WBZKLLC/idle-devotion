@@ -39,6 +39,7 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
   const registerForceLogout = useGameStore(s => s.registerForceLogout);
   const hydrateRemoteFeatures = useFeatureStore(s => s.hydrateRemoteFeatures);
   const hydrateEntitlements = useEntitlementStore(s => s.hydrateEntitlements);
+  const initNetworkListener = useNetworkStore(s => s.initNetworkListener);
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
@@ -60,6 +61,12 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
     };
     restore();
   }, [hydrateRemoteFeatures, hydrateAuth, hydrateEntitlements, registerForceLogout]);
+
+  // Initialize network listener (returns cleanup function)
+  useEffect(() => {
+    const unsubscribe = initNetworkListener();
+    return unsubscribe;
+  }, [initNetworkListener]);
 
   // Show loading while restoring session
   if (isRestoring) {

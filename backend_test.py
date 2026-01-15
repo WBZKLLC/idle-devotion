@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 """
-Identity Hardening Backend Test Suite
-Tests the critical security refactor for authentication system.
+Backend API Testing for AuthEpoch Expansion (Phase 3.9)
+Tests the backend endpoints that support the AuthEpoch system to prevent race conditions.
 
-Key Changes Being Tested:
-1. JWT 'sub' is now immutable user_id (not username)
-2. Login uses username_canon for case-insensitive lookup
-3. Registration populates username_canon and reserves 'adam'
-4. get_current_user loads user by ID from JWT
+Test Focus:
+1. Core Authentication Flow - login/logout endpoints work correctly
+2. Gacha Endpoint - verify API responds correctly for authenticated requests  
+3. Entitlements Endpoint - verify snapshot API works
+4. User Profile - verify user data fetch works
+
+Credentials: Adam/Adam123!
 """
 
 import requests
 import json
 import sys
-import time
 from typing import Dict, Any, Optional
 
-# Backend URL from environment
+# Backend URL from frontend/.env
 BACKEND_URL = "https://premium-gatekeeper.preview.emergentagent.com/api"
 
 # Test credentials
-ADMIN_USERNAME = "adam"
-ADMIN_PASSWORD = "t-l!8c2mUfl*94?7drlj=f$d4&pl+u5ay!st$2Lt0lwros#ip_c#7-thaclbu!t1"
+TEST_USERNAME = "Adam"
+TEST_PASSWORD = "Adam123!"
 
 class IdentityHardeningTester:
     def __init__(self):

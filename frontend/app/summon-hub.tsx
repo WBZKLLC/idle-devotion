@@ -209,66 +209,164 @@ export default function SummonHubScreen() {
     }
   };
 
-  const renderResultsModal = () => (
-    <Modal visible={showResults} animationType="fade" transparent={true} onRequestClose={() => setShowResults(false)}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.resultsContainer}>
-          <LinearGradient colors={[COLORS.navy.dark, COLORS.navy.primary]} style={styles.resultsGradient}>
-            <Text style={styles.resultsTitle}>Summon Results</Text>
-            <ScrollView horizontal contentContainerStyle={styles.resultsScroll} showsHorizontalScrollIndicator={false}>
-              {pullResults.map((item, index) => (
-                <View key={index} style={[
-                  styles.heroResultCard, 
-                  { borderColor: item.is_filler 
-                    ? getFillerRarityColor(item.rarity || 'common') 
-                    : getRarityColor(item.rarity || 'SR') 
-                  }
-                ]}>
-                  {item.is_filler ? (
-                    // Filler Reward Card
-                    <>
-                      <View style={[styles.rarityBadge, { backgroundColor: getFillerRarityColor(item.rarity || 'common') }]}>
-                        <Text style={styles.rarityText}>{item.rarity?.toUpperCase() || 'REWARD'}</Text>
-                      </View>
-                      <View style={styles.fillerIconContainer}>
-                        <Text style={styles.fillerIcon}>{getFillerRewardIcon(item.type)}</Text>
-                      </View>
-                      <Text style={styles.heroName} numberOfLines={2}>{item.display || 'Reward'}</Text>
-                    </>
-                  ) : (
-                    // Hero Card
-                    <>
-                      <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(item.rarity || 'SR') }]}>
-                        <Text style={styles.rarityText}>{item.rarity || 'SR'}</Text>
-                      </View>
-                      {item.image_url ? (
-                        <Image 
-                          source={{ uri: item.image_url }} 
-                          style={styles.heroImage} 
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View style={styles.heroImagePlaceholder}>
-                          <Ionicons name="person" size={40} color={COLORS.cream.soft} />
-                        </View>
-                      )}
-                      <Text style={styles.heroName} numberOfLines={2}>{item.hero_name || item.name || 'Unknown'}</Text>
-                      {item.element && (
-                        <Text style={[styles.heroElement, { color: getElementColor(item.element) }]}>{item.element}</Text>
-                      )}
-                    </>
+  const renderResultsModal = () => {
+    const primaryCTA = getPrimaryCTA();
+    const currentPity = getPityCounter();
+    
+    return (
+      <Modal visible={showResults} animationType="fade" transparent={true} onRequestClose={() => setShowResults(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.resultsContainer}>
+            <LinearGradient colors={[COLORS.navy.dark, COLORS.navy.primary]} style={styles.resultsGradient}>
+              <Text style={styles.resultsTitle}>Summon Results</Text>
+              
+              {/* Phase 3.19.3: Result Recap Summary */}
+              <View style={styles.recapStrip}>
+                {resultAnalysis.hasNewHero ? (
+                  <View style={styles.recapHighlight}>
+                    <Ionicons name="sparkles" size={16} color={COLORS.gold.primary} />
+                    <Text style={styles.recapHighlightText}>
+                      {resultAnalysis.newHeroes.length === 1 
+                        ? 'New hero unlocked!' 
+                        : `${resultAnalysis.newHeroes.length} new heroes unlocked!`}
+                    </Text>
+                  </View>
+                ) : resultAnalysis.totalHeroes > 0 ? (
+                  <View style={styles.recapHighlight}>
+                    <Ionicons name="repeat" size={16} color={COLORS.gold.light} />
+                    <Text style={styles.recapHighlightText}>Duplicates converted to shards</Text>
+                  </View>
+                ) : null}
+                
+                {/* Counts row */}
+                <View style={styles.recapCounts}>
+                  {resultAnalysis.totalHeroes > 0 && (
+                    <View style={styles.recapCount}>
+                      <Text style={styles.recapCountValue}>+{resultAnalysis.totalHeroes}</Text>
+                      <Text style={styles.recapCountLabel}>Heroes</Text>
+                    </View>
+                  )}
+                  {resultAnalysis.fillers.length > 0 && (
+                    <View style={styles.recapCount}>
+                      <Text style={styles.recapCountValue}>+{resultAnalysis.fillers.length}</Text>
+                      <Text style={styles.recapCountLabel}>Rewards</Text>
+                    </View>
                   )}
                 </View>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.closeResultsButton} onPress={() => setShowResults(false)}>
-              <Text style={styles.closeResultsText}>Continue</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+                
+                {/* Pity impact */}
+                {pityBefore > 0 && (
+                  <View style={styles.recapPity}>
+                    <Text style={styles.recapPityText}>
+                      Pity: {pityBefore} → {currentPity}
+                      {resultAnalysis.pityReset && ' 🎉'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              
+              {/* Hero Cards Scroll */}
+              <ScrollView horizontal contentContainerStyle={styles.resultsScroll} showsHorizontalScrollIndicator={false}>
+                {pullResults.map((item, index) => (
+                  <View key={index} style={[
+                    styles.heroResultCard, 
+                    { borderColor: item.is_filler 
+                      ? getFillerRarityColor(item.rarity || 'common') 
+                      : getRarityColor(item.rarity || 'SR') 
+                    },
+                    item.is_new && styles.heroResultCardNew,
+                  ]}>
+                    {item.is_filler ? (
+                      // Filler Reward Card
+                      <>
+                        <View style={[styles.rarityBadge, { backgroundColor: getFillerRarityColor(item.rarity || 'common') }]}>
+                          <Text style={styles.rarityText}>{item.rarity?.toUpperCase() || 'REWARD'}</Text>
+                        </View>
+                        <View style={styles.fillerIconContainer}>
+                          <Text style={styles.fillerIcon}>{getFillerRewardIcon(item.type)}</Text>
+                        </View>
+                        <Text style={styles.heroName} numberOfLines={2}>{item.display || 'Reward'}</Text>
+                      </>
+                    ) : (
+                      // Hero Card
+                      <>
+                        <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(item.rarity || 'SR') }]}>
+                          <Text style={styles.rarityText}>{item.rarity || 'SR'}</Text>
+                        </View>
+                        {item.is_new && (
+                          <View style={styles.newBadge}>
+                            <Text style={styles.newBadgeText}>NEW</Text>
+                          </View>
+                        )}
+                        {item.image_url ? (
+                          <Image 
+                            source={{ uri: item.image_url }} 
+                            style={styles.heroImage} 
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.heroImagePlaceholder}>
+                            <Ionicons name="person" size={40} color={COLORS.cream.soft} />
+                          </View>
+                        )}
+                        <Text style={styles.heroName} numberOfLines={2}>{item.hero_name || item.name || 'Unknown'}</Text>
+                        {item.element && (
+                          <Text style={[styles.heroElement, { color: getElementColor(item.element) }]}>{item.element}</Text>
+                        )}
+                      </>
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
+              
+              {/* Phase 3.19.3: Progression tip (non-deceptive) */}
+              <View style={styles.progressionTip}>
+                <Ionicons name="information-circle-outline" size={14} color="rgba(255,255,255,0.5)" />
+                <Text style={styles.progressionTipText}>
+                  Tip: Duplicates become shards used for star promotion.
+                </Text>
+              </View>
+              
+              {/* Phase 3.19.3: Smart CTA Stack */}
+              <View style={styles.ctaStack}>
+                {/* Primary CTA */}
+                <PrimaryButton
+                  title={primaryCTA.label}
+                  onPress={primaryCTA.action}
+                  leftIcon={<Ionicons name={primaryCTA.icon as any} size={18} color={COLORS.navy.darkest} />}
+                  variant="gold"
+                  size="lg"
+                />
+                
+                {/* Secondary CTAs */}
+                <View style={styles.secondaryCTAs}>
+                  <SecondaryButton
+                    title="Summon Again"
+                    onPress={() => {
+                      setShowResults(false);
+                      // Small delay to let modal close
+                      setTimeout(() => performPull(lastPullType), 300);
+                    }}
+                    variant="subtle"
+                    size="sm"
+                    leftIcon={<Ionicons name="refresh" size={14} color={COLORS.gold.light} />}
+                    style={{ flex: 1, marginRight: 8 }}
+                  />
+                  <SecondaryButton
+                    title="Close"
+                    onPress={() => setShowResults(false)}
+                    variant="ghost"
+                    size="sm"
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
         </View>
-      </View>
-    </Modal>
-  );
+      </Modal>
+    );
+  };
 
   const getElementColor = (element: string) => {
     const colors: {[key: string]: string} = {

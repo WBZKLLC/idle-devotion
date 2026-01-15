@@ -28,6 +28,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../theme/colors';
 import ProfileFrame, { FRAME_DEFINITIONS, getAvailableFrames } from '../components/ProfileFrame';
+// Phase 3.11: Canonical navigation
+import { goToPaywall } from '../lib/entitlements/navigation';
 
 export default function ProfileScreen() {
   const router = useRouter();

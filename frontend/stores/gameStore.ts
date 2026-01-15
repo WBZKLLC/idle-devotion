@@ -365,11 +365,14 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   fetchUser: async () => {
-    const { user } = get();
+    const { user, authEpoch } = get();
     if (!user) return;
     
+    const epochAtStart = authEpoch;
     try {
       const userData = await apiFetchUser(user.username);
+      // Ignore if logout happened during request
+      if (get().authEpoch !== epochAtStart) return;
       set({ user: userData });
     } catch (error) {
       console.error('Failed to fetch user:', error);
@@ -377,6 +380,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   fetchUserHeroes: async () => {
+    const { user, authEpoch } = get();
+    if (!user) return;
+    
+    const epochAtStart = authEpoch;
     if (__DEV__) {
       console.warn(
         "[GameStore.fetchUserHeroes] Full roster fetch called. " +

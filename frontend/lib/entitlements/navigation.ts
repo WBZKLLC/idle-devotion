@@ -284,3 +284,44 @@ export function getPaywallRoute(): string {
 export function getStoreRoute(): string {
   return STORE_ROUTE;
 }
+
+// ==============================================================
+// Phase 3.19.5: Safe Return Path Helper
+// ==============================================================
+
+/**
+ * Generate a stable return path so Paywall/Store can send the player back
+ * without each screen inventing logic.
+ * 
+ * - Default returnTo: current pathname (no query, sanitized)
+ * - If route is already /paid-features or /store, return '/' (prevents loops)
+ * - If route is undefined, return '/'
+ * 
+ * @param currentPath - The current route pathname
+ * @returns A safe, sanitized return path
+ */
+export function getSafeReturnTo(currentPath?: string): string {
+  // Clean up the path first
+  const cleaned = sanitizeReturnTo(currentPath ?? '/');
+  
+  // If sanitization failed, go to home
+  if (!cleaned) return '/';
+  
+  // Prevent navigation loops - if already on paywall/store routes, go home
+  const loopRoutes = [PAYWALL_ROUTE, STORE_ROUTE, '/paid-features', '/store'];
+  if (loopRoutes.some(route => cleaned === route || cleaned.startsWith(route + '?'))) {
+    return '/';
+  }
+  
+  return cleaned;
+}
+
+/**
+ * Get current route path (for use in components that need returnTo)
+ * This is a helper that works with expo-router
+ */
+export function useCurrentPath(): string {
+  // In expo-router, we can use the segments or pathname
+  // For now, return a placeholder that components can override
+  return '/';
+}

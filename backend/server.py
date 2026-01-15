@@ -10374,6 +10374,9 @@ async def get_launch_bundles(username: str):
 @api_router.post("/launch-banner/purchase-bundle/{username}")
 async def purchase_launch_bundle(username: str, bundle_id: str):
     """Purchase a bundle (simulated - in production would use RevenueCat)"""
+    # DEV-ONLY: Simulated purchases blocked in production
+    require_dev_mode()
+    
     user = await get_user_for_mutation(username)  # Includes frozen check
     
     # Get bundle info

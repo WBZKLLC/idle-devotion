@@ -5,6 +5,14 @@
 
 import { Alert } from 'react-native';
 import { isErrorHandledGlobally } from './api';
+import { useNetworkStore } from '../stores/networkStore';
+
+/**
+ * Check if device is online
+ */
+export function isOnline(): boolean {
+  return useNetworkStore.getState().isOnline;
+}
 
 /**
  * Structured result type for safeMutation

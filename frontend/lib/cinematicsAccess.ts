@@ -7,12 +7,8 @@
  * 
  * Also provides per-hero ownership check for stat bonuses.
  * 
- * Usage:
- * if (!canAccessCinematics(user?.id)) {
- *   navigate('paid-features');
- *   return;
- * }
- * openCinematic();
+ * NOTE: For navigation to paywall, use openPremiumCinematic() from openPremiumCinematic.ts
+ * or goToPaywall() from entitlements/navigation.ts - NOT direct router.push.
  */
 
 import { isFeatureEnabled } from './features';

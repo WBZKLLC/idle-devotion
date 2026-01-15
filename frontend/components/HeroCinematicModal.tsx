@@ -4,6 +4,19 @@
  * A reusable modal component for playing hero cinematic videos.
  * Used exclusively for 5+ star (final ascension) hero cinematics.
  * 
+ * INVARIANT: NO PURCHASE LOGIC HERE
+ * ─────────────────────────────────
+ * This component is PURELY for video playback.
+ * Entitlement checks MUST happen UPSTREAM before showing this modal.
+ * 
+ * Use requireCinematicAccess(heroId) from lib/entitlements/gating.ts
+ * BEFORE rendering this modal.
+ * 
+ * DO NOT:
+ * - Import purchase-flow, PurchaseButton, or Paywall here
+ * - Check entitlements inside this component
+ * - Show paywall UI from this component
+ * 
  * Features:
  * - Module-first video source (bulletproof)
  * - Proper logging for failure signature capture
@@ -31,7 +44,7 @@ import COLORS from '../theme/colors';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ─────────────────────────────────────────────────────────────
-// Logging helper for failure signature capture
+// Logging helper for failure signature capture (DEV only)
 // ─────────────────────────────────────────────────────────────
 const logCine = (...args: any[]) => {
   if (__DEV__) console.log('[cinematics]', ...args);

@@ -24,8 +24,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ENTITLEMENTS, premiumCinematicOwnedKey } from '../lib/entitlements';
+import { ENTITLEMENT_KEYS } from '../lib/entitlements/types';
 import { useEntitlementStore } from '../stores/entitlementStore';
+import { useHasEntitlement } from '../lib/entitlements/gating';
 import { useGameStore } from '../stores/gameStore';
+import PurchaseButton from '../components/PurchaseButton';
 import COLORS from '../theme/colors';
 
 export default function PaidFeaturesScreen() {

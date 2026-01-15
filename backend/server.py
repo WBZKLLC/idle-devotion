@@ -11798,6 +11798,21 @@ async def revenuecat_webhook(request: Request, event: RevenueCatWebhookEvent):
     if not event_id or not event_type:
         raise HTTPException(status_code=400, detail="Missing event id or type")
     
+    # Event type allowlist - reject unknown types
+    ALLOWED_EVENT_TYPES = {
+        RC_EVENT_INITIAL_PURCHASE,
+        RC_EVENT_RENEWAL,
+        RC_EVENT_CANCELLATION,
+        RC_EVENT_UNCANCELLATION,
+        RC_EVENT_EXPIRATION,
+        RC_EVENT_PRODUCT_CHANGE,
+        RC_EVENT_BILLING_ISSUE,
+        RC_EVENT_TRANSFER,
+    }
+    if event_type not in ALLOWED_EVENT_TYPES:
+        print(f"⚠️ RevenueCat webhook: Unknown event type '{event_type}' - rejected")
+        raise HTTPException(status_code=400, detail=f"Unknown event type: {event_type}")
+    
     # Idempotency check - have we processed this event?
     webhook_events = db.revenuecat_webhook_events
     existing = await webhook_events.find_one({"event_id": event_id})

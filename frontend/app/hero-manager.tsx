@@ -420,16 +420,12 @@ export default function HeroManagerScreen() {
         // Log save
         addChangeLog('saved', `${GAME_MODES[selectedMode].name} team`, 0);
         
-        Alert.alert(
-          '✅ Team Saved!',
-          `Your ${GAME_MODES[selectedMode].name} team has been saved and documented.`,
-          [{ text: 'OK' }]
-        );
+        toast.success(`${GAME_MODES[selectedMode].name} team saved and documented!`);
       }
     } catch (error: any) {
       console.error('Error saving team:', error);
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Failed to save team');
+        toast.error(error?.message || 'Failed to save team');
       }
     } finally {
       setSaving(false);

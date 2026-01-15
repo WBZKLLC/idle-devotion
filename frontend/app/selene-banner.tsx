@@ -98,7 +98,7 @@ export default function SeleneBannerScreen() {
       await loadBannerData();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Failed to perform summon');
+        toast.error(error?.message || 'Failed to perform summon');
       }
     } finally {
       setIsPulling(false);

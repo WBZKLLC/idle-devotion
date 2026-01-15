@@ -117,7 +117,7 @@ export default function TeamBuilderScreen() {
     // Check if hero is already in another slot
     const existingSlot = slots.find(s => s.heroId === userHero.id);
     if (existingSlot) {
-      Alert.alert('Hero Already Assigned', 'This hero is already in another slot. Remove it first.');
+      toast.warning('This hero is already in another slot. Remove it first.');
       return;
     }
     
@@ -169,18 +169,18 @@ export default function TeamBuilderScreen() {
       if (selectedTeamId) {
         // Update existing team - use centralized API wrapper
         await updateTeamSlots(selectedTeamId, user?.username || '', slotsData);
-        Alert.alert('Success', 'Team saved successfully!');
+        toast.success('Team saved successfully!');
         loadTeams();
       } else {
         // Create new team - use centralized API wrapper
         const newTeam = await createTeamFull(user?.username || '', 'Main Team', slotsData);
         setSelectedTeamId(newTeam.id);
-        Alert.alert('Success', 'Team created successfully!');
+        toast.success('Team created successfully!');
         loadTeams();
       }
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', 'Failed to save team');
+        toast.error('Failed to save team');
       }
     } finally {
       setIsLoading(false);
@@ -193,11 +193,11 @@ export default function TeamBuilderScreen() {
     try {
       // Use centralized API wrapper (no raw fetch)
       await setActiveTeam(selectedTeamId, user?.username || '');
-      Alert.alert('Success', 'Team set as active!');
+      toast.success('Team set as active!');
       loadTeams();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', 'Failed to set active team');
+        toast.error('Failed to set active team');
       }
     }
   };

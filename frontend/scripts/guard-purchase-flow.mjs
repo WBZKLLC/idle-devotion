@@ -37,6 +37,8 @@ const ALLOWED_PRODUCT_STRING_FILES = new Set([
   'legacy.ts', // Legacy entitlement definitions
   'cinematicsAccess.ts', // Cinematic access helper
   'Paywall.tsx', // Canonical paywall uses product keys
+  'openPremiumCinematic.ts', // Canonical cinematic router uses product keys
+  'navigation.ts', // Canonical navigation helper uses product keys
 ]);
 
 // Raw strings that should NOT appear outside allowed files

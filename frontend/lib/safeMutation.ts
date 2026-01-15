@@ -2,10 +2,11 @@
 // SAFE MUTATION WRAPPER
 // Enforces consistent loading/success/failure patterns for all state mutations
 // Prevents optimistic updates and ensures server-authoritative state
+// Phase 3.18.4: Uses toast instead of Alert for error feedback
 
-import { Alert } from 'react-native';
 import { isErrorHandledGlobally } from './api';
 import { useNetworkStore } from '../stores/networkStore';
+import { toast } from '../components/ui/Toast';
 
 /**
  * Check if device is online

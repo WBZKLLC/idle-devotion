@@ -11202,6 +11202,7 @@ ENTITLEMENT_KEYS = {
 class EntitlementStatus(str, Enum):
     owned = "owned"
     not_owned = "not_owned"
+    expired = "expired"
     pending = "pending"
     revoked = "revoked"
 

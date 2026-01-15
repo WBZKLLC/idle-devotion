@@ -83,6 +83,7 @@ const VIP_TIERS: VIPTier[] = [
 
 export default function StoreScreen() {
   const { user, fetchUser } = useGameStore();
+  const { restorePurchases } = useEntitlementStore();
   // REVENUECAT DISABLED - Re-enable when finalizing:
   // const { isPro, isLoading: isRevenueCatLoading } = useRevenueCatStore();
   const isPro = false; // Temporary placeholder
@@ -90,6 +91,7 @@ export default function StoreScreen() {
   const [divinePackages, setDivinePackages] = useState<any>(null);
   const [vipInfo, setVipInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [showVIPModal, setShowVIPModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'crystals' | 'divine' | 'vip'>('crystals');
@@ -99,6 +101,19 @@ export default function StoreScreen() {
       loadStoreData();
     }
   }, [user]);
+  
+  // Phase 3.19.4: Handle restore purchases
+  const handleRestorePurchases = async () => {
+    setIsRestoring(true);
+    try {
+      await restorePurchases();
+      toast.success('Purchases restored successfully!');
+    } catch (error) {
+      toast.error('Could not restore purchases. Please try again.');
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   // REVENUECAT DISABLED - Re-enable when finalizing:
   // const handleShowPaywall = async () => {

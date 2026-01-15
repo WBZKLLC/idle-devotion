@@ -184,9 +184,11 @@ export default function CampaignScreen() {
       setStages(data.stages || []);
       setSelectedChapter(chapter);
       setActiveTab('stages');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading stages:', error);
-      Alert.alert('Error', 'Failed to load chapter stages');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', 'Failed to load chapter stages');
+      }
     } finally {
       setLoading(false);
     }

@@ -223,6 +223,97 @@ export const useEntitlementStore = create<EntitlementStoreState>((set, get) => (
   },
 
   /**
+   * Phase 3.10: Check if cached entitlements are stale
+   * Uses SERVER time (not device time) for staleness calculation
+   * 
+   * Stale if: server_now > server_time + ttl_seconds
+   */
+  isStale: () => {
+    const { snapshot } = get();
+    
+    // No snapshot = stale (need to fetch)
+    if (!snapshot) return true;
+    
+    // Get server time and TTL from snapshot
+    const serverTimeStr = snapshot.server_time;
+    const ttlSeconds = snapshot.ttl_seconds ?? DEFAULT_TTL_SECONDS;
+    
+    // Clamp TTL to reasonable bounds
+    const clampedTtl = Math.max(MIN_TTL_SECONDS, Math.min(MAX_TTL_SECONDS, ttlSeconds));
+    
+    if (!serverTimeStr) {
+      // No server time in snapshot - fall back to device time check
+      const { lastRefreshAt } = get();
+      if (!lastRefreshAt) return true;
+      const deviceNow = Date.now();
+      return deviceNow > lastRefreshAt + (clampedTtl * 1000);
+    }
+    
+    // Parse server time
+    const serverTime = new Date(serverTimeStr).getTime();
+    if (isNaN(serverTime)) {
+      dlog('[entitlementStore] Invalid server_time in snapshot, treating as stale');
+      return true;
+    }
+    
+    // Estimate current server time (server_time + time_since_refresh)
+    const { lastRefreshAt } = get();
+    const timeSinceRefresh = lastRefreshAt ? Date.now() - lastRefreshAt : 0;
+    const estimatedServerNow = serverTime + timeSinceRefresh;
+    
+    // Stale if estimated server time exceeds expiry
+    const expiresAt = serverTime + (clampedTtl * 1000);
+    const isStale = estimatedServerNow > expiresAt;
+    
+    if (__DEV__ && isStale) {
+      dlog('[entitlementStore] Cache is stale:', {
+        serverTime: new Date(serverTime).toISOString(),
+        estimatedServerNow: new Date(estimatedServerNow).toISOString(),
+        expiresAt: new Date(expiresAt).toISOString(),
+        ttlSeconds: clampedTtl,
+      });
+    }
+    
+    return isStale;
+  },
+
+  /**
+   * Phase 3.10: Canonical refresh entry point
+   * 
+   * Use this at premium gates instead of direct refreshFromServer calls.
+   * Fire-and-forget for non-blocking UX, or await for blocking checks.
+   * 
+   * Rules:
+   * - If no user logged in → no-op
+   * - If already refreshing → no-op (dedup)
+   * - If not stale → no-op
+   * - If stale → trigger refresh
+   */
+  ensureFreshEntitlements: async (reason: RefreshReason) => {
+    // No user = no entitlements to refresh
+    const user = getUser();
+    if (!user) {
+      dlog('[entitlementStore] ensureFresh: no user, skipping');
+      return;
+    }
+    
+    // Already refreshing = dedup
+    if (get().isRefreshing) {
+      dlog('[entitlementStore] ensureFresh: already refreshing, skipping');
+      return;
+    }
+    
+    // Not stale = no-op
+    if (!get().isStale()) {
+      dlog('[entitlementStore] ensureFresh: cache is fresh, skipping');
+      return;
+    }
+    
+    dlog('[entitlementStore] ensureFresh: cache stale, refreshing for', reason);
+    await get().refreshFromServer(reason);
+  },
+
+  /**
    * Clear all entitlement state (on logout)
    * Bumps epoch to invalidate any in-flight requests
    */

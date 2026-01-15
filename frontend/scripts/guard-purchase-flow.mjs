@@ -98,7 +98,6 @@ const ALLOWED_PREMIUM_TELEMETRY_FILES = new Set([
   'navigation.ts', // paywall_opened, store_opened
   'gating.ts',     // premium_gate_denied, premium_gate_allowed
 ]);
-]);
 
 // Files allowed to have legacy paywall patterns (none - they're deprecated)
 const ALLOWED_LEGACY_PAYWALL_FILES = new Set([

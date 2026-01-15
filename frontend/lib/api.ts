@@ -65,6 +65,20 @@ export function isErrorHandledGlobally(error: any): boolean {
   return error?._handledGlobally === true;
 }
 
+/**
+ * Use this anywhere you have an `error` object and want to avoid duplicate UX.
+ * Guards against double-alerting when the global interceptor already showed one.
+ */
+export function alertIfNotHandledGlobally(
+  error: any,
+  title: string,
+  message: string
+): void {
+  if (!isErrorHandledGlobally(error)) {
+    Alert.alert(title, message);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // AUTH TOKEN MANAGEMENT
 // Synchronous token setter - avoids race conditions on boot

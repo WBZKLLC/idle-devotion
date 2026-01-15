@@ -154,7 +154,9 @@ export default function LaunchBannerScreen() {
       
       await fetchUser();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Pull failed');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Pull failed');
+      }
     } finally {
       setPulling(false);
     }

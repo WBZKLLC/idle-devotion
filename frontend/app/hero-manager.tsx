@@ -426,7 +426,9 @@ export default function HeroManagerScreen() {
       }
     } catch (error: any) {
       console.error('Error saving team:', error);
-      Alert.alert('Error', error?.message || 'Failed to save team');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Failed to save team');
+      }
     } finally {
       setSaving(false);
     }

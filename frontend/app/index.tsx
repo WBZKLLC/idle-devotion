@@ -174,7 +174,9 @@ export default function HomeScreen() {
         loadInstantCooldown();
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to instant collect');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Failed to instant collect');
+      }
     } finally {
       setIsClaiming(false);
     }

@@ -61,7 +61,9 @@ export default function SummonHubScreen() {
       setShowResults(true);
       await fetchUser();
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to perform summon');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Failed to perform summon');
+      }
     }
     finally { setIsLoading(false); }
   };

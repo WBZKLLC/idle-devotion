@@ -11215,3 +11215,238 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ENTITLEMENTS SYSTEM
+# Server-authoritative entitlement state
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Entitlement keys (must match frontend)
+ENTITLEMENT_KEYS = {
+    "PREMIUM": "PREMIUM",
+    "PREMIUM_CINEMATICS_PACK": "PREMIUM_CINEMATICS_PACK", 
+    "NO_ADS": "NO_ADS",
+    "STARTER_PACK": "STARTER_PACK",
+}
+
+class EntitlementStatus(str, Enum):
+    owned = "owned"
+    not_owned = "not_owned"
+    pending = "pending"
+    revoked = "revoked"
+
+class ServerEntitlement(BaseModel):
+    key: str
+    status: EntitlementStatus
+    granted_at: Optional[str] = None
+    expires_at: Optional[str] = None
+    transaction_id: Optional[str] = None
+    product_id: Optional[str] = None
+    reason: Optional[str] = None
+
+class EntitlementsSnapshot(BaseModel):
+    server_time: str
+    version: int
+    username: str
+    entitlements: Dict[str, ServerEntitlement]
+    ttl_seconds: Optional[int] = 300
+    source: Optional[str] = "database"
+
+@api_router.get("/entitlements/snapshot")
+async def get_entitlements_snapshot(request: Request):
+    """
+    Get server-authoritative entitlements snapshot for authenticated user.
+    Client should cache this but revalidate on startup and post-purchase.
+    """
+    user = await authenticate_request(request)
+    user_doc = await get_user_for_read(user["username"])
+    
+    # Build entitlements map from user document
+    user_entitlements = user_doc.get("entitlements", {})
+    
+    # Create snapshot with all known keys
+    entitlements_map = {}
+    
+    # Fill all known keys (not_owned if not in user data)
+    for key in ENTITLEMENT_KEYS.values():
+        if key in user_entitlements:
+            ent_data = user_entitlements[key]
+            entitlements_map[key] = ServerEntitlement(
+                key=key,
+                status=EntitlementStatus(ent_data.get("status", "owned")),
+                granted_at=ent_data.get("granted_at"),
+                expires_at=ent_data.get("expires_at"),
+                transaction_id=ent_data.get("transaction_id"),
+                product_id=ent_data.get("product_id"),
+                reason=ent_data.get("reason", "purchase"),
+            )
+        else:
+            entitlements_map[key] = ServerEntitlement(
+                key=key,
+                status=EntitlementStatus.not_owned,
+            )
+    
+    # Also include any per-hero cinematic entitlements
+    for key, ent_data in user_entitlements.items():
+        if key.startswith("PREMIUM_CINEMATIC_OWNED:"):
+            entitlements_map[key] = ServerEntitlement(
+                key=key,
+                status=EntitlementStatus(ent_data.get("status", "owned")),
+                granted_at=ent_data.get("granted_at"),
+                expires_at=ent_data.get("expires_at"),
+                transaction_id=ent_data.get("transaction_id"),
+                product_id=ent_data.get("product_id"),
+                reason=ent_data.get("reason", "purchase"),
+            )
+    
+    # Get version from user doc (or use timestamp)
+    version = user_doc.get("entitlements_version", int(datetime.now(timezone.utc).timestamp()))
+    
+    return EntitlementsSnapshot(
+        server_time=datetime.now(timezone.utc).isoformat(),
+        version=version,
+        username=user["username"],
+        entitlements=entitlements_map,
+        ttl_seconds=300,
+        source="database",
+    )
+
+# Purchase verification with idempotency
+class PurchaseVerifyRequest(BaseModel):
+    product_id: str
+    entitlement_key: str
+    idempotency_key: str
+    platform: str
+    transaction_id: Optional[str] = None
+    receipt_data: Optional[str] = None
+
+@api_router.post("/purchases/verify")
+async def verify_purchase(request: Request, body: PurchaseVerifyRequest):
+    """
+    Verify a purchase and grant entitlement.
+    Idempotent: same idempotency_key returns same result.
+    
+    In production, this would:
+    1. Check idempotency key hasn't been used
+    2. Verify receipt with Apple/Google/RevenueCat
+    3. Grant entitlement if valid
+    4. Return updated snapshot
+    """
+    user = await authenticate_request(request)
+    user_doc = await get_user_for_mutation(user["username"])
+    username = user["username"]
+    
+    # Check idempotency - if we've seen this key, return cached result
+    purchase_cache = db.purchase_idempotency
+    existing = await purchase_cache.find_one({
+        "username": username,
+        "idempotency_key": body.idempotency_key,
+    })
+    
+    if existing:
+        # Return cached result (idempotent)
+        return existing["response"]
+    
+    # TODO: In production, verify receipt with RevenueCat/Apple/Google here
+    # For now, we trust the client and grant the entitlement
+    
+    # Grant the entitlement
+    now = datetime.now(timezone.utc)
+    entitlement_data = {
+        "status": "owned",
+        "granted_at": now.isoformat(),
+        "transaction_id": body.transaction_id,
+        "product_id": body.product_id,
+        "reason": "purchase",
+    }
+    
+    # Update user's entitlements
+    await users_collection.update_one(
+        {"username": username},
+        {
+            "$set": {
+                f"entitlements.{body.entitlement_key}": entitlement_data,
+            },
+            "$inc": {"entitlements_version": 1},
+        }
+    )
+    
+    # Get updated snapshot
+    updated_user = await get_user_for_read(username)
+    snapshot = await build_entitlements_snapshot(updated_user)
+    
+    response = {
+        "success": True,
+        "entitlements_snapshot": snapshot.dict(),
+        "message": f"Entitlement {body.entitlement_key} granted",
+    }
+    
+    # Cache the result for idempotency (TTL: 24 hours)
+    await purchase_cache.insert_one({
+        "username": username,
+        "idempotency_key": body.idempotency_key,
+        "response": response,
+        "created_at": now,
+        "expires_at": now + timedelta(hours=24),
+    })
+    
+    return response
+
+async def build_entitlements_snapshot(user_doc: dict) -> EntitlementsSnapshot:
+    """Build entitlements snapshot from user document"""
+    user_entitlements = user_doc.get("entitlements", {})
+    entitlements_map = {}
+    
+    # Fill all known keys
+    for key in ENTITLEMENT_KEYS.values():
+        if key in user_entitlements:
+            ent_data = user_entitlements[key]
+            entitlements_map[key] = ServerEntitlement(
+                key=key,
+                status=EntitlementStatus(ent_data.get("status", "owned")),
+                granted_at=ent_data.get("granted_at"),
+                expires_at=ent_data.get("expires_at"),
+                transaction_id=ent_data.get("transaction_id"),
+                product_id=ent_data.get("product_id"),
+                reason=ent_data.get("reason", "purchase"),
+            )
+        else:
+            entitlements_map[key] = ServerEntitlement(
+                key=key,
+                status=EntitlementStatus.not_owned,
+            )
+    
+    # Include per-hero cinematics
+    for key, ent_data in user_entitlements.items():
+        if key.startswith("PREMIUM_CINEMATIC_OWNED:"):
+            entitlements_map[key] = ServerEntitlement(
+                key=key,
+                status=EntitlementStatus(ent_data.get("status", "owned")),
+                granted_at=ent_data.get("granted_at"),
+                expires_at=ent_data.get("expires_at"),
+                transaction_id=ent_data.get("transaction_id"),
+                product_id=ent_data.get("product_id"),
+                reason=ent_data.get("reason", "purchase"),
+            )
+    
+    version = user_doc.get("entitlements_version", int(datetime.now(timezone.utc).timestamp()))
+    
+    return EntitlementsSnapshot(
+        server_time=datetime.now(timezone.utc).isoformat(),
+        version=version,
+        username=user_doc["username"],
+        entitlements=entitlements_map,
+        ttl_seconds=300,
+        source="database",
+    )
+
+# Create TTL index for idempotency cache
+@app.on_event("startup")
+async def setup_purchase_idempotency_index():
+    try:
+        await db.purchase_idempotency.create_index("expires_at", expireAfterSeconds=0)
+        await db.purchase_idempotency.create_index([("username", 1), ("idempotency_key", 1)], unique=True)
+        print("✅ Created purchase_idempotency indexes")
+    except Exception as e:
+        if "already exists" not in str(e).lower():
+            print(f"⚠️ purchase_idempotency index warning: {e}")

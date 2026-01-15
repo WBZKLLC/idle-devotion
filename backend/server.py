@@ -3767,6 +3767,9 @@ async def get_vip_comparison(username: str):
 @api_router.post("/vip/purchase")
 async def vip_purchase(username: str, amount_usd: float):
     """Process VIP purchase (in production, integrate with payment processor)"""
+    # DEV-ONLY: Simulated purchases blocked in production
+    require_dev_mode()
+    
     user = await get_user_for_mutation(username)  # Includes frozen check
     
     if amount_usd <= 0:

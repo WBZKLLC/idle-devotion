@@ -6,6 +6,7 @@
 // 
 // PHASE 3.10: Premium gates now trigger ensureFreshEntitlements() for staleness check
 // PHASE 3.11: Uses canonical navigation helper instead of direct router.push
+// PHASE 3.13: Emits telemetry for gate denied/allowed events (only here, guards enforce)
 
 import { Alert } from 'react-native';
 import { 
@@ -15,6 +16,7 @@ import {
   type ServerEntitlement,
 } from './types';
 import { goToPaywall, getPaywallRoute, type PaywallSource } from './navigation';
+import { track, Events } from '../telemetry/events';
 
 // Dynamic import to avoid circular dependency
 let _entitlementStore: any = null;
@@ -33,6 +35,32 @@ function triggerFreshnessCheck(): void {
   const store = getEntitlementStore();
   // Fire and forget - don't await
   store.getState().ensureFreshEntitlements('gate').catch(() => {});
+}
+
+// ==============================================================
+// TELEMETRY HELPERS (Phase 3.13)
+// ==============================================================
+// Gate allowed events are sampled (10%) to reduce noise
+// Gate denied events are always tracked (business-critical)
+const GATE_ALLOWED_SAMPLE_RATE = 0.1; // 10%
+
+function trackGateDenied(requiredKey: string, source: PaywallSource, heroId?: string): void {
+  track(Events.PREMIUM_GATE_DENIED, {
+    requiredKey,
+    source,
+    heroId: heroId ?? null,
+  });
+}
+
+function trackGateAllowed(requiredKey: string, source: PaywallSource): void {
+  // Sampled to reduce noise - gate allows are frequent and expected
+  if (Math.random() < GATE_ALLOWED_SAMPLE_RATE) {
+    track(Events.PREMIUM_GATE_ALLOWED, {
+      requiredKey,
+      source,
+      sampled: true,
+    });
+  }
 }
 
 /**

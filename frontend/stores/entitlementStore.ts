@@ -53,6 +53,9 @@ interface EntitlementStoreState {
   isRefreshing: boolean;
   refreshError: string | null;
   
+  // Epoch for invalidating in-flight requests on logout
+  entitlementEpoch: number;
+  
   // Actions
   hydrateEntitlements: () => Promise<void>;
   refreshFromServer: (reason: 'startup' | 'post_purchase' | 'manual') => Promise<void>;

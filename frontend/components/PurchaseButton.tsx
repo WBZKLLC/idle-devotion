@@ -105,8 +105,8 @@ export default function PurchaseButton({
     // Start new purchase flow
     try {
       const idempotencyKey = startPurchaseFlow(
-        GOLDEN_PATH_PRODUCT.productId,
-        GOLDEN_PATH_PRODUCT.entitlementKey
+        product.productId,
+        product.entitlementKey
       );
       
       if (testMode) {

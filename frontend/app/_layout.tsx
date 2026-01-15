@@ -13,6 +13,8 @@ import { AppErrorBoundary } from '../components/AppErrorBoundary';
 import { initSentry, sentrySetUser } from '../lib/telemetry/sentry';
 import { track, Events } from '../lib/telemetry/events';
 import { validateConfig } from '../lib/config/validate';
+// Phase 3.14: App resume reconciliation
+import { useAppResumeReconcile } from '../hooks/useAppResumeReconcile';
 
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';

@@ -90,6 +90,7 @@ SUPER_ADMIN_BOOTSTRAP_TOKEN=  # Remove after ADAM is created
 ### Frontend (.env)
 ```bash
 # REQUIRED
+EXPO_PUBLIC_ENV=production
 EXPO_PUBLIC_BACKEND_URL=https://your-production-domain.com/api
 
 # RECOMMENDED

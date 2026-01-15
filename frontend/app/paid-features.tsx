@@ -35,6 +35,8 @@ import { useHasEntitlement } from '../lib/entitlements/gating';
 import { useGameStore } from '../stores/gameStore';
 import PurchaseButton from '../components/PurchaseButton';
 import COLORS from '../theme/colors';
+// Phase 3.18.7: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 
 // DEV-only flag - set to false to disable DEV tools even in __DEV__ mode
 const ENABLE_DEV_TOOLS = __DEV__;
@@ -119,11 +121,12 @@ export default function PaidFeaturesScreen() {
   const handleDevGrantHero = async (heroId: string) => {
     if (!ENABLE_DEV_TOOLS) return;
     if (!heroId.trim()) {
-      Alert.alert('Error', 'Please enter a hero ID');
+      toast.warning('Please enter a hero ID');
       return;
     }
     try {
       await setHeroPremiumCinematicOwned(heroId.trim(), true);
+      // ALERT_ALLOWED: dev_mode
       Alert.alert('DEV Mode', `Granted premium cinematic ownership for: ${heroId.trim()}`);
       setCustomHeroId('');
     } catch (e: any) {

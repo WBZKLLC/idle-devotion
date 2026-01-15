@@ -7,14 +7,14 @@
  * ───────────────────────────────────────────────────────────────
  * 
  * This file:
- * - Calls requireCinematicAccess() from lib/entitlements/gating.ts
+ * - Calls requireCinematicAccess() - the SINGLE canonical gate
  * - If denied, routes to canonical paywall (paid-features)
  * - If allowed, opens the cinematic modal
  * 
  * This file does NOT:
+ * - Implement its own entitlement checks (uses gating.ts only)
  * - Implement purchase logic
- * - Check entitlements directly (uses gating helpers only)
- * - Show its own alerts (paywall handles that)
+ * - Show its own alerts (gating.ts or paywall handles that)
  * 
  * Requirements for playback:
  * 1. User has PREMIUM_CINEMATICS_PACK entitlement (global pack) OR
@@ -23,10 +23,7 @@
  */
 
 import { router } from 'expo-router';
-import { 
-  canAccessHeroCinematic, 
-  hasPremiumCinematicsPack 
-} from './entitlements/gating';
+import { requireCinematicAccess } from './entitlements/gating';
 import { isFeatureEnabled } from './features';
 
 export interface OpenCinematicResult {
@@ -54,14 +51,13 @@ export function openPremiumCinematic(
     return { success: false, reason: 'feature_disabled' };
   }
   
-  // Check entitlement using CANONICAL gating helper
-  // This checks both pack ownership AND per-hero ownership
-  const hasAccess = hasPremiumCinematicsPack() || canAccessHeroCinematic(heroId);
+  // Use SINGLE CANONICAL GATE - all policy logic lives in gating.ts
+  // On denial, route to canonical paywall (no alert here)
+  const hasAccess = requireCinematicAccess(heroId, {
+    onDenied: () => router.push('/paid-features'),
+  });
   
   if (!hasAccess) {
-    // Route to canonical paywall - DO NOT show alerts here
-    // Paywall will handle purchase UX
-    router.push('/paid-features');
     return { success: false, reason: 'no_entitlement' };
   }
   
@@ -80,6 +76,7 @@ export function openPremiumCinematic(
  * Use this for UI state (show play button vs lock icon).
  * 
  * This does NOT navigate or show any UI - it's a pure check.
+ * Uses the same canonical gate for consistency.
  * 
  * @param heroId - The hero's stable ID
  * @param stableId - User's stable ID for feature flag rollout
@@ -94,6 +91,6 @@ export function canPlayHeroCinematic(
     return false;
   }
   
-  // Must have entitlement (pack OR hero-specific)
-  return hasPremiumCinematicsPack() || canAccessHeroCinematic(heroId);
+  // Use canonical gate with no-op denial handler (pure check)
+  return requireCinematicAccess(heroId, { onDenied: () => {} });
 }

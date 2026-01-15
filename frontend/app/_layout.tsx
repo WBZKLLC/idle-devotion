@@ -50,6 +50,10 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isRestoring, setIsRestoring] = useState(true);
 
   useEffect(() => {
+    // Validate config and init telemetry (runs once on app start, not at module-load)
+    validateConfig();
+    initSentry();
+    
     // Track app start
     track(Events.APP_START);
     

@@ -5,6 +5,7 @@
 import axios, { AxiosError } from 'axios';
 import { Alert } from 'react-native';
 import { track, Events } from './telemetry/events';
+import type { EntitlementsSnapshot } from './entitlements/types';
 
 const RAW = process.env.EXPO_PUBLIC_BACKEND_URL;
 const API_BASE = RAW

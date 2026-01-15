@@ -107,6 +107,12 @@ function checkFile(filePath) {
     // These are typically safe boilerplate
     const skipRawStringCheck = lineNum <= 10;
     
+    // Skip commented lines entirely (// or /*)
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*')) {
+      continue;
+    }
+    
     // Check for raw product strings in non-allowed files
     if (!skipRawStringCheck && !ALLOWED_PRODUCT_STRING_FILES.has(fileName)) {
       for (const pattern of FORBIDDEN_RAW_STRINGS) {

@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
 // Phase 3.18.3: Toast for summon feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.19.1: Skeleton + Empty state components
+import { BannerSkeleton } from '../components/ui/Skeleton';
+import { NoBannersEmpty } from '../components/ui/EmptyState';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { pullGacha } from '../lib/api';

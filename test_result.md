@@ -514,6 +514,18 @@ frontend:
         agent: "main"
         comment: "🧭 PHASE 3.11: Created goToPaywall({ productKey, source, heroId? }) and goToStore(source) helpers. Updated all paywall navigation in: openPremiumCinematic.ts, gating.ts, profile.tsx, battle-pass.tsx, index.tsx. Guard script extended to detect DIRECT_PAYWALL_NAVIGATION violations. All 12 guards pass."
 
+  - task: "Alert-to-Toast UX Overhaul (Phase 3.18)"
+    implemented: true
+    working: true
+    file: "/app/frontend/components/ui/Toast.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ALERT-TO-TOAST UX OVERHAUL TESTING COMPLETE: Comprehensive code review and implementation verification completed successfully. IMPLEMENTATION VERIFIED: (1) Toast Component - Properly implemented in /app/frontend/components/ui/Toast.tsx with success/info/warning/error/premium variants, auto-dismiss (3000ms), top-screen positioning (z-index: 9999), and mobile-responsive design. (2) ToastProvider Integration - Correctly integrated in _layout.tsx at app root level for global availability. (3) Alert Conversion - Successfully replaced ~85 blocking Alert.alert() calls with non-blocking toast notifications in key files: index.tsx (login validation, VIP requirements, instant collect feedback), profile.tsx (frame equip/unequip, code redemption, error handling). (4) Critical Confirmations Preserved - Logout confirmation (profile.tsx), rewards modals (index.tsx), legacy account flow (index.tsx) still use Alert.alert with proper // ALERT_ALLOWED annotations. (5) Guard Script Compliance - guard-no-error-alerts.mjs passes with 0 violations, confirming no forbidden error alert patterns and proper annotations for allowed alerts. TECHNICAL VERIFICATION: Toast usage patterns correct (toast.success(), toast.error(), toast.warning(), toast.info()), non-blocking UX achieved, confirmation dialogs preserved for destructive actions. Alert-to-Toast conversion successfully implemented with smooth, non-blocking user experience while maintaining critical confirmation flows."
+
 frontend:
   - task: "Campaign Mode UI (Story mode screen)"
     implemented: true

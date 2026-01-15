@@ -92,7 +92,9 @@ export default function ProfileScreen() {
       await loadUserFrames();
       Alert.alert('Success', 'Frame equipped successfully!');
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to equip frame');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to equip frame');
+      }
     } finally {
       setLoadingFrames(false);
     }
@@ -107,7 +109,9 @@ export default function ProfileScreen() {
       await loadUserFrames();
       Alert.alert('Success', 'Frame unequipped');
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to unequip frame');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to unequip frame');
+      }
     } finally {
       setLoadingFrames(false);
     }

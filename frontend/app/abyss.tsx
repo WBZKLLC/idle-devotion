@@ -121,10 +121,7 @@ export default function AbyssScreen() {
         // Show victory
         setTimeout(() => {
           if (result.milestone_reward) {
-            Alert.alert(
-              '🎉 MILESTONE FIRST CLEAR!',
-              `${result.milestone_reward.message}\n\nDepth ${result.level}m conquered!`
-            );
+            toast.success(`${result.milestone_reward.message} — Depth ${result.level}m conquered!`);
           }
           loadAbyssData();
           fetchUser();
@@ -132,7 +129,7 @@ export default function AbyssScreen() {
       }
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Attack failed');
+        toast.error(error?.message || 'Attack failed');
       }
     } finally {
       setIsAttacking(false);

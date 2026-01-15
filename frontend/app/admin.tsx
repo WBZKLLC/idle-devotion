@@ -78,7 +78,7 @@ export default function AdminPanelScreen() {
 
   const searchUsers = async () => {
     if (!searchQuery.trim()) {
-      Alert.alert('Error', 'Please enter a username to search');
+      toast.warning('Please enter a username to search');
       return;
     }
     
@@ -98,12 +98,12 @@ export default function AdminPanelScreen() {
     } catch (error: any) {
       if (error.response?.status === 404) {
         if (!isErrorHandledGlobally(error)) {
-          Alert.alert('Not Found', 'User not found');
+          toast.warning('User not found');
         }
         setSearchResults([]);
       } else {
         if (!isErrorHandledGlobally(error)) {
-          Alert.alert('Error', 'Failed to search users');
+          toast.error('Failed to search users');
         }
       }
     } finally {
@@ -121,19 +121,19 @@ export default function AdminPanelScreen() {
     if (grantResources.divine_essence) resources.divine_essence = parseInt(grantResources.divine_essence);
     
     if (Object.keys(resources).length === 0) {
-      Alert.alert('Error', 'Please enter at least one resource amount');
+      toast.warning('Please enter at least one resource amount');
       return;
     }
     
     setProcessing(true);
     try {
       await adminGrantResources(selectedUser.username, user.username, resources);
-      Alert.alert('Success', `Resources granted to ${selectedUser.username}`);
+      toast.success(`Resources granted to ${selectedUser.username}`);
       setShowGrantModal(false);
       setGrantResources({ gems: '', coins: '', gold: '', divine_essence: '' });
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to grant resources');
+        toast.error(error.response?.data?.detail || 'Failed to grant resources');
       }
     } finally {
       setProcessing(false);
@@ -145,20 +145,20 @@ export default function AdminPanelScreen() {
     
     const level = parseInt(newVIPLevel);
     if (isNaN(level) || level < 0 || level > 15) {
-      Alert.alert('Error', 'VIP level must be between 0 and 15');
+      toast.warning('VIP level must be between 0 and 15');
       return;
     }
     
     setProcessing(true);
     try {
       await adminSetVIP(selectedUser.username, user.username, level);
-      Alert.alert('Success', `VIP level set to ${level} for ${selectedUser.username}`);
+      toast.success(`VIP level set to ${level} for ${selectedUser.username}`);
       setShowVIPModal(false);
       setNewVIPLevel('');
       searchUsers(); // Refresh
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to set VIP');
+        toast.error(error.response?.data?.detail || 'Failed to set VIP');
       }
     } finally {
       setProcessing(false);
@@ -173,12 +173,12 @@ export default function AdminPanelScreen() {
     setProcessing(true);
     try {
       await adminMuteUser(selectedUser.username, user.username, hours);
-      Alert.alert('Success', `${selectedUser.username} has been muted for ${hours} hours`);
+      toast.success(`${selectedUser.username} has been muted for ${hours} hours`);
       setShowMuteModal(false);
       searchUsers(); // Refresh
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Failed to mute user');
+        toast.error(error.response?.data?.detail || 'Failed to mute user');
       }
     } finally {
       setProcessing(false);
@@ -190,6 +190,7 @@ export default function AdminPanelScreen() {
     
     const reason = banReason.trim() || 'Violation of terms';
     
+    // ALERT_ALLOWED: destructive_confirm
     Alert.alert(
       'Confirm Ban',
       `Are you sure you want to ban ${selectedUser.username}? This action cannot be undone.`,
@@ -202,13 +203,13 @@ export default function AdminPanelScreen() {
             setProcessing(true);
             try {
               await adminBanUser(selectedUser.username, user.username, reason);
-              Alert.alert('Success', `${selectedUser.username} has been banned`);
+              toast.success(`${selectedUser.username} has been banned`);
               setShowBanModal(false);
               setBanReason('');
               searchUsers(); // Refresh
             } catch (error: any) {
               if (!isErrorHandledGlobally(error)) {
-                Alert.alert('Error', error.response?.data?.detail || 'Failed to ban user');
+                toast.error(error.response?.data?.detail || 'Failed to ban user');
               }
             } finally {
               setProcessing(false);

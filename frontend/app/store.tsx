@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
+// Phase 3.18.4: Toast for non-blocking feedback
+import { toast } from '../components/ui/Toast';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 // import { CustomPaywall, presentNativePaywall } from '../components/Paywall';

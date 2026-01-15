@@ -69,7 +69,6 @@ const ALLOWED_LEGACY_PAYWALL_FILES = new Set([
   // Paywall.tsx exports deprecated stubs that warn - this is intentional
   'Paywall.tsx',
 ]);
-];
 
 // Direct verifyPurchase calls (only allowed in purchase-flow.ts)
 const VERIFY_CALL_PATTERN = /verifyPurchase\s*\(/;

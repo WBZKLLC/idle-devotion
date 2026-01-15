@@ -172,9 +172,10 @@ export function canAccessHeroCinematic(heroId: string): boolean {
  * 
  * Phase 3.10: Triggers background freshness check before evaluating
  * Phase 3.13: Emits telemetry for gate outcomes
+ * Phase 3.18.4: No blocking alert - navigates to paywall directly
  * 
  * @param heroId - Hero to check access for
- * @param options.onDenied - Called when access is denied (default: shows alert)
+ * @param options.onDenied - Called when access is denied (default: navigates to paywall)
  * @returns true if access granted, false if denied
  */
 export function requireCinematicAccess(
@@ -195,30 +196,18 @@ export function requireCinematicAccess(
   // Phase 3.13: Track denied (always)
   trackGateDenied(requiredKey, 'cinematic_gate', heroId);
   
-  // Access denied - call custom handler or show default alert
+  // Access denied - call custom handler or navigate to paywall
   if (options?.onDenied) {
     options.onDenied();
     return false;
   }
   
-  // Default: use standard requireEntitlement alert (freshness already triggered)
-  // Note: requireEntitlement will NOT double-emit telemetry because we already tracked above
-  // and the entitlement check will fail again
-  Alert.alert(
-    'Premium Cinematic',
-    'Unlock this cinematic with the Premium Cinematics Pack or purchase it individually.',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'View Store', 
-        onPress: () => goToPaywall({ 
-          productKey: 'PREMIUM_CINEMATICS_PACK',
-          source: 'cinematic_gate',
-          heroId,
-        }) 
-      },
-    ]
-  );
+  // Phase 3.18.4: Navigate to paywall directly (no blocking alert)
+  goToPaywall({ 
+    productKey: 'PREMIUM_CINEMATICS_PACK',
+    source: 'cinematic_gate',
+    heroId,
+  });
   
   return false;
 }

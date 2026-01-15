@@ -109,7 +109,9 @@ export default function HeroUpgradeScreen() {
       loadHeroDetails();
       fetchUser();
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to awaken');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error?.message || 'Failed to awaken');
+      }
     } finally {
       setIsUpgrading(false);
     }

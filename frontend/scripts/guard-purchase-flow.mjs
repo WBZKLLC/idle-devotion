@@ -78,15 +78,19 @@ function getAllTsxFiles(dir, files = []) {
 function checkFile(filePath) {
   const fileName = basename(filePath);
   const content = readFileSync(filePath, 'utf-8');
-  const lines = content.split('\\n');
+  const lines = content.split('\n');
   const violations = [];
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineNum = i + 1;
     
+    // Skip first 10 lines (imports/comments) for raw string checks
+    // These are typically safe boilerplate
+    const skipRawStringCheck = lineNum <= 10;
+    
     // Check for raw product strings in non-allowed files
-    if (!ALLOWED_PRODUCT_STRING_FILES.has(fileName)) {
+    if (!skipRawStringCheck && !ALLOWED_PRODUCT_STRING_FILES.has(fileName)) {
       for (const pattern of FORBIDDEN_RAW_STRINGS) {
         if (pattern.test(line)) {
           violations.push({

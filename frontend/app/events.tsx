@@ -115,13 +115,13 @@ export default function EventsScreen() {
       const result = await pullEventBanner(user.username, bannerId, isMulti);
       
       if (result.heroes && result.heroes.length > 0) {
-        const heroNames = result.heroes.map((h: any) => `⭐ ${h.name} (${h.rarity})`).join('\n');
-        Alert.alert('🎉 Summon Results!', heroNames);
+        const heroNames = result.heroes.map((h: any) => `${h.name} (${h.rarity})`).slice(0, 3).join(', ');
+        toast.success(`Summoned: ${heroNames}${result.heroes.length > 3 ? '...' : ''}`);
         await fetchUser();
       }
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.response?.data?.detail || 'Failed to perform summon');
+        toast.error(error?.response?.data?.detail || 'Failed to perform summon');
       }
     } finally {
       setIsPulling(false);
@@ -142,6 +142,7 @@ export default function EventsScreen() {
     if (event.type === 'limited') {
       const banner = eventBanners.find(b => b.id === eventId);
       if (banner) {
+        // ALERT_ALLOWED: purchase_confirm
         Alert.alert(
           `🎰 ${banner.name}`,
           `Featured: ${banner.featured_heroes.slice(0, 3).join(', ')}\n\nPerform a summon?`,
@@ -166,7 +167,7 @@ export default function EventsScreen() {
     
     if (event.progress !== undefined && event.target !== undefined) {
       if (event.progress < event.target) {
-        Alert.alert('Not Yet', `Complete the objective first! (${event.progress}/${event.target})`);
+        toast.warning(`Complete the objective first! (${event.progress}/${event.target})`);
         return;
       }
     }
@@ -174,7 +175,7 @@ export default function EventsScreen() {
     setEvents(prev => prev.map(e => e.id === eventId ? { ...e, claimed: true } : e));
     
     const rewardText = event.rewards.map(r => `${r.amount} ${r.type.replace('_', ' ')}`).join(', ');
-    Alert.alert('Claimed!', `You received: ${rewardText}`);
+    toast.success(`Claimed: ${rewardText}`);
   };
 
   const getEventTypeColor = (type: string) => {

@@ -14,12 +14,25 @@ import { useGameStore } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
 // Phase 3.18.4: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.19.2: Canonical button components
+import { SecondaryButton } from '../components/ui/SecondaryButton';
+// Phase 3.19.4: Entitlement store for restore
+import { useEntitlementStore } from '../lib/entitlements/gating';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 // import { CustomPaywall, presentNativePaywall } from '../components/Paywall';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+
+// Centralized API wrappers (no raw fetch in screens - critical for monetization)
+import {
+  getCrystalPackages,
+  getDivinePackages,
+  getVipInfo,
+  purchaseCrystals as apiPurchaseCrystals,
+  purchaseDivine as apiPurchaseDivine,
+} from '../lib/api';
 
 // Centralized API wrappers (no raw fetch in screens - critical for monetization)
 import {

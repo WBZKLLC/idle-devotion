@@ -54,7 +54,11 @@ export default function SummonHubScreen() {
     if (selectedBanner === 'divine') { currencyType = 'divine_essence'; cost = pullType === 'single' ? 1 : 10; currencyBalance = user.divine_essence || 0; currencyName = 'Divine Essence'; }
     else if (selectedBanner === 'premium') { currencyType = 'crystals'; cost = pullType === 'single' ? 100 : 1000; currencyBalance = user.gems || 0; currencyName = 'Crystals'; }
     else { currencyType = 'coins'; cost = pullType === 'single' ? 1000 : 10000; currencyBalance = user.coins || 0; currencyName = 'Coins'; }
-    if (currencyBalance < cost) { Alert.alert('Insufficient Funds', `You need ${cost.toLocaleString()} ${currencyName}`); return; }
+    if (currencyBalance < cost) { 
+      // Phase 3.18.3: Use toast for insufficient funds (non-blocking)
+      toast.warning(`You need ${cost.toLocaleString()} ${currencyName}`);
+      return; 
+    }
     setIsLoading(true);
     try {
       // Use centralized API wrapper
@@ -62,9 +66,19 @@ export default function SummonHubScreen() {
       setPullResults(data.heroes || []);
       setShowResults(true);
       await fetchUser();
+      
+      // Phase 3.18.3: Success toast with banner-appropriate variant
+      const toastVariant = (selectedBanner === 'premium' || selectedBanner === 'divine') ? 'premium' : 'success';
+      const toastMessage = pullType === 'multi' ? 'x10 Summon complete!' : 'Summon complete!';
+      if (toastVariant === 'premium') {
+        toast.premium(toastMessage);
+      } else {
+        toast.success(toastMessage);
+      }
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Failed to perform summon');
+        // Phase 3.18.3: Error toast instead of Alert
+        toast.error('Summon failed. Please try again.');
       }
     }
     finally { setIsLoading(false); }

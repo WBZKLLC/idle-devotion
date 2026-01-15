@@ -130,7 +130,9 @@ export default function AdminPanelScreen() {
       setShowGrantModal(false);
       setGrantResources({ gems: '', coins: '', gold: '', divine_essence: '' });
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to grant resources');
+      if (!isErrorHandledGlobally(error)) {
+        Alert.alert('Error', error.response?.data?.detail || 'Failed to grant resources');
+      }
     } finally {
       setProcessing(false);
     }

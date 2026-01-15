@@ -1,14 +1,16 @@
 // /app/frontend/components/ui/SecondaryButton.tsx
 // Design system secondary button - use for secondary actions
+// Phase 3.19.2: Added accessibility, leftIcon/rightIcon, pressed state
 
 import React from 'react';
 import {
-  TouchableOpacity,
+  Pressable,
   Text,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
+  View,
 } from 'react-native';
 import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT, TOUCH_TARGET, COLORS } from './tokens';
 
@@ -17,11 +19,15 @@ interface SecondaryButtonProps {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  /** @deprecated Use leftIcon instead */
   icon?: React.ReactNode;
   variant?: 'outline' | 'ghost' | 'subtle';
   size?: 'sm' | 'md' | 'lg';
   style?: ViewStyle;
   textStyle?: TextStyle;
+  testID?: string;
 }
 
 const SIZES = {

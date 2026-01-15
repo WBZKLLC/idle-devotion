@@ -160,9 +160,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   error: null,
   isHydrated: false,
   authToken: null,
+  authEpoch: 0,  // Incremented on logout to invalidate in-flight requests
   needsPassword: false,
 
   setHydrated: (value: boolean) => set({ isHydrated: value }),
+  
+  // Bump epoch on logout to invalidate any in-flight requests
+  bumpAuthEpoch: () => set(s => ({ authEpoch: s.authEpoch + 1 })),
 
   // Primary auth hydration - called on app boot (idempotent, safe to call multiple times)
   // Loads token from storage, sets axios headers, then fetches user

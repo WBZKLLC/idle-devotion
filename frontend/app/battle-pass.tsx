@@ -104,7 +104,7 @@ export default function BattlePassScreen() {
         'Upgrade to Premium Pass to claim premium rewards.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'View Premium', onPress: () => router.push('/paid-features') },
+          { text: 'View Premium', onPress: () => goToPaywall({ productKey: 'PREMIUM_SUBSCRIPTION', source: 'battle_pass' }) },
         ]
       );
       return;

@@ -20,6 +20,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { isErrorHandledGlobally } from '../lib/api';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.19.1: Skeleton + Empty state components
+import { StageCardSkeleton } from '../components/ui/Skeleton';
+import { NoStagesEmpty } from '../components/ui/EmptyState';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

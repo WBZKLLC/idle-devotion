@@ -423,16 +423,20 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   fetchAllHeroes: async () => {
+    const epochAtStart = get().authEpoch;
     try {
       const data = await fetchAllHeroesCatalog();
+      // Epoch check: ignore late response if user logged out
+      if (get().authEpoch !== epochAtStart) return;
       set({ allHeroes: data });
     } catch (error) {
-      console.error('Failed to fetch all heroes:', error);
+      if (__DEV__) console.error('Failed to fetch all heroes:', error);
     }
   },
 
   pullGacha: async (pullType: 'single' | 'multi', currencyType: 'gems' | 'coins') => {
-    const { user, fetchUser, fetchUserHeroes } = get();
+    const { user, fetchUser, fetchUserHeroes, authEpoch } = get();
+    const epochAtStart = authEpoch;
     if (!user) throw new Error('No user found');
     
     set({ isLoading: true, error: null });

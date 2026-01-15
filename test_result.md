@@ -587,7 +587,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Identity Hardening - Canonical usernames and immutable JWT subject"
+    - "AuthEpoch Expansion - Prevent race conditions in async store actions"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

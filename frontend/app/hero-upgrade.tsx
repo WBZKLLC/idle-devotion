@@ -64,15 +64,13 @@ export default function HeroUpgradeScreen() {
     try {
       // Use centralized API wrapper
       const result = await apiLevelUpHero(heroId || '', user?.username || '', levels);
-      Alert.alert(
-        'Level Up!',
-        `Hero leveled up to Lv.${result.new_level}\nGold spent: ${result.gold_spent.toLocaleString()}`
-      );
+      // Phase 3.18.5: Toast instead of blocking Alert
+      toast.success(`Level up to Lv.${result.new_level}! Gold spent: ${result.gold_spent.toLocaleString()}`);
       loadHeroDetails();
       fetchUser();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Failed to level up');
+        toast.error(error?.message || 'Failed to level up');
       }
     } finally {
       setIsUpgrading(false);
@@ -84,14 +82,11 @@ export default function HeroUpgradeScreen() {
     try {
       // Use centralized API wrapper
       const result = await promoteHeroStar(heroId || '', user?.username || '');
-      Alert.alert(
-        'Star Promotion!',
-        `Hero promoted to ${result.new_stars}★\nShards used: ${result.shards_used}`
-      );
+      toast.success(`Star promoted to ${result.new_stars}★!`);
       loadHeroDetails();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Failed to promote');
+        toast.error(error?.message || 'Failed to promote');
       }
     } finally {
       setIsUpgrading(false);
@@ -103,15 +98,12 @@ export default function HeroUpgradeScreen() {
     try {
       // Use centralized API wrapper
       const result = await apiAwakenHero(heroId || '', user?.username || '');
-      Alert.alert(
-        'Awakening Complete!',
-        `Hero awakened to level ${result.new_awakening_level}!\nShards used: ${result.shards_used}\nGold used: ${result.gold_used.toLocaleString()}`
-      );
+      toast.success(`Awakening complete! Now level ${result.new_awakening_level}`);
       loadHeroDetails();
       fetchUser();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error?.message || 'Failed to awaken');
+        toast.error(error?.message || 'Failed to awaken');
       }
     } finally {
       setIsUpgrading(false);

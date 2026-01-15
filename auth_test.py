@@ -18,7 +18,7 @@ import random
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://secureauth-hub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://crash-shield.preview.emergentagent.com/api"
 
 # Test credentials
 TEST_USERNAME = "Adam"

@@ -97,7 +97,7 @@ The following environment variables are used:
 
 | Variable | Description | Default |
 |----------|-------------|----------|
-| `EXPO_PUBLIC_BACKEND_URL` | Backend API URL | https://secureauth-hub-1.preview.emergentagent.com |
+| `EXPO_PUBLIC_BACKEND_URL` | Backend API URL | https://crash-shield.preview.emergentagent.com |
 | `EXPO_PUBLIC_REVENUECAT_API_KEY` | RevenueCat API Key | test_GHJByEeqdUHXOWbuvIWFFrQFXjB |
 
 ## Architecture

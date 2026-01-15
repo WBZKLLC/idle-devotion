@@ -94,10 +94,12 @@ interface GameState {
   error: string | null;
   isHydrated: boolean;
   authToken: string | null;
+  authEpoch: number;  // Incremented on logout to invalidate in-flight requests
   needsPassword: boolean;  // For legacy accounts without passwords
   
   // Actions
   hydrateAuth: () => Promise<void>;  // Called on app boot to restore auth from storage
+  bumpAuthEpoch: () => void;  // Call on logout to invalidate in-flight requests
   initUser: (username: string, password?: string) => Promise<void>;
   registerUser: (username: string, password: string) => Promise<{success: boolean; error?: string}>;
   loginWithPassword: (username: string, password: string) => Promise<{success: boolean; error?: string}>;

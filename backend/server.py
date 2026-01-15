@@ -3842,6 +3842,9 @@ async def get_vip_packages(username: str):
 @api_router.post("/vip/package/purchase")
 async def purchase_vip_package(username: str, package_tier: str):
     """Purchase a VIP package with crystals"""
+    # DEV-ONLY: Simulated purchases blocked in production
+    require_dev_mode()
+    
     user = await get_user_for_mutation(username)  # Includes frozen check
     
     vip_level = calculate_vip_level(user.get("total_spent", 0))

@@ -362,13 +362,8 @@ export default function HeroesScreen() {
             </View>
 
             {filteredAndSortedHeroes.length === 0 && (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="search" size={48} color="rgba(255,255,255,0.25)" />
-                <Text style={styles.emptyText}>No heroes match your filters</Text>
-                <Pressable onPress={() => { setFilterRarity(null); setFilterClass(null); }}>
-                  <Text style={styles.clearFilters}>Clear Filters</Text>
-                </Pressable>
-              </View>
+              /* Phase 3.19.1: Enhanced filter empty state */
+              <FilterNoResultsEmpty onClear={() => { setFilterRarity(null); setFilterClass(null); }} />
             )}
 
             <View style={{ height: 140 }} />

@@ -591,6 +591,7 @@ const styles = StyleSheet.create({
   powerText: { fontSize: 9, color: 'rgba(255, 215, 140, 0.85)', fontWeight: '900' },
 
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  emptyStateContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 100 },
   emptyText: { fontSize: 15, color: 'rgba(255,255,255,0.60)', marginTop: 12, fontWeight: '800' },
   clearFilters: { fontSize: 14, color: 'rgba(255, 215, 140, 0.92)', marginTop: 8, fontWeight: '900' },
 

@@ -119,6 +119,23 @@ When user taps "Why am I seeing this?" on paywall:
 - If entitlement changed: show small toast "Premium unlocked" (green)
 - If entitlement expired: show small toast "Subscription expired" (amber)
 
+### Toast Component (Phase 3.18)
+The design system includes a global `Toast` component for non-intrusive feedback:
+
+| Import | Usage |
+|--------|-------|
+| `import { toast } from '../components/ui/Toast'` | Call from any component |
+
+| Method | Example | Use Case |
+|--------|---------|----------|
+| `toast.success(msg)` | `toast.success('Purchase complete!')` | Success confirmation |
+| `toast.info(msg)` | `toast.info('Processing...')` | Informational notice |
+| `toast.warning(msg)` | `toast.warning('Subscription expires soon')` | Amber warning |
+| `toast.error(msg)` | `toast.error('Payment failed')` | Error feedback |
+| `toast.premium(msg)` | `toast.premium('Premium unlocked!')` | Purple premium feedback |
+
+Options: `{ duration: 3000, action: { label: 'Undo', onPress: fn } }`
+
 ---
 
 ## 8) Forbidden Patterns

@@ -5,6 +5,15 @@
 
 export * from './types';
 
+// Purchase flow helpers
+export {
+  startPurchaseFlow,
+  verifyAndApplyPurchase,
+  cancelPurchaseFlow,
+  resetPurchaseFlow,
+  getPendingPurchase,
+} from './purchase-flow';
+
 // Legacy exports (for backwards compatibility with existing code)
 export { 
   premiumCinematicOwnedKey,

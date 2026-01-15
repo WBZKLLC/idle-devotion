@@ -1305,8 +1305,6 @@ export async function claimIdle(username: string) {
 // Server-authoritative entitlement state
 // ─────────────────────────────────────────────────────────────
 
-import type { EntitlementsSnapshot } from './entitlements/types';
-
 export async function getEntitlementsSnapshot(): Promise<EntitlementsSnapshot> {
   const res = await api.get('/entitlements/snapshot');
   return res.data;

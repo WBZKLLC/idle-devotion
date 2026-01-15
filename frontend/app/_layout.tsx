@@ -14,10 +14,6 @@ import { initSentry, sentrySetUser } from '../lib/telemetry/sentry';
 import { track, Events } from '../lib/telemetry/events';
 import { validateConfig } from '../lib/config/validate';
 
-// Initialize on module load (earliest possible)
-validateConfig();
-initSentry();
-
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 

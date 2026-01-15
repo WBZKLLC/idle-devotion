@@ -4,6 +4,11 @@
  * Shows purchasable premium features.
  * Currently: Premium Cinematics ($9.99)
  * 
+ * CANONICAL PURCHASE FLOW:
+ * - Uses PurchaseButton for all purchases
+ * - DEV grant/revoke is guarded behind __DEV__
+ * - No direct purchase verification calls
+ * 
  * Payment flow is NOT implemented yet - this is UI wiring only.
  * DEV mode provides grant/revoke buttons for testing.
  */
@@ -30,6 +35,9 @@ import { useHasEntitlement } from '../lib/entitlements/gating';
 import { useGameStore } from '../stores/gameStore';
 import PurchaseButton from '../components/PurchaseButton';
 import COLORS from '../theme/colors';
+
+// DEV-only flag - set to false to disable DEV tools even in __DEV__ mode
+const ENABLE_DEV_TOOLS = __DEV__;
 
 export default function PaidFeaturesScreen() {
   // Subscribe directly to entitlements state for proper reactivity

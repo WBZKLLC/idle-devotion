@@ -1,83 +1,115 @@
 // /app/frontend/components/ui/Toast.tsx
-// Toast notification component for non-blocking feedback
+// Design system toast component for success/info/warning notifications
 
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SPACING, RADIUS, FONT_SIZE, PREMIUM_COLORS } from './tokens';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT, COLORS, PREMIUM_COLORS, SHADOW } from './tokens';
 
-type ToastVariant = 'success' | 'error' | 'info' | 'premium';
+// =============================================================================
+// TYPES
+// =============================================================================
+type ToastVariant = 'success' | 'info' | 'warning' | 'error' | 'premium';
 
-interface ToastProps {
-  visible: boolean;
+export interface ToastConfig {
+  id: string;
   message: string;
   variant?: ToastVariant;
-  duration?: number;
-  onDismiss: () => void;
+  icon?: keyof typeof Ionicons.glyphMap;
+  duration?: number; // ms, default 3000, 0 = sticky
   action?: {
     label: string;
     onPress: () => void;
   };
 }
 
+interface ToastItemProps extends ToastConfig {
+  onDismiss: (id: string) => void;
+}
+
+// =============================================================================
+// VARIANT CONFIG
+// =============================================================================
 const VARIANT_CONFIG = {
   success: {
-    bg: PREMIUM_COLORS.green,
+    bg: 'rgba(34, 197, 94, 0.95)',
+    text: '#FFFFFF',
     icon: 'checkmark-circle' as const,
   },
-  error: {
-    bg: '#EF4444',
-    icon: 'alert-circle' as const,
-  },
   info: {
-    bg: '#3B82F6',
+    bg: 'rgba(59, 130, 246, 0.95)',
+    text: '#FFFFFF',
     icon: 'information-circle' as const,
   },
+  warning: {
+    bg: 'rgba(245, 158, 11, 0.95)',
+    text: '#FFFFFF',
+    icon: 'warning' as const,
+  },
+  error: {
+    bg: 'rgba(239, 68, 68, 0.95)',
+    text: '#FFFFFF',
+    icon: 'alert-circle' as const,
+  },
   premium: {
-    bg: PREMIUM_COLORS.gold,
+    bg: 'rgba(168, 85, 247, 0.95)',
+    text: '#FFFFFF',
     icon: 'star' as const,
   },
 };
 
-export function Toast({
-  visible,
+// =============================================================================
+// TOAST ITEM (Individual toast)
+// =============================================================================
+function ToastItem({
+  id,
   message,
   variant = 'info',
+  icon,
   duration = 3000,
-  onDismiss,
   action,
-}: ToastProps) {
+  onDismiss,
+}: ToastItemProps) {
+  const config = VARIANT_CONFIG[variant];
+  const iconName = icon || config.icon;
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
-  const config = VARIANT_CONFIG[variant];
 
   useEffect(() => {
-    if (visible) {
-      // Slide in
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+    // Slide in
+    Animated.parallel([
+      Animated.spring(translateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 10,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-      // Auto dismiss
-      if (duration > 0) {
-        const timer = setTimeout(() => {
-          handleDismiss();
-        }, duration);
-        return () => clearTimeout(timer);
-      }
+    // Auto dismiss
+    if (duration > 0) {
+      const timer = setTimeout(() => {
+        dismiss();
+      }, duration);
+      return () => clearTimeout(timer);
     }
-  }, [visible, duration]);
+  }, []);
 
-  const handleDismiss = () => {
+  const dismiss = () => {
     Animated.parallel([
       Animated.timing(translateY, {
         toValue: -100,
@@ -90,90 +122,196 @@ export function Toast({
         useNativeDriver: true,
       }),
     ]).start(() => {
-      onDismiss();
+      onDismiss(id);
     });
   };
-
-  if (!visible) return null;
 
   return (
     <Animated.View
       style={[
-        styles.container,
-        { backgroundColor: config.bg, transform: [{ translateY }], opacity },
+        styles.toast,
+        SHADOW.md,
+        {
+          backgroundColor: config.bg,
+          transform: [{ translateY }],
+          opacity,
+        },
       ]}
     >
       <View style={styles.content}>
-        <Ionicons name={config.icon} size={20} color="white" />
-        <Text style={styles.message}>{message}</Text>
+        <Ionicons name={iconName} size={20} color={config.text} style={styles.icon} />
+        <Text style={[styles.message, { color: config.text }]} numberOfLines={2}>
+          {message}
+        </Text>
       </View>
-      <View style={styles.actions}>
-        {action && (
-          <TouchableOpacity
-            onPress={() => {
-              action.onPress();
-              handleDismiss();
-            }}
-            style={styles.actionButton}
-          >
-            <Text style={styles.actionText}>{action.label}</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={handleDismiss} style={styles.dismissButton}>
-          <Ionicons name="close" size={18} color="white" />
+      {action && (
+        <TouchableOpacity onPress={action.onPress} style={styles.actionButton}>
+          <Text style={[styles.actionText, { color: config.text }]}>{action.label}</Text>
         </TouchableOpacity>
-      </View>
+      )}
+      <TouchableOpacity onPress={dismiss} style={styles.dismissButton}>
+        <Ionicons name="close" size={18} color={config.text} />
+      </TouchableOpacity>
     </Animated.View>
   );
 }
 
+// =============================================================================
+// TOAST CONTAINER (Manages multiple toasts)
+// =============================================================================
+interface ToastContainerProps {
+  toasts: ToastConfig[];
+  onDismiss: (id: string) => void;
+}
+
+export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
+  const insets = useSafeAreaInsets();
+
+  if (toasts.length === 0) return null;
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { top: insets.top + SPACING.sm },
+      ]}
+      pointerEvents="box-none"
+    >
+      {toasts.map((toast) => (
+        <ToastItem key={toast.id} {...toast} onDismiss={onDismiss} />
+      ))}
+    </View>
+  );
+}
+
+// =============================================================================
+// TOAST STORE (Global state for toasts)
+// =============================================================================
+type ToastListener = (toasts: ToastConfig[]) => void;
+
+class ToastStore {
+  private toasts: ToastConfig[] = [];
+  private listeners: Set<ToastListener> = new Set();
+  private counter = 0;
+
+  subscribe(listener: ToastListener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notify() {
+    this.listeners.forEach((listener) => listener([...this.toasts]));
+  }
+
+  show(config: Omit<ToastConfig, 'id'>) {
+    const id = `toast-${++this.counter}-${Date.now()}`;
+    const toast: ToastConfig = { id, ...config };
+    this.toasts = [toast, ...this.toasts].slice(0, 3); // Max 3 toasts
+    this.notify();
+    return id;
+  }
+
+  dismiss(id: string) {
+    this.toasts = this.toasts.filter((t) => t.id !== id);
+    this.notify();
+  }
+
+  dismissAll() {
+    this.toasts = [];
+    this.notify();
+  }
+}
+
+export const toastStore = new ToastStore();
+
+// =============================================================================
+// TOAST HOOK (For components to use)
+// =============================================================================
+export function useToast() {
+  const [toasts, setToasts] = useState<ToastConfig[]>([]);
+
+  useEffect(() => {
+    return toastStore.subscribe(setToasts);
+  }, []);
+
+  return {
+    toasts,
+    dismiss: (id: string) => toastStore.dismiss(id),
+  };
+}
+
+// =============================================================================
+// CONVENIENCE FUNCTIONS
+// =============================================================================
+export const toast = {
+  success: (message: string, options?: Partial<Omit<ToastConfig, 'id' | 'message' | 'variant'>>) =>
+    toastStore.show({ message, variant: 'success', ...options }),
+
+  info: (message: string, options?: Partial<Omit<ToastConfig, 'id' | 'message' | 'variant'>>) =>
+    toastStore.show({ message, variant: 'info', ...options }),
+
+  warning: (message: string, options?: Partial<Omit<ToastConfig, 'id' | 'message' | 'variant'>>) =>
+    toastStore.show({ message, variant: 'warning', ...options }),
+
+  error: (message: string, options?: Partial<Omit<ToastConfig, 'id' | 'message' | 'variant'>>) =>
+    toastStore.show({ message, variant: 'error', ...options }),
+
+  premium: (message: string, options?: Partial<Omit<ToastConfig, 'id' | 'message' | 'variant'>>) =>
+    toastStore.show({ message, variant: 'premium', ...options }),
+
+  dismiss: (id: string) => toastStore.dismiss(id),
+  dismissAll: () => toastStore.dismissAll(),
+};
+
+// =============================================================================
+// STYLES
+// =============================================================================
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 50,
     left: SPACING.md,
     right: SPACING.md,
+    zIndex: 9999,
+    alignItems: 'center',
+  },
+  toast: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: SPACING.md,
+    paddingVertical: SPACING.sm,
+    paddingLeft: SPACING.md,
+    paddingRight: SPACING.sm,
     borderRadius: RADIUS.lg,
-    zIndex: 9999,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    marginBottom: SPACING.sm,
+    maxWidth: SCREEN_WIDTH - SPACING.md * 2,
+    minWidth: 200,
   },
   content: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  message: {
-    color: 'white',
-    fontSize: FONT_SIZE.md,
-    fontWeight: '600',
-    marginLeft: SPACING.sm,
-    flex: 1,
+  icon: {
+    marginRight: SPACING.sm,
   },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  message: {
+    flex: 1,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.medium,
   },
   actionButton: {
-    marginRight: SPACING.sm,
     paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: RADIUS.sm,
+    paddingVertical: SPACING.xs,
+    marginLeft: SPACING.sm,
   },
   actionText: {
-    color: 'white',
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontWeight: FONT_WEIGHT.bold,
+    textDecorationLine: 'underline',
   },
   dismissButton: {
-    padding: 4,
+    padding: SPACING.xs,
+    marginLeft: SPACING.xs,
   },
 });

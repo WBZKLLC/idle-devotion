@@ -69,6 +69,8 @@ const LEGACY_PAYWALL_PATTERNS = [
 const ALLOWED_LEGACY_PAYWALL_FILES = new Set([
   // Paywall.tsx exports deprecated stubs that warn - this is intentional
   'Paywall.tsx',
+  // revenueCatStore.ts is the store file for RevenueCat state (needed for future IAP integration)
+  'revenueCatStore.ts',
 ]);
 
 // Direct verifyPurchase calls (only allowed in purchase-flow.ts)

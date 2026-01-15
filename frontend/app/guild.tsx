@@ -205,17 +205,15 @@ export default function GuildScreen() {
       }));
       
       if (result.defeated) {
-        Alert.alert(
-          '🎉 Boss Defeated!',
-          `Your contribution: ${result.contribution_percent}%\nRewards: ${JSON.stringify(result.rewards)}`
-        );
+        // Phase 3.18.5: Celebratory toast for boss defeat
+        toast.premium(`Boss defeated! Contribution: ${result.contribution_percent}%`);
         loadBossData();
       }
       
       fetchUser();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Attack Failed', error.response?.data?.detail || 'Attack failed');
+        toast.error(error.response?.data?.detail || 'Attack failed');
       }
     } finally {
       setIsAttacking(false);
@@ -226,10 +224,7 @@ export default function GuildScreen() {
     setIsDonating(true);
     try {
       const result = await donateToGuildApi(user?.username || '', selectedDonationTier);
-      Alert.alert(
-        '💎 Donation Successful!',
-        `Earned ${result.guild_coins_earned} Guild Coins\nGuild gained ${result.guild_exp_earned} EXP!`
-      );
+      toast.success(`+${result.guild_coins_earned} Guild Coins! Guild gained ${result.guild_exp_earned} EXP`);
       setShowDonateModal(false);
       fetchUser();
       loadDonationHistory();
@@ -237,7 +232,7 @@ export default function GuildScreen() {
       loadGuildLevelInfo();
     } catch (error: any) {
       if (!isErrorHandledGlobally(error)) {
-        Alert.alert('Error', error.response?.data?.detail || 'Donation failed');
+        toast.error(error.response?.data?.detail || 'Donation failed');
       }
     } finally {
       setIsDonating(false);

@@ -389,7 +389,9 @@ export default function HeroProgressionScreen() {
     } catch (e: any) {
       // Rollback to canonical pre-optimistic hero state
       if (rollbackRef.current?.hero) setLocalHeroOverride(rollbackRef.current.hero);
-      Alert.alert('Promotion failed', e?.response?.data?.detail || 'Unable to promote this hero right now.');
+      if (!isErrorHandledGlobally(e)) {
+        Alert.alert('Promotion failed', e?.response?.data?.detail || 'Unable to promote this hero right now.');
+      }
     } finally {
       rollbackRef.current = null;
       setIsPromoting(false);

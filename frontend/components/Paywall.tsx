@@ -314,32 +314,77 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 40 },
   
   // Header
-  header: { marginBottom: 24 },
+  header: { marginBottom: 20 },
   closeIcon: { alignSelf: 'flex-end', padding: 8 },
   headerContent: { alignItems: 'center' },
-  title: { fontSize: 28, fontWeight: 'bold', color: COLORS.gold.primary, marginTop: 12 },
-  subtitle: { fontSize: 16, color: COLORS.cream.soft, marginTop: 4, textAlign: 'center' },
+  title: { fontSize: 26, fontWeight: 'bold', color: COLORS.gold.primary, marginTop: 12 },
+  subtitle: { fontSize: 15, color: COLORS.cream.soft, marginTop: 4, textAlign: 'center', lineHeight: 20 },
+  
+  // Phase 3.19.4: First Purchase Badge
+  firstPurchaseBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 6,
+    backgroundColor: COLORS.gold.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  firstPurchaseText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.navy.darkest,
+  },
   
   // Benefits
   benefitsContainer: { 
     backgroundColor: COLORS.navy.medium, 
     borderRadius: 16, 
     padding: 16, 
-    marginBottom: 24 
+    marginBottom: 16,
   },
   benefitsTitle: { 
-    fontSize: 16, 
+    fontSize: 15, 
     fontWeight: 'bold', 
     color: COLORS.cream.pure, 
-    marginBottom: 12 
+    marginBottom: 12,
   },
   benefitRow: { 
     flexDirection: 'row', 
     alignItems: 'center', 
     gap: 12, 
-    paddingVertical: 8 
+    paddingVertical: 8,
   },
-  benefitText: { fontSize: 14, color: COLORS.cream.soft },
+  benefitIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(201, 162, 39, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  benefitText: { fontSize: 14, color: COLORS.cream.soft, flex: 1 },
+  
+  // Phase 3.19.4: Trust/Reassurance Row
+  trustContainer: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  trustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  trustText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '500',
+  },
   
   // Price
   priceContainer: {
@@ -349,21 +394,47 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navy.medium,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  priceLabel: { fontSize: 16, color: COLORS.cream.soft },
+  priceLabel: { fontSize: 15, color: COLORS.cream.soft },
+  priceRight: { alignItems: 'flex-end' },
   priceValue: { fontSize: 24, fontWeight: 'bold', color: COLORS.gold.primary },
+  priceNote: { fontSize: 11, color: COLORS.cream.dark, marginTop: 2 },
   
   // Purchase
-  purchaseContainer: { alignItems: 'center', marginBottom: 16 },
+  purchaseContainer: { alignItems: 'center', marginBottom: 12 },
   purchaseButtonStyle: { minWidth: 250 },
+  
+  // Phase 3.19.4: First Purchase Reassurance
+  firstPurchaseReassurance: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  
+  // Phase 3.19.4: Restore Purchases
+  restoreContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  restoreHint: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.45)',
+    marginTop: 6,
+    textAlign: 'center',
+  },
   
   // Platform note
   platformNote: { 
     fontSize: 12, 
     color: COLORS.cream.dark, 
     textAlign: 'center', 
-    marginBottom: 12 
+    marginBottom: 12,
   },
   
   // Terms
@@ -372,7 +443,7 @@ const styles = StyleSheet.create({
     color: COLORS.cream.dark, 
     textAlign: 'center', 
     marginTop: 16, 
-    lineHeight: 14 
+    lineHeight: 14,
   },
   
   // Success
@@ -380,36 +451,36 @@ const styles = StyleSheet.create({
     flex: 1, 
     alignItems: 'center', 
     justifyContent: 'center', 
-    padding: 24 
+    padding: 24,
   },
   successTitle: { 
     fontSize: 28, 
     fontWeight: 'bold', 
     color: COLORS.gold.primary, 
-    marginTop: 16 
+    marginTop: 16,
   },
   successText: { 
     fontSize: 16, 
     color: COLORS.cream.soft, 
     marginTop: 8, 
-    textAlign: 'center' 
+    textAlign: 'center',
   },
   closeButton: { 
     backgroundColor: COLORS.gold.primary, 
     paddingHorizontal: 32, 
     paddingVertical: 12, 
     borderRadius: 8, 
-    marginTop: 24 
+    marginTop: 24,
   },
   closeButtonText: { 
     fontSize: 16, 
     fontWeight: 'bold', 
-    color: COLORS.navy.darkest 
+    color: COLORS.navy.darkest,
   },
   
-  // Phase 3.18.1: "Not now" exit affordance styles
+  // "Not now" exit affordance
   notNowButton: {
-    marginTop: 12,
+    marginTop: 8,
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 1,

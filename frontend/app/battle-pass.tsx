@@ -12,9 +12,25 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
+import { useHasEntitlement } from '../lib/entitlements/gating';
+import { ENTITLEMENT_KEYS } from '../lib/entitlements/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+
+/**
+ * Battle Pass Screen
+ * 
+ * NOTE: has_premium_ui (from VIP level) is for PREVIEW purposes only.
+ * Actual premium claims are gated by PREMIUM entitlement on the server.
+ * 
+ * UI State vs Entitlement Truth:
+ * - has_premium_ui: VIP level >= 5 (client-side preview)
+ * - hasPremiumEntitlement: Server-authoritative PREMIUM entitlement
+ * 
+ * The server enforces the real entitlement check on claim requests.
+ * Client UI is best-effort and may show "premium" even without real entitlement.
+ */
 
 // NOTE: Battle Pass currently uses mock data - no API calls needed yet
 

@@ -60,14 +60,14 @@ function migrateEntitlements(oldEntitlements: Record<string, boolean>): Record<s
     if (newKey !== key) {
       migrated = true;
       if (__DEV__) {
-        console.log(`[entitlementStore] Migrating ${key} -> ${newKey}`);
+        dlog(`[entitlementStore] Migrating ${key} -> ${newKey}`);
       }
     }
     newEntitlements[newKey] = value;
   }
   
   if (migrated && __DEV__) {
-    console.log('[entitlementStore] Migration complete');
+    dlog('[entitlementStore] Migration complete');
   }
   
   return newEntitlements;
@@ -89,7 +89,7 @@ export const useEntitlementStore = create<EntitlementState>((set, get) => ({
         if (raw) {
           needsMigration = true;
           if (__DEV__) {
-            console.log('[entitlementStore] Found legacy storage, will migrate');
+            dlog('[entitlementStore] Found legacy storage, will migrate');
           }
         }
       }
@@ -112,12 +112,12 @@ export const useEntitlementStore = create<EntitlementState>((set, get) => ({
         await storageSet(STORAGE_KEY, JSON.stringify({ entitlements }));
         await storageRemove(LEGACY_STORAGE_KEY);
         if (__DEV__) {
-          console.log('[entitlementStore] Migrated to new storage key');
+          dlog('[entitlementStore] Migrated to new storage key');
         }
       }
       
       if (__DEV__) {
-        console.log('[entitlementStore] Hydrated:', Object.keys(entitlements));
+        dlog('[entitlementStore] Hydrated:', Object.keys(entitlements));
       }
     } catch (e) {
       console.error('[entitlementStore] Hydration error:', e);
@@ -138,7 +138,7 @@ export const useEntitlementStore = create<EntitlementState>((set, get) => ({
     set({ entitlements: next });
     await storageSet(STORAGE_KEY, JSON.stringify({ entitlements: next }));
     if (__DEV__) {
-      console.log(`[entitlementStore] Set ${key} = ${value}`);
+      dlog(`[entitlementStore] Set ${key} = ${value}`);
     }
   },
 
@@ -160,7 +160,7 @@ export const useEntitlementStore = create<EntitlementState>((set, get) => ({
       return;
     }
     await get().setEntitlement(key, true);
-    console.log('[entitlementStore] DEV: Granted', key);
+    dlog('[entitlementStore] DEV: Granted', key);
   },
 
   // DEV ONLY: Revoke entitlement for testing
@@ -170,7 +170,7 @@ export const useEntitlementStore = create<EntitlementState>((set, get) => ({
       return;
     }
     await get().setEntitlement(key, false);
-    console.log('[entitlementStore] DEV: Revoked', key);
+    dlog('[entitlementStore] DEV: Revoked', key);
   },
 
   // DEV ONLY: Clear all entitlements
@@ -181,6 +181,6 @@ export const useEntitlementStore = create<EntitlementState>((set, get) => ({
     }
     set({ entitlements: {} });
     await storageRemove(STORAGE_KEY);
-    console.log('[entitlementStore] DEV: Cleared all entitlements');
+    dlog('[entitlementStore] DEV: Cleared all entitlements');
   },
 }));

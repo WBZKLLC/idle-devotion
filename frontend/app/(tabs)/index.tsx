@@ -598,7 +598,7 @@ export default function HomeScreen() {
       <HomeSideRail 
         onAnyInteraction={handleUserInteraction}
         onPressDoors={() => setDoorsOpen(true)}
-        onPressMail={() => router.push('/rewards')}
+        onPressMail={() => router.push('/login-rewards')}
         onPressFriends={() => router.push('/guild')} // friends → guild for now
         onPressQuest={() => router.push('/journey')}
         onPressEvents={() => router.push('/events')}

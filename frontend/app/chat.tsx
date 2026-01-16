@@ -307,37 +307,32 @@ export default function ChatScreen() {
   const handleBlockUser = async (usernameToBlock: string) => {
     if (!user) return;
     
-    // ALERT_ALLOWED: destructive_confirm
-    Alert.alert(
-      'Block User',
-      `Are you sure you want to block ${usernameToBlock}? You won't see their messages anymore.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Server derives current user from JWT - do NOT pass username
-              await blockChatUser(usernameToBlock);
-              toast.success(`${usernameToBlock} has been blocked`);
-              await loadMessages(); // Refresh to hide their messages
-            } catch (error: any) {
-              const status = error.response?.status;
-              if (status === 401) {
-                if (!isErrorHandledGlobally(error)) {
-                  toast.warning('Please log in to block users');
-                }
-              } else {
-                if (!isErrorHandledGlobally(error)) {
-                  toast.error(error.response?.data?.detail || 'Failed to block user');
-                }
-              }
+    openConfirm({
+      title: 'Block User',
+      message: `Are you sure you want to block ${usernameToBlock}? You won't see their messages anymore.`,
+      tone: 'danger',
+      confirmText: 'Block',
+      cancelText: 'Cancel',
+      icon: 'person-remove-outline',
+      onConfirm: async () => {
+        try {
+          await blockChatUser(usernameToBlock);
+          toast.success(`${usernameToBlock} has been blocked`);
+          await loadMessages();
+        } catch (error: any) {
+          const status = error.response?.status;
+          if (status === 401) {
+            if (!isErrorHandledGlobally(error)) {
+              toast.warning('Please log in to block users');
+            }
+          } else {
+            if (!isErrorHandledGlobally(error)) {
+              toast.error(error.response?.data?.detail || 'Failed to block user');
             }
           }
         }
-      ]
-    );
+      },
+    });
   };
 
   const handleEquipBubble = async (bubbleId: string) => {

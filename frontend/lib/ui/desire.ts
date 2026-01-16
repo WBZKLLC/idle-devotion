@@ -110,8 +110,8 @@ export const GLANCE_RULES = {
   maxSessionTime: 90_000,
   /** Idle time required before triggering (ms) */
   idleRequired: 3_000,
-  /** Probability of triggering (0-1) */
-  chance: 0.35,
+  /** Probability of triggering (0-1) — Phase 3.22.8 v2: lowered for meaning */
+  chance: 0.18,
   /** Head tilt angle (degrees) */
   headTilt: 1.5,
   /** Animation duration (ms) */

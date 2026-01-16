@@ -802,6 +802,9 @@ export default function HomeScreen() {
         data={rewardRecap} 
         onClose={() => setRewardRecap(null)} 
       />
+      
+      {/* Phase 3.19.10: Confirm Modal */}
+      <ConfirmModal visible={!!confirmData} data={confirmData} onClose={() => setConfirmData(null)} />
     </View>
   );
 }

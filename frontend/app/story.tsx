@@ -380,6 +380,8 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: 16 },
   chapterCard: { marginBottom: 16, borderRadius: 16, overflow: 'hidden' },
   chapterLocked: { opacity: 0.7 },
+  // Phase 3.22.4: Pressed-state feedback
+  pressedFeedback: { opacity: PRESS.OPACITY, transform: [{ scale: PRESS.SCALE }] },
   chapterGradient: { padding: 20, minHeight: 140 },
   lockOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 10, borderRadius: 16 },
   lockText: { color: COLORS.cream.dark, marginTop: 8, fontSize: 12 },

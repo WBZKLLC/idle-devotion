@@ -833,9 +833,24 @@ const styles = StyleSheet.create({
   claimButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
   buttonRow: { flexDirection: 'row', alignItems: 'center' },
   // Phase 3.22.1: quickLinks styles moved to QuickLinksGrid component
-  pitySection: { marginBottom: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
-  pityCard: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
+  // Phase 3.22.7: Pity section — quiet ledger, not another loud tile
+  pitySection: { marginTop: SECTION_GAP.pause },
+  sectionTitle: { 
+    fontSize: FONT_SIZE.sm, 
+    fontWeight: FONT_WEIGHT.semibold, 
+    color: COLORS.cream.soft, 
+    letterSpacing: 0.4,
+    opacity: INVITATION.dormant,
+    marginBottom: 10,
+  },
+  pityCard: { 
+    backgroundColor: COLORS.navy.dark, 
+    borderRadius: RADIUS.lg, 
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1, 
+    borderColor: COLORS.gold.dark + '18',
+  },
   pityRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   pityInfo: { width: 80 },
   pityLabel: { fontSize: 12, color: COLORS.cream.dark },

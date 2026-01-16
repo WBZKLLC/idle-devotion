@@ -54,7 +54,7 @@ const STAGE_TYPES = {
     name: 'Soul Forge',
     icon: 'flash',
     color: COLORS.dungeon.exp,
-    gradient: ['#22c55e', '#16a34a'],
+    gradient: ['#22c55e', '#16a34a'] as const,
     desc: 'Farm Soul Dust for hero leveling',
     reward: 'Soul Dust + Gold',
     staminaCost: 10,
@@ -64,7 +64,7 @@ const STAGE_TYPES = {
     name: 'Treasure Vault',
     icon: 'cash',
     color: COLORS.dungeon.gold,
-    gradient: ['#eab308', '#ca8a04'],
+    gradient: ['#eab308', '#ca8a04'] as const,
     desc: 'Plunder gold and coins',
     reward: 'Gold + Coins',
     staminaCost: 10,
@@ -74,7 +74,7 @@ const STAGE_TYPES = {
     name: 'Arcane Sanctum',
     icon: 'book',
     color: COLORS.dungeon.skill,
-    gradient: ['#8b5cf6', '#7c3aed'],
+    gradient: ['#8b5cf6', '#7c3aed'] as const,
     desc: 'Gather essence for skills',
     reward: 'Skill Essence + Gold',
     staminaCost: 12,
@@ -84,7 +84,7 @@ const STAGE_TYPES = {
     name: 'Divine Forge',
     icon: 'construct',
     color: COLORS.dungeon.equipment,
-    gradient: ['#3b82f6', '#2563eb'],
+    gradient: ['#3b82f6', '#2563eb'] as const,
     desc: 'Craft powerful gear',
     reward: 'Equipment Drops',
     staminaCost: 15,
@@ -94,13 +94,17 @@ const STAGE_TYPES = {
     name: 'Crystal Mines',
     icon: 'diamond',
     color: COLORS.dungeon.enhance,
-    gradient: ['#f97316', '#ea580c'],
+    gradient: ['#f97316', '#ea580c'] as const,
     desc: 'Mine enhancement stones',
     reward: 'Enhancement Stones + Gold',
     staminaCost: 12,
     path: 'enhancement',
   },
-};
+} as const;
+
+// Typed gradient fallbacks for dungeons
+const DUNGEON_NAVY = [COLORS.navy.medium, COLORS.navy.dark] as const;
+const DUNGEON_LOCKED = [COLORS.dungeon.stone, COLORS.dungeon.dark] as const;
 
 interface StageInfo {
   name: string;

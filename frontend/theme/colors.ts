@@ -36,6 +36,20 @@ export const COLORS = {
   error: '#8b4049',
   warning: '#b8860b',
   
+  // Phase 3.22.1: Additional accent colors (from index.tsx local theme)
+  violet: {
+    dark: '#2d1b4e',
+    primary: '#5b3d8a',
+    light: '#8b6bb8',
+    glow: '#a78bfa',
+  },
+  
+  celestial: {
+    deep: '#0d0a1a',
+    mid: '#1a1330',
+    accent: '#3b2d5f',
+  },
+  
   // Rarity Colors
   rarity: {
     SR: '#8b9dc3',      // Soft blue-gray

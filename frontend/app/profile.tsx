@@ -446,7 +446,7 @@ export default function ProfileScreen() {
           {/* Premium Features Button */}
           <TouchableOpacity 
             style={styles.paidFeaturesButton} 
-            onPress={() => goToPaywall({ source: 'profile' })}
+            onPress={() => goToPaywall({ source: 'profile', returnTo: getSafeReturnTo(pathname) })}
           >
             <LinearGradient colors={['#9B2CFF', '#7B1FA2', '#4A148C']} style={styles.paidFeaturesGradient}>
               <Ionicons name="diamond" size={24} color={COLORS.cream.pure} />

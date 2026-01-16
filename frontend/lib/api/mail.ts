@@ -4,8 +4,6 @@
 // Canonical API calls for mail system.
 // Graceful error handling — returns defaults on failure.
 
-import { getEnvironmentMode } from '../../components/environment/EnvironmentDetector';
-
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
 
 /**

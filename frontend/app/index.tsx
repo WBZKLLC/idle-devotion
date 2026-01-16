@@ -30,6 +30,8 @@ import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { RewardRecapModal, RewardRecapData } from '../components/ui/RewardRecapModal';
 // Phase 3.19.10: Canonical confirm modal
 import { ConfirmModal, ConfirmModalData } from '../components/ui/ConfirmModal';
+// Phase 3.19.11: Confirm modal hook
+import { useConfirmModal } from '../components/ui/useConfirmModal';
 // Phase 3.18.4: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen

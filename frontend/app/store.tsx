@@ -19,8 +19,8 @@ import { SecondaryButton } from '../components/ui/SecondaryButton';
 import { useEntitlementStore } from '../lib/entitlements/gating';
 // Phase 3.19.6: Canonical header + layout constants
 import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
-// Phase 3.19.10: Canonical confirm modal
-import { ConfirmModal, ConfirmModalData } from '../components/ui/ConfirmModal';
+// Phase 3.19.11: Confirm modal hook
+import { useConfirmModal } from '../components/ui/useConfirmModal';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 // import { CustomPaywall, presentNativePaywall } from '../components/Paywall';

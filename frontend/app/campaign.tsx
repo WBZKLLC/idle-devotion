@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
 
   // Chapters
   chaptersContainer: { flex: 1 },
-  chaptersList: { padding: 16, paddingBottom: 100 },
+  chaptersList: { padding: 16, paddingBottom: LAYOUT.BOTTOM_GUTTER },
 
   // ✅ Premium chapter frame
   chapterCardOuter: { marginBottom: 16 },

@@ -35,7 +35,15 @@ export async function getFriendsList(username: string): Promise<Array<{
   try {
     const res = await fetch(`${API_BASE}/api/friends/list/${username}`);
     if (!res.ok) throw new Error('Failed to fetch friends list');
-    return await res.json();
+    const data = await res.json();
+    // Transform backend response to frontend format
+    return data.map((f: any) => ({
+      id: f.friend_id || f.id,
+      username: f.friend_username || f.username,
+      lastOnline: f.last_collected ? 'Earlier today' : 'Yesterday',
+      status: 'offline' as const,
+      affinity: f.can_collect ? 50 : undefined,
+    }));
   } catch {
     return [];
   }
@@ -52,7 +60,13 @@ export async function getFriendRequests(username: string): Promise<Array<{
   try {
     const res = await fetch(`${API_BASE}/api/friends/requests/${username}`);
     if (!res.ok) throw new Error('Failed to fetch friend requests');
-    return await res.json();
+    const data = await res.json();
+    // Transform to frontend format
+    return data.map((r: any) => ({
+      id: r.id,
+      fromUsername: r.from_username,
+      timestamp: 'Just now',
+    }));
   } catch {
     return [];
   }
@@ -81,7 +95,7 @@ export async function declineFriendRequest(username: string, requestId: string):
 /**
  * Search for players
  */
-export async function searchPlayers(query: string): Promise<Array<{
+export async function searchPlayers(query: string, username?: string): Promise<Array<{
   id: string;
   username: string;
   level: number;
@@ -91,7 +105,10 @@ export async function searchPlayers(query: string): Promise<Array<{
   if (!query || query.length < 2) return [];
   
   try {
-    const res = await fetch(`${API_BASE}/api/friends/search?q=${encodeURIComponent(query)}`);
+    const params = new URLSearchParams({ q: query });
+    if (username) params.append('username', username);
+    
+    const res = await fetch(`${API_BASE}/api/friends/search?${params}`);
     if (!res.ok) throw new Error('Failed to search players');
     return await res.json();
   } catch {

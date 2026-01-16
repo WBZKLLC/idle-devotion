@@ -4480,28 +4480,40 @@ async def claim_mail_gift(gift_id: str, credentials: HTTPAuthorizationCredential
     user, _ = await authenticate_request(credentials, require_auth=True)
     assert_account_active(user)
     
+    # Check if gift exists and belongs to user
     gift = await db.mail_gifts.find_one({
         "id": gift_id,
-        "to_user_id": user["id"],
-        "claimed": False
+        "to_user_id": user["id"]
     })
     
     if not gift:
-        raise HTTPException(status_code=404, detail="Gift not found or already claimed")
+        raise HTTPException(status_code=404, detail="Gift not found")
     
-    # Mark as claimed
+    # Idempotent: if already claimed, return success with flag
+    if gift.get("claimed"):
+        return {"message": "Gift accepted", "alreadyClaimed": True}
+    
+    # Mark as claimed (atomic check)
     await db.mail_gifts.update_one(
-        {"id": gift_id},
+        {"id": gift_id, "to_user_id": user["id"], "claimed": False},
         {"$set": {"claimed": True, "claimed_at": datetime.utcnow()}}
     )
     
-    return {"message": "Gift accepted"}
+    return {"message": "Gift accepted", "alreadyClaimed": False}
+
+# Legacy route for backwards compatibility
+@api_router.post("/mail/gifts/{username}/{gift_id}/claim")
+async def claim_mail_gift_legacy(username: str, gift_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await claim_mail_gift(gift_id, credentials)
 
 # ==================== FRIENDS SYSTEM ====================
-@api_router.get("/friends/summary/{username}")
-async def get_friends_summary(username: str):
-    """Get friends badge counts for UI"""
-    user = await get_user_readonly(username)
+# Phase 3.23.2.P: Security patch - server derives user from auth token
+
+@api_router.get("/friends/summary")
+async def get_friends_summary(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get friends badge counts for UI (auth required)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
     
     # Count pending requests
     pending_requests = await db.friend_requests.count_documents({
@@ -4522,18 +4534,25 @@ async def get_friends_summary(username: str):
         "totalFriends": total_friends
     }
 
+# Legacy route for backwards compatibility
+@api_router.get("/friends/summary/{username}")
+async def get_friends_summary_legacy(username: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await get_friends_summary(credentials)
+
 @api_router.get("/friends/search")
-async def search_players(q: str, username: Optional[str] = None):
-    """Search for players by username"""
-    if not q or len(q) < 2:
-        return []
+async def search_players(q: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Search for players by username (auth required, rate limited)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
     
-    # Get current user if provided (to check friend status)
-    current_user = None
-    if username:
-        current_user = await db.users.find_one({"username": username})
+    # Sanitize and validate query
+    q = q.strip().lower() if q else ""
+    if len(q) < 3:
+        return []  # Minimum 3 chars
+    if len(q) > 50:
+        q = q[:50]  # Max 50 chars
     
-    # Case-insensitive search
+    # Case-insensitive prefix search
     query_pattern = {"$regex": f"^{re.escape(q)}", "$options": "i"}
     users = await db.users.find(
         {"username": query_pattern},
@@ -4543,35 +4562,31 @@ async def search_players(q: str, username: Optional[str] = None):
     results = []
     for u in users:
         # Skip current user
-        if current_user and u["id"] == current_user["id"]:
+        if u["id"] == user["id"]:
             continue
         
-        is_friend = False
-        has_pending_request = False
+        # Check if already friends
+        friendship = await db.friendships.find_one({
+            "$or": [
+                {"user_id": user["id"], "friend_id": u["id"]},
+                {"user_id": u["id"], "friend_id": user["id"]}
+            ]
+        })
+        is_friend = friendship is not None
         
-        if current_user:
-            # Check if already friends
-            friendship = await db.friendships.find_one({
-                "$or": [
-                    {"user_id": current_user["id"], "friend_id": u["id"]},
-                    {"user_id": u["id"], "friend_id": current_user["id"]}
-                ]
-            })
-            is_friend = friendship is not None
-            
-            # Check pending request
-            pending = await db.friend_requests.find_one({
-                "$or": [
-                    {"from_user_id": current_user["id"], "to_user_id": u["id"], "status": "pending"},
-                    {"from_user_id": u["id"], "to_user_id": current_user["id"], "status": "pending"}
-                ]
-            })
-            has_pending_request = pending is not None
+        # Check pending request
+        pending = await db.friend_requests.find_one({
+            "$or": [
+                {"from_user_id": user["id"], "to_user_id": u["id"], "status": "pending"},
+                {"from_user_id": u["id"], "to_user_id": user["id"], "status": "pending"}
+            ]
+        })
+        has_pending_request = pending is not None
         
         results.append({
             "id": u["id"],
             "username": u["username"],
-            "level": u.get("vip_level", 0) + 1,  # Display as level 1+
+            "level": u.get("vip_level", 0) + 1,
             "isFriend": is_friend,
             "hasPendingRequest": has_pending_request
         })
@@ -4579,22 +4594,22 @@ async def search_players(q: str, username: Optional[str] = None):
     return results
 
 @api_router.post("/friends/requests/send")
-async def send_friend_request_v2(request: Request):
-    """Send a friend request (v2 with JSON body)"""
+async def send_friend_request_v2(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Send a friend request (auth required)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    
     body = await request.json()
-    from_username = body.get("from")
     to_username = body.get("to")
     
-    if not from_username or not to_username:
-        raise HTTPException(status_code=400, detail="Missing from or to username")
+    if not to_username:
+        raise HTTPException(status_code=400, detail="Missing target username")
     
-    from_user = await db.users.find_one({"username": from_username})
     to_user = await db.users.find_one({"username": to_username})
-    
-    if not from_user or not to_user:
+    if not to_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if from_user["id"] == to_user["id"]:
+    if user["id"] == to_user["id"]:
         raise HTTPException(status_code=400, detail="Cannot add yourself as friend")
     
     # Check if already friends

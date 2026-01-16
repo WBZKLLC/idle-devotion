@@ -148,6 +148,34 @@ export async function playInstantCue(): Promise<void> {
 }
 
 /**
+ * Play the signature moment cue (Phase 3.22.10)
+ * Ultra-low volume, warm presence sound
+ * Only fires once per day as part of signature moment
+ */
+export async function playSignatureCue(): Promise<void> {
+  if (!isEnabled) return;
+  
+  try {
+    const Haptics = await import('expo-haptics');
+    if (canPlay()) {
+      lastPlayTime = Date.now();
+      // Soft, warm haptic for signature moment
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      // Small delay then another softer one for "presence" feel
+      setTimeout(async () => {
+        try {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } catch {
+          // Silent fail
+        }
+      }, 400);
+    }
+  } catch {
+    // Silent fail
+  }
+}
+
+/**
  * Toggle ambient sound on/off
  */
 export async function setAmbientEnabled(enabled: boolean): Promise<void> {

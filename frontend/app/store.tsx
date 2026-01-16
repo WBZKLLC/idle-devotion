@@ -347,9 +347,16 @@ export default function StoreScreen() {
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
+        {/* Phase 3.19.6: Canonical header */}
+        <AppHeader
+          title="Store"
+          subtitle="Upgrades & Premium"
+          left={{ type: 'back' }}
+          includeSafeArea={false}
+          centerTitle={false}
+        />
+        
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Store</Text>
-          
           {/* Pro Subscription Banner */}
           <TouchableOpacity 
             style={styles.proBanner}

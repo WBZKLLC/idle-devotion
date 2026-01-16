@@ -12,7 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
-import { useEntitlementStore } from '../stores/entitlementStore';
+import { useEntitlementVersion } from '../lib/entitlements/gating';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';

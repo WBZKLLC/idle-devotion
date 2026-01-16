@@ -785,7 +785,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   noUserText: { color: COLORS.cream.dark, fontSize: 16, marginTop: 16 },
-  loginBtnText: { color: COLORS.navy.darkest, fontWeight: 'bold' },
 
   // Header
   header: {

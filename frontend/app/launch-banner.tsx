@@ -366,7 +366,6 @@ const styles = StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loadingText: { color: '#FF6B00', marginTop: 12, fontSize: 16 },
   errorText: { color: COLORS.cream.dark, fontSize: 16 },
-  loginBtnText: { color: '#fff', fontWeight: 'bold' },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#FF6B0030' },
   backButton: { padding: 8 },

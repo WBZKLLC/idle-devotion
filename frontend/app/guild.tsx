@@ -754,6 +754,13 @@ export default function GuildScreen() {
             </View>
           </View>
         </Modal>
+        
+        {/* Phase 3.19.10: Confirm Modal */}
+        <ConfirmModal
+          visible={!!confirmData}
+          data={confirmData}
+          onClose={() => setConfirmData(null)}
+        />
       </SafeAreaView>
     </LinearGradient>
   );

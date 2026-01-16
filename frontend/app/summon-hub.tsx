@@ -13,6 +13,8 @@ import { NoBannersEmpty } from '../components/ui/EmptyState';
 // Phase 3.19.2: Canonical button components
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { SecondaryButton } from '../components/ui/SecondaryButton';
+// Phase 3.19.6: Canonical header + layout constants
+import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { pullGacha } from '../lib/api';

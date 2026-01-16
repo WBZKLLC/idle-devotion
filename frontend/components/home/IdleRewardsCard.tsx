@@ -31,6 +31,7 @@ import {
   markNoticedTriggered,
   getNoticedVariant,
   NOTICED_VARIANTS,
+  trySpendDesireBudget,
 } from '../../lib/ui/desire';
 
 type IdleStatus = {

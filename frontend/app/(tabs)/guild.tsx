@@ -42,6 +42,9 @@ import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
 // Phase 3.19.11: Confirm modal hook
 import { useConfirmModal } from '../../components/ui/useConfirmModal';
+// Phase 3.22.4: Micro-interaction utilities
+import { PRESS, haptic } from '../../lib/ui/interaction';
+import { LAYOUT } from '../../components/ui/tokens';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();

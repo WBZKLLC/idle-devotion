@@ -51,7 +51,7 @@ import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
 
 // Sanctum background (matches your existing setup)
-const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');
+const SANCTUM_BG = require('../../assets/backgrounds/sanctum_environment_01.jpg');
 
 // Helper to convert tier art to Image source
 function tierArtToSource(heroData: any, tier: DisplayTier) {

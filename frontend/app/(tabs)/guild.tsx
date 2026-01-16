@@ -37,7 +37,7 @@ import { NoGuildEmpty } from '../../components/ui/EmptyState';
 // Phase 3.19.5: Canonical button components
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
 // Phase 3.19.6: Canonical header + layout constants
-import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
+import { AppHeader } from '../../components/ui/AppHeader';
 // Phase 3.19.7: Cinematic loading screen
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
 // Phase 3.19.11: Confirm modal hook

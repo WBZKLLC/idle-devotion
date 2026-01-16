@@ -391,6 +391,8 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: COLORS.gold.primary },
   tabText: { color: COLORS.cream.dark, fontWeight: '600' },
   tabTextActive: { color: COLORS.navy.darkest },
+  // Phase 3.22.4: Pressed-state feedback
+  pressedFeedback: { opacity: PRESS.OPACITY, transform: [{ scale: PRESS.SCALE }] },
 
   eventsList: { flex: 1, padding: 16, paddingBottom: LAYOUT.BOTTOM_GUTTER },
   emptyContainer: { alignItems: 'center', paddingTop: 60 },

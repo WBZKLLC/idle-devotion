@@ -7,11 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
 import { LAYOUT } from './AppHeader';
-
-// =============================================================================
-// LOGIN HERO SOURCE - Reuse the same hero as login page
-// =============================================================================
-export const LOGIN_HERO_SOURCE = 'https://customer-assets.emergentagent.com/job_c8748f08-a318-4a5c-a64d-da94566b2c02/artifacts/b7izvrr1_3b23ca9d-fc3b-4d22-a99f-0dddae4c4d89_1.webp';
+// Single source of truth for login hero
+import { LOGIN_HERO_URI } from '../../lib/assets/loginHero';
 
 // =============================================================================
 // TYPES

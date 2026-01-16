@@ -220,9 +220,10 @@ class RevenueCatService {
   private async notifyBackendPurchase(productId: string, transactionId: string): Promise<void> {
     try {
       await verifyPurchase({
-        username: this.userId || '',
-        productId,
-        transactionId,
+        product_id: productId,
+        entitlement_key: productId, // Use product_id as entitlement_key for now
+        idempotency_key: `${this.userId || 'anon'}_${transactionId}_${Date.now()}`,
+        transaction_id: transactionId,
         platform: Platform.OS as 'ios' | 'android' | 'web',
       });
     } catch (error) {

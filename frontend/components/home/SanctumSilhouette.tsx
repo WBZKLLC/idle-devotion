@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    opacity: 0.08, // Very faint
+    opacity: SILHOUETTE.maxOpacity, // Phase 3.22.7: Restrained to 0.06
   },
   orb: {
     position: 'absolute',
@@ -110,6 +110,6 @@ const styles = StyleSheet.create({
     marginLeft: -100,
     borderRadius: 100,
     backgroundColor: COLORS.gold.dark,
-    opacity: 0.04, // Extremely subtle
+    opacity: 0.03, // Phase 3.22.7: Reduced from 0.04
   },
 });

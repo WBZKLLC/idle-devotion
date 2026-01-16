@@ -36,8 +36,6 @@ import PurchaseButton from '../components/PurchaseButton';
 import COLORS from '../theme/colors';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
-// Phase 3.19.10: Canonical confirm modal
-import { ConfirmModal, ConfirmModalData } from '../components/ui/ConfirmModal';
 
 // DEV-only flag - set to false to disable DEV tools even in __DEV__ mode
 const ENABLE_DEV_TOOLS = __DEV__;

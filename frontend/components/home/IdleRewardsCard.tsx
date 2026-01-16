@@ -238,6 +238,7 @@ export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function Id
               pressed && styles.btnPressed,
               collectDisabled && styles.btnDisabled,
             ]}
+            onPressIn={onAnyInteraction}
             onPress={() => {
               haptic('medium');
               onCollect();
@@ -261,6 +262,7 @@ export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function Id
               pressed && styles.btnPressed,
               (instantLocked || instantCooling) && styles.btnInstantMuted,
             ]}
+            onPressIn={onAnyInteraction}
             onPress={() => {
               if (instantLocked) {
                 haptic('heavy');

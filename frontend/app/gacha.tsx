@@ -34,6 +34,7 @@ import {
   CenteredBackground,
   DivineOverlays,
   SummonAtmosphere,
+  SanctumAtmosphere,
   GlassCard,
 } from '../components/DivineShell';
 

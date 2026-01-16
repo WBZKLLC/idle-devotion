@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 
+// Phase 3.20.2: Type for LinearGradient-compatible color arrays
+type GradientColors = readonly [string, string, ...string[]];
+
 // Frame definitions based on VIP levels and special unlocks
 export const FRAME_DEFINITIONS: { [key: string]: {
   name: string;
-  borderColors: string[];
+  borderColors: GradientColors;
   innerGlow?: string;
   icon?: string;
   requiredVIP?: number;
@@ -14,53 +17,53 @@ export const FRAME_DEFINITIONS: { [key: string]: {
 }} = {
   default: {
     name: 'Basic Frame',
-    borderColors: ['#4a5568', '#2d3748'],
+    borderColors: ['#4a5568', '#2d3748'] as const,
   },
   bronze: {
     name: 'Bronze Frame',
-    borderColors: ['#cd7f32', '#8b4513'],
+    borderColors: ['#cd7f32', '#8b4513'] as const,
     requiredVIP: 1,
   },
   silver: {
     name: 'Silver Frame',
-    borderColors: ['#c0c0c0', '#a8a8a8', '#808080'],
+    borderColors: ['#c0c0c0', '#a8a8a8', '#808080'] as const,
     innerGlow: 'rgba(192, 192, 192, 0.3)',
     requiredVIP: 3,
   },
   gold: {
     name: 'Golden Frame',
-    borderColors: [COLORS.gold.light, COLORS.gold.primary, COLORS.gold.dark],
+    borderColors: [COLORS.gold.light, COLORS.gold.primary, COLORS.gold.dark] as const,
     innerGlow: 'rgba(212, 175, 55, 0.3)',
     requiredVIP: 5,
   },
   platinum: {
     name: 'Platinum Frame',
-    borderColors: ['#e5e4e2', '#c0c0c0', '#a9a9a9'],
+    borderColors: ['#e5e4e2', '#c0c0c0', '#a9a9a9'] as const,
     innerGlow: 'rgba(229, 228, 226, 0.4)',
     requiredVIP: 7,
   },
   diamond: {
     name: 'Diamond Frame',
-    borderColors: ['#b9f2ff', '#00bfff', '#1e90ff'],
+    borderColors: ['#b9f2ff', '#00bfff', '#1e90ff'] as const,
     innerGlow: 'rgba(0, 191, 255, 0.4)',
     requiredVIP: 9,
   },
   rainbow: {
     name: 'Rainbow Frame',
-    borderColors: ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#8b00ff'],
+    borderColors: ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#8b00ff'] as const,
     innerGlow: 'rgba(255, 255, 255, 0.3)',
     requiredVIP: 11,
   },
   legendary: {
     name: 'Legendary Frame',
-    borderColors: ['#ff6b00', '#ff9500', '#ffcc00'],
+    borderColors: ['#ff6b00', '#ff9500', '#ffcc00'] as const,
     innerGlow: 'rgba(255, 107, 0, 0.5)',
     icon: '🔥',
     requiredVIP: 13,
   },
   divine: {
     name: 'Divine Frame',
-    borderColors: ['#ffffff', '#ffd700', '#ffffff'],
+    borderColors: ['#ffffff', '#ffd700', '#ffffff'] as const,
     innerGlow: 'rgba(255, 255, 255, 0.6)',
     icon: '✨',
     requiredVIP: 15,
@@ -68,7 +71,7 @@ export const FRAME_DEFINITIONS: { [key: string]: {
   // Special frames from achievements/events
   champion: {
     name: 'Arena Champion',
-    borderColors: ['#dc2626', '#b91c1c', '#7f1d1d'],
+    borderColors: ['#dc2626', '#b91c1c', '#7f1d1d'] as const,
     innerGlow: 'rgba(220, 38, 38, 0.4)',
     icon: '🏆',
     special: true,

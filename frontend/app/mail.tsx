@@ -20,7 +20,7 @@ import { haptic, PRESS } from '../lib/ui/interaction';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { ListRow } from '../components/ui/ListRow';
-import { toast } from '../lib/toast';
+import { toast } from '../components/ui/Toast';
 // Phase 3.23.2: API layer
 import { getMailSummary, getMailRewards, getMailMessages, getMailGifts, claimMailReward, claimMailGift } from '../lib/api/mail';
 

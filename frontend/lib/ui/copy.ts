@@ -22,8 +22,8 @@
  */
 export const GREETING_VARIANTS = [
   'Welcome back.',           // default (most common)
-  'You've returned.',
-  'They've been waiting.',
+  "You've returned.",
+  "They've been waiting.",
   'Your absence was noted.',
   'The Sanctum remembers.',
   'Time has been kind.',

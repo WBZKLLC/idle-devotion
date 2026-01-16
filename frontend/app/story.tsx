@@ -199,25 +199,28 @@ export default function StoryScreen() {
     }
   };
 
-  const getActColor = (act: number) => {
+  const getActColor = (act: number): readonly [string, string] => {
     switch (act) {
-      case 1: return ['#3b82f6', '#1e40af'];
-      case 2: return ['#dc2626', '#7f1d1d'];
-      case 3: return ['#fbbf24', '#b45309'];
-      case 4: return ['#8b5cf6', '#4c1d95'];
-      default: return [COLORS.navy.medium, COLORS.navy.primary];
+      case 1: return ['#3b82f6', '#1e40af'] as const;
+      case 2: return ['#dc2626', '#7f1d1d'] as const;
+      case 3: return ['#fbbf24', '#b45309'] as const;
+      case 4: return ['#8b5cf6', '#4c1d95'] as const;
+      default: return [COLORS.navy.medium, COLORS.navy.primary] as const;
     }
   };
 
-  const getBackgroundGradient = (bg: string) => {
+  const getBackgroundGradient = (bg: string): readonly [string, string] => {
     switch (bg) {
-      case 'forest': return ['#064e3b', '#022c22'];
-      case 'temple': return ['#44403c', '#1c1917'];
-      case 'arena': return ['#7f1d1d', '#450a0a'];
-      case 'castle': return ['#1e3a5f', '#0d1b2a'];
-      default: return [COLORS.navy.dark, COLORS.navy.darkest];
+      case 'forest': return ['#064e3b', '#022c22'] as const;
+      case 'temple': return ['#44403c', '#1c1917'] as const;
+      case 'arena': return ['#7f1d1d', '#450a0a'] as const;
+      case 'castle': return ['#1e3a5f', '#0d1b2a'] as const;
+      default: return [COLORS.navy.dark, COLORS.navy.darkest] as const;
     }
   };
+
+  // Locked chapter gradient
+  const LOCKED_CHAPTER = ['#1a1a1a', '#0a0a0a'] as const;
 
   if (!hydrated || loading) {
     return (

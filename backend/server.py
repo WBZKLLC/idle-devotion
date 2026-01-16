@@ -4352,7 +4352,295 @@ async def get_user_tickets(username: str):
     tickets = await db.support_tickets.find({"user_id": user["id"]}).sort("created_at", -1).to_list(100)
     return [convert_objectid(ticket) for ticket in tickets]
 
+# ==================== MAIL SYSTEM ====================
+# Phase 3.23: Mail system for rewards, messages, and gifts
+
+@api_router.get("/mail/summary/{username}")
+async def get_mail_summary(username: str):
+    """Get mail badge counts for UI"""
+    user = await get_user_readonly(username)
+    
+    # Count unclaimed rewards (daily login rewards are always available)
+    rewards_available = 1  # Daily reward always available
+    
+    # Count unread messages (system messages)
+    unread_messages = await db.mail_messages.count_documents({
+        "to_user_id": user["id"],
+        "read": False
+    })
+    
+    # Count unclaimed gifts
+    gifts_available = await db.mail_gifts.count_documents({
+        "to_user_id": user["id"],
+        "claimed": False
+    })
+    
+    return {
+        "rewardsAvailable": rewards_available,
+        "unreadMessages": unread_messages,
+        "giftsAvailable": gifts_available
+    }
+
+@api_router.get("/mail/rewards/{username}")
+async def get_mail_rewards(username: str):
+    """Get list of claimable rewards"""
+    user = await get_user_readonly(username)
+    
+    # Get rewards from database
+    rewards = await db.mail_rewards.find({
+        "user_id": user["id"],
+        "claimed": False
+    }).to_list(50)
+    
+    return [convert_objectid(r) for r in rewards]
+
+@api_router.get("/mail/messages/{username}")
+async def get_mail_messages(username: str):
+    """Get system messages"""
+    user = await get_user_readonly(username)
+    
+    messages = await db.mail_messages.find({
+        "to_user_id": user["id"]
+    }).sort("timestamp", -1).to_list(50)
+    
+    return [convert_objectid(m) for m in messages]
+
+@api_router.get("/mail/gifts/{username}")
+async def get_mail_gifts(username: str):
+    """Get gifts from friends/system"""
+    user = await get_user_readonly(username)
+    
+    gifts = await db.mail_gifts.find({
+        "to_user_id": user["id"],
+        "claimed": False
+    }).to_list(50)
+    
+    return [convert_objectid(g) for g in gifts]
+
+@api_router.post("/mail/rewards/{username}/{reward_id}/claim")
+async def claim_mail_reward(username: str, reward_id: str):
+    """Claim a specific reward"""
+    user = await get_user_for_mutation(username)
+    
+    reward = await db.mail_rewards.find_one({
+        "id": reward_id,
+        "user_id": user["id"],
+        "claimed": False
+    })
+    
+    if not reward:
+        raise HTTPException(status_code=404, detail="Reward not found or already claimed")
+    
+    # Mark as claimed
+    await db.mail_rewards.update_one(
+        {"id": reward_id},
+        {"$set": {"claimed": True, "claimed_at": datetime.utcnow()}}
+    )
+    
+    # Award the rewards (simplified)
+    # In a full implementation, parse reward.rewards and apply to user
+    
+    return {"message": "Reward claimed"}
+
+@api_router.post("/mail/gifts/{username}/{gift_id}/claim")
+async def claim_mail_gift(username: str, gift_id: str):
+    """Claim a gift"""
+    user = await get_user_for_mutation(username)
+    
+    gift = await db.mail_gifts.find_one({
+        "id": gift_id,
+        "to_user_id": user["id"],
+        "claimed": False
+    })
+    
+    if not gift:
+        raise HTTPException(status_code=404, detail="Gift not found or already claimed")
+    
+    # Mark as claimed
+    await db.mail_gifts.update_one(
+        {"id": gift_id},
+        {"$set": {"claimed": True, "claimed_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Gift accepted"}
+
 # ==================== FRIENDS SYSTEM ====================
+@api_router.get("/friends/summary/{username}")
+async def get_friends_summary(username: str):
+    """Get friends badge counts for UI"""
+    user = await get_user_readonly(username)
+    
+    # Count pending requests
+    pending_requests = await db.friend_requests.count_documents({
+        "to_user_id": user["id"],
+        "status": "pending"
+    })
+    
+    # Count total friends
+    total_friends = await db.friendships.count_documents({
+        "$or": [
+            {"user_id": user["id"]},
+            {"friend_id": user["id"]}
+        ]
+    })
+    
+    return {
+        "pendingRequests": pending_requests,
+        "totalFriends": total_friends
+    }
+
+@api_router.get("/friends/search")
+async def search_players(q: str, username: Optional[str] = None):
+    """Search for players by username"""
+    if not q or len(q) < 2:
+        return []
+    
+    # Get current user if provided (to check friend status)
+    current_user = None
+    if username:
+        current_user = await db.users.find_one({"username": username})
+    
+    # Case-insensitive search
+    query_pattern = {"$regex": f"^{re.escape(q)}", "$options": "i"}
+    users = await db.users.find(
+        {"username": query_pattern},
+        {"id": 1, "username": 1, "vip_level": 1}
+    ).limit(20).to_list(20)
+    
+    results = []
+    for u in users:
+        # Skip current user
+        if current_user and u["id"] == current_user["id"]:
+            continue
+        
+        is_friend = False
+        has_pending_request = False
+        
+        if current_user:
+            # Check if already friends
+            friendship = await db.friendships.find_one({
+                "$or": [
+                    {"user_id": current_user["id"], "friend_id": u["id"]},
+                    {"user_id": u["id"], "friend_id": current_user["id"]}
+                ]
+            })
+            is_friend = friendship is not None
+            
+            # Check pending request
+            pending = await db.friend_requests.find_one({
+                "$or": [
+                    {"from_user_id": current_user["id"], "to_user_id": u["id"], "status": "pending"},
+                    {"from_user_id": u["id"], "to_user_id": current_user["id"], "status": "pending"}
+                ]
+            })
+            has_pending_request = pending is not None
+        
+        results.append({
+            "id": u["id"],
+            "username": u["username"],
+            "level": u.get("vip_level", 0) + 1,  # Display as level 1+
+            "isFriend": is_friend,
+            "hasPendingRequest": has_pending_request
+        })
+    
+    return results
+
+@api_router.post("/friends/requests/send")
+async def send_friend_request_v2(request: Request):
+    """Send a friend request (v2 with JSON body)"""
+    body = await request.json()
+    from_username = body.get("from")
+    to_username = body.get("to")
+    
+    if not from_username or not to_username:
+        raise HTTPException(status_code=400, detail="Missing from or to username")
+    
+    from_user = await db.users.find_one({"username": from_username})
+    to_user = await db.users.find_one({"username": to_username})
+    
+    if not from_user or not to_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if from_user["id"] == to_user["id"]:
+        raise HTTPException(status_code=400, detail="Cannot add yourself as friend")
+    
+    # Check if already friends
+    existing_friendship = await db.friendships.find_one({
+        "$or": [
+            {"user_id": from_user["id"], "friend_id": to_user["id"]},
+            {"user_id": to_user["id"], "friend_id": from_user["id"]}
+        ]
+    })
+    
+    if existing_friendship:
+        raise HTTPException(status_code=400, detail="Already friends")
+    
+    # Check if request already exists
+    existing_request = await db.friend_requests.find_one({
+        "from_user_id": from_user["id"],
+        "to_user_id": to_user["id"],
+        "status": "pending"
+    })
+    
+    if existing_request:
+        raise HTTPException(status_code=400, detail="Friend request already sent")
+    
+    friend_request = FriendRequest(
+        from_user_id=from_user["id"],
+        to_user_id=to_user["id"]
+    )
+    
+    await db.friend_requests.insert_one(friend_request.dict())
+    return convert_objectid(friend_request.dict())
+
+@api_router.post("/friends/requests/{username}/{request_id}/accept")
+async def accept_friend_request_v2(username: str, request_id: str):
+    """Accept a friend request (v2 path format)"""
+    user = await get_user_for_mutation(username)
+    
+    friend_request = await db.friend_requests.find_one({"id": request_id})
+    if not friend_request:
+        raise HTTPException(status_code=404, detail="Friend request not found")
+    
+    if friend_request["to_user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your friend request")
+    
+    # Update request status
+    await db.friend_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": "accepted"}}
+    )
+    
+    # Create friendship
+    friendship = Friendship(
+        user_id=friend_request["from_user_id"],
+        friend_id=friend_request["to_user_id"]
+    )
+    
+    await db.friendships.insert_one(friendship.dict())
+    
+    return {"message": "Friend request accepted"}
+
+@api_router.post("/friends/requests/{username}/{request_id}/decline")
+async def decline_friend_request(username: str, request_id: str):
+    """Decline a friend request"""
+    user = await get_user_for_mutation(username)
+    
+    friend_request = await db.friend_requests.find_one({"id": request_id})
+    if not friend_request:
+        raise HTTPException(status_code=404, detail="Friend request not found")
+    
+    if friend_request["to_user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your friend request")
+    
+    # Update request status
+    await db.friend_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": "rejected"}}
+    )
+    
+    return {"message": "Friend request declined"}
+
 @api_router.post("/friends/request")
 async def send_friend_request(from_username: str, to_username: str):
     """Send a friend request"""

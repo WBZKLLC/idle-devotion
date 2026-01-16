@@ -42,6 +42,7 @@ const ALLOWED_FILES = [
   'entitlementStore.ts',
   'gating.ts',
   'purchaseStore.ts',
+  'paid-features.tsx', // DEV admin screen - needs direct access for dev tools
 ];
 
 function getAllTsxFiles(dir, files = []) {

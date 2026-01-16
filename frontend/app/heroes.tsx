@@ -45,6 +45,8 @@ import {
 // Phase 3.19.1: Loading + Empty state components
 import { HeroGridSkeleton } from '../components/ui/Skeleton';
 import { FilterNoResultsEmpty, NoHeroesEmpty } from '../components/ui/EmptyState';
+// Phase 3.19.6: Canonical header + layout constants
+import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 
 // Sanctum background (matches your existing setup)
 const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');

@@ -37,25 +37,25 @@ type Props = {
 export function SanctumSilhouette({ scrollY, reduceMotion = false }: Props) {
   const { height: screenHeight } = useWindowDimensions();
   
-  // Parallax animation style
+  // Parallax animation style — scroll only, no independent animation
   const animatedStyle = useAnimatedStyle(() => {
     if (reduceMotion) {
       return {}; // Static when reduced motion is enabled
     }
     
-    // TranslateY: 0 → -12px as user scrolls down
+    // TranslateY: 0 → -8px max (restrained from -12px)
     const translateY = interpolate(
       scrollY.value,
       [0, screenHeight * 0.5],
-      [0, -12],
+      [0, SILHOUETTE.maxTranslateY],
       Extrapolation.CLAMP
     );
     
-    // Scale: 1.00 → 1.02 (very subtle zoom)
+    // Scale: 1.00 → 1.015 (restrained from 1.02)
     const scale = interpolate(
       scrollY.value,
       [0, screenHeight * 0.5],
-      [1, 1.02],
+      SILHOUETTE.scaleRange,
       Extrapolation.CLAMP
     );
     

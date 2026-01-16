@@ -329,7 +329,7 @@ export default function StoreScreen() {
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
           <Text style={styles.errorText}>Please log in first</Text>
         </SafeAreaView>
       </LinearGradient>
@@ -338,7 +338,7 @@ export default function StoreScreen() {
 
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {/* Phase 3.19.6: Canonical header */}
         <AppHeader
           title="Store"

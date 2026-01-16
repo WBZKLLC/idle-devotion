@@ -52,7 +52,7 @@ export function QuickLinksGrid({ rows }: Props) {
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={tile.gradient as unknown as string[]} // expo-linear-gradient accepts string[]
+                colors={tile.gradient}
                 style={[styles.quickLinkGradient, tile.gradientStyle]}
               >
                 {tile.kind === 'custom' ? (

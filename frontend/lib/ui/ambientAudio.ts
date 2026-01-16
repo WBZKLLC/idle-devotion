@@ -1,37 +1,39 @@
 // /app/frontend/lib/ui/ambientAudio.ts
-// Phase 3.22.6.D: Ambient Audio System
+// Phase 3.22.10.A: Sensory Mastering — Audio Cues
 //
-// Quietly indulgent audio cues — felt, not intrusive.
+// Goals:
+// - Warm + noticeable, never sharp
+// - Low frequency, high meaning
+// - Nothing triggers twice by accident (rate-limit + per-event cooldown)
+//
 // Rules:
-// - One soft "return" cue on entering authenticated Home
-// - Micro-cues only on ritual actions (Receive, Take More)
-// - Never on every button, never on navigation spam
-// - Rate-limited: max 1 cue per 2-3 seconds
-// - Respects device silent mode / system volume
+// - Respect system silent / ringer settings (best-effort)
+// - Respect Reduce Motion accessibility
+// - User toggle (Ambient Sound on/off)
+//
+// Hard caps:
+// - Signature/presence cue: max 1 per SESSION
+// - Collect cue: max 1 per 2.5s
+// - Tab press: haptic only, no sound
 
-import { Audio, AVPlaybackStatus } from 'expo-av';
+import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform, AccessibilityInfo } from 'react-native';
 
 // Storage key for ambient sound preference
 const AMBIENT_ENABLED_KEY = 'ambientSoundEnabled';
 
-// Volume targets (very restrained)
-const VOLUME = {
-  homeReturn: 0.14,    // 0.10–0.18 range
-  collect: 0.17,       // 0.12–0.22 range
-  instant: 0.20,       // slightly brighter
-} as const;
-
-// Rate limiting
+// Rate limiting (global)
 const MIN_INTERVAL_MS = 2500; // 2.5 seconds between cues
 let lastPlayTime = 0;
 
-// Singleton sound instances (preloaded)
-let homeReturnSound: Audio.Sound | null = null;
-let collectSound: Audio.Sound | null = null;
-let instantSound: Audio.Sound | null = null;
+// Session caps
+let signaturePlayedThisSession = false;
+
+// State
 let isLoaded = false;
 let isEnabled = true; // default ON
+let reduceMotionEnabled = false;
 
 /**
  * Initialize ambient audio system
@@ -47,27 +49,41 @@ export async function initAmbientAudio(): Promise<void> {
       isEnabled = stored === 'true';
     }
 
-    // Configure audio mode
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: false, // Respect silent mode
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
-    });
-
-    // Preload sounds (using simple sine tones as placeholders)
-    // In production, replace with actual audio assets
-    // For now, we'll use programmatic approach
+    // Check Reduce Motion accessibility setting
+    reduceMotionEnabled = await AccessibilityInfo.isReduceMotionEnabled();
     
+    // Listen for changes
+    const subscription = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      (enabled) => {
+        reduceMotionEnabled = enabled;
+      }
+    );
+
+    // Configure audio mode (best-effort, may fail on web)
+    if (Platform.OS !== 'web') {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: false, // Respect silent mode
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+      } catch {
+        // Silent fail — audio config not critical
+      }
+    }
+
     isLoaded = true;
   } catch (error) {
-    console.warn('[ambientAudio] Init failed:', error);
+    // Silent fail — init non-critical
+    isLoaded = true; // Mark loaded to prevent retry spam
   }
 }
 
 /**
  * Check if enough time has passed since last cue
  */
-function canPlay(): boolean {
+function canPlayRateLimited(): boolean {
   if (!isEnabled) return false;
   const now = Date.now();
   if (now - lastPlayTime < MIN_INTERVAL_MS) return false;
@@ -75,39 +91,43 @@ function canPlay(): boolean {
 }
 
 /**
- * Play a sound with rate limiting
+ * Get haptics module safely (lazy import)
  */
-async function playSound(
-  sound: Audio.Sound | null,
-  volume: number
-): Promise<void> {
-  if (!canPlay() || !sound) return;
-
+async function getHaptics() {
   try {
-    lastPlayTime = Date.now();
-    await sound.setVolumeAsync(volume);
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
-  } catch (error) {
-    // Silent fail — audio is non-critical
+    if (Platform.OS === 'web') return null;
+    const Haptics = await import('expo-haptics');
+    return Haptics;
+  } catch {
+    return null;
   }
 }
 
 /**
- * Play the "home return" cue
- * Call when entering authenticated Home screen
+ * Play the "signature" cue (Phase 3.22.10.A)
+ * MAX 1 PER SESSION — ultra-rare presence moment
+ * Warm double-tap haptic pattern
  */
-export async function playHomeReturnCue(): Promise<void> {
+export async function playSignatureCue(): Promise<void> {
+  // Session cap: only once
+  if (signaturePlayedThisSession) return;
   if (!isEnabled) return;
+  if (reduceMotionEnabled) return; // Respect accessibility
   
-  // For now, just trigger haptic as audio placeholder
-  // Full audio integration would require actual sound files
+  signaturePlayedThisSession = true;
+  lastPlayTime = Date.now();
+
+  const Haptics = await getHaptics();
+  if (!Haptics) return;
+
   try {
-    const Haptics = await import('expo-haptics');
-    if (canPlay()) {
-      lastPlayTime = Date.now();
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    // Warm double-tap: soft → pause → soft
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // 400ms pause for "presence" feel
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   } catch {
     // Silent fail
   }
@@ -115,16 +135,20 @@ export async function playHomeReturnCue(): Promise<void> {
 
 /**
  * Play the "collect" cue (Receive button)
+ * Soft "seal" confirmation — satisfying but not intrusive
+ * Rate-limited: max 1 per 2.5s
  */
 export async function playCollectCue(): Promise<void> {
-  if (!isEnabled) return;
+  if (!canPlayRateLimited()) return;
   
+  lastPlayTime = Date.now();
+  
+  const Haptics = await getHaptics();
+  if (!Haptics) return;
+
   try {
-    const Haptics = await import('expo-haptics');
-    if (canPlay()) {
-      lastPlayTime = Date.now();
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
+    // Success notification — soft confirmation
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   } catch {
     // Silent fail
   }
@@ -132,44 +156,42 @@ export async function playCollectCue(): Promise<void> {
 
 /**
  * Play the "instant" cue (Take More button)
+ * Slightly stronger than collect — still warm
+ * Rate-limited: max 1 per 2.5s
  */
 export async function playInstantCue(): Promise<void> {
-  if (!isEnabled) return;
+  if (!canPlayRateLimited()) return;
   
+  lastPlayTime = Date.now();
+  
+  const Haptics = await getHaptics();
+  if (!Haptics) return;
+
   try {
-    const Haptics = await import('expo-haptics');
-    if (canPlay()) {
-      lastPlayTime = Date.now();
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
+    // Medium impact — stronger but warm
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   } catch {
     // Silent fail
   }
 }
 
 /**
- * Play the signature moment cue (Phase 3.22.10)
- * Ultra-low volume, warm presence sound
- * Only fires once per day as part of signature moment
+ * Play home return cue (entering authenticated Home)
+ * Only haptic, no sound (per spec: presence is signature's job)
+ * Rate-limited
  */
-export async function playSignatureCue(): Promise<void> {
-  if (!isEnabled) return;
+export async function playHomeReturnCue(): Promise<void> {
+  if (!canPlayRateLimited()) return;
+  if (reduceMotionEnabled) return;
   
+  lastPlayTime = Date.now();
+  
+  const Haptics = await getHaptics();
+  if (!Haptics) return;
+
   try {
-    const Haptics = await import('expo-haptics');
-    if (canPlay()) {
-      lastPlayTime = Date.now();
-      // Soft, warm haptic for signature moment
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      // Small delay then another softer one for "presence" feel
-      setTimeout(async () => {
-        try {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        } catch {
-          // Silent fail
-        }
-      }, 400);
-    }
+    // Very light presence tap
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   } catch {
     // Silent fail
   }
@@ -180,7 +202,11 @@ export async function playSignatureCue(): Promise<void> {
  */
 export async function setAmbientEnabled(enabled: boolean): Promise<void> {
   isEnabled = enabled;
-  await AsyncStorage.setItem(AMBIENT_ENABLED_KEY, String(enabled));
+  try {
+    await AsyncStorage.setItem(AMBIENT_ENABLED_KEY, String(enabled));
+  } catch {
+    // Silent fail
+  }
 }
 
 /**
@@ -191,15 +217,16 @@ export function isAmbientEnabled(): boolean {
 }
 
 /**
- * Cleanup sounds on app terminate
+ * Reset session state (call on app background/foreground)
+ */
+export function resetAudioSession(): void {
+  signaturePlayedThisSession = false;
+  lastPlayTime = 0;
+}
+
+/**
+ * Cleanup (optional, called on app terminate)
  */
 export async function unloadAmbientAudio(): Promise<void> {
-  try {
-    if (homeReturnSound) await homeReturnSound.unloadAsync();
-    if (collectSound) await collectSound.unloadAsync();
-    if (instantSound) await instantSound.unloadAsync();
-    isLoaded = false;
-  } catch {
-    // Silent fail
-  }
+  isLoaded = false;
 }

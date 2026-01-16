@@ -26,6 +26,8 @@ import { goToStore } from '../lib/entitlements/navigation';
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen
 import { CinematicLoading } from '../components/ui/CinematicLoading';
+// Single source of truth for login hero
+import { LOGIN_HERO_URI } from '../lib/assets/loginHero';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../lib/api';

@@ -6,9 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { emitInteraction } from '../../lib/ui/interactionSession';
 
 // Phase 3.22.6.C: Tab bar is "the floor" — darker, anchoring, never competing
+// Phase 3.22.11: Elegance refinements — tighter, quieter
 const COLORS = {
-  navy: { darkest: '#060d17', dark: '#0a1321', primary: '#1b263b' }, // deeper darkest
-  gold: { primary: '#c9a227', warm: '#d4a84a' }, // warm active state
+  navy: { darkest: '#050a12', dark: '#0a1321', primary: '#1b263b' }, // even deeper
+  gold: { primary: '#c9a227', warm: '#d4a84a' },
   cream: { muted: '#f8f6f0' },
 };
 
@@ -17,10 +18,12 @@ const COLORS = {
  * Contains the 6 main tab destinations
  * 
  * Phase 3.22.6.C: "The Floor"
- * - Darker than content
- * - Active icon slightly warmer, not brighter
- * - No animation, no glow
- * - Anchors the indulgence
+ * Phase 3.22.11: Elegance Pass
+ * - Darker than content (the ground you stand on)
+ * - Active icon warm, not bright
+ * - Reduced label contrast
+ * - Tighter icon/label spacing
+ * - Never competes with Chapter 2 (ritual)
  */
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -30,16 +33,18 @@ export default function TabsLayout() {
       screenOptions={{
         // Active: warm gold (not bright)
         tabBarActiveTintColor: COLORS.gold.warm,
-        // Inactive: very muted (not competing)
-        tabBarInactiveTintColor: COLORS.cream.muted + '40',
+        // Phase 3.22.11: Even more muted inactive (30% instead of 40%)
+        tabBarInactiveTintColor: COLORS.cream.muted + '30',
         tabBarStyle: {
           // Darker than content — the ground you stand on
           backgroundColor: COLORS.navy.darkest,
-          borderTopColor: COLORS.gold.primary + '15', // barely visible border
-          borderTopWidth: 1,
-          height: Platform.OS === 'web' ? 56 : 60,
-          paddingBottom: Platform.OS === 'web' ? 6 : Math.max(insets.bottom, 8),
-          paddingTop: 6,
+          // Phase 3.22.11: Even more subtle border (10% alpha)
+          borderTopColor: COLORS.gold.primary + '10',
+          borderTopWidth: 0.5,
+          // Phase 3.22.11: Slightly shorter
+          height: Platform.OS === 'web' ? 52 : 56,
+          paddingBottom: Platform.OS === 'web' ? 4 : Math.max(insets.bottom, 6),
+          paddingTop: 4,
         },
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,
@@ -56,7 +61,7 @@ export default function TabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <Ionicons name="home" size={size - 2} color={color} />
           ),
         }}
       />
@@ -65,7 +70,7 @@ export default function TabsLayout() {
         options={{
           title: 'Summon',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="gift" size={size} color={color} />
+            <Ionicons name="gift" size={size - 2} color={color} />
           ),
         }}
       />
@@ -74,7 +79,7 @@ export default function TabsLayout() {
         options={{
           title: 'Heroes',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+            <Ionicons name="people" size={size - 2} color={color} />
           ),
         }}
       />
@@ -83,7 +88,7 @@ export default function TabsLayout() {
         options={{
           title: 'Arena',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy" size={size} color={color} />
+            <Ionicons name="trophy" size={size - 2} color={color} />
           ),
         }}
       />
@@ -92,7 +97,7 @@ export default function TabsLayout() {
         options={{
           title: 'Guild',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="shield" size={size} color={color} />
+            <Ionicons name="shield" size={size - 2} color={color} />
           ),
         }}
       />
@@ -101,7 +106,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="person" size={size - 2} color={color} />
           ),
         }}
       />
@@ -111,12 +116,14 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabLabel: {
-    fontSize: 9,
-    fontWeight: '500', // lighter
-    marginTop: 2,
-    letterSpacing: 0.3,
+    // Phase 3.22.11: Smaller, more elegant
+    fontSize: 8,
+    fontWeight: '400', // even lighter
+    marginTop: 1, // tighter icon/label spacing
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
   },
   tabIcon: {
-    marginBottom: -2,
+    marginBottom: 0, // Phase 3.22.11: Tighter
   },
 });

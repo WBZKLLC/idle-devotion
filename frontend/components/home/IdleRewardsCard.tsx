@@ -32,7 +32,11 @@ import {
   getNoticedVariant,
   NOTICED_VARIANTS,
   trySpendDesireBudget,
+  canTriggerSignatureToday,
+  markSignatureTriggered,
+  getSignatureCopy,
 } from '../../lib/ui/desire';
+import { playSignatureCue } from '../../lib/ui/ambientAudio';
 
 type IdleStatus = {
   is_capped?: boolean;

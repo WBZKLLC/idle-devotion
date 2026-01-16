@@ -193,7 +193,7 @@ export default function HeroDetailScreen() {
         />
         <SanctumAtmosphere />
         <DivineOverlays vignette grain />
-        <SafeAreaView style={styles.centerContainer}>
+        <SafeAreaView style={styles.centerContainer} edges={['top', 'left', 'right']}>
           <Ionicons name="alert-circle" size={48} color={COLORS.gold.primary} />
           <Text style={styles.errorText}>Hero not found</Text>
           <Text style={styles.errorSubtext}>This hero may have been removed or the link is invalid.</Text>
@@ -234,7 +234,7 @@ export default function HeroDetailScreen() {
       <SanctumAtmosphere />
       <DivineOverlays vignette grain />
 
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {/* Phase 3.19.6: Canonical header - back on LEFT */}
         <AppHeader
           title={heroData.name}

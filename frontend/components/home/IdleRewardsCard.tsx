@@ -106,8 +106,9 @@ export function IdleRewardsCard({
             <Ionicons name="star" size={16} color={COLORS.gold.primary} />
           </View>
           <Text style={styles.pendingText}>
-            +{goldPending.toLocaleString()} Gold awaiting
+            +{goldPending.toLocaleString()} Gold
           </Text>
+          <Text style={styles.pendingLabel}>{IDLE_COPY.pendingLabel}</Text>
         </View>
 
         {/* Action Buttons — Receive (calm), Demand More (tempting) */}

@@ -747,7 +747,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       .filter((v: any) => v !== null && v !== undefined)
       .map((v: any) => String(v));
 
-    const uniqueIds = Array.from(new Set(ids));
+    const uniqueIds: string[] = [...new Set(ids)];
 
     // Strategy:
     // - 1..3 heroes -> targeted refresh (cheap: 1-3 API calls)

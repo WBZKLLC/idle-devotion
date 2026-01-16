@@ -169,8 +169,8 @@ export default function GuildScreen() {
   };
 
   const handleLeaveGuild = async () => {
-    // Phase 3.19.10: Use ConfirmModal instead of Alert.alert
-    setConfirmData({
+    // Phase 3.19.11: Use hook-based openConfirm
+    openConfirm({
       title: 'Leave Guild',
       message: 'Are you sure you want to leave the guild?',
       confirmText: 'Leave',

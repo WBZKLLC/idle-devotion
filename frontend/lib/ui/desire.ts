@@ -129,16 +129,29 @@ export function shouldCancelGlance(): boolean {
 
 const NOTICED_KEY = 'lastNoticedAt';
 
+/** Phase 3.22.8.B: Possession tone — "You're expected. You're claimed." */
 export const NOTICED_VARIANTS = {
-  /** Microcopy variants (toast-adjacent, not toast) */
+  /** Daily micro-moments (pick 1/day) — quiet certainty, not pleading */
   copy: [
-    'We saw you.',
-    'Still here.',
-    'Remembered.',
+    "You're late.",
+    'There you are.',
+    'Good.',
+    'Still ours.',
+    'Come closer.',
+    'We kept it warm.',
+    "Everything's ready.",
   ] as const,
   /** Idle card subtitle shift (one render only) */
   idleSubtitle: 'Still warm.',
 } as const;
+
+/** Idle card subtitle variants (1 per session, low rotation) — possessive */
+export const IDLE_SUBTITLE_VARIANTS = [
+  'Kept for you.',
+  'Untouched. Waiting.',
+  'Time gathered. Yours.',
+  'Still warm.',
+] as const;
 
 /**
  * Check if "noticed" moment can trigger today

@@ -276,12 +276,21 @@ export default function StoryScreen() {
         </View>
 
         {/* Chapters List */}
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: LAYOUT.BOTTOM_GUTTER }} showsVerticalScrollIndicator={false}>
           {chapters.map(chapter => (
-            <TouchableOpacity
+            <Pressable
               key={chapter.id}
-              style={[styles.chapterCard, !chapter.unlocked && styles.chapterLocked]}
-              onPress={() => startChapter(chapter)}
+              style={({ pressed }) => [
+                styles.chapterCard,
+                !chapter.unlocked && styles.chapterLocked,
+                pressed && chapter.unlocked && styles.pressedFeedback,
+              ]}
+              onPress={() => {
+                if (chapter.unlocked && chapter.scenes.length > 0) {
+                  haptic('selection');
+                  startChapter(chapter);
+                }
+              }}
               disabled={!chapter.unlocked || chapter.scenes.length === 0}
             >
               <LinearGradient

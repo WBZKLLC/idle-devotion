@@ -106,7 +106,9 @@ const styles = StyleSheet.create({
   quickLinksRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 12,
+    marginBottom: SECTION_GAP.rest, // Phase 3.22.7: Breathing rhythm
+    // Phase 3.22.7: Secondary invitation — available but not eager
+    opacity: INVITATION.secondary,
   },
   // Phase 3.22.6.C: More breathing room between sections
   rowSpacing: {
@@ -116,17 +118,17 @@ const styles = StyleSheet.create({
     borderRadius: 14, // slightly more rounded
     overflow: 'hidden',
   },
-  // Phase 3.22.4: Pressed state feedback
+  // Phase 3.22.4: Pressed state feedback — animate to full presence
   quickLinkPressed: {
     transform: [{ scale: PRESS.SCALE }],
-    opacity: PRESS.OPACITY,
+    opacity: 1, // Full presence on interaction
   },
   quickLinkGradient: {
     paddingVertical: 14,
     alignItems: 'center',
     gap: 5,
     borderWidth: 1,
-    borderColor: COLORS.gold.dark + '20', // softer border
+    borderColor: COLORS.gold.dark + '15', // Phase 3.22.7: Reduced to 15% alpha
     borderRadius: 14,
   },
   quickLinkText: {

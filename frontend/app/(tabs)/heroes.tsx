@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   loadingText: { color: 'rgba(255,255,255,0.70)', marginTop: 12, fontSize: 14, fontWeight: '700' },
 
   gridScroll: { flex: 1, marginTop: 10 },
-  gridContent: { paddingHorizontal: 12 },
+  gridContent: { paddingHorizontal: 12, paddingBottom: LAYOUT.BOTTOM_GUTTER },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
 
   heroCardOuter: {
@@ -524,6 +524,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 1.2,
     backgroundColor: 'rgba(255, 215, 140, 0.18)', // subtle gold stroke
+  },
+  // Phase 3.22.4: Pressed state feedback
+  heroCardPressed: {
+    transform: [{ scale: PRESS.SCALE }],
+    opacity: PRESS.OPACITY,
   },
   heroCardInner: {
     flex: 1,

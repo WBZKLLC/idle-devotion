@@ -348,10 +348,17 @@ export default function GuildScreen() {
               {/* Tab Navigation */}
               <View style={styles.tabBar}>
                 {(['info', 'boss', 'donate'] as const).map((tab) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={tab}
-                    style={[styles.tab, activeTab === tab && styles.tabActive]}
-                    onPress={() => setActiveTab(tab)}
+                    style={({ pressed }) => [
+                      styles.tab, 
+                      activeTab === tab && styles.tabActive,
+                      pressed && styles.pressedFeedback,
+                    ]}
+                    onPress={() => {
+                      haptic('selection');
+                      setActiveTab(tab);
+                    }}
                   >
                     <Ionicons 
                       name={tab === 'info' ? 'information-circle' : tab === 'boss' ? 'skull' : 'gift'} 
@@ -361,7 +368,7 @@ export default function GuildScreen() {
                     <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
                       {tab === 'info' ? 'Info' : tab === 'boss' ? 'Boss' : 'Donate'}
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </View>
 

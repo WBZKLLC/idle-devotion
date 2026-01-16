@@ -18,3 +18,5 @@ export { CinematicLoading } from './CinematicLoading';
 // LOGIN_HERO_URI is exported from lib/assets/loginHero.ts (single source of truth)
 export { RewardRecapModal } from './RewardRecapModal';
 export type { RewardRecapData } from './RewardRecapModal';
+export { ConfirmModal } from './ConfirmModal';
+export type { ConfirmModalData, ConfirmTone } from './ConfirmModal';

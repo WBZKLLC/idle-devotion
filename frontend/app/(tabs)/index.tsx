@@ -13,6 +13,14 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  Easing,
+  interpolate,
+} from 'react-native-reanimated';
 import { useGameStore, useHydration } from '../../stores/gameStore';
 import { isErrorHandledGlobally } from '../../lib/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,6 +39,8 @@ import { useConfirmModal } from '../../components/ui/useConfirmModal';
 import { toast } from '../../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
+// Phase 3.22.9: Settle animation tokens
+import { SECTION_GAP } from '../../components/ui/tokens';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';

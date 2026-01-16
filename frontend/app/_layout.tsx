@@ -149,12 +149,35 @@ function TabsWithSafeArea() {
   // Phase 3.22.2: Hide tab bar when user is not logged in
   const user = useGameStore(s => s.user);
   
-  // Visible tab bar style
+  // Visible tab bar style for authenticated users
   const visibleTabBarStyle = {
-    ...styles.tabBar,
-    paddingBottom: Math.max(insets.bottom, 8),
-    height: 60 + Math.max(insets.bottom, 0),
-    display: 'flex' as const, // Explicitly show
+    backgroundColor: COLORS.navy.darkest,
+    borderTopColor: COLORS.gold.primary + '30',
+    borderTopWidth: 1,
+    height: Platform.OS === 'web' ? 60 : 65,
+    paddingBottom: Platform.OS === 'web' ? 8 : Math.max(insets.bottom, 10),
+    paddingTop: 8,
+    ...(Platform.OS === 'web' ? {
+      position: 'fixed' as any,
+      bottom: 0,
+      left: 0,
+      right: 0,
+    } : {}),
+  };
+  
+  // Hidden tab bar style - completely hide on login screen
+  // Must NOT inherit fixed positioning from tabBar
+  const hiddenTabBarStyle = Platform.OS === 'web' ? {
+    position: 'fixed' as any,
+    bottom: -200, // Move completely off screen
+    left: 0,
+    right: 0,
+    height: 0,
+    opacity: 0,
+    pointerEvents: 'none' as any,
+  } : {
+    display: 'none' as const,
+    height: 0,
   };
   
   return (
@@ -162,13 +185,10 @@ function TabsWithSafeArea() {
       screenOptions={{
         tabBarActiveTintColor: COLORS.gold.primary,
         tabBarInactiveTintColor: COLORS.cream.soft + '60',
-        // When no user, hide the entire tab bar
-        tabBarStyle: user ? visibleTabBarStyle : { display: 'none' },
+        tabBarStyle: user ? visibleTabBarStyle : hiddenTabBarStyle,
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIconStyle: styles.tabIcon,
-        // Also control the inner items
-        tabBarShowLabel: !!user,
       }}
     >
       {/* ===== 6 MAIN VISIBLE TABS ===== */}

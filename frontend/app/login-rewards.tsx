@@ -193,9 +193,9 @@ export default function LoginRewardsScreen() {
         <SafeAreaView style={styles.centerContainer}>
           <Ionicons name="lock-closed" size={48} color={COLORS.gold.primary} />
           <Text style={styles.errorText}>Please log in first</Text>
-          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/')}>
-            <Text style={styles.loginButtonText}>Go to Login</Text>
-          </TouchableOpacity>
+          <View style={{ marginTop: 16, width: '60%' }}>
+            <PrimaryButton title="Go to Login" onPress={() => router.push('/')} variant="gold" size="md" />
+          </View>
         </SafeAreaView>
       </LinearGradient>
     );

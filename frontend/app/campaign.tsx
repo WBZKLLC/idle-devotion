@@ -31,6 +31,9 @@ import { SecondaryButton } from '../components/ui/SecondaryButton';
 import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 // Phase 3.19.7: Cinematic loading screen
 import { CinematicLoading } from '../components/ui/CinematicLoading';
+// Phase 3.22.4: Micro-interaction utilities
+import { PRESS, haptic } from '../lib/ui/interaction';
+import { LAYOUT } from '../components/ui/tokens';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

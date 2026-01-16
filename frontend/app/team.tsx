@@ -13,6 +13,7 @@ import {
 import { useGameStore } from '../stores/gameStore';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import { Ionicons } from '@expo/vector-icons';
+import { toast } from '../components/ui/Toast';
 
 // CANONICAL combat stats and power helpers
 import { computeCombatStats } from '../lib/combatStats';

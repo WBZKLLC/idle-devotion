@@ -145,6 +145,11 @@ export default function HeroesScreen() {
 
   // Use TIER_LABEL_ARRAY from lib/tier.ts for display tier buttons
 
+  // Phase 3.19.7: Cinematic loading for initial hydration
+  if (!hydrated) {
+    return <CinematicLoading subtitle="Summoning your champions..." />;
+  }
+
   if (!user) {
     return (
       <View style={styles.root}>

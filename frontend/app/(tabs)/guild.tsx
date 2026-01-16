@@ -737,23 +737,21 @@ export default function GuildScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Available Guilds</Text>
-              <ScrollView style={styles.guildList}>
+              <ScrollView style={styles.guildList} contentContainerStyle={{ gap: LIST.ROW_GAP }}>
                 {availableGuilds.length === 0 ? (
                   <Text style={styles.noGuildsText}>No guilds available</Text>
                 ) : (
                   availableGuilds.map((guild, idx) => (
-                    <TouchableOpacity
+                    <ListRow
                       key={idx}
-                      style={styles.guildListItem}
                       onPress={() => handleJoinGuild(guild.id)}
+                      haptics
+                      leading={<Ionicons name="shield" size={LIST.LEADING_ICON} color={COLORS.gold.primary} />}
+                      trailing={<Ionicons name="chevron-forward" size={LIST.TRAILING_ICON} color={COLORS.cream.dark} />}
                     >
-                      <Ionicons name="shield" size={24} color={COLORS.gold.primary} />
-                      <View style={styles.guildListInfo}>
-                        <Text style={styles.guildListName}>{guild.name}</Text>
-                        <Text style={styles.guildListMembers}>{guild.member_count} members</Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={20} color={COLORS.cream.dark} />
-                    </TouchableOpacity>
+                      <Text style={styles.guildListName}>{guild.name}</Text>
+                      <Text style={styles.guildListMembers}>{guild.member_count} members</Text>
+                    </ListRow>
                   ))
                 )}
               </ScrollView>

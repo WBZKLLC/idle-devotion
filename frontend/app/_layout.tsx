@@ -183,10 +183,10 @@ export default function RootLayout() {
     <AppErrorBoundary>
       <SafeAreaProvider>
         <SessionProvider>
+          {/* Phase 3.18: Global toast notifications - inside SessionProvider for auth context */}
+          <ToastProvider />
           <AuthNavigator />
         </SessionProvider>
-        {/* Phase 3.18: Global toast notifications */}
-        <ToastProvider />
       </SafeAreaProvider>
     </AppErrorBoundary>
   );

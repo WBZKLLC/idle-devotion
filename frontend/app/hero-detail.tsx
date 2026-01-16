@@ -177,25 +177,9 @@ export default function HeroDetailScreen() {
     return [color, `${color}88`];
   };
 
-  // Loading state with 2Dlive shell + skeleton
+  // Phase 3.19.7: Cinematic loading for initial hydration
   if (!hydrated || isLoading) {
-    return (
-      <View style={styles.container}>
-        <CenteredBackground 
-          source={require('../assets/backgrounds/sanctum_environment_01.jpg')} 
-          mode="contain" 
-          zoom={1.04} 
-        />
-        <SanctumAtmosphere />
-        <DivineOverlays vignette grain />
-        <SafeAreaView style={styles.centerContainer}>
-          {/* Phase 3.19.1: Skeleton loading state */}
-          <GlassCard>
-            <HeroDetailHeaderSkeleton />
-          </GlassCard>
-        </SafeAreaView>
-      </View>
-    );
+    return <CinematicLoading subtitle="Revealing champion details..." />;
   }
 
   // Error state with 2Dlive shell - Phase 3.19.5: deterministic path out

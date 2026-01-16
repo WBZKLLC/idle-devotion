@@ -90,19 +90,8 @@ export default function StoreScreen() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'crystals' | 'divine' | 'vip'>('crystals');
   
-  // Phase 3.19.10: Confirm modal state
-  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
-  const [isConfirmBusy, setIsConfirmBusy] = useState(false);
-  const openConfirm = (data: ConfirmModalData) => {
-    setConfirmData({
-      ...data,
-      onConfirm: async () => {
-        setConfirmData(null);
-        await data.onConfirm?.();
-      },
-      onCancel: () => setConfirmData(null),
-    });
-  };
+  // Phase 3.19.11: Confirm modal hook (with busy support for purchases)
+  const { openConfirm, confirmNode, setBusy, isBusy } = useConfirmModal();
 
   useEffect(() => {
     if (user) {

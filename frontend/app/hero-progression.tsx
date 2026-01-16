@@ -29,6 +29,10 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 import { useEntitlementStore } from '../stores/entitlementStore';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.19.5: Canonical button components
+import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { SecondaryButton } from '../components/ui/SecondaryButton';
+import { HeroDetailHeaderSkeleton } from '../components/ui/Skeleton';
 
 // Feature flags (SINGLE SOURCE OF TRUTH)
 import { isFeatureEnabled } from '../lib/features';

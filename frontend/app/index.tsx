@@ -139,20 +139,27 @@ export default function HomeScreen() {
   };
 
   const handleClaimIdle = async () => {
-    if (isClaiming) return;
-    setIsClaiming(true);
+    if (isClaimingCollect || isClaimingInstant) return;
+    setIsClaimingCollect(true);
     try {
       const rewards = await claimIdleRewards();
       if (rewards?.gold_earned) {
-        // ALERT_ALLOWED: rewards_modal
-        Alert.alert('Rewards Collected', `+${rewards.gold_earned.toLocaleString()} Gold`, [{ text: 'Continue' }]);
+        // Phase 3.19.8: In-app recap modal (replaces blocking Alert)
+        setRewardRecap({
+          title: 'Rewards Collected',
+          message: `+${rewards.gold_earned.toLocaleString()} Gold`,
+          tone: 'gold',
+        });
       }
       // Reload idle status to reset timer
       loadIdleStatus();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to claim idle rewards:', error);
+      if (!isErrorHandledGlobally(error)) {
+        toast.error(error?.message || 'Failed to collect idle rewards');
+      }
     } finally {
-      setIsClaiming(false);
+      setIsClaimingCollect(false);
     }
   };
 

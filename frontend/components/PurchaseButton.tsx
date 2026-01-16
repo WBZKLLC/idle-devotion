@@ -13,15 +13,17 @@
  * Phase 3.18.2: Toast cadence for success/fail feedback
  */
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   TouchableOpacity,
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   View,
+  Modal,
+  Pressable,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { usePurchaseStore } from '../stores/purchaseStore';
 import { useHasEntitlement } from '../lib/entitlements/gating';
 import { PRODUCTS, type ProductKey } from '../lib/entitlements/products';

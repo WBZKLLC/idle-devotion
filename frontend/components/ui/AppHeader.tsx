@@ -128,10 +128,15 @@ export function AppHeader({
         </View>
 
         {/* Center Title */}
-        <View style={styles.centerSlot}>
+        <View style={[styles.centerSlot, !centerTitle && styles.centerSlotLeft]}>
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
+          {subtitle && (
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          )}
         </View>
 
         {/* Right Slot */}

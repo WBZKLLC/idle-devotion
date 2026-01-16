@@ -68,7 +68,8 @@ export default function PaidFeaturesScreen() {
   // DEV: text input for custom hero ID
   const [customHeroId, setCustomHeroId] = useState('');
 
-  const item = useMemo(() => ENTITLEMENTS.PREMIUM_CINEMATICS_PACK, []);
+  // Phase 3.20.1: Use PRODUCTS from products.ts for product info
+  const item = useMemo(() => PRODUCTS.PREMIUM_CINEMATICS_PACK, []);
   const packOwned = useHasEntitlement(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
 
   // Count how many heroes have premium cinematics owned
@@ -113,7 +114,8 @@ export default function PaidFeaturesScreen() {
       return;
     }
     try {
-      await setHeroPremiumCinematicOwned(heroId.trim(), true);
+      // Phase 3.20.1: Use devGrantEntitlement with the hero cinematic key
+      grantDev(premiumCinematicOwnedKey(heroId.trim()));
       toast.success(`[DEV] Granted premium cinematic ownership for: ${heroId.trim()}`);
       setCustomHeroId('');
     } catch (e: any) {
@@ -125,7 +127,8 @@ export default function PaidFeaturesScreen() {
   const handleDevRevokeHero = async (heroId: string) => {
     if (!ENABLE_DEV_TOOLS) return;
     try {
-      await setHeroPremiumCinematicOwned(heroId, false);
+      // Phase 3.20.1: Use devRevokeEntitlement with the hero cinematic key
+      revokeDev(premiumCinematicOwnedKey(heroId));
       toast.success(`[DEV] Revoked premium cinematic ownership for: ${heroId}`);
     } catch (e: any) {
       if (__DEV__) console.warn('[DEV] Revoke hero failed:', e.message);

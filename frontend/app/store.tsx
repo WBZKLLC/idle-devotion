@@ -18,6 +18,8 @@ import { toast } from '../components/ui/Toast';
 import { SecondaryButton } from '../components/ui/SecondaryButton';
 // Phase 3.19.4: Entitlement store for restore
 import { useEntitlementStore } from '../lib/entitlements/gating';
+// Phase 3.19.6: Canonical header + layout constants
+import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 // REVENUECAT DISABLED - Re-enable when finalizing project
 // import { useRevenueCatStore } from '../stores/revenueCatStore';
 // import { CustomPaywall, presentNativePaywall } from '../components/Paywall';

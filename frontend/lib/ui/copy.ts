@@ -89,32 +89,32 @@ export function getIdleSubtitle(): string {
 // =============================================================================
 
 export const TOAST_COPY = {
-  // Success (Sacred voice)
+  // Success (warm authority, never sharp)
   success: {
-    default: 'Received.',
-    claimed: 'Bound to your account.',
-    collected: 'Added to your reliquary.',
+    default: 'Accepted.',
+    claimed: 'Bound to you.',
+    collected: "It's yours.",
     levelUp: 'Strength settles into you.',
     milestone: 'A new step on the path.',
   },
   
-  // Error (Steel voice)
+  // Error (brief, never sharp)
   error: {
-    default: "That didn't take. Try again.",
+    default: 'Not now.',
     connection: 'Connection faltered.',
-    notReady: 'Not yet ready.',
-    failed: "It didn't hold.",
+    notReady: 'Again.',
+    failed: 'Not yet.',
   },
   
-  // Locked/Gated (Neutral, clear)
+  // Locked/Gated (controlled)
   locked: {
-    vip: (level: number) => `Requires VIP ${level}+.`,
+    vip: (level: number) => `VIP ${level}+ opens this.`,
     level: (level: number) => `Unlocks at level ${level}.`,
     progress: 'This path opens later.',
-    premium: 'A deeper commitment is required.',
+    premium: 'A deeper commitment opens this.',
   },
   
-  // Purchase (respectful, ceremonial)
+  // Purchase (possessive warmth)
   purchase: {
     success: 'The vow is sealed.',
     restored: 'Your devotion was remembered.',

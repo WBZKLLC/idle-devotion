@@ -10,8 +10,8 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGameStore, useHydration } from '../stores/gameStore';
-import { isErrorHandledGlobally } from '../lib/api';
+import { useGameStore, useHydration } from '../../stores/gameStore';
+import { isErrorHandledGlobally } from '../../lib/api';
 import {
   getGuild,
   getGuildLevelInfo,
@@ -23,24 +23,24 @@ import {
   attackGuildBoss,
   getGuildDonations,
   donateToGuildApi,
-} from '../lib/api';
+} from '../../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import COLORS from '../theme/colors';
+import COLORS from '../../theme/colors';
 import { router } from 'expo-router';
 // Phase 3.18.5: Toast for non-blocking feedback
-import { toast } from '../components/ui/Toast';
+import { toast } from '../../components/ui/Toast';
 // Phase 3.19.1: Skeleton + Empty state components
-import { GuildItemSkeleton } from '../components/ui/Skeleton';
-import { NoGuildEmpty } from '../components/ui/EmptyState';
+import { GuildItemSkeleton } from '../../components/ui/Skeleton';
+import { NoGuildEmpty } from '../../components/ui/EmptyState';
 // Phase 3.19.5: Canonical button components
-import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { PrimaryButton } from '../../components/ui/PrimaryButton';
 // Phase 3.19.6: Canonical header + layout constants
-import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
+import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
 // Phase 3.19.7: Cinematic loading screen
-import { CinematicLoading } from '../components/ui/CinematicLoading';
+import { CinematicLoading } from '../../components/ui/CinematicLoading';
 // Phase 3.19.11: Confirm modal hook
-import { useConfirmModal } from '../components/ui/useConfirmModal';
+import { useConfirmModal } from '../../components/ui/useConfirmModal';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();

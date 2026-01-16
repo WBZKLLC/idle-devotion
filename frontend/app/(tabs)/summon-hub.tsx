@@ -4,23 +4,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useGameStore, useHydration } from '../stores/gameStore';
-import { isErrorHandledGlobally } from '../lib/api';
+import { useGameStore, useHydration } from '../../stores/gameStore';
+import { isErrorHandledGlobally } from '../../lib/api';
 // Phase 3.18.3: Toast for summon feedback
-import { toast } from '../components/ui/Toast';
+import { toast } from '../../components/ui/Toast';
 // Phase 3.19.1: Skeleton + Empty state components
-import { BannerSkeleton } from '../components/ui/Skeleton';
-import { NoBannersEmpty } from '../components/ui/EmptyState';
+import { BannerSkeleton } from '../../components/ui/Skeleton';
+import { NoBannersEmpty } from '../../components/ui/EmptyState';
 // Phase 3.19.2: Canonical button components
-import { PrimaryButton } from '../components/ui/PrimaryButton';
-import { SecondaryButton } from '../components/ui/SecondaryButton';
+import { PrimaryButton } from '../../components/ui/PrimaryButton';
+import { SecondaryButton } from '../../components/ui/SecondaryButton';
 // Phase 3.19.6: Canonical header + layout constants
-import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
+import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
 // Phase 3.19.7: Cinematic loading screen
-import { CinematicLoading } from '../components/ui/CinematicLoading';
+import { CinematicLoading } from '../../components/ui/CinematicLoading';
 
 // Centralized API wrappers (no raw fetch in screens)
-import { pullGacha } from '../lib/api';
+import { pullGacha } from '../../lib/api';
 
 const COLORS = {
   navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b', medium: '#283845', light: '#3d5a80' },

@@ -11,14 +11,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useGameStore, useHydration } from '../stores/gameStore';
-import { useEntitlementVersion } from '../lib/entitlements/gating';
+import { useGameStore, useHydration } from '../../stores/gameStore';
+import { useEntitlementVersion } from '../../lib/entitlements/gating';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../theme/colors';
+import COLORS from '../../theme/colors';
 
 // CANONICAL combat stats and power helpers
-import { computeCombatStats } from '../lib/combatStats';
-import { computePowerWithMultipliers } from '../lib/power';
+import { computeCombatStats } from '../../lib/combatStats';
+import { computePowerWithMultipliers } from '../../lib/power';
 
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {
@@ -29,10 +29,10 @@ import {
   resolveTierArt,
   computeUserMaxUnlockedTier,
   TIER_LABELS,
-} from '../lib/progression';
+} from '../../lib/progression';
 
 // Shared animated TierSelector component
-import TierSelector from '../components/TierSelector';
+import TierSelector from '../../components/TierSelector';
 
 // 2Dlive shell (UI-only)
 import {
@@ -40,15 +40,15 @@ import {
   DivineOverlays,
   SanctumAtmosphere,
   GlassCard,
-} from '../components/DivineShell';
+} from '../../components/DivineShell';
 
 // Phase 3.19.1: Loading + Empty state components
-import { HeroGridSkeleton } from '../components/ui/Skeleton';
-import { FilterNoResultsEmpty, NoHeroesEmpty } from '../components/ui/EmptyState';
+import { HeroGridSkeleton } from '../../components/ui/Skeleton';
+import { FilterNoResultsEmpty, NoHeroesEmpty } from '../../components/ui/EmptyState';
 // Phase 3.19.6: Canonical header + layout constants
-import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
+import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
 // Phase 3.19.7: Cinematic loading screen
-import { CinematicLoading } from '../components/ui/CinematicLoading';
+import { CinematicLoading } from '../../components/ui/CinematicLoading';
 
 // Sanctum background (matches your existing setup)
 const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');

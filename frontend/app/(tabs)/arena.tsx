@@ -13,12 +13,12 @@ import {
   FlatList,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useGameStore, useHydration } from '../stores/gameStore';
+import { useGameStore, useHydration } from '../../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import COLORS from '../theme/colors';
+import COLORS from '../../theme/colors';
 // Phase 3.18.7: Toast for non-blocking feedback
-import { toast } from '../components/ui/Toast';
+import { toast } from '../../components/ui/Toast';
 
 // Centralized API wrappers (no raw axios in screens)
 import {
@@ -26,7 +26,7 @@ import {
   getArenaOpponents,
   startArenaBattle,
   getLeaderboard,
-} from '../lib/api';
+} from '../../lib/api';
 
 // API_BASE removed - using centralized lib/api.ts wrappers
 

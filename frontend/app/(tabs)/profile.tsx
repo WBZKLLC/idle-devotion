@@ -14,27 +14,27 @@ import {
   Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useGameStore, useHydration } from '../stores/gameStore';
-import { isErrorHandledGlobally } from '../lib/api';
+import { useGameStore, useHydration } from '../../stores/gameStore';
+import { isErrorHandledGlobally } from '../../lib/api';
 import {
   getUserGuild,
   getUserFrames,
   equipFrameApi,
   unequipFrameApi,
   redeemCode,
-} from '../lib/api';
+} from '../../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import COLORS from '../theme/colors';
-import ProfileFrame, { FRAME_DEFINITIONS, getAvailableFrames } from '../components/ProfileFrame';
+import COLORS from '../../theme/colors';
+import ProfileFrame, { FRAME_DEFINITIONS, getAvailableFrames } from '../../components/ProfileFrame';
 // Phase 3.11 + 3.19.5: Canonical navigation with returnTo
 import { usePathname } from 'expo-router';
-import { goToPaywall, getSafeReturnTo } from '../lib/entitlements/navigation';
+import { goToPaywall, getSafeReturnTo } from '../../lib/entitlements/navigation';
 // Phase 3.18: Toast for success feedback
-import { toast } from '../components/ui/Toast';
+import { toast } from '../../components/ui/Toast';
 // Phase 3.19.11: Confirm modal hook
-import { useConfirmModal } from '../components/ui/useConfirmModal';
+import { useConfirmModal } from '../../components/ui/useConfirmModal';
 
 export default function ProfileScreen() {
   const router = useRouter();

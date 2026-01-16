@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -12,6 +11,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { useHasEntitlement } from '../lib/entitlements/gating';
 import { ENTITLEMENT_KEYS } from '../lib/entitlements/types';

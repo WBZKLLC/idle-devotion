@@ -3,51 +3,46 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Image,
-  KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
   Modal,
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGameStore, useHydration } from '../stores/gameStore';
-import { isErrorHandledGlobally } from '../lib/api';
+import { useGameStore, useHydration } from '../../stores/gameStore';
+import { isErrorHandledGlobally } from '../../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../../components/Sidebar';
 // Phase 3.11: Canonical store navigation
-import { goToStore } from '../lib/entitlements/navigation';
+import { goToStore } from '../../lib/entitlements/navigation';
 // Phase 3.19.2: Canonical button component
-import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { PrimaryButton } from '../../components/ui/PrimaryButton';
 // Phase 3.19.9: Unified reward recap modal
-import { RewardRecapModal, RewardRecapData } from '../components/ui/RewardRecapModal';
+import { RewardRecapModal, RewardRecapData } from '../../components/ui/RewardRecapModal';
 // Phase 3.19.11: Confirm modal hook
-import { useConfirmModal } from '../components/ui/useConfirmModal';
+import { useConfirmModal } from '../../components/ui/useConfirmModal';
 // Phase 3.18.4: Toast for non-blocking feedback
-import { toast } from '../components/ui/Toast';
+import { toast } from '../../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen
-import { CinematicLoading } from '../components/ui/CinematicLoading';
-// Single source of truth for login hero
-import { LOGIN_HERO_URI } from '../lib/assets/loginHero';
+import { CinematicLoading } from '../../components/ui/CinematicLoading';
 
 // Centralized API wrappers (no raw fetch in screens)
-import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../lib/api';
+import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';
 
 // Dashboard background (Sanctum environment art) - LOCAL ASSET
 // Celestial sanctum/temple environment - instant render, no flicker
-const SANCTUM_BG_IMAGE = require('../assets/backgrounds/sanctum_environment_01.jpg');
+const SANCTUM_BG_IMAGE = require('../../assets/backgrounds/sanctum_environment_01.jpg');
 
 // Phase 3.22.1: Use canonical theme colors (no local duplication)
-import COLORS from '../theme/colors';
+import COLORS from '../../theme/colors';
 // Phase 3.22.1: Extracted home screen components
-import { HomeHeader, CurrencyBar, IdleRewardsCard, QuickLinksGrid, QuickLinkRow } from '../components/home';
+import { HomeHeader, CurrencyBar, IdleRewardsCard, QuickLinksGrid, QuickLinkRow } from '../../components/home';
 
 export default function HomeScreen() {
   const { user, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();

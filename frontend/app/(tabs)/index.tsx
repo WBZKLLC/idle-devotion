@@ -223,91 +223,11 @@ export default function HomeScreen() {
     } catch (error) { console.error('CR error:', error); }
   };
 
-  const [password, setPassword] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const { registerUser, loginWithPassword, setPasswordForLegacyAccount, needsPassword } = useGameStore();
-
-  const handleStartGame = async () => {
-    const trimmedUsername = username.trim();
-    if (!trimmedUsername) { 
-      // Phase 3.18.4: Toast for validation
-      toast.warning('Please enter a username to begin');
-      return; 
-    }
-    if (!password) {
-      toast.warning('Please enter a password to secure your account');
-      return;
-    }
-    if (password.length < 6) {
-      toast.warning('Password must be at least 6 characters');
-      return;
-    }
-    
-    setAuthError('');
-    
-    if (isRegistering) {
-      // Registration flow
-      if (password !== confirmPassword) {
-        toast.error('Passwords do not match');
-        return;
-      }
-      
-      const result = await registerUser(trimmedUsername, password);
-      if (!result.success) {
-        setAuthError(result.error || 'Registration failed');
-      }
-    } else {
-      // Login flow
-      const result = await loginWithPassword(trimmedUsername, password);
-      if (!result.success) {
-        if (result.error === 'NEEDS_PASSWORD') {
-          // Legacy account - prompt to set password
-          openConfirm({
-            title: 'Account Security Upgrade',
-            message: 'This account was created before passwords were required. Please set a password to secure your account.',
-            tone: 'neutral',
-            confirmText: 'Set Password',
-            cancelText: 'Cancel',
-            icon: 'shield-checkmark-outline',
-            onConfirm: async () => {
-              const setResult = await setPasswordForLegacyAccount(trimmedUsername, password);
-              if (!setResult.success) {
-                setAuthError(setResult.error || 'Failed to set password');
-              } else {
-                toast.success('Password set successfully! Your account is now secure.');
-              }
-            },
-          });
-        } else if (result.error?.includes('Invalid username')) {
-          // User doesn't exist - offer to register
-          openConfirm({
-            title: 'Account Not Found',
-            message: 'No account with this username exists. Would you like to create a new account?',
-            tone: 'neutral',
-            confirmText: 'Create Account',
-            cancelText: 'Cancel',
-            icon: 'person-add-outline',
-            onConfirm: () => setIsRegistering(true),
-          });
-        } else {
-          setAuthError(result.error || 'Login failed');
-        }
-      }
-    }
-  };
-
   // Phase 3.19.7: Cinematic loading screen for initial hydration
-  if (!hydrated || isLoading) {
+  // Note: Root layout handles auth gating, so we just show loading if needed
+  if (!hydrated || isLoading || !user) {
     return <CinematicLoading />;
   }
-
-  if (!user) {
-    return (
-      <View style={loginStyles.screenContainer}>
-        {/* Background: Login hero - MATH-CENTERED (Login "wow" moment) */}
         <CenteredBackground
           source={{ uri: LOGIN_HERO_URI }}
           mode="contain"

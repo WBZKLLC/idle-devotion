@@ -399,7 +399,7 @@ function SearchTab({ username, onUpdate }: { username: string; onUpdate: () => v
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const data = await searchPlayers(query);
+        const data = await searchPlayers(query, username);
         setResults(data);
       } catch {
         setResults([]);
@@ -413,7 +413,7 @@ function SearchTab({ username, onUpdate }: { username: string; onUpdate: () => v
         clearTimeout(debounceRef.current);
       }
     };
-  }, [query]);
+  }, [query, username]);
   
   const handleSendRequest = async (toUsername: string) => {
     setSending(toUsername);

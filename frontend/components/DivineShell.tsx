@@ -20,7 +20,7 @@ import {
   View 
 } from "react-native";
 
-type CenterFitMode = "contain" | "native";
+type CenterFitMode = "contain" | "native" | "cover";
 
 /**
  * CenteredBackground - Hardened version with no-jump, truly deterministic centering

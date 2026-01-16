@@ -646,6 +646,13 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16, fontWeight: '500' },
   
+  // Phase 3.22.7: Restraint pass — intentional vertical rhythm
+  content: { 
+    paddingHorizontal: LAYOUT.SCREEN_PADDING,
+    paddingTop: SECTION_GAP.breath,
+    paddingBottom: LAYOUT.TAB_BAR_HEIGHT + LAYOUT.BOTTOM_GUTTER,
+  },
+  
   // ============ LEGACY LOGIN STYLES (deprecated - using loginStyles instead) ============
   loginScreenContainer: { flex: 1, backgroundColor: COLORS.celestial.deep },
   backgroundImage: { 

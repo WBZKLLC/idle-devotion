@@ -179,6 +179,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  centerSlotLeft: {
+    alignItems: 'flex-start',
+  },
   rightSlot: {
     width: 44,
     alignItems: 'flex-end',
@@ -196,6 +199,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.cream.pure,
     letterSpacing: 0.3,
+  },
+  subtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.55)',
+    marginTop: 2,
   },
 });
 

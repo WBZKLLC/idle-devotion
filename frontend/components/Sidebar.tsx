@@ -24,9 +24,11 @@ export default function Sidebar({ visible, onClose }: SidebarProps) {
   const { user, userHeroes } = useGameStore();
   const [slideAnim] = useState(new Animated.Value(width * 0.8));
   const [heroShards, setHeroShards] = useState<any[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     if (visible) {
+      setIsAnimating(true);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -39,7 +41,7 @@ export default function Sidebar({ visible, onClose }: SidebarProps) {
         toValue: width * 0.8,
         duration: 250,
         useNativeDriver: true,
-      }).start();
+      }).start(() => setIsAnimating(false));
     }
   }, [visible]);
 
@@ -55,7 +57,7 @@ export default function Sidebar({ visible, onClose }: SidebarProps) {
     setHeroShards(shards);
   };
 
-  if (!visible && slideAnim._value === width * 0.8) return null;
+  if (!visible && !isAnimating) return null;
 
   return (
     <Modal

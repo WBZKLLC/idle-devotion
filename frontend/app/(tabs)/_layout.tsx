@@ -105,9 +105,10 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '500', // lighter
     marginTop: 2,
+    letterSpacing: 0.3,
   },
   tabIcon: {
     marginBottom: -2,

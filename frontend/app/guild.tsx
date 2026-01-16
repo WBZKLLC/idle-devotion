@@ -34,6 +34,8 @@ import { toast } from '../components/ui/Toast';
 // Phase 3.19.1: Skeleton + Empty state components
 import { GuildItemSkeleton } from '../components/ui/Skeleton';
 import { NoGuildEmpty } from '../components/ui/EmptyState';
+// Phase 3.19.5: Canonical button components
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();

@@ -19,7 +19,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   SafeAreaView,
   ScrollView,
   TextInput,

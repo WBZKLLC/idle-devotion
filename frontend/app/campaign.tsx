@@ -257,26 +257,9 @@ export default function CampaignScreen() {
     return COLORS.acts[act as keyof typeof COLORS.acts] || COLORS.acts[1];
   };
 
-  // ----------------------------
-  // 2Dlive wrapped loading screen (UI-only)
-  // ----------------------------
+  // Phase 3.19.7: Cinematic loading screen for initial hydration
   if (!hydrated || loading) {
-    return (
-      <View style={styles.root}>
-        <CenteredBackground source={CAMPAIGN_BG} mode="contain" zoom={1.03} opacity={1} />
-        <SanctumAtmosphere />
-        <DivineOverlays vignette={true} rays={false} grain={true} />
-
-        <SafeAreaView style={styles.centerContainer}>
-          {/* Phase 3.19.1: Skeleton loading state */}
-          <View style={{ padding: 16, width: '100%' }}>
-            <StageCardSkeleton />
-            <StageCardSkeleton />
-            <StageCardSkeleton />
-          </View>
-        </SafeAreaView>
-      </View>
-    );
+    return <CinematicLoading subtitle="Charting the campaign..." />;
   }
 
   // ----------------------------

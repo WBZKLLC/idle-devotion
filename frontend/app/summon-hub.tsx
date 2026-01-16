@@ -382,18 +382,8 @@ export default function SummonHubScreen() {
     return colors[element] || COLORS.gold.primary;
   };
 
-  if (!hydrated) return (
-    <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-      <SafeAreaView style={styles.container}>
-        {/* Phase 3.19.1: Banner skeleton loading state */}
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Summon</Text>
-          <BannerSkeleton />
-          <BannerSkeleton />
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
-  );
+  // Phase 3.19.7: Cinematic loading screen for initial hydration
+  if (!hydrated) return <CinematicLoading subtitle="Preparing the summon altar..." />;
   
   if (!user) return (<LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}><SafeAreaView style={styles.container}><Text style={styles.loginText}>Please log in first</Text></SafeAreaView></LinearGradient>);
 

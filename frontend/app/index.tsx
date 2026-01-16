@@ -284,15 +284,9 @@ export default function HomeScreen() {
     }
   };
 
+  // Phase 3.19.7: Cinematic loading screen for initial hydration
   if (!hydrated || isLoading) {
-    return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.loadingContainer} edges={['top', 'left', 'right']}>
-          <ActivityIndicator size="large" color={COLORS.gold.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </SafeAreaView>
-      </LinearGradient>
-    );
+    return <CinematicLoading />;
   }
 
   if (!user) {

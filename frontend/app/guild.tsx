@@ -268,19 +268,9 @@ export default function GuildScreen() {
     return '#e74c3c';
   };
 
+  // Phase 3.19.7: Cinematic loading screen for initial hydration
   if (!hydrated) {
-    return (
-      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.centerContainer}>
-          {/* Phase 3.19.1: Guild loading skeleton */}
-          <View style={{ padding: 16, width: '100%' }}>
-            <GuildItemSkeleton />
-            <GuildItemSkeleton />
-            <GuildItemSkeleton />
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    );
+    return <CinematicLoading subtitle="Gathering your guild..." />;
   }
 
   if (!user) {

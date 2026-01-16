@@ -86,6 +86,9 @@ export default function HomeScreen() {
   // Phase 3.22.8: Desire accents - eye-shift trigger after first scroll + delay
   const eyeShiftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
+  // Phase 3.22.10: Ref to IdleRewardsCard for cancelling signature revert on interaction
+  const idleCardRef = useRef<IdleRewardsCardRef>(null);
+  
   useEffect(() => {
     // Attempt eye-shift trigger after scroll is detected + short delay
     const attemptEyeShift = () => {

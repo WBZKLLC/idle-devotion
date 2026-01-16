@@ -52,14 +52,15 @@ export const IDLE_COPY = {
   /** Card title — confident, possessive */
   title: 'Awaiting You',
   
-  /** Subtitle variants — sensuality via attention */
+  /** Subtitle variants — Phase 3.22.8.B Possession tone */
   subtitles: [
-    'Prepared in your absence.',
-    'Kept warm for you.',
-    'Time gathered. For you.',
+    'Kept for you.',
+    'Untouched. Waiting.',
+    'Time gathered. Yours.',
+    'Still warm.',
   ] as const,
   
-  /** Button labels — ritual, controlled */
+  /** Button labels — dominant, non-cringe */
   collectButton: 'Receive',
   instantButton: 'Take More',
   
@@ -74,6 +75,9 @@ export const IDLE_COPY = {
   
   /** VIP lock copy */
   vipLock: 'VIP 1+ opens this.',
+  
+  /** Cooldown copy */
+  cooldown: 'Not yet.',
 } as const;
 
 /**

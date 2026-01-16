@@ -97,7 +97,7 @@ The following environment variables are used:
 
 | Variable | Description | Default |
 |----------|-------------|----------|
-| `EXPO_PUBLIC_BACKEND_URL` | Backend API URL | https://ui-tokens-refine.preview.emergentagent.com |
+| `EXPO_PUBLIC_BACKEND_URL` | Backend API URL | https://routefix-4.preview.emergentagent.com |
 | `EXPO_PUBLIC_REVENUECAT_API_KEY` | RevenueCat API Key | test_GHJByEeqdUHXOWbuvIWFFrQFXjB |
 
 ## Architecture

@@ -31,11 +31,12 @@ export const GREETING_VARIANTS = [
 
 /**
  * Get a greeting — 85% default, 15% variant
+ * Never enthusiastic. Never exclamatory. No urgency.
  */
 export function getGreeting(): string {
   const roll = Math.random();
   if (roll < 0.85) {
-    return GREETING_VARIANTS[0]; // "Welcome back."
+    return GREETING_VARIANTS[0]; // "You've returned."
   }
   // Pick from variants (indices 1-5)
   const variantIndex = 1 + Math.floor(Math.random() * (GREETING_VARIANTS.length - 1));

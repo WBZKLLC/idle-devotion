@@ -834,6 +834,8 @@ const styles = StyleSheet.create({
 
   // ✅ Premium chapter frame
   chapterCardOuter: { marginBottom: 16 },
+  // Phase 3.22.4: Pressed-state feedback
+  pressedFeedback: { opacity: PRESS.OPACITY, transform: [{ scale: PRESS.SCALE }] },
   goldStrokeFrame: {
     borderRadius: 18,
     padding: 1.2,

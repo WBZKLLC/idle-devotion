@@ -50,6 +50,9 @@ export default function ProfileScreen() {
   const [showFrameModal, setShowFrameModal] = useState(false);
   const [availableFrames, setAvailableFrames] = useState<any[]>([]);
   const [lockedFrames, setLockedFrames] = useState<any[]>([]);
+  
+  // Phase 3.19.10: Confirm modal state
+  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
   const [equippedFrame, setEquippedFrame] = useState('default');
   const [loadingFrames, setLoadingFrames] = useState(false);
   

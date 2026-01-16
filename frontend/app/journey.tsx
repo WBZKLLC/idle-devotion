@@ -377,8 +377,10 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: COLORS.gold.primary + '30', borderWidth: 1, borderColor: COLORS.gold.primary },
   tabText: { color: COLORS.cream.dark, fontWeight: '600' },
   tabTextActive: { color: COLORS.gold.primary },
+  // Phase 3.22.4: Pressed-state feedback
+  pressedFeedback: { opacity: PRESS.OPACITY, transform: [{ scale: PRESS.SCALE }] },
 
-  content: { flex: 1, padding: 16 },
+  content: { flex: 1, padding: 16, paddingBottom: LAYOUT.BOTTOM_GUTTER },
 
   daysGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
   dayCard: { width: '30%', aspectRatio: 1, backgroundColor: COLORS.navy.medium, borderRadius: 16, padding: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'transparent' },

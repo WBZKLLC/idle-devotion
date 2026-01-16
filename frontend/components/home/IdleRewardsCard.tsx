@@ -76,20 +76,44 @@ export function IdleRewardsCard({
   const instantLocked = vipLevel < 1;
   const instantCooling = instantCooldown > 0;
 
-  // Ritual subtitle — rotates subtly on mount
-  const subtitle = useMemo(() => getIdleSubtitle(), []);
+  // Ritual subtitle — check for "noticed" moment first
+  const [subtitle, setSubtitle] = useState<string>('');
+  
+  useEffect(() => {
+    const checkNoticed = async () => {
+      const canNotice = await canTriggerNoticed();
+      if (canNotice) {
+        const variant = getNoticedVariant();
+        if (variant === 'idle') {
+          // One-time "noticed" subtitle: "Still warm."
+          setSubtitle(NOTICED_VARIANTS.idleSubtitle);
+          await markNoticedTriggered();
+          return;
+        }
+      }
+      // Normal rotating subtitle
+      setSubtitle(getIdleSubtitle());
+    };
+    checkNoticed();
+  }, []);
 
-  // Phase 3.22.7: Subtle breathing animation — felt, not seen
-  // 10 second cycle, scale 1.0 → 1.015, easeInOut
+  // Phase 3.22.8: Breathing sync with session-unique jitter
+  const breathingDuration = useMemo(() => getBreathingDuration(), []);
+  const phaseOffset = useMemo(() => getBreathingPhaseOffset(0), []); // Element 0 = idle card
+  
   const breath = useSharedValue(0);
 
   useEffect(() => {
-    breath.value = withRepeat(
-      withTiming(1, { duration: 10000, easing: Easing.inOut(Easing.ease) }),
-      -1, // infinite
-      true // reverse
+    // Apply phase offset before starting breathing
+    breath.value = withDelay(
+      phaseOffset,
+      withRepeat(
+        withTiming(1, { duration: breathingDuration, easing: Easing.inOut(Easing.ease) }),
+        -1, // infinite
+        true // reverse
+      )
     );
-  }, [breath]);
+  }, [breath, breathingDuration, phaseOffset]);
 
   // Animated glow style - very subtle scale + opacity shift
   const breathingStyle = useAnimatedStyle(() => ({

@@ -6,13 +6,12 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  Alert,
   Modal,
+  ActivityIndicator,
   RefreshControl,
+  TextInput,
   Animated,
-  Dimensions,
+  Switch,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';

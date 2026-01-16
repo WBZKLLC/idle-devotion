@@ -279,7 +279,7 @@ export default function GuildScreen() {
   if (!user) {
     return (
       <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-        <SafeAreaView style={styles.centerContainer}>
+        <SafeAreaView style={styles.centerContainer} edges={['top', 'left', 'right']}>
           <Ionicons name="lock-closed" size={48} color={COLORS.gold.primary} />
           <Text style={styles.errorText}>Please log in first</Text>
           {/* Phase 3.19.5: Canonical button */}
@@ -298,7 +298,7 @@ export default function GuildScreen() {
 
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {/* Phase 3.19.6: Canonical header */}
         <AppHeader
           title="Guild"

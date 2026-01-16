@@ -19,7 +19,7 @@ import { LAYOUT, RADIUS, FONT_SIZE, FONT_WEIGHT } from '../components/ui/tokens'
 import { haptic, PRESS } from '../lib/ui/interaction';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
-import { toast } from '../lib/toast';
+import { toast } from '../components/ui/Toast';
 // Phase 3.23.2: API layer
 import { 
   getFriendsSummary, 

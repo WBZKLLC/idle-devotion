@@ -21,3 +21,5 @@ export type { RewardRecapData } from './RewardRecapModal';
 export { ConfirmModal } from './ConfirmModal';
 export type { ConfirmModalData, ConfirmTone } from './ConfirmModal';
 export { useConfirmModal } from './useConfirmModal';
+// Phase 3.22.5: Elegant list row primitive
+export { ListRow } from './ListRow';

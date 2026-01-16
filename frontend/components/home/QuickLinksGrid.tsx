@@ -1,3 +1,9 @@
+// /app/frontend/components/home/QuickLinksGrid.tsx
+// Phase 3.22.6.C: "Desire Without Demand"
+//
+// Quick links are not buttons — they are rituals you may or may not perform today.
+// Nothing flashes. Nothing pulses. Only the Idle card breathes.
+
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,8 +50,15 @@ type Props = {
 export function QuickLinksGrid({ rows }: Props) {
   return (
     <>
-      {rows.map((row) => (
-        <View key={row.key} style={styles.quickLinksRow}>
+      {rows.map((row, rowIndex) => (
+        <View 
+          key={row.key} 
+          style={[
+            styles.quickLinksRow,
+            // Phase 3.22.6.C: Increased vertical spacing between rows
+            rowIndex > 0 && styles.rowSpacing,
+          ]}
+        >
           {row.tiles.map((tile) => (
             <Pressable
               key={tile.key}
@@ -70,8 +83,8 @@ export function QuickLinksGrid({ rows }: Props) {
                     ) : tile.showIonicon === false ? null : (
                       <Ionicons
                         name={tile.icon ?? 'grid'}
-                        size={22}
-                        color={tile.iconColor ?? COLORS.gold.light}
+                        size={20}
+                        color={tile.iconColor ?? COLORS.cream.soft}
                       />
                     )}
                     <Text style={[styles.quickLinkText, tile.labelStyle]}>{tile.label}</Text>
@@ -89,11 +102,15 @@ export function QuickLinksGrid({ rows }: Props) {
 const styles = StyleSheet.create({
   quickLinksRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
+    gap: 10,
+    marginBottom: 12,
+  },
+  // Phase 3.22.6.C: More breathing room between sections
+  rowSpacing: {
+    marginTop: 4,
   },
   quickLink: {
-    borderRadius: 12,
+    borderRadius: 14, // slightly more rounded
     overflow: 'hidden',
   },
   // Phase 3.22.4: Pressed state feedback
@@ -102,18 +119,20 @@ const styles = StyleSheet.create({
     opacity: PRESS.OPACITY,
   },
   quickLinkGradient: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     borderWidth: 1,
-    borderColor: COLORS.gold.dark + '30',
+    borderColor: COLORS.gold.dark + '20', // softer border
+    borderRadius: 14,
   },
   quickLinkText: {
     color: COLORS.cream.soft,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '500', // slightly lighter
+    letterSpacing: 0.3,
   },
   emoji: {
-    fontSize: 20,
+    fontSize: 18,
   },
 });

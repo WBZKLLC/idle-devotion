@@ -742,10 +742,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     // Extract user-hero instance IDs (result.heroes[].id)
-    const ids = heroes
+    const ids: string[] = heroes
       .map((h: any) => h?.id)
-      .filter((v: any) => v !== null && v !== undefined)
-      .map((v: any) => String(v));
+      .filter((v: any): v is string => v !== null && v !== undefined)
+      .map((v) => String(v));
 
     const uniqueIds: string[] = [...new Set(ids)];
 

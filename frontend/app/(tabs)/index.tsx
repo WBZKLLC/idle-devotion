@@ -600,16 +600,13 @@ export default function HomeScreen() {
       <HomeSideRail 
         onAnyInteraction={handleUserInteraction}
         onPressDoors={() => setDoorsOpen(true)}
-        onPressMail={() => router.push('/login-rewards')}
-        onPressFriends={() => router.push('/guild')} // friends → guild for now
+        onPressMail={() => router.push('/mail')}
+        onPressFriends={() => router.push('/friends')}
         onPressQuest={() => router.push('/journey')}
         onPressEvents={() => router.push('/events')}
         onPressSummon={() => router.push('/summon-hub')}
         onPressShop={() => goToStore('store')}
-        badges={{
-          mail: true,
-          events: true,
-        }}
+        badges={useRailBadges()}
       />
 
       {/* === RITUAL DOCK (bottom-center anchor, the ONE prominent element) === */}

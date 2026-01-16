@@ -159,34 +159,32 @@ export default function StoreScreen() {
   };
 
   const purchaseCrystals = async (packageId: string, packageName: string, price: number) => {
-    // ALERT_ALLOWED: purchase_confirm
-    Alert.alert(
-      'Purchase Crystals',
-      `Purchase ${packageName} for $${price.toFixed(2)}?\n\n(This is a simulation - no real payment)`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Purchase',
-          onPress: async () => {
-            try {
-              // Use centralized API wrapper (critical for monetization)
-              const result = await apiPurchaseCrystals(user?.username || '', packageId);
-              // Phase 3.18.4: Success toast instead of blocking alert
-              toast.premium(
-                `+${result.crystals_received} crystals!` +
-                (result.first_purchase_bonus ? ` (Bonus: +${result.first_purchase_bonus})` : '')
-              );
-              fetchUser();
-              loadStoreData();
-            } catch (error: any) {
-              if (!isErrorHandledGlobally(error)) {
-                toast.error(error?.message || 'Purchase failed');
-              }
-            }
+    openConfirm({
+      title: 'Purchase Crystals',
+      message: `Purchase ${packageName} for $${price.toFixed(2)}?\n\n(This is a simulation - no real payment)\n\nYou can restore purchases anytime.`,
+      tone: 'premium',
+      confirmText: 'Purchase',
+      cancelText: 'Cancel',
+      icon: 'diamond-outline',
+      onConfirm: async () => {
+        setIsPurchasing(true);
+        try {
+          const result = await apiPurchaseCrystals(user?.username || '', packageId);
+          toast.premium(
+            `+${result.crystals_received} crystals!` +
+            (result.first_purchase_bonus ? ` (Bonus: +${result.first_purchase_bonus})` : '')
+          );
+          fetchUser();
+          loadStoreData();
+        } catch (error: any) {
+          if (!isErrorHandledGlobally(error)) {
+            toast.error(error?.message || 'Purchase failed');
           }
+        } finally {
+          setIsPurchasing(false);
         }
-      ]
-    );
+      },
+    });
   };
 
   const purchaseDivinePackage = async (packageId: string, packageName: string, price: number) => {
@@ -196,36 +194,31 @@ export default function StoreScreen() {
       return;
     }
     
-    // ALERT_ALLOWED: purchase_confirm
-    Alert.alert(
-      'Purchase Divine Package',
-      `Purchase ${packageName} for $${price.toFixed(2)}?\n\n` +
-      `Contains: Divine Essence + Crystals + VIP XP\n` +
-      `Remaining: ${purchaseInfo?.remaining || 3}/3 this month\n\n` +
-      `(This is a simulation - no real payment)`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Purchase',
-          onPress: async () => {
-            try {
-              // Use centralized API wrapper (critical for monetization)
-              const result = await apiPurchaseDivine(user?.username || '', packageId);
-              // Phase 3.18.4: Success toast
-              toast.premium(
-                `Divine: +${result.divine_essence_received}, Crystals: +${result.crystals_received}`
-              );
-              fetchUser();
-              loadStoreData();
-            } catch (error: any) {
-              if (!isErrorHandledGlobally(error)) {
-                toast.error(error?.message || 'Purchase failed');
-              }
-            }
+    openConfirm({
+      title: 'Purchase Divine Package',
+      message: `Purchase ${packageName} for $${price.toFixed(2)}?\n\nContains: Divine Essence + Crystals + VIP XP\nRemaining: ${purchaseInfo?.remaining || 3}/3 this month\n\n(This is a simulation - no real payment)`,
+      tone: 'premium',
+      confirmText: 'Purchase',
+      cancelText: 'Cancel',
+      icon: 'sparkles-outline',
+      onConfirm: async () => {
+        setIsPurchasing(true);
+        try {
+          const result = await apiPurchaseDivine(user?.username || '', packageId);
+          toast.premium(
+            `Divine: +${result.divine_essence_received}, Crystals: +${result.crystals_received}`
+          );
+          fetchUser();
+          loadStoreData();
+        } catch (error: any) {
+          if (!isErrorHandledGlobally(error)) {
+            toast.error(error?.message || 'Purchase failed');
           }
+        } finally {
+          setIsPurchasing(false);
         }
-      ]
-    );
+      },
+    });
   };
 
   const getFrameColor = (frame: string) => {

@@ -67,6 +67,7 @@ export type PaywallSource =
   | 'profile'              // Profile premium section
   | 'hero_detail'          // Hero detail premium feature
   | 'gating_alert'         // Generic gating helper alert (requireEntitlement)
+  | 'gating_check'         // Generic requireEntitlement check
   | 'equipment'            // Equipment/gear premium feature
   | 'gacha'                // Gacha premium feature
   | 'campaign'             // Campaign premium feature
@@ -75,7 +76,7 @@ export type PaywallSource =
 // Known sources for validation (exported for type checking)
 export const KNOWN_SOURCES = new Set<PaywallSource>([
   'cinematic_gate', 'battle_pass', 'store', 'profile', 'hero_detail',
-  'gating_alert', 'equipment', 'gacha', 'campaign', 'unknown'
+  'gating_alert', 'gating_check', 'equipment', 'gacha', 'campaign', 'unknown'
 ]);
 
 /**

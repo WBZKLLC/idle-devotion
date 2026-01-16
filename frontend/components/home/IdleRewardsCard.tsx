@@ -59,6 +59,9 @@ type Props = {
   onCollect: () => void;
   onInstant: () => void;
   onVipLockedPress: () => void;
+  
+  // Phase 3.22.10: Global interaction signal (cancels pending desire accents)
+  onAnyInteraction?: () => void;
 };
 
 // Expose methods to parent via ref
@@ -77,6 +80,7 @@ export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function Id
   onCollect,
   onInstant,
   onVipLockedPress,
+  onAnyInteraction,
 }, ref) {
   const maxHours = idleStatus?.max_hours ?? 8;
   const elapsed = idleStatus?.time_elapsed ?? 0;

@@ -1,125 +1,110 @@
 // /app/frontend/components/home/HomeSideRail.tsx
-// Phase 3.22.7.D: Side Rail Actions
-// Phase 3.22.13: Rail composition locked — "Idle Angels-style"
+// Phase 3.22.12.R1: Side Rail (Mail + Friends)
 //
-// A vertical stack of hot actions on the right side of the screen.
-// Icons only, no labels. Daily muscle memory.
-// Doors + 6 pinned items = 7 total (max before scroll).
+// Decoupled: rail only emits intent (callbacks). Home decides navigation.
+// Icons only, 7 actions, scrollable, no-bounce, subtle bottom fade.
 //
 // "The rail is reflex. DoorsSheet is the library."
 
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, ScrollView } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, ScrollView, Pressable, StyleSheet, Platform, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import COLORS from '../../theme/colors';
-import { RAIL, HOME_OVERLAY } from '../ui/tokens';
-import { PRESS, haptic } from '../../lib/ui/interaction';
+import { HOME_OVERLAY, RAIL } from '../ui/tokens';
 
-type RailItem = {
-  key: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  route?: string;
-  onPress?: () => void;
-  badge?: number;
-  color?: string;
-};
+type RailKey = 'doors' | 'mail' | 'friends' | 'quest' | 'events' | 'summon' | 'shop';
 
-type Props = {
-  items?: RailItem[];
-  onDoorsPress: () => void;
-  /** Called on any interaction to cancel pending desire accents */
+export type HomeSideRailBadges = Partial<Record<RailKey, number | boolean>>;
+
+export type HomeSideRailProps = {
   onAnyInteraction?: () => void;
+
+  onPressDoors: () => void;
+  onPressMail: () => void;
+  onPressFriends: () => void;
+  onPressQuest: () => void;
+  onPressEvents: () => void;
+  onPressSummon: () => void;
+  onPressShop: () => void;
+
+  badges?: HomeSideRailBadges;
 };
 
-/**
- * Default rail items — "Idle Angels-style" composition
- * Order: Mail, Friends, Quest, Events, Summon, Shop
- * Doors button is rendered separately at top
- */
-const defaultItems: RailItem[] = [
-  { key: 'mail', icon: 'mail-outline', route: '/rewards' },
-  { key: 'friends', icon: 'people-outline', route: '/friends' },
-  { key: 'quest', icon: 'map-outline', route: '/journey' },
-  { key: 'events', icon: 'calendar-outline', route: '/events' },
-  { key: 'summon', icon: 'gift-outline', route: '/summon-hub' },
-  { key: 'shop', icon: 'storefront-outline', route: '/store' },
-];
+function Badge({ value }: { value: number | boolean }) {
+  const label =
+    typeof value === 'number' ? (value > 99 ? '99+' : String(value)) : '';
 
-/**
- * HomeSideRail — Peripheral hot actions
- * 
- * Icons only. No labels. Max 7 visible (Doors + 6 items).
- * Scrollable with subtle fade if overflow.
- */
-export function HomeSideRail({ items = defaultItems, onDoorsPress, onAnyInteraction }: Props) {
-  const router = useRouter();
-  
-  const handleItemPress = (item: RailItem) => {
-    onAnyInteraction?.();
-    haptic('light');
-    if (item.onPress) {
-      item.onPress();
-    } else if (item.route) {
-      router.push(item.route as any);
-    }
-  };
-  
-  const handleDoorsPress = () => {
-    onAnyInteraction?.();
-    haptic('light');
-    onDoorsPress();
-  };
-  
   return (
-    <View style={styles.container}>
-      {/* Doors button at top (opens full menu) */}
-      <Pressable
-        style={({ pressed }) => [
-          styles.item,
-          styles.doorsItem,
-          pressed && styles.itemPressed,
-        ]}
-        onPress={handleDoorsPress}
-      >
-        <Ionicons name="grid-outline" size={18} color={COLORS.gold.light} />
-      </Pressable>
-      
-      {/* Scrollable rail items (no bounce, subtle fade if overflow) */}
+    <View style={styles.badge}>
+      {typeof value === 'number' ? <Text style={styles.badgeText}>{label}</Text> : null}
+    </View>
+  );
+}
+
+export function HomeSideRail(props: HomeSideRailProps) {
+  const items = useMemo(
+    () => [
+      { key: 'doors' as const, icon: 'grid' as const, onPress: props.onPressDoors, accent: true },
+      { key: 'mail' as const, icon: 'mail' as const, onPress: props.onPressMail },
+      { key: 'friends' as const, icon: 'people' as const, onPress: props.onPressFriends },
+      { key: 'quest' as const, icon: 'map' as const, onPress: props.onPressQuest },
+      { key: 'events' as const, icon: 'calendar' as const, onPress: props.onPressEvents },
+      { key: 'summon' as const, icon: 'gift' as const, onPress: props.onPressSummon },
+      { key: 'shop' as const, icon: 'storefront' as const, onPress: props.onPressShop },
+    ],
+    [props],
+  );
+
+  return (
+    <View pointerEvents="box-none" style={styles.wrap}>
+      {/* Rail background */}
+      <View style={styles.railBack} />
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        {items.map((item) => (
-          <Pressable
-            key={item.key}
-            style={({ pressed }) => [
-              styles.item,
-              pressed && styles.itemPressed,
-            ]}
-            onPress={() => handleItemPress(item)}
-          >
-            <Ionicons
-              name={item.icon}
-              size={20}
-              color={item.color ?? COLORS.cream.soft}
-            />
-            {item.badge && item.badge > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.badge > 9 ? '9+' : item.badge}</Text>
-              </View>
-            )}
-          </Pressable>
-        ))}
+        {items.map((it) => {
+          const badgeValue = props.badges?.[it.key];
+          const showBadge = badgeValue === true || (typeof badgeValue === 'number' && badgeValue > 0);
+
+          return (
+            <Pressable
+              key={it.key}
+              onPress={() => {
+                props.onAnyInteraction?.();
+                it.onPress();
+              }}
+              onPressIn={props.onAnyInteraction}
+              style={({ pressed }) => [
+                styles.item,
+                it.accent ? styles.itemAccent : null,
+                pressed ? styles.itemPressed : null,
+              ]}
+              hitSlop={10}
+            >
+              <Ionicons
+                name={it.icon}
+                size={RAIL.ICON_SIZE}
+                color={it.accent ? COLORS.gold.primary : COLORS.cream.pure}
+                style={{ opacity: it.accent ? 1 : 0.92 }}
+              />
+              {showBadge ? <Badge value={badgeValue!} /> : null}
+            </Pressable>
+          );
+        })}
+
+        {/* bottom spacer */}
+        <View style={{ height: 8 }} />
       </ScrollView>
-      
-      {/* Bottom fade indicator (subtle, only visible if scrollable) */}
+
+      {/* Subtle bottom fade */}
       <LinearGradient
         colors={['transparent', COLORS.navy.darkest + '60']}
-        style={styles.bottomFade}
+        style={styles.fadeBottom}
         pointerEvents="none"
       />
     </View>
@@ -127,77 +112,93 @@ export function HomeSideRail({ items = defaultItems, onDoorsPress, onAnyInteract
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrap: {
     position: 'absolute',
-    right: HOME_OVERLAY.sideInset,
-    top: '22%',
-    bottom: '28%', // Room for dock + tab bar
+    right: HOME_OVERLAY.SIDE_INSET,
+    top: HOME_OVERLAY.TOP_INSET,
+    bottom: HOME_OVERLAY.BOTTOM_CLEARANCE,
+    width: RAIL.WIDTH,
+    alignItems: 'flex-end',
     zIndex: 5,
-    alignItems: 'center',
   },
-  scroll: {
-    flex: 1,
-    marginTop: HOME_OVERLAY.railGap,
-  },
-  scrollContent: {
-    gap: HOME_OVERLAY.railGap,
-    paddingBottom: 8,
-  },
-  item: {
-    width: RAIL.itemSize,
-    height: RAIL.itemSize,
-    borderRadius: RAIL.radius,
-    backgroundColor: COLORS.navy.darkest + Math.round(RAIL.bgAlpha * 255).toString(16).padStart(2, '0'),
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 0.5,
-    borderColor: COLORS.cream.pure + '08',
-    // Subtle shadow
+  railBack: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: RAIL.WIDTH,
+    borderRadius: RAIL.RADIUS,
+    backgroundColor: COLORS.navy.dark + RAIL.BG_ALPHA_HEX,
+    borderWidth: 1,
+    borderColor: COLORS.cream.pure + '10',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
+        shadowOpacity: 0.22,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 6 },
       },
       android: {
-        elevation: 2,
+        elevation: 6,
       },
       web: {
-        boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+        boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
       },
     }),
   },
-  itemPressed: {
-    transform: [{ scale: PRESS.SCALE }],
-    opacity: 0.8,
+  scroll: {
+    width: RAIL.WIDTH,
+    borderRadius: RAIL.RADIUS,
   },
-  doorsItem: {
-    borderColor: COLORS.gold.dark + '25',
+  scrollContent: {
+    paddingTop: RAIL.PAD_Y,
+    paddingBottom: RAIL.PAD_Y,
+    alignItems: 'center',
+    gap: RAIL.GAP,
+  },
+  item: {
+    width: RAIL.ITEM_SIZE,
+    height: RAIL.ITEM_SIZE,
+    borderRadius: RAIL.ITEM_RADIUS,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.navy.dark + '14',
+    borderWidth: 1,
+    borderColor: COLORS.cream.pure + '10',
+  },
+  itemAccent: {
+    backgroundColor: COLORS.navy.dark + '1C',
+    borderColor: COLORS.gold.dark + '22',
+  },
+  itemPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.96,
   },
   badge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: -3,
+    right: -3,
     minWidth: 16,
     height: 16,
-    borderRadius: 8,
+    paddingHorizontal: 4,
+    borderRadius: 999,
     backgroundColor: COLORS.gold.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
-    color: COLORS.navy.darkest,
+    color: COLORS.navy.dark,
+    letterSpacing: 0.2,
   },
-  bottomFade: {
+  fadeBottom: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    height: 20,
-    borderRadius: RAIL.radius,
+    bottom: 0,
+    height: 18,
+    borderBottomLeftRadius: RAIL.RADIUS,
+    borderBottomRightRadius: RAIL.RADIUS,
   },
 });

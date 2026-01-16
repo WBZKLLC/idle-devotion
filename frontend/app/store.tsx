@@ -89,6 +89,20 @@ export default function StoreScreen() {
   const [showVIPModal, setShowVIPModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'crystals' | 'divine' | 'vip'>('crystals');
+  
+  // Phase 3.19.10: Confirm modal state
+  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const openConfirm = (data: ConfirmModalData) => {
+    setConfirmData({
+      ...data,
+      onConfirm: async () => {
+        setConfirmData(null);
+        await data.onConfirm?.();
+      },
+      onCancel: () => setConfirmData(null),
+    });
+  };
 
   useEffect(() => {
     if (user) {

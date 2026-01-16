@@ -388,11 +388,11 @@ export default function SummonHubScreen() {
   // Phase 3.19.7: Cinematic loading screen for initial hydration
   if (!hydrated) return <CinematicLoading subtitle="Preparing the summon altar..." />;
   
-  if (!user) return (<LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}><SafeAreaView style={styles.container}><Text style={styles.loginText}>Please log in first</Text></SafeAreaView></LinearGradient>);
+  if (!user) return (<LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}><SafeAreaView style={styles.container} edges={['top', 'left', 'right']}><Text style={styles.loginText}>Please log in first</Text></SafeAreaView></LinearGradient>);
 
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {/* Phase 3.19.6: Canonical header */}
         <AppHeader
           title="Summon"

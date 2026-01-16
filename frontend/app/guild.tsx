@@ -170,30 +170,27 @@ export default function GuildScreen() {
   };
 
   const handleLeaveGuild = async () => {
-    // ALERT_ALLOWED: destructive_confirm
-    Alert.alert(
-      'Leave Guild',
-      'Are you sure you want to leave the guild?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await leaveGuildApi(user?.username || '');
-              toast.success('You left the guild');
-              setGuildData(null);
-              loadAvailableGuilds();
-            } catch (error: any) {
-              if (!isErrorHandledGlobally(error)) {
-                toast.error('Failed to leave guild');
-              }
-            }
+    // Phase 3.19.10: Use ConfirmModal instead of Alert.alert
+    setConfirmData({
+      title: 'Leave Guild',
+      message: 'Are you sure you want to leave the guild?',
+      confirmText: 'Leave',
+      cancelText: 'Cancel',
+      tone: 'danger',
+      icon: 'exit-outline',
+      onConfirm: async () => {
+        try {
+          await leaveGuildApi(user?.username || '');
+          toast.success('You left the guild');
+          setGuildData(null);
+          loadAvailableGuilds();
+        } catch (error: any) {
+          if (!isErrorHandledGlobally(error)) {
+            toast.error('Failed to leave guild');
           }
         }
-      ]
-    );
+      },
+    });
   };
 
   const handleAttackBoss = async () => {

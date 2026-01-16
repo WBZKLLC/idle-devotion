@@ -358,7 +358,6 @@ const styles = StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loadingText: { color: '#8b5cf6', marginTop: 12, fontSize: 16 },
   errorText: { color: COLORS.cream.dark, fontSize: 16 },
-  loginBtn: { marginTop: 16, backgroundColor: '#8b5cf6', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
   loginBtnText: { color: '#fff', fontWeight: 'bold' },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#8b5cf630' },

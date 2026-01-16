@@ -597,6 +597,7 @@ export default function HomeScreen() {
       {/* === RIGHT SIDE RAIL (peripheral hot actions) === */}
       <HomeSideRail 
         onDoorsPress={() => setDoorsOpen(true)}
+        onAnyInteraction={handleUserInteraction}
       />
 
       {/* === RITUAL DOCK (bottom-center anchor, the ONE prominent element) === */}
@@ -605,6 +606,7 @@ export default function HomeScreen() {
         formatIdleTime={formatIdleTime}
         onPress={() => setRitualOpen(true)}
         onReceive={handleClaimIdle}
+        onAnyInteraction={handleUserInteraction}
       />
 
       {/* === MODALS / SHEETS === */}

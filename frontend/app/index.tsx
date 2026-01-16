@@ -783,7 +783,7 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
 
-        <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} user={user} cr={cr} />
+        <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
       </SafeAreaView>
       
       {/* Phase 3.19.9: Unified Reward Recap Modal */}

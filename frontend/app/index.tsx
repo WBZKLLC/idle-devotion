@@ -28,6 +28,8 @@ import { goToStore } from '../lib/entitlements/navigation';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 // Phase 3.19.9: Unified reward recap modal
 import { RewardRecapModal, RewardRecapData } from '../components/ui/RewardRecapModal';
+// Phase 3.19.10: Canonical confirm modal
+import { ConfirmModal, ConfirmModalData } from '../components/ui/ConfirmModal';
 // Phase 3.18.4: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen

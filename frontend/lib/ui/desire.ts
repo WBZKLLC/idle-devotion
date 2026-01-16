@@ -304,6 +304,7 @@ export function resetSessionState(): void {
   sessionState.sessionStartTime = Date.now();
   sessionState.lastInteractionTime = Date.now();
   sessionState.scrollDetected = false;
+  sessionState.desireBudgetSpent = false;
   sessionJitter = null;
   shiftAudioTriggeredCount = 0;
 }

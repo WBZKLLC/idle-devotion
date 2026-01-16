@@ -14,4 +14,5 @@ export { Skeleton, HeroGridSkeleton, HeroDetailHeaderSkeleton, BannerSkeleton, S
 export { EmptyState, NoHeroesEmpty, NoGuildEmpty, NoBannersEmpty, NoStagesEmpty, FilterNoResultsEmpty } from './EmptyState';
 export { DisabledHint, RequiresVIPHint, RequiresCurrencyHint, RequiresLevelHint, RequiresStarsHint } from './DisabledHint';
 export { AppHeader, LAYOUT } from './AppHeader';
-export { CinematicLoading, LOGIN_HERO_SOURCE } from './CinematicLoading';
+export { CinematicLoading } from './CinematicLoading';
+// LOGIN_HERO_URI is exported from lib/assets/loginHero.ts (single source of truth)

@@ -567,10 +567,11 @@ export default function HomeScreen() {
     },
   ];
 
-  // AUTHENTICATED DASHBOARD
+  // AUTHENTICATED DASHBOARD — Phase 3.22.12: Sanctuary Scene Layout
+  // No more ScrollView stack. Home is now a scene with anchored overlays.
   return (
     <View style={styles.container}>
-      {/* Background: Sanctum environment (local asset - instant render, no flicker) */}
+      {/* === BACKGROUND SCENE LAYERS === */}
       <CenteredBackground 
         source={SANCTUM_BG_IMAGE} 
         mode="contain" 
@@ -580,29 +581,58 @@ export default function HomeScreen() {
       <SanctumAtmosphere />
       <DivineOverlays vignette grain />
       
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        {/* Phase 3.22.1: Extracted header component */}
-        <HomeHeader username={user.username} cr={cr} />
+      {/* === PERIMETER HUD (top overlay, quiet) === */}
+      <SafeAreaView style={styles.hudContainer} edges={['top', 'left', 'right']} pointerEvents="box-none">
+        <View style={styles.hudContent}>
+          <HomeHeader username={user.username} cr={cr} />
+          <CurrencyBar
+            gems={user.gems || 0}
+            gold={user.gold || 0}
+            coins={user.coins || 0}
+            divineEssence={user.divine_essence || 0}
+          />
+        </View>
+      </SafeAreaView>
 
-        {/* Phase 3.22.1: Extracted currency bar component */}
-        <CurrencyBar
-          gems={user.gems || 0}
-          gold={user.gold || 0}
-          coins={user.coins || 0}
-          divineEssence={user.divine_essence || 0}
-        />
+      {/* === RIGHT SIDE RAIL (peripheral hot actions) === */}
+      <HomeSideRail 
+        onDoorsPress={() => setDoorsOpen(true)}
+      />
 
-        <ScrollView 
-          contentContainerStyle={styles.content} 
-          showsVerticalScrollIndicator={false}
-          onScrollBeginDrag={() => {
-            markScrollDetected();
-            handleUserInteraction();
-          }}
-          scrollEventThrottle={16}
-        >
-          {/* Phase 3.22.1: Extracted idle rewards component */}
-          <Pressable onPressIn={handleUserInteraction}>
+      {/* === RITUAL DOCK (bottom-center anchor, the ONE prominent element) === */}
+      <RitualDock
+        idleStatus={idleStatus}
+        formatIdleTime={formatIdleTime}
+        onPress={() => setRitualOpen(true)}
+        onReceive={handleClaimIdle}
+      />
+
+      {/* === MODALS / SHEETS === */}
+      
+      {/* Doors Sheet (QuickLinks + Pity + dashboard stuff) */}
+      <DoorsSheet
+        visible={doorsOpen}
+        onClose={() => setDoorsOpen(false)}
+        quickLinkRows={quickLinkRows}
+        pityData={{
+          common: { current: user.pity_counter || 0, max: 50 },
+          premium: { current: user.pity_counter_premium || 0, max: 50 },
+          divine: { current: user.pity_counter_divine || 0, max: 40 },
+        }}
+        onAnyInteraction={handleUserInteraction}
+      />
+      
+      {/* Ritual Sheet (expanded idle rewards) */}
+      <Modal
+        visible={ritualOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setRitualOpen(false)}
+      >
+        <View style={styles.ritualOverlay}>
+          <Pressable style={styles.ritualBackdrop} onPress={() => setRitualOpen(false)} />
+          <View style={styles.ritualSheet}>
+            <View style={styles.ritualHandle}><View style={styles.handleBar} /></View>
             <IdleRewardsCard
               ref={idleCardRef}
               idleStatus={idleStatus}
@@ -612,53 +642,17 @@ export default function HomeScreen() {
               isClaimingInstant={isClaimingInstant}
               formatIdleTime={formatIdleTime}
               formatCooldown={formatCooldown}
-              onCollect={handleClaimIdle}
-              onInstant={handleInstantCollect}
+              onCollect={() => { handleClaimIdle(); setRitualOpen(false); }}
+              onInstant={() => { handleInstantCollect(); setRitualOpen(false); }}
               onVipLockedPress={() => toast.info('VIP 1+ unlocks Instant Collect (2 hours of rewards instantly).')}
               onAnyInteraction={handleUserInteraction}
             />
-          </Pressable>
-
-          {/* Phase 3.22.1: Extracted quick links grid */}
-          <QuickLinksGrid rows={quickLinkRows} onAnyInteraction={handleUserInteraction} />
-
-          {/* Pity Progress */}
-          <View style={styles.pitySection}>
-            <Text style={styles.sectionTitle}>Summon Progress</Text>
-            <View style={styles.pityCard}>
-              <View style={styles.pityRow}>
-                <View style={styles.pityInfo}>
-                  <Text style={styles.pityLabel}>Common</Text>
-                  <Text style={styles.pityValue}>{user.pity_counter || 0}/50</Text>
-                </View>
-                <View style={styles.pityBarOuter}>
-                  <View style={[styles.pityBarFill, { width: `${((user.pity_counter || 0) / 50) * 100}%`, backgroundColor: COLORS.gold.light }]} />
-                </View>
-              </View>
-              <View style={styles.pityRow}>
-                <View style={styles.pityInfo}>
-                  <Text style={styles.pityLabel}>Premium</Text>
-                  <Text style={styles.pityValue}>{user.pity_counter_premium || 0}/50</Text>
-                </View>
-                <View style={styles.pityBarOuter}>
-                  <View style={[styles.pityBarFill, { width: `${((user.pity_counter_premium || 0) / 50) * 100}%`, backgroundColor: '#9b4dca' }]} />
-                </View>
-              </View>
-              <View style={styles.pityRow}>
-                <View style={styles.pityInfo}>
-                  <Text style={styles.pityLabel}>Divine</Text>
-                  <Text style={styles.pityValue}>{user.pity_counter_divine || 0}/40</Text>
-                </View>
-                <View style={styles.pityBarOuter}>
-                  <View style={[styles.pityBarFill, { width: `${((user.pity_counter_divine || 0) / 40) * 100}%`, backgroundColor: COLORS.gold.primary }]} />
-                </View>
-              </View>
-            </View>
           </View>
-        </ScrollView>
+        </View>
+      </Modal>
 
-        <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
-      </SafeAreaView>
+      {/* Sidebar (legacy, accessed via HomeSideRail "More") */}
+      <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} />
       
       {/* Phase 3.19.9: Unified Reward Recap Modal */}
       <RewardRecapModal 

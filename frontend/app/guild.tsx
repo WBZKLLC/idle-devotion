@@ -306,14 +306,14 @@ export default function GuildScreen() {
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
-          </TouchableOpacity>
-          <Text style={styles.title}>⚔️ Guild</Text>
-          <View style={styles.placeholder} />
-        </View>
+        {/* Phase 3.19.6: Canonical header */}
+        <AppHeader
+          title="Guild"
+          subtitle={guildData ? guildData.name : 'Find or create a guild'}
+          left={{ type: 'back' }}
+          includeSafeArea={false}
+          centerTitle={false}
+        />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {isLoading ? (

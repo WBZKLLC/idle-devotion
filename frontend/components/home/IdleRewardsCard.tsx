@@ -73,6 +73,23 @@ export function IdleRewardsCard({
   // Ritual subtitle — rotates subtly on mount
   const subtitle = useMemo(() => getIdleSubtitle(), []);
 
+  // Phase 3.22.6.C: Subtle breathing animation
+  // 8-10 second sine-like loop, felt not seen
+  const breath = useSharedValue(0);
+
+  useEffect(() => {
+    breath.value = withRepeat(
+      withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.ease) }),
+      -1, // infinite
+      true // reverse
+    );
+  }, [breath]);
+
+  // Animated glow style - very subtle opacity shift
+  const breathingStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(breath.value, [0, 1], [0.96, 1]),
+  }));
+
   // Card gradient — subtle shift when capped (ready to receive)
   const cardColors: readonly [string, string] = isCapped
     ? [COLORS.navy.primary + 'F0', COLORS.navy.dark]

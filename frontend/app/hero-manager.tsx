@@ -277,39 +277,33 @@ export default function HeroManagerScreen() {
     // Check if hero is already in another slot
     const existingSlotIndex = slots.findIndex(s => s.heroId === userHero.id);
     if (existingSlotIndex !== -1) {
-      // ALERT_ALLOWED: destructive_confirm
-      Alert.alert(
-        'Hero Already Assigned',
-        `${userHero.hero_data?.name || 'This hero'} is already in Slot ${existingSlotIndex + 1}. Swap positions?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Swap',
-            onPress: () => {
-              const newSlots = [...slots];
-              // Swap the heroes
-              const targetSlotData = newSlots[selectedSlot - 1];
-              newSlots[existingSlotIndex] = {
-                ...newSlots[existingSlotIndex],
-                heroId: targetSlotData.heroId,
-                heroData: targetSlotData.heroData,
-              };
-              newSlots[selectedSlot - 1] = {
-                ...newSlots[selectedSlot - 1],
-                heroId: userHero.id,
-                heroData: userHero,
-              };
-              setSlots(newSlots);
-              setHasChanges(true);
-              calculateTeamPower(newSlots);
-              
-              // Log the change
-              addChangeLog('swapped', userHero.hero_data?.name || 'Hero', selectedSlot);
-              flashSlotAnimation();
-            },
-          },
-        ]
-      );
+      openConfirm({
+        title: 'Hero Already Assigned',
+        message: `${userHero.hero_data?.name || 'This hero'} is already in Slot ${existingSlotIndex + 1}. Swap positions?`,
+        tone: 'neutral',
+        confirmText: 'Swap',
+        cancelText: 'Cancel',
+        icon: 'swap-horizontal-outline',
+        onConfirm: () => {
+          const newSlots = [...slots];
+          const targetSlotData = newSlots[selectedSlot - 1];
+          newSlots[existingSlotIndex] = {
+            ...newSlots[existingSlotIndex],
+            heroId: targetSlotData.heroId,
+            heroData: targetSlotData.heroData,
+          };
+          newSlots[selectedSlot - 1] = {
+            ...newSlots[selectedSlot - 1],
+            heroId: userHero.id,
+            heroData: userHero,
+          };
+          setSlots(newSlots);
+          setHasChanges(true);
+          calculateTeamPower(newSlots);
+          addChangeLog('swapped', userHero.hero_data?.name || 'Hero', selectedSlot);
+          flashSlotAnimation();
+        },
+      });
       return;
     }
     

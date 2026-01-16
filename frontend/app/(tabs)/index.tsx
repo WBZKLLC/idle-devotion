@@ -598,11 +598,12 @@ export default function HomeScreen() {
               onCollect={handleClaimIdle}
               onInstant={handleInstantCollect}
               onVipLockedPress={() => toast.info('VIP 1+ unlocks Instant Collect (2 hours of rewards instantly).')}
+              onAnyInteraction={handleUserInteraction}
             />
           </Pressable>
 
           {/* Phase 3.22.1: Extracted quick links grid */}
-          <QuickLinksGrid rows={quickLinkRows} />
+          <QuickLinksGrid rows={quickLinkRows} onAnyInteraction={handleUserInteraction} />
 
           {/* Pity Progress */}
           <View style={styles.pitySection}>

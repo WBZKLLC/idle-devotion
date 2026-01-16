@@ -62,9 +62,10 @@ export const EYE_SHIFT = {
 
 /**
  * Check if eye-line shift can trigger
- * Only triggers once per session, on first scroll
+ * Only triggers once per session, on first scroll, if budget available
  */
 export function canTriggerEyeShift(): boolean {
+  if (!hasDesireBudget()) return false; // Budget already spent
   if (sessionState.eyeShiftTriggered) return false;
   if (!sessionState.scrollDetected) return false;
   return true;
@@ -75,6 +76,7 @@ export function canTriggerEyeShift(): boolean {
  */
 export function markEyeShiftTriggered(): void {
   sessionState.eyeShiftTriggered = true;
+  spendDesireBudget(); // Consume the session's desire budget
 }
 
 /**

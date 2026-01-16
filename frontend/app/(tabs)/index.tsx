@@ -65,7 +65,18 @@ const SANCTUM_BG_IMAGE = require('../../assets/backgrounds/sanctum_environment_0
 // Phase 3.22.1: Use canonical theme colors (no local duplication)
 import COLORS from '../../theme/colors';
 // Phase 3.22.1: Extracted home screen components
-import { HomeHeader, CurrencyBar, IdleRewardsCard, QuickLinksGrid, QuickLinkRow, IdleRewardsCardRef } from '../../components/home';
+// Phase 3.22.12: Sanctuary layout components
+import { 
+  HomeHeader, 
+  CurrencyBar, 
+  IdleRewardsCard, 
+  QuickLinksGrid, 
+  QuickLinkRow, 
+  IdleRewardsCardRef,
+  RitualDock,
+  HomeSideRail,
+  DoorsSheet,
+} from '../../components/home';
 
 export default function HomeScreen() {
   const { user, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();
@@ -80,6 +91,10 @@ export default function HomeScreen() {
   const [instantCooldown, setInstantCooldown] = useState<number>(0); // seconds remaining
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
+  // Phase 3.22.12: Sanctuary layout state
+  const [doorsOpen, setDoorsOpen] = useState(false);
+  const [ritualOpen, setRitualOpen] = useState(false);
   
   // Phase 3.19.9: In-app reward recap modal (unified component)
   const [rewardRecap, setRewardRecap] = useState<RewardRecapData | null>(null);

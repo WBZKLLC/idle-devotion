@@ -41,6 +41,15 @@ import { toast } from '../../components/ui/Toast';
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
 // Phase 3.22.9: Settle animation tokens
 import { SECTION_GAP } from '../../components/ui/tokens';
+// Phase 3.22.8: Desire accents system
+import {
+  markScrollDetected,
+  markInteraction,
+  canTriggerEyeShift,
+  markEyeShiftTriggered,
+  canTriggerGlance,
+  markGlanceTriggered,
+} from '../../lib/ui/desire';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';

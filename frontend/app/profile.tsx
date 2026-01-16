@@ -130,22 +130,18 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    // ALERT_ALLOWED: logout_confirm
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+    // Phase 3.19.10: Use ConfirmModal instead of Alert.alert
+    setConfirmData({
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      tone: 'neutral',
+      icon: 'log-out-outline',
+      onConfirm: async () => {
+        await logout();
+      },
+    });
   };
 
   const handleRedeemCode = async () => {

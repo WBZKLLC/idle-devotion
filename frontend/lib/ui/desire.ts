@@ -45,6 +45,17 @@ export function spendDesireBudget(): void {
   sessionState.desireBudgetSpent = true;
 }
 
+/**
+ * Atomically try to spend the desire budget
+ * Returns true if budget was available and is now spent
+ * Returns false if budget was already spent (safe for race conditions)
+ */
+export function trySpendDesireBudget(): boolean {
+  if (sessionState.desireBudgetSpent) return false;
+  sessionState.desireBudgetSpent = true;
+  return true;
+}
+
 // =============================================================================
 // EYE-LINE SHIFT (Peripheral Attention)
 // =============================================================================

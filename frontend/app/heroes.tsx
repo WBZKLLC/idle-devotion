@@ -47,6 +47,8 @@ import { HeroGridSkeleton } from '../components/ui/Skeleton';
 import { FilterNoResultsEmpty, NoHeroesEmpty } from '../components/ui/EmptyState';
 // Phase 3.19.6: Canonical header + layout constants
 import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
+// Phase 3.19.7: Cinematic loading screen
+import { CinematicLoading } from '../components/ui/CinematicLoading';
 
 // Sanctum background (matches your existing setup)
 const SANCTUM_BG = require('../assets/backgrounds/sanctum_environment_01.jpg');

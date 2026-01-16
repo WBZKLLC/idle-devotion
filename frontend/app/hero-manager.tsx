@@ -648,16 +648,15 @@ export default function HeroManagerScreen() {
                       style={[styles.modeCard, isSelected && styles.modeCardSelected]}
                       onPress={() => {
                         if (hasChanges) {
-                          // ALERT_ALLOWED: destructive_confirm
-                          Alert.alert(
-                            'Unsaved Changes',
-                            'You have unsaved changes. Save before switching modes?',
-                            [
-                              { text: 'Discard', style: 'destructive', onPress: () => setSelectedMode(mode) },
-                              { text: 'Cancel', style: 'cancel' },
-                              { text: 'Save', onPress: async () => { await saveTeam(); setSelectedMode(mode); } },
-                            ]
-                          );
+                          openConfirm({
+                            title: 'Unsaved Changes',
+                            message: 'You have unsaved changes. Discard them?',
+                            tone: 'danger',
+                            confirmText: 'Discard',
+                            cancelText: 'Keep Editing',
+                            icon: 'warning-outline',
+                            onConfirm: () => setSelectedMode(mode),
+                          });
                         } else {
                           setSelectedMode(mode);
                           if (modeTeams[mode]) {

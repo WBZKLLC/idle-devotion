@@ -185,6 +185,42 @@ export const SETTLE = {
 } as const;
 
 // =============================================================================
+// SANCTUARY HOME LAYOUT (Phase 3.22.7)
+// =============================================================================
+
+/** Ritual Dock — the one calm focal point */
+export const DOCK = {
+  /** Width as percentage of screen */
+  widthPct: 0.88,
+  /** Minimum height */
+  minHeight: 88,
+  /** Border radius */
+  radius: 16,
+  /** Bottom offset above tab bar */
+  bottomOffset: 12,
+} as const;
+
+/** Home overlay positioning */
+export const HOME_OVERLAY = {
+  /** Side inset for rails */
+  sideInset: 10,
+  /** Top inset for header */
+  topInset: 8,
+  /** Gap between rail items */
+  railGap: 10,
+} as const;
+
+/** Side rail actions */
+export const RAIL = {
+  /** Size of each item */
+  itemSize: 44,
+  /** Border radius */
+  radius: 14,
+  /** Background alpha */
+  bgAlpha: 0.22,
+} as const;
+
+// =============================================================================
 // PREMIUM COLORS (from UX spec)
 // =============================================================================
 export const PREMIUM_COLORS = {

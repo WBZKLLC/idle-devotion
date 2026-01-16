@@ -72,8 +72,8 @@ export type PaywallSource =
   | 'campaign'             // Campaign premium feature
   | 'unknown';             // Fallback (should be rare, logged as warning)
 
-// Known sources for validation
-const KNOWN_SOURCES = new Set<PaywallSource>([
+// Known sources for validation (exported for type checking)
+export const KNOWN_SOURCES = new Set<PaywallSource>([
   'cinematic_gate', 'battle_pass', 'store', 'profile', 'hero_detail',
   'gating_alert', 'equipment', 'gacha', 'campaign', 'unknown'
 ]);

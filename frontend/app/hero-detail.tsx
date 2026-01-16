@@ -50,6 +50,8 @@ import { HeroDetailHeaderSkeleton } from '../components/ui/Skeleton';
 // Phase 3.19.2 & 3.19.5: Canonical button components
 import { SecondaryButton } from '../components/ui/SecondaryButton';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
+// Phase 3.19.6: Canonical header + layout constants
+import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'N': '#9e9e9e',

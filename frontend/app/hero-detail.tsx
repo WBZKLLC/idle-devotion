@@ -52,6 +52,8 @@ import { SecondaryButton } from '../components/ui/SecondaryButton';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 // Phase 3.19.6: Canonical header + layout constants
 import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
+// Phase 3.19.7: Cinematic loading screen
+import { CinematicLoading } from '../components/ui/CinematicLoading';
 
 const RARITY_COLORS: { [key: string]: string } = {
   'N': '#9e9e9e',

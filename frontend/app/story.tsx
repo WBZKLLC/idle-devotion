@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Pressable,
   ScrollView,
   ActivityIndicator,
   Modal,
@@ -18,6 +19,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 // Phase 3.22.3: Canonical button
 import { PrimaryButton } from '../components/ui/PrimaryButton';
+// Phase 3.22.4: Micro-interaction utilities
+import { PRESS, haptic } from '../lib/ui/interaction';
+import { LAYOUT } from '../components/ui/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

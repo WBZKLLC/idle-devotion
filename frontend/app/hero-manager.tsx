@@ -479,7 +479,7 @@ export default function HeroManagerScreen() {
                 <Text style={styles.rarityIndicatorText}>{heroInfo.rarity}</Text>
               </View>
               
-              <Image
+              <RNImage
                 source={{ uri: heroInfo.image_url }}
                 style={styles.heroImage}
               />
@@ -792,7 +792,7 @@ export default function HeroManagerScreen() {
                         ]}
                         onPress={() => assignHeroToSlot(hero)}
                       >
-                        <Image
+                        <RNImage
                           source={{ uri: heroInfo?.image_url }}
                           style={styles.heroListImage}
                         />

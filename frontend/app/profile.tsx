@@ -33,8 +33,8 @@ import { usePathname } from 'expo-router';
 import { goToPaywall, getSafeReturnTo } from '../lib/entitlements/navigation';
 // Phase 3.18: Toast for success feedback
 import { toast } from '../components/ui/Toast';
-// Phase 3.19.10: Canonical confirm modal
-import { ConfirmModal, ConfirmModalData } from '../components/ui/ConfirmModal';
+// Phase 3.19.11: Confirm modal hook
+import { useConfirmModal } from '../components/ui/useConfirmModal';
 
 export default function ProfileScreen() {
   const router = useRouter();

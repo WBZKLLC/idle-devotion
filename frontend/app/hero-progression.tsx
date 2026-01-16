@@ -250,8 +250,8 @@ export default function HeroProgressionScreen() {
     return effectiveUnlockedTier === 6;
   }, [effectiveUnlockedTier, rarityNext]);
   
-  // Subscribe to entitlements for reactive power updates
-  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
+  // Subscribe to entitlements for reactive power updates (Phase 3.21: use version hook)
+  const entitlementVersion = useEntitlementVersion();
 
   const calcPower = useCallback((h: any, hd: any, overrideStars?: number) => {
     if (!h || !hd) return 0;
@@ -271,7 +271,7 @@ export default function HeroProgressionScreen() {
     const awakenMult = 1 + awaken * 0.2;
 
     return computePowerWithMultipliers(stats, levelMult, starMult, awakenMult);
-  }, [entitlements]);
+  }, [entitlementVersion]);
 
   const currentPower = useMemo(() => calcPower(hero, heroData), [calcPower, hero, heroData]);
 

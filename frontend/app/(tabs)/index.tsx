@@ -94,6 +94,9 @@ export default function HomeScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
+  // Phase 3.22.12.R2: Real badge data
+  const railBadges = useRailBadges();
+  
   // Phase 3.22.12: Sanctuary layout state
   const [doorsOpen, setDoorsOpen] = useState(false);
   const [ritualOpen, setRitualOpen] = useState(false);

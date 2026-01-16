@@ -50,6 +50,8 @@ import {
   canTriggerGlance,
   markGlanceTriggered,
 } from '../../lib/ui/desire';
+// Phase 3.22.10: Global interaction event bus
+import { subscribeInteraction } from '../../lib/ui/interactionSession';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';

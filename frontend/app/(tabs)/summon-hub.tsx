@@ -388,7 +388,19 @@ export default function SummonHubScreen() {
   // Phase 3.19.7: Cinematic loading screen for initial hydration
   if (!hydrated) return <CinematicLoading subtitle="Preparing the summon altar..." />;
   
-  if (!user) return (<LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}><SafeAreaView style={styles.container} edges={['top', 'left', 'right']}><Text style={styles.loginText}>Please log in first</Text></SafeAreaView></LinearGradient>);
+  if (!user) {
+    return (
+      <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
+        <SafeAreaView style={styles.centerContainer} edges={['top', 'left', 'right']}>
+          <Ionicons name="lock-closed" size={48} color={COLORS.gold.primary} />
+          <Text style={styles.loginText}>Please log in first</Text>
+          <View style={{ marginTop: 16, width: '60%' }}>
+            <PrimaryButton title="Go to Login" onPress={() => router.push('/')} variant="gold" size="md" />
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>

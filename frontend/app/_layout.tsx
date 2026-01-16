@@ -154,34 +154,21 @@ function TabsWithSafeArea() {
     ...styles.tabBar,
     paddingBottom: Math.max(insets.bottom, 8),
     height: 60 + Math.max(insets.bottom, 0),
+    display: 'flex' as const, // Explicitly show
   };
-  
-  // Hidden tab bar style - fully removes from layout on web and native
-  // Must override the fixed positioning from styles.tabBar on web
-  const hiddenTabBarStyle = Platform.select({
-    web: {
-      display: 'none' as const,
-      position: 'absolute' as const,
-      height: 0,
-      width: 0,
-      overflow: 'hidden' as const,
-      visibility: 'hidden' as const,
-    },
-    default: {
-      display: 'none' as const,
-      height: 0,
-    },
-  });
   
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: COLORS.gold.primary,
         tabBarInactiveTintColor: COLORS.cream.soft + '60',
-        tabBarStyle: user ? visibleTabBarStyle : hiddenTabBarStyle,
+        // When no user, hide the entire tab bar
+        tabBarStyle: user ? visibleTabBarStyle : { display: 'none' },
         headerShown: false,
-        tabBarLabelStyle: user ? styles.tabLabel : { display: 'none' as const },
-        tabBarIconStyle: user ? styles.tabIcon : { display: 'none' as const },
+        tabBarLabelStyle: styles.tabLabel,
+        tabBarIconStyle: styles.tabIcon,
+        // Also control the inner items
+        tabBarShowLabel: !!user,
       }}
     >
       {/* ===== 6 MAIN VISIBLE TABS ===== */}

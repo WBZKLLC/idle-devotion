@@ -17,16 +17,17 @@
 
 /** 
  * Greeting variants for HomeHeader
- * Only ONE line ever. Power is acknowledged, not celebrated.
- * Never enthusiastic. Never exclamatory. No urgency.
+ * Confident + possessive. Short sentences. Declarative.
+ * Warm authority — no "cute", no pleading, no comedy.
  * 85% default, 15% variant
  */
 export const GREETING_VARIANTS = [
-  "You've returned.",        // default (most common)
-  'Time was generous.',
-  'They waited.',
-  'The Sanctum remembers.',
-  'Your absence was noted.',
+  "You're back.",              // default (most common)
+  'Good. You returned.',
+  "They've been waiting.",
+  'Come closer.',
+  'The Sanctum is yours.',
+  'We kept it ready.',
 ] as const;
 
 /**

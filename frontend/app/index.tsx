@@ -279,36 +279,34 @@ export default function HomeScreen() {
       const result = await loginWithPassword(trimmedUsername, password);
       if (!result.success) {
         if (result.error === 'NEEDS_PASSWORD') {
-          // Legacy account - prompt to set password (KEEP as Alert - user decision required)
-          // ALERT_ALLOWED: legacy_account_flow
-          Alert.alert(
-            'Account Security Upgrade',
-            'This account was created before passwords were required. Please set a password to secure your account.',
-            [
-              {
-                text: 'Set Password',
-                onPress: async () => {
-                  const setResult = await setPasswordForLegacyAccount(trimmedUsername, password);
-                  if (!setResult.success) {
-                    setAuthError(setResult.error || 'Failed to set password');
-                  } else {
-                    toast.success('Password set successfully! Your account is now secure.');
-                  }
-                }
+          // Legacy account - prompt to set password
+          openConfirm({
+            title: 'Account Security Upgrade',
+            message: 'This account was created before passwords were required. Please set a password to secure your account.',
+            tone: 'neutral',
+            confirmText: 'Set Password',
+            cancelText: 'Cancel',
+            icon: 'shield-checkmark-outline',
+            onConfirm: async () => {
+              const setResult = await setPasswordForLegacyAccount(trimmedUsername, password);
+              if (!setResult.success) {
+                setAuthError(setResult.error || 'Failed to set password');
+              } else {
+                toast.success('Password set successfully! Your account is now secure.');
               }
-            ]
-          );
+            },
+          });
         } else if (result.error?.includes('Invalid username')) {
-          // User doesn't exist - offer to register (KEEP as Alert - user decision required)
-          // ALERT_ALLOWED: legacy_account_flow
-          Alert.alert(
-            'Account Not Found',
-            'No account with this username exists. Would you like to create a new account?',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Create Account', onPress: () => setIsRegistering(true) }
-            ]
-          );
+          // User doesn't exist - offer to register
+          openConfirm({
+            title: 'Account Not Found',
+            message: 'No account with this username exists. Would you like to create a new account?',
+            tone: 'neutral',
+            confirmText: 'Create Account',
+            cancelText: 'Cancel',
+            icon: 'person-add-outline',
+            onConfirm: () => setIsRegistering(true),
+          });
         } else {
           setAuthError(result.error || 'Login failed');
         }

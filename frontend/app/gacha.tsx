@@ -16,6 +16,7 @@ import { useGameStore } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import COLORS from '../theme/colors';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
 // Phase 3.22.3: Canonical button

@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
   backButton: { padding: 8 },
   title: { fontSize: 20, fontWeight: 'bold', color: COLORS.cream.pure },
   placeholder: { width: 40 },
-  content: { padding: 16, paddingTop: 0, paddingBottom: 100 },
+  content: { padding: 16, paddingTop: 0, paddingBottom: LAYOUT.BOTTOM_GUTTER },
   loader: { marginTop: 40 },
   
   // Guild Card

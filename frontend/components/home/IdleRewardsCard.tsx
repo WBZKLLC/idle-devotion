@@ -6,7 +6,7 @@
 // This card represents: "What was prepared for you while you were away"
 // The only surface that breathes — slow, felt, not seen.
 
-import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import React, { useMemo, useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';

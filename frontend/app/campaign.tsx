@@ -471,26 +471,24 @@ export default function CampaignScreen() {
       <DivineOverlays vignette={true} rays={false} grain={true} />
 
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => activeTab === 'stages' ? setActiveTab('chapters') : router.back()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>
-              {activeTab === 'chapters' ? '📖 Campaign' : selectedChapter?.title}
-            </Text>
-            {activeTab === 'stages' && selectedChapter && (
-              <Text style={styles.headerSubtitle}>Chapter {selectedChapter.id}</Text>
-            )}
-          </View>
-          <View style={styles.staminaDisplay}>
-            <Ionicons name="flash" size={16} color="#22c55e" />
-            <Text style={styles.staminaText}>{user.stamina || 100}</Text>
-          </View>
+        {/* Phase 3.19.6: Canonical header with dynamic title */}
+        <AppHeader
+          title={activeTab === 'chapters' ? 'Campaign' : (selectedChapter?.title || 'Campaign')}
+          subtitle={activeTab === 'stages' && selectedChapter ? `Chapter ${selectedChapter.id}` : 'Journey forward'}
+          left={{ 
+            type: 'back',
+            onPress: () => activeTab === 'stages' ? setActiveTab('chapters') : router.back()
+          }}
+          right={
+            <View style={styles.staminaDisplay}>
+              <Ionicons name="flash" size={16} color="#22c55e" />
+              <Text style={styles.staminaText}>{user.stamina || 100}</Text>
+            </View>
+          }
+          transparent
+          includeSafeArea={false}
+          centerTitle={false}
+        />
         </View>
 
         {/* Chapters List */}

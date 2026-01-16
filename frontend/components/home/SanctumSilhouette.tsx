@@ -1,14 +1,13 @@
 // /app/frontend/components/home/SanctumSilhouette.tsx
 // Phase 3.22.6.D: Character Silhouette Parallax
+// Phase 3.22.7: Restraint Pass — presence, not display
 //
 // A very faint silhouette layer behind home content:
-// - Opacity: 0.05-0.12
-// - Blurred/softened
-// - Moves slightly with scroll (parallax)
+// - Opacity: 0.06 max (felt, not seen)
+// - Moves only with scroll (no independent animation)
 // - Respects Reduce Motion setting
 //
-// TranslateY range: 0 → -12px across full scroll
-// Optional scale: 1.00 → 1.02 (very subtle)
+// "They're there. They don't move unless you do."
 
 import React from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
@@ -20,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../../theme/colors';
+import { SILHOUETTE } from '../ui/tokens';
 
 type Props = {
   /** Scroll position shared value from parent ScrollView */

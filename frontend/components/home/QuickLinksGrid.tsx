@@ -1,94 +1,109 @@
-// /app/frontend/components/home/QuickLinksGrid.tsx
-// Phase 3.22.1: Extracted quick links grid component
-
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
-import { BG_NAVY, ACCENT_GOLD } from '../../lib/ui/gradients';
-import { SPACING, RADIUS } from '../ui/tokens';
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+type GradientColors = readonly [string, string] | readonly [string, string, string];
 
-interface QuickLink {
-  route: string;
-  icon: IoniconsName;
+type BaseTile = {
+  key: string;
+  onPress: () => void;
+  flex?: 1 | 2;
+  gradient: GradientColors;
+  gradientStyle?: ViewStyle;
+};
+
+type StandardTile = BaseTile & {
+  kind: 'standard';
+  icon?: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
   label: string;
-  variant?: 'gold' | 'navy';
-}
+  labelStyle?: TextStyle;
+  showIonicon?: boolean; // default true
+  emoji?: string;        // optional replacement for icon
+};
 
-const QUICK_LINKS: QuickLink[] = [
-  { route: '/hero-manager', icon: 'people', label: 'Teams', variant: 'gold' },
-  { route: '/heroes', icon: 'star', label: 'Heroes' },
-  { route: '/login-rewards', icon: 'calendar', label: 'Rewards' },
-  { route: '/summon-hub', icon: 'flash', label: 'Summon' },
-  { route: '/store', icon: 'cart', label: 'Store' },
-  { route: '/campaign', icon: 'map', label: 'Campaign' },
-];
+type CustomTile = BaseTile & {
+  kind: 'custom';
+  children: React.ReactNode;
+};
 
-export function QuickLinksGrid() {
-  const router = useRouter();
+export type QuickLinkTile = StandardTile | CustomTile;
 
+export type QuickLinkRow = {
+  key: string;
+  tiles: QuickLinkTile[];
+};
+
+type Props = {
+  rows: QuickLinkRow[];
+};
+
+export function QuickLinksGrid({ rows }: Props) {
   return (
-    <View style={styles.grid}>
-      {QUICK_LINKS.map((link) => (
-        <TouchableOpacity
-          key={link.route}
-          style={styles.tile}
-          onPress={() => router.push(link.route as any)}
-          activeOpacity={0.7}
-        >
-          <LinearGradient
-            colors={link.variant === 'gold' ? ACCENT_GOLD : BG_NAVY}
-            style={styles.tileGradient}
-          >
-            <Ionicons
-              name={link.icon}
-              size={22}
-              color={link.variant === 'gold' ? COLORS.navy.darkest : COLORS.gold.light}
-            />
-            <Text
-              style={[
-                styles.tileText,
-                link.variant === 'gold' && { color: COLORS.navy.darkest },
-              ]}
+    <>
+      {rows.map((row) => (
+        <View key={row.key} style={styles.quickLinksRow}>
+          {row.tiles.map((tile) => (
+            <TouchableOpacity
+              key={tile.key}
+              style={[styles.quickLink, { flex: tile.flex ?? 1 }]}
+              onPress={tile.onPress}
+              activeOpacity={0.85}
             >
-              {link.label}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+              <LinearGradient
+                colors={tile.gradient as unknown as string[]} // expo-linear-gradient accepts string[]
+                style={[styles.quickLinkGradient, tile.gradientStyle]}
+              >
+                {tile.kind === 'custom' ? (
+                  tile.children
+                ) : (
+                  <>
+                    {tile.emoji ? (
+                      <Text style={styles.emoji}>{tile.emoji}</Text>
+                    ) : tile.showIonicon === false ? null : (
+                      <Ionicons
+                        name={tile.icon ?? 'grid'}
+                        size={22}
+                        color={tile.iconColor ?? COLORS.gold.light}
+                      />
+                    )}
+                    <Text style={[styles.quickLinkText, tile.labelStyle]}>{tile.label}</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          ))}
+        </View>
       ))}
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  grid: {
+  quickLinksRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-    paddingHorizontal: SPACING.md,
+    gap: 12,
+    marginBottom: 24,
   },
-  tile: {
-    width: '31%',
-    aspectRatio: 1.2,
-    borderRadius: RADIUS.lg,
+  quickLink: {
+    borderRadius: 12,
     overflow: 'hidden',
   },
-  tileGradient: {
-    flex: 1,
+  quickLinkGradient: {
+    paddingVertical: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: RADIUS.lg,
-    gap: SPACING.xs,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: COLORS.gold.dark + '30',
   },
-  tileText: {
+  quickLinkText: {
+    color: COLORS.cream.soft,
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.gold.light,
+  },
+  emoji: {
+    fontSize: 20,
   },
 });
-
-export default QuickLinksGrid;

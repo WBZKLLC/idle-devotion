@@ -50,10 +50,9 @@ import COLORS from '../theme/colors';
 import { HomeHeader, CurrencyBar, IdleRewardsCard, QuickLinksGrid, QuickLinkRow } from '../components/home';
 
 export default function HomeScreen() {
-  const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();
+  const { user, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();
   const hydrated = useHydration();
   
-  const [username, setUsername] = useState('');
   const [idleStatus, setIdleStatus] = useState<any>(null);
   // Phase 3.19.8: Split loading states for button cadence
   const [isClaimingCollect, setIsClaimingCollect] = useState(false);

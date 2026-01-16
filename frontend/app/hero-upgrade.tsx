@@ -12,7 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useGameStore } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
-import { useEntitlementStore } from '../stores/entitlementStore';
+import { useEntitlementVersion } from '../lib/entitlements/gating';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
@@ -33,8 +33,8 @@ export default function HeroUpgradeScreen() {
   const { heroId } = useLocalSearchParams<{ heroId: string }>();
   const router = useRouter();
   const { user, fetchUser } = useGameStore();
-  // Subscribe to entitlements for reactive bonus updates
-  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
+  // Subscribe to entitlements for reactive bonus updates (Phase 3.21: use version hook)
+  const _entitlementVersion = useEntitlementVersion();
   const [heroDetails, setHeroDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);

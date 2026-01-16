@@ -676,11 +676,4 @@ const styles = StyleSheet.create({
   
   // Error states
   errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },
-  loginButton: {
-    backgroundColor: COLORS.gold.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
-  },
-  loginButtonText: { color: COLORS.navy.darkest, fontSize: 16, fontWeight: 'bold' },
 });

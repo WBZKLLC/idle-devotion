@@ -400,7 +400,7 @@ export default function CampaignScreen() {
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 

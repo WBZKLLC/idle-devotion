@@ -166,17 +166,10 @@ function TabsWithSafeArea() {
   };
   
   // Hidden tab bar style - completely hide on login screen
-  // Must NOT inherit fixed positioning from tabBar
-  const hiddenTabBarStyle = Platform.OS === 'web' ? {
-    position: 'fixed' as any,
-    bottom: -200, // Move completely off screen
-    left: 0,
-    right: 0,
-    height: 0,
+  // For web, we need to use transform to move it completely off viewport
+  const hiddenTabBarStyle = {
+    transform: [{ translateY: 500 }], // Move completely off screen
     opacity: 0,
-    pointerEvents: 'none' as any,
-  } : {
-    display: 'none' as const,
     height: 0,
   };
   

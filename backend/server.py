@@ -4615,8 +4615,8 @@ async def send_friend_request_v2(request: Request, credentials: HTTPAuthorizatio
     # Check if already friends
     existing_friendship = await db.friendships.find_one({
         "$or": [
-            {"user_id": from_user["id"], "friend_id": to_user["id"]},
-            {"user_id": to_user["id"], "friend_id": from_user["id"]}
+            {"user_id": user["id"], "friend_id": to_user["id"]},
+            {"user_id": to_user["id"], "friend_id": user["id"]}
         ]
     })
     
@@ -4625,7 +4625,7 @@ async def send_friend_request_v2(request: Request, credentials: HTTPAuthorizatio
     
     # Check if request already exists
     existing_request = await db.friend_requests.find_one({
-        "from_user_id": from_user["id"],
+        "from_user_id": user["id"],
         "to_user_id": to_user["id"],
         "status": "pending"
     })
@@ -4634,17 +4634,18 @@ async def send_friend_request_v2(request: Request, credentials: HTTPAuthorizatio
         raise HTTPException(status_code=400, detail="Friend request already sent")
     
     friend_request = FriendRequest(
-        from_user_id=from_user["id"],
+        from_user_id=user["id"],
         to_user_id=to_user["id"]
     )
     
     await db.friend_requests.insert_one(friend_request.dict())
     return convert_objectid(friend_request.dict())
 
-@api_router.post("/friends/requests/{username}/{request_id}/accept")
-async def accept_friend_request_v2(username: str, request_id: str):
-    """Accept a friend request (v2 path format)"""
-    user = await get_user_for_mutation(username)
+@api_router.post("/friends/requests/{request_id}/accept")
+async def accept_friend_request_v2(request_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Accept a friend request (auth required, idempotent)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
     
     friend_request = await db.friend_requests.find_one({"id": request_id})
     if not friend_request:
@@ -4653,26 +4654,45 @@ async def accept_friend_request_v2(username: str, request_id: str):
     if friend_request["to_user_id"] != user["id"]:
         raise HTTPException(status_code=403, detail="Not your friend request")
     
+    # Idempotent: if already accepted, return success
+    if friend_request.get("status") == "accepted":
+        return {"message": "Friend request accepted", "alreadyAccepted": True}
+    
     # Update request status
     await db.friend_requests.update_one(
-        {"id": request_id},
+        {"id": request_id, "status": "pending"},  # Atomic check
         {"$set": {"status": "accepted"}}
     )
     
-    # Create friendship
-    friendship = Friendship(
-        user_id=friend_request["from_user_id"],
-        friend_id=friend_request["to_user_id"]
-    )
+    # Check if friendship already exists
+    existing_friendship = await db.friendships.find_one({
+        "$or": [
+            {"user_id": friend_request["from_user_id"], "friend_id": user["id"]},
+            {"user_id": user["id"], "friend_id": friend_request["from_user_id"]}
+        ]
+    })
     
-    await db.friendships.insert_one(friendship.dict())
+    if not existing_friendship:
+        # Create friendship
+        friendship = Friendship(
+            user_id=friend_request["from_user_id"],
+            friend_id=friend_request["to_user_id"]
+        )
+        await db.friendships.insert_one(friendship.dict())
     
-    return {"message": "Friend request accepted"}
+    return {"message": "Friend request accepted", "alreadyAccepted": False}
 
-@api_router.post("/friends/requests/{username}/{request_id}/decline")
-async def decline_friend_request(username: str, request_id: str):
-    """Decline a friend request"""
-    user = await get_user_for_mutation(username)
+# Legacy route for backwards compatibility
+@api_router.post("/friends/requests/{username}/{request_id}/accept")
+async def accept_friend_request_legacy(username: str, request_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await accept_friend_request_v2(request_id, credentials)
+
+@api_router.post("/friends/requests/{request_id}/decline")
+async def decline_friend_request(request_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Decline a friend request (auth required, idempotent)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
     
     friend_request = await db.friend_requests.find_one({"id": request_id})
     if not friend_request:
@@ -4681,13 +4701,23 @@ async def decline_friend_request(username: str, request_id: str):
     if friend_request["to_user_id"] != user["id"]:
         raise HTTPException(status_code=403, detail="Not your friend request")
     
+    # Idempotent: if already declined/rejected, return success
+    if friend_request.get("status") in ["rejected", "declined"]:
+        return {"message": "Friend request declined", "alreadyDeclined": True}
+    
     # Update request status
     await db.friend_requests.update_one(
-        {"id": request_id},
+        {"id": request_id, "status": "pending"},  # Atomic check
         {"$set": {"status": "rejected"}}
     )
     
-    return {"message": "Friend request declined"}
+    return {"message": "Friend request declined", "alreadyDeclined": False}
+
+# Legacy route for backwards compatibility
+@api_router.post("/friends/requests/{username}/{request_id}/decline")
+async def decline_friend_request_legacy(username: str, request_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await decline_friend_request(request_id, credentials)
 
 @api_router.post("/friends/request")
 async def send_friend_request(from_username: str, to_username: str):

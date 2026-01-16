@@ -76,21 +76,24 @@ const COLORS = {
   },
 };
 
-// Chapter Icons & Backgrounds
-const CHAPTER_VISUALS: { [key: number]: { icon: string; bg: string[] } } = {
-  1:  { icon: '🔥', bg: ['#1e3a5f', '#0d1b2a'] },
-  2:  { icon: '🏰', bg: ['#3d1f1f', '#1a0a0a'] },
-  3:  { icon: '⚔️', bg: ['#4a3000', '#1a1000'] },
-  4:  { icon: '👿', bg: ['#2d1f4e', '#0f0a1f'] },
-  5:  { icon: '🔥', bg: ['#4a1010', '#1a0505'] },
-  6:  { icon: '⛓️', bg: ['#1a0a2e', '#0a0510'] },
-  7:  { icon: '👼', bg: ['#4a4a00', '#1a1a00'] },
-  8:  { icon: '💔', bg: ['#3d2060', '#150a25'] },
-  9:  { icon: '📜', bg: ['#5a3080', '#1f1030'] },
-  10: { icon: '🌀', bg: ['#1a1040', '#050510'] },
-  11: { icon: '🤝', bg: ['#0a0a1f', '#020205'] },
-  12: { icon: '👑', bg: ['#ffffff', '#a0a0a0'] },
+// Chapter Icons & Backgrounds (typed as readonly tuples for LinearGradient)
+const CHAPTER_VISUALS: { [key: number]: { icon: string; bg: readonly [string, string] } } = {
+  1:  { icon: '🔥', bg: ['#1e3a5f', '#0d1b2a'] as const },
+  2:  { icon: '🏰', bg: ['#3d1f1f', '#1a0a0a'] as const },
+  3:  { icon: '⚔️', bg: ['#4a3000', '#1a1000'] as const },
+  4:  { icon: '👿', bg: ['#2d1f4e', '#0f0a1f'] as const },
+  5:  { icon: '🔥', bg: ['#4a1010', '#1a0505'] as const },
+  6:  { icon: '⛓️', bg: ['#1a0a2e', '#0a0510'] as const },
+  7:  { icon: '👼', bg: ['#4a4a00', '#1a1a00'] as const },
+  8:  { icon: '💔', bg: ['#3d2060', '#150a25'] as const },
+  9:  { icon: '📜', bg: ['#5a3080', '#1f1030'] as const },
+  10: { icon: '🌀', bg: ['#1a1040', '#050510'] as const },
+  11: { icon: '🤝', bg: ['#0a0a1f', '#020205'] as const },
+  12: { icon: '👑', bg: ['#ffffff', '#a0a0a0'] as const },
 };
+
+// Fallback gradient for locked/unknown chapters
+const LOCKED_BG = ['#1a1a1a', '#0a0a0a'] as const;
 
 interface Chapter {
   id: number;

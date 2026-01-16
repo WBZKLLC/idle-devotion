@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useGameStore } from '../stores/gameStore';
-import { useEntitlementStore } from '../stores/entitlementStore';
+import { useEntitlementVersion } from '../lib/entitlements/gating';
 import { Ionicons } from '@expo/vector-icons';
 import { toast } from '../components/ui/Toast';
 
@@ -28,8 +28,8 @@ const RARITY_COLORS: { [key: string]: string } = {
 
 export default function TeamScreen() {
   const { user, userHeroes, fetchUserHeroes, isLoading } = useGameStore();
-  // Subscribe to entitlements for reactive power updates
-  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
+  // Subscribe to entitlements for reactive power updates (Phase 3.21: use version hook)
+  const _entitlementVersion = useEntitlementVersion();
   const [selectedHeroes, setSelectedHeroes] = useState<string[]>([]);
 
   useEffect(() => {

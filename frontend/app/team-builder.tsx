@@ -36,8 +36,8 @@ interface TeamSlot {
 
 export default function TeamBuilderScreen() {
   const { user, userHeroes, fetchUserHeroes } = useGameStore();
-  // Subscribe to entitlements for reactive power updates
-  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
+  // Subscribe to entitlements for reactive power updates (Phase 3.21: use version hook)
+  const _entitlementVersion = useEntitlementVersion();
   const [teams, setTeams] = useState<any[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [slots, setSlots] = useState<TeamSlot[]>([

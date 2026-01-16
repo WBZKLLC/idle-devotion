@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
-import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT } from '../ui/tokens';
+import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT, INVITATION } from '../ui/tokens';
 
 type CurrencyItem = {
   key: string;
@@ -18,6 +18,12 @@ type Props = {
   divineEssence: number;
 };
 
+/**
+ * CurrencyBar — Phase 3.22.11: Chapter 1 "Return"
+ * 
+ * Quiet, grounded, never competing with the ritual.
+ * Information, not invitation.
+ */
 export function CurrencyBar({ gems, gold, coins, divineEssence }: Props) {
   const items: CurrencyItem[] = [
     { key: 'gems', icon: 'diamond', color: '#9b4dca', value: gems },
@@ -35,7 +41,7 @@ export function CurrencyBar({ gems, gold, coins, divineEssence }: Props) {
     >
       {items.map((it) => (
         <View key={it.key} style={styles.pill}>
-          <Ionicons name={it.icon} size={14} color={it.color} />
+          <Ionicons name={it.icon} size={13} color={it.color} style={styles.icon} />
           <Text style={styles.text}>{(it.value || 0).toLocaleString()}</Text>
         </View>
       ))}
@@ -49,17 +55,24 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.xs,
-    paddingVertical: SPACING.xs,
+    gap: 4,
+    paddingVertical: 4,
     paddingHorizontal: SPACING.sm,
     borderRadius: RADIUS.xl,
-    backgroundColor: COLORS.navy.dark,
-    borderWidth: 1,
-    borderColor: COLORS.navy.light,
+    backgroundColor: COLORS.navy.darkest + '80', // Phase 3.22.11: More transparent
+    borderWidth: 0.5,
+    borderColor: COLORS.cream.pure + '08', // Phase 3.22.11: Almost invisible border
+    // Phase 3.22.11: Chapter 1 — quiet, not competing
+    opacity: INVITATION.secondary,
+  },
+  icon: {
+    opacity: 0.85, // Phase 3.22.11: Slightly muted
   },
   text: {
     color: COLORS.cream.pure,
-    fontSize: FONT_SIZE.sm,
-    fontWeight: FONT_WEIGHT.semibold,
+    fontSize: FONT_SIZE.sm - 1, // Phase 3.22.11: Slightly smaller
+    fontWeight: FONT_WEIGHT.medium,
+    opacity: 0.9,
+    letterSpacing: 0.2,
   },
 });

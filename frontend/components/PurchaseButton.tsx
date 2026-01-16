@@ -350,4 +350,68 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
+  // Phase 3.19.10: Modal styles
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.60)',
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  modalCardInner: {
+    padding: 20,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  modalMessage: {
+    marginTop: 10,
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    marginTop: 20,
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  modalCancelText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.8)',
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#8b5cf6',
+  },
+  modalConfirmText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#fff',
+  },
 });

@@ -169,18 +169,16 @@ export default function HeroesScreen() {
       <SanctumAtmosphere />
       <DivineOverlays vignette rays={false} grain />
 
-      <SafeAreaView style={styles.safe}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerTitles}>
-            <Text style={styles.title}>Idle Devotion</Text>
-            <Text style={styles.subtitle}>A Soul Bound Fantasy • {userHeroes.length} Heroes</Text>
-          </View>
-
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>‹</Text>
-          </Pressable>
-        </View>
+      <SafeAreaView style={styles.safe} edges={['left', 'right']}>
+        {/* Phase 3.19.6: Canonical header - back on LEFT per mobile UX convention */}
+        <AppHeader
+          title="Heroes"
+          subtitle={`${userHeroes.length} Heroes`}
+          left={{ type: 'back' }}
+          transparent
+          includeSafeArea={false}
+          centerTitle={false}
+        />
 
         {/* Display Tier Selector (animated, gated by unlock) */}
         <TierSelector

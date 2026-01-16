@@ -432,7 +432,7 @@ export default function HeroProgressionScreen() {
     !hero || !heroData ? 'not-found' :
     'ready';
 
-  // Loading view
+  // Loading view - Phase 3.19.5: Skeleton loading state
   if (renderMode === 'loading') {
     return (
       <View style={styles.root}>
@@ -441,14 +441,15 @@ export default function HeroProgressionScreen() {
         <DivineOverlays vignette grain />
 
         <SafeAreaView style={styles.center}>
-          <ActivityIndicator size="large" color="rgba(255, 215, 140, 0.92)" />
-          <Text style={styles.loadingText}>Loading progression...</Text>
+          <GlassCard>
+            <HeroDetailHeaderSkeleton />
+          </GlassCard>
         </SafeAreaView>
       </View>
     );
   }
 
-  // Not found view
+  // Not found view - Phase 3.19.5: Deterministic escape paths
   if (renderMode === 'not-found') {
     return (
       <View style={styles.root}>
@@ -459,9 +460,21 @@ export default function HeroProgressionScreen() {
         <SafeAreaView style={styles.center}>
           <Ionicons name="alert-circle" size={44} color="rgba(255, 215, 140, 0.92)" />
           <Text style={styles.errorTitle}>Hero not found</Text>
-          <Pressable style={styles.primaryBtn} onPress={() => Router.back()}>
-            <Text style={styles.primaryBtnText}>Go Back</Text>
-          </Pressable>
+          <Text style={styles.errorSubtext}>We couldn't load this hero's progression data.</Text>
+          <View style={{ gap: 10, marginTop: 16, width: '80%' }}>
+            <PrimaryButton
+              title="Go Home"
+              onPress={() => Router.replace('/')}
+              variant="gold"
+              size="md"
+            />
+            <SecondaryButton
+              title="Go Back"
+              onPress={() => Router.back()}
+              variant="ghost"
+              size="sm"
+            />
+          </View>
         </SafeAreaView>
       </View>
     );

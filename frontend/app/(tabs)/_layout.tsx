@@ -29,12 +29,6 @@ export default function TabsLayout() {
           height: Platform.OS === 'web' ? 60 : 65,
           paddingBottom: Platform.OS === 'web' ? 8 : Math.max(insets.bottom, 10),
           paddingTop: 8,
-          ...(Platform.OS === 'web' ? {
-            position: 'fixed' as any,
-            bottom: 0,
-            left: 0,
-            right: 0,
-          } : {}),
         },
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,

@@ -737,3 +737,32 @@ metadata:
   version: "1.0"
   test_sequence: 1
   run_ui: true
+
+# Phase 3.19 UX Polish Testing
+
+## Completed Phases:
+- 3.19.1: Loading + Empty + Disabled States (Skeleton, EmptyState, DisabledHint)
+- 3.19.2: Consistent Button Affordances (PrimaryButton, SecondaryButton, GhostButton)
+- 3.19.3: Summon Result CTA + Reward Recap
+- 3.19.4: Paywall/Store Polish + First-Purchase Framing
+- 3.19.5: Navigation Friction Cleanups + getSafeReturnTo()
+
+## Key Files Modified:
+- components/ui/Skeleton.tsx (NEW)
+- components/ui/EmptyState.tsx (NEW)
+- components/ui/DisabledHint.tsx (NEW)
+- components/ui/PrimaryButton.tsx (ENHANCED)
+- components/ui/SecondaryButton.tsx (ENHANCED)
+- app/heroes.tsx (skeleton + empty states)
+- app/hero-detail.tsx (skeleton + error state with Go Home/Go Back)
+- app/summon-hub.tsx (result recap + smart CTAs)
+- app/campaign.tsx (skeleton)
+- app/guild.tsx (skeleton)
+- app/store.tsx (restore purchases button)
+- components/Paywall.tsx (trust signals, restore, first-purchase)
+- lib/entitlements/navigation.ts (getSafeReturnTo helper)
+
+agent_communication:
+  - agent: "main"
+    message: "Phase 3.19 UX Polish complete. Please test all major flows."
+

@@ -603,7 +603,7 @@ export default function HomeScreen() {
         onPressQuest={() => router.push('/journey')}
         onPressEvents={() => router.push('/events')}
         onPressSummon={() => router.push('/summon-hub')}
-        onPressShop={() => goToStore('home_rail')}
+        onPressShop={() => goToStore('store')}
         badges={{
           mail: true,
           events: true,

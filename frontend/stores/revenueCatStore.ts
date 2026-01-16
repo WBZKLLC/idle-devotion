@@ -105,7 +105,7 @@ export const useRevenueCatStore = create<RevenueCatState>((set, get) => ({
       dlog('[RevenueCat] Configured successfully');
 
       // Listen for customer info updates
-      Purchases.addCustomerInfoUpdateListener((customerInfo) => {
+      Purchases.addCustomerInfoUpdateListener((customerInfo: CustomerInfo) => {
         dlog('[RevenueCat] Customer info updated');
         const isPro = typeof customerInfo.entitlements.active[PRO_ENTITLEMENT_ID] !== 'undefined';
         set({ customerInfo, isPro });

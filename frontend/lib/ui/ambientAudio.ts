@@ -103,7 +103,7 @@ export async function playHomeReturnCue(): Promise<void> {
   // For now, just trigger haptic as audio placeholder
   // Full audio integration would require actual sound files
   try {
-    const { default: * as Haptics } = await import('expo-haptics');
+    const Haptics = await import('expo-haptics');
     if (canPlay()) {
       lastPlayTime = Date.now();
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -120,7 +120,7 @@ export async function playCollectCue(): Promise<void> {
   if (!isEnabled) return;
   
   try {
-    const { default: * as Haptics } = await import('expo-haptics');
+    const Haptics = await import('expo-haptics');
     if (canPlay()) {
       lastPlayTime = Date.now();
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -137,7 +137,7 @@ export async function playInstantCue(): Promise<void> {
   if (!isEnabled) return;
   
   try {
-    const { default: * as Haptics } = await import('expo-haptics');
+    const Haptics = await import('expo-haptics');
     if (canPlay()) {
       lastPlayTime = Date.now();
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

@@ -1066,13 +1066,51 @@ function GlassCard(props: { children: React.ReactNode; style?: any }) {
 
 /**
  * SanctumAtmosphere - Adds depth and readability to Sanctum environment
- * - Cool violet wash for deeper feel
+ * Phase 3.22.10.C: Now with seasonal temperature shift
+ * - Cool violet wash for deeper feel (adjusted by season)
  * - Bottom fade for UI density/readability
  */
 function SanctumAtmosphere() {
+  // Phase 3.22.10.C: Seasonal temperature bias (cached per session)
+  const bias = useMemo(() => getTemperatureBias(), []);
+  const season = useMemo(() => getSeason(), []);
+  
+  // Apply seasonal shift to violet wash (5-8% max)
+  // Winter: slightly more violet/cool
+  // Summer: slightly warmer/less violet
+  const violetWashOpacity = useMemo(() => {
+    const base = 0.18;
+    return base * bias.violetSaturation;
+  }, [bias]);
+  
+  // Violet base: rgba(20, 18, 40, opacity)
+  // Adjust based on season
+  const violetColor = useMemo(() => {
+    let r = 20;
+    let b = 40;
+    
+    // Summer: warmer (less blue)
+    if (season === 'summer') {
+      r = 24;
+      b = 36;
+    }
+    // Winter: cooler (more blue)
+    else if (season === 'winter') {
+      r = 16;
+      b = 44;
+    }
+    // Fall: amber shift
+    else if (season === 'fall') {
+      r = 26;
+      b = 34;
+    }
+    
+    return `rgba(${r}, 18, ${b}, ${violetWashOpacity.toFixed(2)})`;
+  }, [season, violetWashOpacity]);
+
   return (
     <>
-      {/* Cool violet wash */}
+      {/* Cool violet wash (seasonal) */}
       <View
         pointerEvents="none"
         style={{
@@ -1081,7 +1119,7 @@ function SanctumAtmosphere() {
           top: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(20, 18, 40, 0.18)",
+          backgroundColor: violetColor,
         }}
       />
 

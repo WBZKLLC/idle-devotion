@@ -138,29 +138,8 @@ export default function PurchaseButton({
         // 2. Wait for purchase completion callback
         // 3. Then call verifyAndApplyPurchase(transactionId)
         
-        // For now, show placeholder message
-        // ALERT_ALLOWED: purchase_confirm
-        Alert.alert(
-          'Purchase Flow',
-          'This would open the native purchase UI.\n\nTransaction ID would be passed to verifyAndApplyPurchase() on completion.',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-              onPress: () => cancelPurchaseFlow(),
-            },
-            {
-              text: 'Simulate Success',
-              onPress: async () => {
-                const result = await verifyAndApplyPurchase('simulated_txn_' + Date.now());
-                if (!result.success && !result.shouldRetry) {
-                  toast.error('Verification failed. If you were charged, use Restore Purchases.');
-                  onPurchaseError?.(result.error);
-                }
-              },
-            },
-          ]
-        );
+        // Phase 3.19.10: Show inline confirm modal for simulation
+        setShowPurchaseConfirm(true);
       }
     } catch (e: any) {
       console.error('[PurchaseButton] Error:', e.message);

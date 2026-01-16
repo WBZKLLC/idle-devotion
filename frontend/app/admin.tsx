@@ -28,6 +28,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.19.10: Canonical confirm modal
+import { ConfirmModal, ConfirmModalData } from '../components/ui/ConfirmModal';
 
 interface UserSearchResult {
   username: string;

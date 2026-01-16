@@ -49,7 +49,7 @@ import {
 import { HeroGridSkeleton } from '../../components/ui/Skeleton';
 import { FilterNoResultsEmpty, NoHeroesEmpty } from '../../components/ui/EmptyState';
 // Phase 3.19.6: Canonical header + layout constants
-import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
+import { AppHeader } from '../../components/ui/AppHeader';
 // Phase 3.19.7: Cinematic loading screen
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
 

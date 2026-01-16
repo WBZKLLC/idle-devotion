@@ -1,16 +1,19 @@
 // /app/frontend/components/home/SanctumSilhouette.tsx
 // Phase 3.22.6.D: Character Silhouette Parallax
 // Phase 3.22.7: Restraint Pass — presence, not display
+// Phase 3.22.10.B: Parallax Polish — eased motion, no robot slide
 //
 // A very faint silhouette layer behind home content:
 // - Opacity: 0.06 max (felt, not seen)
 // - Moves only with scroll (no independent animation)
+// - Uses easing interpolation (not linear)
+// - Tighter clamp on small screens
 // - Respects Reduce Motion setting
 //
 // "They're there. They don't move unless you do."
 
 import React from 'react';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import { StyleSheet, useWindowDimensions, AccessibilityInfo } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   interpolate,
@@ -29,33 +32,65 @@ type Props = {
 };
 
 /**
+ * Custom easing function for scroll interpolation
+ * Creates smooth, organic motion instead of linear "robot slide"
+ * Uses ease-out cubic for natural deceleration
+ */
+function easeOutCubic(t: number): number {
+  'worklet';
+  return 1 - Math.pow(1 - t, 3);
+}
+
+/**
+ * Apply easing to scroll value for smooth parallax
+ */
+function easedScrollValue(scrollY: number, maxScroll: number): number {
+  'worklet';
+  const progress = Math.max(0, Math.min(1, scrollY / maxScroll));
+  return easeOutCubic(progress) * maxScroll;
+}
+
+/**
  * SanctumSilhouette — ambient depth layer
  * 
  * Creates a subtle visual depth behind home content.
  * Moves slightly with scroll to create parallax effect.
+ * Phase 3.22.10.B: Polished with easing, tighter clamp on small screens.
  */
 export function SanctumSilhouette({ scrollY, reduceMotion = false }: Props) {
-  const { height: screenHeight } = useWindowDimensions();
+  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   
-  // Parallax animation style — scroll only, no independent animation
+  // Phase 3.22.10.B: Tighter clamp on small screens (< 700px height)
+  const isSmallScreen = screenHeight < 700;
+  const maxTranslate = isSmallScreen ? -5 : SILHOUETTE.maxTranslateY;
+  const scaleRange = isSmallScreen 
+    ? [1, 1.008] as const  // Tighter scale on small screens
+    : SILHOUETTE.scaleRange;
+  
+  // Parallax animation style — scroll only, with easing
   const animatedStyle = useAnimatedStyle(() => {
     if (reduceMotion) {
       return {}; // Static when reduced motion is enabled
     }
     
-    // TranslateY: 0 → -8px max (restrained from -12px)
+    const maxScrollRange = screenHeight * 0.5;
+    
+    // Apply easing to scroll value for organic motion
+    const easedScroll = easedScrollValue(scrollY.value, maxScrollRange);
+    
+    // TranslateY: 0 → maxTranslate (eased, not linear)
     const translateY = interpolate(
-      scrollY.value,
-      [0, screenHeight * 0.5],
-      [0, SILHOUETTE.maxTranslateY],
+      easedScroll,
+      [0, maxScrollRange],
+      [0, maxTranslate],
       Extrapolation.CLAMP
     );
     
-    // Scale: 1.00 → 1.015 (restrained from 1.02)
+    // Scale: 1.00 → 1.015 (eased, not linear)
     const scale = interpolate(
-      scrollY.value,
-      [0, screenHeight * 0.5],
-      SILHOUETTE.scaleRange,
+      easedScroll,
+      [0, maxScrollRange],
+      scaleRange,
       Extrapolation.CLAMP
     );
     

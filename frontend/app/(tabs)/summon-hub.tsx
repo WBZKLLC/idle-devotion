@@ -443,10 +443,21 @@ export default function SummonHubScreen() {
           </ScrollView>
           <View style={styles.bannerSelector}>
             {(['common', 'premium', 'divine'] as const).map(banner => (
-              <TouchableOpacity key={banner} style={[styles.bannerTab, selectedBanner === banner && styles.bannerTabActive]} onPress={() => setSelectedBanner(banner)}>
+              <Pressable 
+                key={banner} 
+                style={({ pressed }) => [
+                  styles.bannerTab, 
+                  selectedBanner === banner && styles.bannerTabActive,
+                  pressed && styles.pressedFeedback,
+                ]} 
+                onPress={() => {
+                  haptic('selection');
+                  setSelectedBanner(banner);
+                }}
+              >
                 <Text style={styles.bannerIcon}>{banner === 'common' ? '🪙' : banner === 'premium' ? '💎' : '✨'}</Text>
                 <Text style={[styles.bannerLabel, selectedBanner === banner && styles.bannerLabelActive]}>{banner.charAt(0).toUpperCase() + banner.slice(1)}</Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
           <View style={styles.bannerCard}>
@@ -470,16 +481,30 @@ export default function SummonHubScreen() {
             </LinearGradient>
           </View>
           <View style={styles.summonButtons}>
-            <TouchableOpacity style={styles.summonButton} onPress={() => performPull('single')} disabled={isLoading}>
+            <Pressable 
+              style={({ pressed }) => [styles.summonButton, pressed && styles.pressedFeedback]} 
+              onPress={() => {
+                haptic('medium');
+                performPull('single');
+              }} 
+              disabled={isLoading}
+            >
               <LinearGradient colors={[COLORS.navy.medium, COLORS.navy.primary]} style={styles.summonButtonGradient}>
                 {isLoading ? <ActivityIndicator color={COLORS.gold.primary} /> : (<><Text style={styles.summonButtonTitle}>Single</Text><View style={styles.costRow}><Ionicons name={selectedBanner === 'divine' ? 'star' : selectedBanner === 'premium' ? 'diamond' : 'cash'} size={14} color={COLORS.gold.light} /><Text style={styles.summonButtonCost}>{selectedBanner === 'divine' ? '1' : selectedBanner === 'premium' ? '100' : '1,000'}</Text></View></>)}
               </LinearGradient>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.summonButton} onPress={() => performPull('multi')} disabled={isLoading}>
+            </Pressable>
+            <Pressable 
+              style={({ pressed }) => [styles.summonButton, pressed && styles.pressedFeedback]} 
+              onPress={() => {
+                haptic('heavy');
+                performPull('multi');
+              }} 
+              disabled={isLoading}
+            >
               <LinearGradient colors={[COLORS.gold.dark, COLORS.gold.darkest]} style={styles.summonButtonGradient}>
                 {isLoading ? <ActivityIndicator color={COLORS.navy.dark} /> : (<><Text style={[styles.summonButtonTitle, { color: COLORS.navy.darkest }]}>x10</Text><View style={styles.costRow}><Ionicons name={selectedBanner === 'divine' ? 'star' : selectedBanner === 'premium' ? 'diamond' : 'cash'} size={14} color={COLORS.navy.dark} /><Text style={[styles.summonButtonCost, { color: COLORS.navy.darkest }]}>{selectedBanner === 'divine' ? '10' : selectedBanner === 'premium' ? '900' : '9,000'}</Text></View></>)}
               </LinearGradient>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </ScrollView>
         {renderResultsModal()}

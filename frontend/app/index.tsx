@@ -164,20 +164,16 @@ export default function HomeScreen() {
   };
 
   const handleInstantCollect = async () => {
-    if (!user || (user.vip_level || 0) < 1) {
-      // Phase 3.18.4: Toast for VIP requirement
-      toast.info('VIP 1+ can use Instant Collect to claim 2 hours of rewards instantly!');
-      return;
-    }
+    // Phase 3.19.8: VIP check moved to button onPress for better UX
     if (instantCooldown > 0) {
       toast.warning(`Instant Collect available in ${formatCooldown(instantCooldown)}`);
       return;
     }
-    if (isClaiming) return;
-    setIsClaiming(true);
+    if (isClaimingCollect || isClaimingInstant) return;
+    setIsClaimingInstant(true);
     try {
       // Use centralized API wrapper
-      const data = await instantCollectIdle(user.username);
+      const data = await instantCollectIdle(user!.username);
       if (data.success) {
         // Build detailed rewards message
         const resources = data.resources_earned || {};
@@ -188,8 +184,12 @@ export default function HomeScreen() {
         if (resources.crystals > 0) rewardsText += `💎 +${resources.crystals.toLocaleString()} Crystals\n`;
         if (resources.stamina > 0) rewardsText += `⚡ +${resources.stamina} Stamina\n`;
         
-        // ALERT_ALLOWED: rewards_modal
-        Alert.alert('⚡ Instant Collect!', rewardsText, [{ text: 'Nice!' }]);
+        // Phase 3.19.8: In-app recap modal (replaces blocking Alert)
+        setRewardRecap({
+          title: '⚡ Instant Collect!',
+          message: rewardsText,
+          tone: 'purple',
+        });
         
         // Set 4 hour cooldown
         setInstantCooldown(4 * 60 * 60);
@@ -208,7 +208,7 @@ export default function HomeScreen() {
         toast.error(error?.message || 'Failed to instant collect');
       }
     } finally {
-      setIsClaiming(false);
+      setIsClaimingInstant(false);
     }
   };
 

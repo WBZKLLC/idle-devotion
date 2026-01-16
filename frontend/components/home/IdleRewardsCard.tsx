@@ -246,6 +246,18 @@ const styles = StyleSheet.create({
   card: {
     marginTop: SPACING.lg,
     paddingHorizontal: SPACING.md,
+    position: 'relative',
+  },
+  // Phase 3.22.9: Premium anchor glow — subtle focal point behind the card
+  anchorGlow: {
+    position: 'absolute',
+    top: -20,
+    left: '10%',
+    right: '10%',
+    height: 60,
+    borderRadius: 100,
+    backgroundColor: COLORS.gold.dark,
+    opacity: 0.06, // Very subtle — everything else obeys
   },
   gradient: {
     borderRadius: RADIUS.xl,

@@ -49,30 +49,85 @@ import {
   apiSetForceLogoutCallback,
 } from '../lib/api';
 
+/**
+ * Phase 3.20.3: Canonical User interface matching backend User model
+ * All properties from backend models/user.py should be represented here
+ */
 interface User {
   id: string;
   username: string;
-  gems: number;
-  coins: number;
+  server_id?: string;
+  
+  // Currency System (matching backend)
   gold: number;
+  coins: number;
+  gems: number;  // Legacy alias for divine_gems
+  crystals?: number;
   divine_essence?: number;
-  stamina?: number;
-  enhancement_stones?: number;
+  soul_dust?: number;
   skill_essence?: number;
-  rune_stones?: number;
+  star_crystals?: number;
+  divine_gems?: number;
   guild_coins?: number;
+  pvp_medals?: number;
+  enhancement_stones?: number;
+  hero_shards?: number;
+  rune_stones?: number;  // Legacy alias
+  rune_essence?: number;
+  
+  // Stamina
+  stamina?: number;
+  stamina_last_regen?: string | null;
+  
+  // Additional Resources (used by resource-bag.tsx)
+  arena_coins?: number;
+  awakening_shards?: number;
+  skill_books?: number;
+  stamina_potions?: number;
+  exp_boosts?: number;
+  gold_boosts?: number;
+  hero_tickets?: number;
+  legendary_tickets?: number;
+  equipment_tickets?: number;
+  summon_scrolls?: number;
+  
+  // Legacy/Other currencies
+  friendship_points?: number;
   arena_tickets?: number;
   blood_crystals?: number;
+  
+  // Gacha Pity
   pity_counter: number;
   pity_counter_premium?: number;
   pity_counter_divine?: number;
   total_pulls: number;
+  
+  // Login tracking
   login_days: number;
   last_login: string | null;
   daily_summons_claimed: number;
+  
+  // Profile
   profile_picture_hero_id: string | null;
+  avatar_frame?: string;
+  
+  // VIP System
   vip_level?: number;
   total_spent?: number;
+  first_purchase_used?: boolean;
+  
+  // Progress & Stats (computed/returned by backend)
+  level?: number;
+  total_power?: number;
+  heroes_count?: number;
+  campaign_progress?: number;
+  
+  // Admin
+  is_admin?: boolean;
+  admin_permissions?: string[];
+  
+  // Timestamps
+  created_at?: string;
 }
 
 interface Hero {
@@ -88,17 +143,30 @@ interface Hero {
   description: string;
 }
 
+/**
+ * Phase 3.20.3: Canonical UserHero interface matching backend UserHero model
+ */
 interface UserHero {
   id: string;
   user_id: string;
   hero_id: string;
   level: number;
   rank: number;
-  star_level: number;
+  star_level: number;  // Legacy alias for rank
+  stars?: number;      // Awakening stars (distinct from rank)
   duplicates: number;
   current_hp: number;
   current_atk: number;
   current_def: number;
+  current_speed?: number;
+  current_crit_rate?: number;
+  current_crit_dmg?: number;
+  skill_levels?: Record<string, number>;
+  equipment?: Record<string, string | null>;
+  experience?: number;
+  is_locked?: boolean;
+  is_favorite?: boolean;
+  obtained_at?: string;
   hero_data?: Hero;
 }
 

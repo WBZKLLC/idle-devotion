@@ -205,34 +205,30 @@ export default function AdminPanelScreen() {
     
     const reason = banReason.trim() || 'Violation of terms';
     
-    // ALERT_ALLOWED: destructive_confirm
-    Alert.alert(
-      'Confirm Ban',
-      `Are you sure you want to ban ${selectedUser.username}? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Ban User',
-          style: 'destructive',
-          onPress: async () => {
-            setProcessing(true);
-            try {
-              await adminBanUser(selectedUser.username, user.username, reason);
-              toast.success(`${selectedUser.username} has been banned`);
-              setShowBanModal(false);
-              setBanReason('');
-              searchUsers(); // Refresh
-            } catch (error: any) {
-              if (!isErrorHandledGlobally(error)) {
-                toast.error(error.response?.data?.detail || 'Failed to ban user');
-              }
-            } finally {
-              setProcessing(false);
-            }
-          },
-        },
-      ]
-    );
+    openConfirm({
+      title: 'Confirm Ban',
+      message: `Are you sure you want to ban ${selectedUser.username}? This action cannot be undone.`,
+      tone: 'danger',
+      confirmText: 'Ban User',
+      cancelText: 'Cancel',
+      icon: 'ban-outline',
+      onConfirm: async () => {
+        setProcessing(true);
+        try {
+          await adminBanUser(selectedUser.username, user.username, reason);
+          toast.success(`${selectedUser.username} has been banned`);
+          setShowBanModal(false);
+          setBanReason('');
+          searchUsers();
+        } catch (error: any) {
+          if (!isErrorHandledGlobally(error)) {
+            toast.error(error.response?.data?.detail || 'Failed to ban user');
+          }
+        } finally {
+          setProcessing(false);
+        }
+      },
+    });
   };
 
   const deleteUserAccount = async () => {

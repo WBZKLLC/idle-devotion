@@ -52,6 +52,8 @@ import {
 } from '../../lib/ui/desire';
 // Phase 3.22.10: Global interaction event bus
 import { subscribeInteraction } from '../../lib/ui/interactionSession';
+// Phase 3.22.10.C: Seasonal temperature
+import { getTemperatureBias, getSeason } from '../../lib/ui/season';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';

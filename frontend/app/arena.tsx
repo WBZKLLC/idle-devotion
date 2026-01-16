@@ -180,11 +180,11 @@ export default function ArenaScreen() {
     return '';
   };
 
-  const getRankColors = (rank: number): string[] => {
-    if (rank === 1) return [COLORS.gold.primary, COLORS.gold.dark];
-    if (rank <= 3) return ['#C0C0C0', '#808080'];
-    if (rank <= 10) return ['#CD7F32', '#8B4513'];
-    return [COLORS.navy.medium, COLORS.navy.primary];
+  const getRankColors = (rank: number): readonly [string, string] => {
+    if (rank === 1) return [COLORS.gold.primary, COLORS.gold.dark] as const;
+    if (rank <= 3) return ['#C0C0C0', '#808080'] as const;
+    if (rank <= 10) return ['#CD7F32', '#8B4513'] as const;
+    return [COLORS.navy.medium, COLORS.navy.primary] as const;
   };
 
   const formatNumber = (num: number) => num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();

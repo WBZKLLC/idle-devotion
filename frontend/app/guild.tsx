@@ -60,6 +60,9 @@ export default function GuildScreen() {
   // Boss state
   const [bossData, setBossData] = useState<any>(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  
+  // Phase 3.19.10: Confirm modal state
+  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
   const [lastAttackResult, setLastAttackResult] = useState<any>(null);
   const [attacksRemaining, setAttacksRemaining] = useState<number>(3);
   const [maxAttacks, setMaxAttacks] = useState<number>(3);

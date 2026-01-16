@@ -991,10 +991,7 @@ const styles = StyleSheet.create({
   claimButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
   claimButtonText: { fontSize: 16, fontWeight: 'bold', color: COLORS.navy.darkest },
   buttonRow: { flexDirection: 'row', alignItems: 'center' },
-  quickLinks: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  quickLink: { flex: 1, borderRadius: 12, overflow: 'hidden' },
-  quickLinkGradient: { paddingVertical: 16, alignItems: 'center', gap: 6, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },
-  quickLinkText: { color: COLORS.cream.soft, fontSize: 12, fontWeight: '600' },
+  // Phase 3.22.1: quickLinks styles moved to QuickLinksGrid component
   pitySection: { marginBottom: 20 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.cream.pure, marginBottom: 12 },
   pityCard: { backgroundColor: COLORS.navy.medium, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: COLORS.gold.dark + '30' },

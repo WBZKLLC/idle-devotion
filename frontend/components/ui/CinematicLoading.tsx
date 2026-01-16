@@ -1,5 +1,5 @@
 // /app/frontend/components/ui/CinematicLoading.tsx
-// Phase 3.19.7: Idle Angels-style cinematic loading screen
+// Phase 3.19.7: Premium cinematic loading screen
 
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';

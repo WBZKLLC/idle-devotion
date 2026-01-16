@@ -149,6 +149,15 @@ function TabsWithSafeArea() {
   // Phase 3.22.2: Hide tab bar when user is not logged in
   const user = useGameStore(s => s.user);
   
+  // Hidden tab bar style - fully removes from layout on web and native
+  const hiddenTabBarStyle = {
+    display: 'none' as const,
+    height: 0,
+    opacity: 0,
+    position: 'absolute' as const,
+    bottom: -100, // Push off screen as fallback
+  };
+  
   return (
     <Tabs
       screenOptions={{
@@ -158,7 +167,7 @@ function TabsWithSafeArea() {
           ...styles.tabBar,
           paddingBottom: Math.max(insets.bottom, 8), // Respect bottom safe area
           height: 60 + Math.max(insets.bottom, 0), // Add height for safe area
-        } : { display: 'none' }, // Phase 3.22.2: Hide on login
+        } : hiddenTabBarStyle, // Phase 3.22.2: Hide on login
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIconStyle: styles.tabIcon,

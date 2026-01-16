@@ -27,8 +27,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ENTITLEMENTS, premiumCinematicOwnedKey } from '../lib/entitlements';
-import { ENTITLEMENT_KEYS } from '../lib/entitlements/types';
+import { ENTITLEMENT_KEYS, premiumCinematicOwnedKey } from '../lib/entitlements';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import { useHasEntitlement } from '../lib/entitlements/gating';
 import { useGameStore } from '../stores/gameStore';
@@ -42,11 +41,10 @@ const ENABLE_DEV_TOOLS = __DEV__;
 
 export default function PaidFeaturesScreen() {
   // Subscribe directly to entitlements state for proper reactivity
-  const entitlements = useEntitlementStore(s => s.entitlements);
-  const setEntitlement = useEntitlementStore(s => s.setEntitlement);
-  const grantDev = useEntitlementStore(s => s.grantEntitlementDevOnly);
-  const revokeDev = useEntitlementStore(s => s.revokeEntitlementDevOnly);
-  const setHeroPremiumCinematicOwned = useEntitlementStore(s => s.setHeroPremiumCinematicOwned);
+  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
+  // Phase 3.20.1: Use canonical dev methods from store
+  const grantDev = useEntitlementStore(s => s.devGrantEntitlement);
+  const revokeDev = useEntitlementStore(s => s.devRevokeEntitlement);
   
   // Get user's actual heroes from game store
   const user = useGameStore(s => s.user);

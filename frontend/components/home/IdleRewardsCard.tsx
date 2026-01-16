@@ -86,23 +86,34 @@ export function IdleRewardsCard({
   // 2. Noticed (daily, if signature didn't fire)
   // 3. Normal rotation
   const [subtitle, setSubtitle] = useState<string>('');
+  const signatureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Cancel signature revert on unmount or interaction
+  const cancelSignatureRevert = useCallback(() => {
+    if (signatureTimeoutRef.current) {
+      clearTimeout(signatureTimeoutRef.current);
+      signatureTimeoutRef.current = null;
+    }
+  }, []);
   
   useEffect(() => {
     const checkAccents = async () => {
-      // PRIORITY 1: Signature moment (daily + session budgeted)
+      // PRIORITY 1: Signature moment (daily + session budgeted, atomic)
       const canSignature = await canTriggerSignatureToday();
       if (canSignature) {
-        // Signature consumes budget in markSignatureTriggered
-        const signatureCopy = getSignatureCopy();
-        setSubtitle(signatureCopy);
-        await markSignatureTriggered();
-        playSignatureCue(); // Warm haptic cue
-        
-        // After signature duration (1.4s), revert to normal
-        setTimeout(() => {
-          setSubtitle(getIdleSubtitle());
-        }, 1400);
-        return;
+        const didSignature = await markSignatureTriggered();
+        if (didSignature) {
+          const signatureCopy = getSignatureCopy();
+          setSubtitle(signatureCopy);
+          playSignatureCue();
+          
+          // Schedule revert (cancellable on interaction)
+          signatureTimeoutRef.current = setTimeout(() => {
+            setSubtitle(getIdleSubtitle());
+            signatureTimeoutRef.current = null;
+          }, 1400);
+          return;
+        }
       }
       
       // PRIORITY 2: Noticed moment (daily, if signature didn't fire)
@@ -114,7 +125,6 @@ export function IdleRewardsCard({
           await markNoticedTriggered();
           return;
         }
-        // Other variants — still budget-paid
         await markNoticedTriggered();
       }
       
@@ -122,7 +132,10 @@ export function IdleRewardsCard({
       setSubtitle(getIdleSubtitle());
     };
     checkAccents();
-  }, []);
+    
+    // Cleanup on unmount
+    return () => cancelSignatureRevert();
+  }, [cancelSignatureRevert]);
 
   // Phase 3.22.8: Breathing sync with session-unique jitter
   const breathingDuration = useMemo(() => getBreathingDuration(), []);

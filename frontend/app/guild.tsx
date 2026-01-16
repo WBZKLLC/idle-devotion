@@ -40,6 +40,8 @@ import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 // Phase 3.19.7: Cinematic loading screen
 import { CinematicLoading } from '../components/ui/CinematicLoading';
+// Phase 3.19.10: Canonical confirm modal
+import { ConfirmModal, ConfirmModalData } from '../components/ui/ConfirmModal';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();

@@ -15,14 +15,12 @@ import { isErrorHandledGlobally } from '../lib/api';
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.2: Canonical button components
 import { SecondaryButton } from '../components/ui/SecondaryButton';
-// Phase 3.19.4: Entitlement store for restore
-import { useEntitlementStore } from '../lib/entitlements/gating';
 // Phase 3.19.6: Canonical header + layout constants
 import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 // Phase 3.19.11: Confirm modal hook
 import { useConfirmModal } from '../components/ui/useConfirmModal';
-// REVENUECAT DISABLED - Re-enable when finalizing project
-// import { useRevenueCatStore } from '../stores/revenueCatStore';
+// Phase 3.20.1: RevenueCat store for restore purchases
+import { useRevenueCatStore } from '../stores/revenueCatStore';
 // import { CustomPaywall, presentNativePaywall } from '../components/Paywall';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -77,10 +75,7 @@ const VIP_TIERS: VIPTier[] = [
 
 export default function StoreScreen() {
   const { user, fetchUser } = useGameStore();
-  const { restorePurchases } = useEntitlementStore();
-  // REVENUECAT DISABLED - Re-enable when finalizing:
-  // const { isPro, isLoading: isRevenueCatLoading } = useRevenueCatStore();
-  const isPro = false; // Temporary placeholder
+  const { restorePurchases, isPro } = useRevenueCatStore();
   const [packages, setPackages] = useState<CrystalPackage[]>([]);
   const [divinePackages, setDivinePackages] = useState<any>(null);
   const [vipInfo, setVipInfo] = useState<any>(null);

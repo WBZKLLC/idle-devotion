@@ -145,11 +145,11 @@ export default function GachaScreen() {
         <SummonAtmosphere />
         <DivineOverlays vignette rays grain />
         <View style={styles.centerContainer}>
-          <Ionicons name="person-circle" size={48} color="rgba(255, 215, 140, 0.9)" />
+          <Ionicons name="lock-closed" size={48} color={COLORS.gold.primary} />
           <Text style={styles.noUserText}>Please login first</Text>
-          <Pressable style={styles.loginBtn} onPress={() => router.push('/')}>
-            <Text style={styles.loginBtnText}>Go to Login</Text>
-          </Pressable>
+          <View style={{ marginTop: 16, width: '60%' }}>
+            <PrimaryButton title="Go to Login" onPress={() => router.push('/')} variant="gold" size="md" />
+          </View>
         </View>
       </View>
     );

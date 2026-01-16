@@ -27,6 +27,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { useEntitlementStore } from '../stores/entitlementStore';
+// Entitlement gating (SINGLE SOURCE OF TRUTH)
+import { 
+  requireCinematicAccess, 
+  canAccessHeroCinematic,
+  useEntitlementVersion,
+} from '../lib/entitlements/gating';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.5: Canonical button components

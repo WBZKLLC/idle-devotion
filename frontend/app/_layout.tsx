@@ -1,8 +1,7 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Stack, Slot, useSegments, useRouter } from 'expo-router';
 import { StyleSheet, Platform, View, ActivityIndicator, Text } from 'react-native';
 import { useEffect, useState } from 'react';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useGameStore } from '../stores/gameStore';
 import { useFeatureStore } from '../stores/featureStore';
 import { useEntitlementStore } from '../stores/entitlementStore';
@@ -13,13 +12,11 @@ import { AppErrorBoundary } from '../components/AppErrorBoundary';
 import { initSentry, sentrySetUser } from '../lib/telemetry/sentry';
 import { track, Events } from '../lib/telemetry/events';
 import { validateConfig } from '../lib/config/validate';
+import { Ionicons } from '@expo/vector-icons';
 // Phase 3.14: App resume reconciliation
 import { useAppResumeReconcile } from '../hooks/useAppResumeReconcile';
 // Phase 3.18: Toast provider for success/error notifications
 import { ToastProvider } from '../components/ui/ToastProvider';
-
-// REVENUECAT DISABLED - Re-enable when finalizing project
-// import { useRevenueCatStore } from '../stores/revenueCatStore';
 
 // Regal Color Palette
 const COLORS = {
@@ -129,122 +126,39 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function Layout() {
+// Auth-aware navigation - redirects based on auth state
+function AuthNavigator() {
+  const user = useGameStore(s => s.user);
+  const segments = useSegments();
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Check if we're in the auth group
+    const inAuthGroup = segments[0] === '(auth)';
+    
+    if (!user && !inAuthGroup) {
+      // User is not logged in and not on auth screen -> redirect to login
+      router.replace('/(auth)/login');
+    } else if (user && inAuthGroup) {
+      // User is logged in but on auth screen -> redirect to main app
+      router.replace('/(tabs)');
+    }
+  }, [user, segments]);
+  
+  return <Slot />;
+}
+
+export default function RootLayout() {
   return (
     <AppErrorBoundary>
       <SafeAreaProvider>
         <SessionProvider>
-          <TabsWithSafeArea />
+          <AuthNavigator />
         </SessionProvider>
         {/* Phase 3.18: Global toast notifications */}
         <ToastProvider />
       </SafeAreaProvider>
     </AppErrorBoundary>
-  );
-}
-
-// Separate component to use the safe area insets hook
-function TabsWithSafeArea() {
-  const insets = useSafeAreaInsets();
-  
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: COLORS.gold.primary,
-        tabBarInactiveTintColor: COLORS.cream.soft + '60',
-        tabBarStyle: {
-          ...styles.tabBar,
-          paddingBottom: Math.max(insets.bottom, 8), // Respect bottom safe area
-          height: 60 + Math.max(insets.bottom, 0), // Add height for safe area
-        },
-        headerShown: false,
-        tabBarLabelStyle: styles.tabLabel,
-        tabBarIconStyle: styles.tabIcon,
-      }}
-    >
-      {/* ===== 6 MAIN VISIBLE TABS ===== */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="summon-hub"
-        options={{
-          title: 'Summon',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="gift" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="heroes"
-        options={{
-          title: 'Heroes',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="arena"
-        options={{
-          title: 'Arena',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="guild"
-        options={{
-          title: 'Guild',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="shield" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
-        }}
-      />
-
-      {/* ===== HIDDEN SCREENS (accessible via router.push) ===== */}
-      <Tabs.Screen name="story" options={{ href: null }} />
-      <Tabs.Screen name="abyss" options={{ href: null }} />
-      <Tabs.Screen name="chat" options={{ href: null }} />
-      <Tabs.Screen name="leaderboard" options={{ href: null }} />
-      <Tabs.Screen name="store" options={{ href: null }} />
-      <Tabs.Screen name="gacha" options={{ href: null }} />
-      <Tabs.Screen name="team" options={{ href: null }} />
-      <Tabs.Screen name="login-rewards" options={{ href: null }} />
-      <Tabs.Screen name="battle-pass" options={{ href: null }} />
-      <Tabs.Screen name="events" options={{ href: null }} />
-      <Tabs.Screen name="team-builder" options={{ href: null }} />
-      <Tabs.Screen name="hero-upgrade" options={{ href: null }} />
-      <Tabs.Screen name="hero-progression" options={{ href: null }} />
-      <Tabs.Screen name="combat" options={{ href: null }} />
-      <Tabs.Screen name="hero-detail" options={{ href: null }} />
-      <Tabs.Screen name="dungeons" options={{ href: null }} />
-      <Tabs.Screen name="equipment" options={{ href: null }} />
-      <Tabs.Screen name="guild-war" options={{ href: null }} />
-      <Tabs.Screen name="hero-manager" options={{ href: null }} />
-      <Tabs.Screen name="journey" options={{ href: null }} />
-      <Tabs.Screen name="launch-banner" options={{ href: null }} />
-      <Tabs.Screen name="selene-banner" options={{ href: null }} />
-      <Tabs.Screen name="resource-bag" options={{ href: null }} />
-      <Tabs.Screen name="campaign" options={{ href: null }} />
-      <Tabs.Screen name="admin" options={{ href: null }} />
-      </Tabs>
   );
 }
 
@@ -280,29 +194,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     opacity: 0.8,
-  },
-  tabBar: {
-    backgroundColor: COLORS.navy.darkest,
-    borderTopColor: COLORS.gold.primary + '30',
-    borderTopWidth: 1,
-    height: Platform.OS === 'web' ? 60 : 65,
-    paddingBottom: Platform.OS === 'web' ? 8 : 10,
-    paddingTop: 8,
-    ...Platform.select({
-      web: {
-        position: 'fixed' as any,
-        bottom: 0,
-        left: 0,
-        right: 0,
-      },
-    }),
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  tabIcon: {
-    marginBottom: -2,
   },
 });

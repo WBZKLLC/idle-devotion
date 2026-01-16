@@ -937,10 +937,9 @@ const styles = StyleSheet.create({
   
   guildList: { maxHeight: 300 },
   noGuildsText: { fontSize: 14, color: COLORS.cream.dark, textAlign: 'center', paddingVertical: 20 },
-  guildListItem: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: COLORS.navy.primary, borderRadius: 10, marginBottom: 8 },
-  guildListInfo: { flex: 1, marginLeft: 12 },
+  // Phase 3.22.5: ListRow handles row styling - only keep text styles
   guildListName: { fontSize: 14, fontWeight: '600', color: COLORS.cream.pure },
-  guildListMembers: { fontSize: 12, color: COLORS.cream.dark },
+  guildListMembers: { fontSize: 12, color: COLORS.cream.dark, marginTop: 2 },
   
   // Error states
   errorText: { color: COLORS.cream.pure, fontSize: 18, textAlign: 'center' },

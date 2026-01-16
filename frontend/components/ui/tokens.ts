@@ -167,6 +167,24 @@ export const SILHOUETTE = {
 } as const;
 
 // =============================================================================
+// PHASE 3.22.9: SETTLE ANIMATION
+// =============================================================================
+
+/** Home screen settle animation — calm dominance after entry */
+export const SETTLE = {
+  /** Duration of settle animation (ms) */
+  duration: 350,
+  /** Initial scale (slightly larger, then settles) */
+  initialScale: 1.008,
+  /** Initial opacity */
+  initialOpacity: 0.92,
+  /** Delay before secondary elements settle (ms) */
+  secondaryDelay: 80,
+  /** Delay before tertiary elements settle (ms) */
+  tertiaryDelay: 150,
+} as const;
+
+// =============================================================================
 // PREMIUM COLORS (from UX spec)
 // =============================================================================
 export const PREMIUM_COLORS = {

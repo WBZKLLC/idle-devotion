@@ -455,6 +455,235 @@ export default function HomeScreen() {
     );
   }
 
+  // Phase 3.22.1: Quick Links data configuration
+  const quickLinkRows: QuickLinkRow[] = [
+    {
+      key: 'row1',
+      tiles: [
+        {
+          kind: 'standard',
+          key: 'teams',
+          onPress: () => router.push('/hero-manager'),
+          gradient: [COLORS.gold.primary, COLORS.gold.dark] as const,
+          icon: 'people',
+          iconColor: COLORS.navy.darkest,
+          label: 'Teams',
+          labelStyle: { color: COLORS.navy.darkest },
+        },
+        {
+          kind: 'standard',
+          key: 'heroes',
+          onPress: () => router.push('/heroes'),
+          gradient: [COLORS.navy.medium, COLORS.navy.primary] as const,
+          icon: 'star',
+          iconColor: COLORS.gold.light,
+          label: 'Heroes',
+        },
+        {
+          kind: 'standard',
+          key: 'rewards',
+          onPress: () => router.push('/login-rewards'),
+          gradient: [COLORS.navy.medium, COLORS.navy.primary] as const,
+          icon: 'calendar',
+          iconColor: COLORS.gold.light,
+          label: 'Rewards',
+        },
+      ],
+    },
+    {
+      key: 'row2',
+      tiles: [
+        {
+          kind: 'standard',
+          key: 'guild',
+          onPress: () => router.push('/guild'),
+          gradient: [COLORS.navy.medium, COLORS.navy.primary] as const,
+          icon: 'shield',
+          iconColor: COLORS.gold.light,
+          label: 'Guild',
+        },
+        {
+          kind: 'standard',
+          key: 'gear',
+          onPress: () => router.push('/equipment'),
+          gradient: ['#8b5cf6', '#6d28d9'] as const,
+          icon: 'hammer',
+          iconColor: COLORS.cream.pure,
+          label: 'Gear',
+          labelStyle: { color: COLORS.cream.pure },
+        },
+        {
+          kind: 'standard',
+          key: 'store',
+          onPress: () => goToStore('store'),
+          gradient: [COLORS.navy.medium, COLORS.navy.primary] as const,
+          icon: 'cart',
+          iconColor: COLORS.gold.light,
+          label: 'Store',
+        },
+      ],
+    },
+    {
+      key: 'row3',
+      tiles: [
+        {
+          kind: 'custom',
+          key: 'selene-banner',
+          flex: 2,
+          onPress: () => router.push('/selene-banner'),
+          gradient: ['#6366f1', '#4338ca', '#1e1b4b'] as const,
+          gradientStyle: { paddingVertical: 20 },
+          children: (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontSize: 20 }}>⏳</Text>
+              <View>
+                <Text style={{ color: '#a5b4fc', fontSize: 14, fontWeight: 'bold' }}>
+                  FATED CHRONOLOGY
+                </Text>
+                <Text style={{ color: '#ef4444', fontSize: 10, fontWeight: 'bold' }}>
+                  7 DAYS ONLY!
+                </Text>
+              </View>
+            </View>
+          ),
+        },
+        {
+          kind: 'standard',
+          key: 'journey',
+          onPress: () => router.push('/journey'),
+          gradient: ['#f59e0b', '#d97706'] as const,
+          icon: 'map',
+          iconColor: COLORS.cream.pure,
+          label: 'Journey',
+          labelStyle: { color: COLORS.cream.pure },
+        },
+      ],
+    },
+    {
+      key: 'row4',
+      tiles: [
+        {
+          kind: 'standard',
+          key: 'aethon',
+          onPress: () => router.push('/launch-banner'),
+          gradient: ['#7c3aed', '#5b21b6'] as const,
+          emoji: '✨',
+          label: 'Aethon 72H',
+          labelStyle: { color: COLORS.gold.light, fontSize: 11 },
+        },
+        {
+          kind: 'standard',
+          key: 'dungeons',
+          onPress: () => router.push('/dungeons'),
+          gradient: ['#22c55e', '#16a34a'] as const,
+          icon: 'flash',
+          iconColor: COLORS.cream.pure,
+          label: 'Dungeons',
+          labelStyle: { color: COLORS.cream.pure },
+        },
+        {
+          kind: 'standard',
+          key: 'events',
+          onPress: () => router.push('/events'),
+          gradient: ['#f59e0b', '#d97706'] as const,
+          icon: 'sparkles',
+          iconColor: COLORS.cream.pure,
+          label: 'Events',
+          labelStyle: { color: COLORS.cream.pure },
+        },
+        {
+          kind: 'standard',
+          key: 'pass',
+          onPress: () => router.push('/battle-pass'),
+          gradient: ['#9b59b6', '#8e44ad'] as const,
+          icon: 'trophy',
+          iconColor: COLORS.cream.pure,
+          label: 'Pass',
+          labelStyle: { color: COLORS.cream.pure },
+        },
+      ],
+    },
+    {
+      key: 'row5',
+      tiles: [
+        {
+          kind: 'custom',
+          key: 'campaign',
+          flex: 2,
+          onPress: () => router.push('/campaign'),
+          gradient: ['#1e40af', '#1e3a8a', '#172554'] as const,
+          gradientStyle: { paddingVertical: 18 },
+          children: (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ fontSize: 24 }}>📖</Text>
+              <View>
+                <Text style={{ color: '#93c5fd', fontSize: 14, fontWeight: 'bold' }}>
+                  STORY CAMPAIGN
+                </Text>
+                <Text style={{ color: '#60a5fa', fontSize: 10 }}>
+                  12 Chapters • Epic Adventure
+                </Text>
+              </View>
+            </View>
+          ),
+        },
+        {
+          kind: 'standard',
+          key: 'abyss',
+          onPress: () => router.push('/abyss'),
+          gradient: ['#1a202c', '#0d0d12'] as const,
+          icon: 'chevron-down-circle',
+          iconColor: '#48bb78',
+          label: 'Abyss',
+          labelStyle: { color: '#48bb78' },
+        },
+      ],
+    },
+    {
+      key: 'row6',
+      tiles: [
+        {
+          kind: 'standard',
+          key: 'war',
+          onPress: () => router.push('/guild-war'),
+          gradient: ['#dc2626', '#7f1d1d'] as const,
+          icon: 'flame',
+          iconColor: COLORS.cream.pure,
+          label: 'War',
+          labelStyle: { color: COLORS.cream.pure },
+        },
+        {
+          kind: 'standard',
+          key: 'chat',
+          onPress: () => router.push('/chat'),
+          gradient: ['#0891b2', '#0e7490'] as const,
+          icon: 'chatbubbles',
+          iconColor: COLORS.cream.pure,
+          label: 'Chat',
+          labelStyle: { color: COLORS.cream.pure },
+        },
+        {
+          kind: 'standard',
+          key: 'ranks',
+          onPress: () => router.push('/leaderboard'),
+          gradient: [COLORS.navy.medium, COLORS.navy.primary] as const,
+          icon: 'podium',
+          iconColor: COLORS.gold.light,
+          label: 'Ranks',
+        },
+        {
+          kind: 'standard',
+          key: 'more',
+          onPress: () => setSidebarVisible(true),
+          gradient: [COLORS.navy.medium, COLORS.navy.primary] as const,
+          icon: 'menu',
+          iconColor: COLORS.gold.light,
+          label: 'More',
+        },
+      ],
+    },
+  ];
+
   // AUTHENTICATED DASHBOARD
   return (
     <View style={styles.container}>

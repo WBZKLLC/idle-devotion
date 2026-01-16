@@ -431,12 +431,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Footer: Featured Hero */}
-              <View style={loginStyles.footer}>
-                <Text style={loginStyles.footerText}>
-                  Featuring Raphael the Eternal — 5+ Star Skin
-                </Text>
-              </View>
+              {/* Footer removed - Phase 3.19.7 cleanup */}
             </ScrollView>
           </SafeAreaView>
         </KeyboardAvoidingView>

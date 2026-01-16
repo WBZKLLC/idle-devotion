@@ -31,6 +31,8 @@ type LeftAction = {
 interface AppHeaderProps {
   /** Screen title displayed in center */
   title: string;
+  /** Optional subtitle (smaller, muted) */
+  subtitle?: string;
   /** Left action button configuration */
   left?: LeftAction;
   /** Right slot content (optional action icons) */
@@ -43,6 +45,8 @@ interface AppHeaderProps {
   style?: ViewStyle;
   /** Include safe area padding at top */
   includeSafeArea?: boolean;
+  /** Center the title (default: true for standard screens) */
+  centerTitle?: boolean;
 }
 
 // =============================================================================

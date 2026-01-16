@@ -47,26 +47,29 @@ export function getGreeting(): string {
 // =============================================================================
 
 export const IDLE_COPY = {
-  /** Card title — reframed from "Idle Rewards" */
-  title: 'Devotion Accrued',
+  /** Card title — refined for quiet indulgence */
+  title: 'Awaiting You',
   
-  /** Subtitle variants — one line, calm */
+  /** Subtitle variants — calm, not enthusiastic */
   subtitles: [
-    'Time has not been wasted.',
-    'Your presence was anticipated.',
-    'They kept working while you rested.',
-    'What was gathered in your absence.',
+    'Prepared for you.',
+    'Time was generous.',
+    'They waited.',
+    'Gathered in your absence.',
   ] as const,
   
   /** Button labels — confident, not aggressive */
   collectButton: 'Receive',
-  instantButton: 'Demand More',
+  instantButton: 'Take More',
   
-  /** Timer label */
-  timerLabel: 'Time Elapsed',
+  /** Timer label — refined */
+  timerLabel: 'Time Accrued',
+  
+  /** Pending label */
+  pendingLabel: 'Prepared for you',
   
   /** Max time note */
-  maxTimeNote: (hours: number) => `Cap: ${hours}h`,
+  maxTimeNote: (hours: number) => `${hours}h cap`,
 } as const;
 
 /**

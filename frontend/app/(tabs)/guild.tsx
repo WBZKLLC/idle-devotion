@@ -44,7 +44,9 @@ import { CinematicLoading } from '../../components/ui/CinematicLoading';
 import { useConfirmModal } from '../../components/ui/useConfirmModal';
 // Phase 3.22.4: Micro-interaction utilities
 import { PRESS, haptic } from '../../lib/ui/interaction';
-import { LAYOUT } from '../../components/ui/tokens';
+import { LAYOUT, LIST } from '../../components/ui/tokens';
+// Phase 3.22.5: Elegant list row primitive
+import { ListRow } from '../../components/ui/ListRow';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();

@@ -523,7 +523,7 @@ export default function HeroProgressionScreen() {
             <View style={styles.heroRow}>
               <View style={styles.portraitOuter}>
                 <View style={[styles.portraitStroke, { backgroundColor: 'rgba(255, 215, 140, 0.18)' }]} />
-                <Image source={resolveTierArt(previewTier)} style={styles.portrait} resizeMode="cover" />
+                <Image source={getTierArtSource(previewTier)} style={styles.portrait} resizeMode="cover" />
                 <View style={[styles.rarityPill, { backgroundColor: rarityPillColor }]}>
                   <Text style={styles.rarityPillText}>{heroRarity}</Text>
                 </View>
@@ -632,7 +632,7 @@ export default function HeroProgressionScreen() {
                     ]}
                   >
                     <View style={styles.tierThumbWrap}>
-                      <Image source={resolveTierArt(tier)} style={styles.tierThumb} resizeMode="cover" />
+                      <Image source={getTierArtSource(tier)} style={styles.tierThumb} resizeMode="cover" />
                       {locked && (
                         <View style={styles.lockOverlay}>
                           <Ionicons 

@@ -798,38 +798,6 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16, fontWeight: '500' },
   
-  // Phase 3.19.8: Reward Recap Modal styles
-  recapBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-  },
-  recapCard: {
-    width: '100%',
-    maxWidth: 420,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  recapCardInner: {
-    padding: 16,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
-  },
-  recapTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.cream.pure,
-  },
-  recapMessage: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 20,
-    color: COLORS.cream.soft,
-  },
-  
   // ============ LEGACY LOGIN STYLES (deprecated - using loginStyles instead) ============
   loginScreenContainer: { flex: 1, backgroundColor: COLORS.celestial.deep },
   backgroundImage: { 

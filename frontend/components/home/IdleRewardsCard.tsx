@@ -61,7 +61,12 @@ type Props = {
   onVipLockedPress: () => void;
 };
 
-export function IdleRewardsCard({
+// Expose methods to parent via ref
+export type IdleRewardsCardRef = {
+  cancelSignatureRevert: () => void;
+};
+
+export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function IdleRewardsCard({
   idleStatus,
   vipLevel,
   instantCooldown,
@@ -72,7 +77,7 @@ export function IdleRewardsCard({
   onCollect,
   onInstant,
   onVipLockedPress,
-}: Props) {
+}, ref) {
   const maxHours = idleStatus?.max_hours ?? 8;
   const elapsed = idleStatus?.time_elapsed ?? 0;
   const isCapped = !!idleStatus?.is_capped;

@@ -24,6 +24,8 @@ import { router } from 'expo-router';
 import Sidebar from '../components/Sidebar';
 // Phase 3.11: Canonical store navigation
 import { goToStore } from '../lib/entitlements/navigation';
+// Phase 3.19.2: Canonical button component
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 // Phase 3.18.4: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen

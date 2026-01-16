@@ -562,20 +562,30 @@ export default function HomeScreen() {
           divineEssence={user.divine_essence || 0}
         />
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.content} 
+          showsVerticalScrollIndicator={false}
+          onScrollBeginDrag={() => {
+            markScrollDetected();
+            handleUserInteraction();
+          }}
+          scrollEventThrottle={16}
+        >
           {/* Phase 3.22.1: Extracted idle rewards component */}
-          <IdleRewardsCard
-            idleStatus={idleStatus}
-            vipLevel={user?.vip_level || 0}
-            instantCooldown={instantCooldown}
-            isClaimingCollect={isClaimingCollect}
-            isClaimingInstant={isClaimingInstant}
-            formatIdleTime={formatIdleTime}
-            formatCooldown={formatCooldown}
-            onCollect={handleClaimIdle}
-            onInstant={handleInstantCollect}
-            onVipLockedPress={() => toast.info('VIP 1+ unlocks Instant Collect (2 hours of rewards instantly).')}
-          />
+          <Pressable onPressIn={handleUserInteraction}>
+            <IdleRewardsCard
+              idleStatus={idleStatus}
+              vipLevel={user?.vip_level || 0}
+              instantCooldown={instantCooldown}
+              isClaimingCollect={isClaimingCollect}
+              isClaimingInstant={isClaimingInstant}
+              formatIdleTime={formatIdleTime}
+              formatCooldown={formatCooldown}
+              onCollect={handleClaimIdle}
+              onInstant={handleInstantCollect}
+              onVipLockedPress={() => toast.info('VIP 1+ unlocks Instant Collect (2 hours of rewards instantly).')}
+            />
+          </Pressable>
 
           {/* Phase 3.22.1: Extracted quick links grid */}
           <QuickLinksGrid rows={quickLinkRows} />

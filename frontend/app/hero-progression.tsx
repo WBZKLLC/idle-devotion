@@ -125,6 +125,9 @@ export default function HeroProgressionScreen() {
   // confirm modals
   const [showConfirmPromote, setShowConfirmPromote] = useState(false);
   const [showConfirmAscend, setShowConfirmAscend] = useState(false);
+  
+  // Phase 3.19.9: Reward recap modal for tier unlock celebration
+  const [rewardRecap, setRewardRecap] = useState<RewardRecapData | null>(null);
 
   // network state
   const [isPromoting, setIsPromoting] = useState(false);

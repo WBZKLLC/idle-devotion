@@ -104,7 +104,11 @@ export default function BattlePassScreen() {
     // Note: Server enforces actual PREMIUM entitlement check
     if (isPremium && !passData.has_premium) {
       toast.premium('Premium required to claim this track.');
-      goToPaywall({ productKey: 'PREMIUM_SUBSCRIPTION', source: 'battle_pass' });
+      goToPaywall({ 
+        productKey: 'PREMIUM_SUBSCRIPTION', 
+        source: 'battle_pass',
+        returnTo: getSafeReturnTo(pathname),
+      });
       return;
     }
 

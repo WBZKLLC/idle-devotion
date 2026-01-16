@@ -466,7 +466,15 @@ function SearchTab({ username, onUpdate }: { username: string; onUpdate: () => v
       {query.length === 0 && (
         <View style={styles.searchHint}>
           <Text style={styles.searchHintText}>
-            Enter a username to find players
+            Enter at least 3 characters to find players
+          </Text>
+        </View>
+      )}
+      
+      {query.length > 0 && query.length < 3 && (
+        <View style={styles.searchHint}>
+          <Text style={styles.searchHintText}>
+            Keep typing... ({3 - query.length} more characters)
           </Text>
         </View>
       )}
@@ -477,7 +485,7 @@ function SearchTab({ username, onUpdate }: { username: string; onUpdate: () => v
         </View>
       )}
       
-      {query.length >= 2 && !searching && results.length === 0 && (
+      {query.length >= 3 && !searching && results.length === 0 && (
         <View style={styles.searchHint}>
           <Text style={styles.searchHintText}>
             No players found matching "{query}"

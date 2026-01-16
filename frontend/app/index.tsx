@@ -44,14 +44,8 @@ import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '..
 // Celestial sanctum/temple environment - instant render, no flicker
 const SANCTUM_BG_IMAGE = require('../assets/backgrounds/sanctum_environment_01.jpg');
 
-// Regal Color Palette - Enhanced for celestial theme
-const COLORS = {
-  navy: { darkest: '#050a14', dark: '#0a1222', primary: '#0f1a2e', medium: '#1a2740', light: '#2d4263' },
-  gold: { darkest: '#8b7355', dark: '#b8860b', primary: '#c9a227', medium: '#d4af37', light: '#e6c666', pale: '#f5e6c4' },
-  cream: { pure: '#ffffff', light: '#fefefe', soft: '#f8f6f0', warm: '#f5f0e6', dark: '#e8e0d0' },
-  violet: { dark: '#2d1b4e', primary: '#5b3d8a', light: '#8b6bb8', glow: '#a78bfa' },
-  celestial: { deep: '#0d0a1a', mid: '#1a1330', accent: '#3b2d5f' },
-};
+// Phase 3.22.1: Use canonical theme colors (no local duplication)
+import COLORS from '../theme/colors';
 
 export default function HomeScreen() {
   const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();

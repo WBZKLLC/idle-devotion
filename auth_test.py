@@ -18,7 +18,7 @@ import random
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://cinema-loading.preview.emergentagent.com/api"
+BACKEND_URL = "https://entitlement-types.preview.emergentagent.com/api"
 
 # Test credentials
 TEST_USERNAME = "Adam"

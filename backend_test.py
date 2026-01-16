@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://cinema-loading.preview.emergentagent.com/api"
+BACKEND_URL = "https://entitlement-types.preview.emergentagent.com/api"
 TEST_USERNAME = "EntitlementTester"
 TEST_PASSWORD = "TestPass123!"
 

@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';
-import { useEntitlementStore } from '../stores/entitlementStore';
+import { useEntitlementVersion } from '../lib/entitlements/gating';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../theme/colors';
 
@@ -106,8 +106,8 @@ export default function HeroesScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userMaxUnlockedTier]);
   
-  // Subscribe to entitlements for reactive power updates
-  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
+  // Subscribe to entitlements for reactive power updates (Phase 3.21: use version hook)
+  const _entitlementVersion = useEntitlementVersion();
 
   const calculatePower = (hero: any) => {
     const heroData = hero.hero_data;

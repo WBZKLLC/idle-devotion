@@ -774,6 +774,9 @@ export default function ChatScreen() {
           </Modal>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      
+      {/* Phase 3.19.10: Confirm Modal */}
+      <ConfirmModal visible={!!confirmData} data={confirmData} onClose={() => setConfirmData(null)} />
     </LinearGradient>
   );
 }

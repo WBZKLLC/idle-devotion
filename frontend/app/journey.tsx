@@ -219,20 +219,34 @@ export default function JourneyScreen() {
 
         {/* Tabs */}
         <View style={styles.tabs}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'daily' && styles.tabActive]}
-            onPress={() => setActiveTab('daily')}
+          <Pressable
+            style={({ pressed }) => [
+              styles.tab,
+              activeTab === 'daily' && styles.tabActive,
+              pressed && styles.pressedFeedback,
+            ]}
+            onPress={() => {
+              haptic('selection');
+              setActiveTab('daily');
+            }}
           >
             <Ionicons name="calendar" size={18} color={activeTab === 'daily' ? COLORS.gold.primary : COLORS.cream.dark} />
             <Text style={[styles.tabText, activeTab === 'daily' && styles.tabTextActive]}>7-Day Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'milestones' && styles.tabActive]}
-            onPress={() => setActiveTab('milestones')}
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.tab,
+              activeTab === 'milestones' && styles.tabActive,
+              pressed && styles.pressedFeedback,
+            ]}
+            onPress={() => {
+              haptic('selection');
+              setActiveTab('milestones');
+            }}
           >
             <Ionicons name="flag" size={18} color={activeTab === 'milestones' ? COLORS.gold.primary : COLORS.cream.dark} />
             <Text style={[styles.tabText, activeTab === 'milestones' && styles.tabTextActive]}>Milestones</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

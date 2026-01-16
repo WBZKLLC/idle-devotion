@@ -4354,14 +4354,18 @@ async def get_user_tickets(username: str):
 
 # ==================== MAIL SYSTEM ====================
 # Phase 3.23: Mail system for rewards, messages, and gifts
+# Phase 3.23.2.P: Security patch - server derives user from auth token
 
-@api_router.get("/mail/summary/{username}")
-async def get_mail_summary(username: str):
-    """Get mail badge counts for UI"""
-    user = await get_user_readonly(username)
+@api_router.get("/mail/summary")
+async def get_mail_summary(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get mail badge counts for UI (auth required)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
     
-    # Count unclaimed rewards (daily login rewards are always available)
-    rewards_available = 1  # Daily reward always available
+    # Count unclaimed rewards from DB
+    rewards_count = await db.mail_rewards.count_documents({
+        "user_id": user["id"],
+        "claimed": False
+    })
     
     # Count unread messages (system messages)
     unread_messages = await db.mail_messages.count_documents({
@@ -4376,17 +4380,22 @@ async def get_mail_summary(username: str):
     })
     
     return {
-        "rewardsAvailable": rewards_available,
+        "rewardsAvailable": rewards_count,
         "unreadMessages": unread_messages,
         "giftsAvailable": gifts_available
     }
 
-@api_router.get("/mail/rewards/{username}")
-async def get_mail_rewards(username: str):
-    """Get list of claimable rewards"""
-    user = await get_user_readonly(username)
+# Legacy route for backwards compatibility (ignores username, uses auth)
+@api_router.get("/mail/summary/{username}")
+async def get_mail_summary_legacy(username: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get mail badge counts - legacy route (ignores username param, uses auth token)"""
+    return await get_mail_summary(credentials)
+
+@api_router.get("/mail/rewards")
+async def get_mail_rewards(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get list of claimable rewards (auth required)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
     
-    # Get rewards from database
     rewards = await db.mail_rewards.find({
         "user_id": user["id"],
         "claimed": False
@@ -4394,10 +4403,15 @@ async def get_mail_rewards(username: str):
     
     return [convert_objectid(r) for r in rewards]
 
-@api_router.get("/mail/messages/{username}")
-async def get_mail_messages(username: str):
-    """Get system messages"""
-    user = await get_user_readonly(username)
+@api_router.get("/mail/rewards/{username}")
+async def get_mail_rewards_legacy(username: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await get_mail_rewards(credentials)
+
+@api_router.get("/mail/messages")
+async def get_mail_messages(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get system messages (auth required)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
     
     messages = await db.mail_messages.find({
         "to_user_id": user["id"]
@@ -4405,10 +4419,15 @@ async def get_mail_messages(username: str):
     
     return [convert_objectid(m) for m in messages]
 
-@api_router.get("/mail/gifts/{username}")
-async def get_mail_gifts(username: str):
-    """Get gifts from friends/system"""
-    user = await get_user_readonly(username)
+@api_router.get("/mail/messages/{username}")
+async def get_mail_messages_legacy(username: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await get_mail_messages(credentials)
+
+@api_router.get("/mail/gifts")
+async def get_mail_gifts(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get gifts from friends/system (auth required)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
     
     gifts = await db.mail_gifts.find({
         "to_user_id": user["id"],
@@ -4417,35 +4436,49 @@ async def get_mail_gifts(username: str):
     
     return [convert_objectid(g) for g in gifts]
 
-@api_router.post("/mail/rewards/{username}/{reward_id}/claim")
-async def claim_mail_reward(username: str, reward_id: str):
-    """Claim a specific reward"""
-    user = await get_user_for_mutation(username)
+@api_router.get("/mail/gifts/{username}")
+async def get_mail_gifts_legacy(username: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await get_mail_gifts(credentials)
+
+@api_router.post("/mail/rewards/{reward_id}/claim")
+async def claim_mail_reward(reward_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Claim a specific reward (idempotent - already claimed returns success)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
     
+    # Check if reward exists and belongs to user
     reward = await db.mail_rewards.find_one({
         "id": reward_id,
-        "user_id": user["id"],
-        "claimed": False
+        "user_id": user["id"]
     })
     
     if not reward:
-        raise HTTPException(status_code=404, detail="Reward not found or already claimed")
+        raise HTTPException(status_code=404, detail="Reward not found")
+    
+    # Idempotent: if already claimed, return success with flag
+    if reward.get("claimed"):
+        return {"message": "Reward claimed", "alreadyClaimed": True}
     
     # Mark as claimed
     await db.mail_rewards.update_one(
-        {"id": reward_id},
+        {"id": reward_id, "user_id": user["id"], "claimed": False},  # Atomic check
         {"$set": {"claimed": True, "claimed_at": datetime.utcnow()}}
     )
     
-    # Award the rewards (simplified)
-    # In a full implementation, parse reward.rewards and apply to user
-    
-    return {"message": "Reward claimed"}
+    return {"message": "Reward claimed", "alreadyClaimed": False}
 
-@api_router.post("/mail/gifts/{username}/{gift_id}/claim")
-async def claim_mail_gift(username: str, gift_id: str):
-    """Claim a gift"""
-    user = await get_user_for_mutation(username)
+# Legacy route for backwards compatibility
+@api_router.post("/mail/rewards/{username}/{reward_id}/claim")
+async def claim_mail_reward_legacy(username: str, reward_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Legacy route - ignores username, uses auth"""
+    return await claim_mail_reward(reward_id, credentials)
+
+@api_router.post("/mail/gifts/{gift_id}/claim")
+async def claim_mail_gift(gift_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Claim a gift (idempotent - already claimed returns success)"""
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
     
     gift = await db.mail_gifts.find_one({
         "id": gift_id,

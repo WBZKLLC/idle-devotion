@@ -205,7 +205,7 @@ export function IdleRewardsCard({
           </Pressable>
         </View>
       </LinearGradient>
-    </View>
+    </Animated.View>
   );
 }
 

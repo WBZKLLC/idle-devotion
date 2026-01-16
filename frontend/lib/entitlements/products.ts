@@ -18,6 +18,8 @@ export interface Product {
   priceFallback: string;
   /** Short description */
   description: string;
+  /** Whether this is a subscription (vs one-time purchase) */
+  isSubscription?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ export const PRODUCTS = {
     displayName: 'Premium Cinematics Pack',
     priceFallback: '$9.99',
     description: 'Unlock all premium hero cinematics',
+    isSubscription: false,
   },
   
   PREMIUM_SUBSCRIPTION: {
@@ -39,6 +42,7 @@ export const PRODUCTS = {
     displayName: 'Premium Subscription',
     priceFallback: '$4.99/mo',
     description: 'All premium features + no ads',
+    isSubscription: true,
   },
   
   NO_ADS: {
@@ -47,6 +51,7 @@ export const PRODUCTS = {
     displayName: 'Remove Ads',
     priceFallback: '$2.99',
     description: 'Remove all ads permanently',
+    isSubscription: false,
   },
   
   STARTER_PACK: {
@@ -55,6 +60,7 @@ export const PRODUCTS = {
     displayName: 'Starter Pack',
     priceFallback: '$0.99',
     description: 'One-time starter bonus',
+    isSubscription: false,
   },
 } as const satisfies Record<string, Product>;
 

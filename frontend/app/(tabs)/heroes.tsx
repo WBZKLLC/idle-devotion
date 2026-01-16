@@ -15,6 +15,9 @@ import { useGameStore, useHydration } from '../../stores/gameStore';
 import { useEntitlementVersion } from '../../lib/entitlements/gating';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
+// Phase 3.22.4: Micro-interaction utilities
+import { PRESS, haptic } from '../../lib/ui/interaction';
+import { LAYOUT } from '../../components/ui/tokens';
 
 // CANONICAL combat stats and power helpers
 import { computeCombatStats } from '../../lib/combatStats';

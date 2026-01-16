@@ -82,21 +82,11 @@ export default function PaidFeaturesScreen() {
   }, [entitlements]);
 
   const handlePurchase = () => {
-    // ALERT_ALLOWED: purchase_confirm
-    Alert.alert(
-      'Purchase Coming Soon',
-      'Payment flow (StoreKit/Play Billing) is not enabled yet. This is the paywall UI wiring only.',
-      [{ text: 'OK' }]
-    );
+    toast.info('Payment flow (StoreKit/Play Billing) is not enabled yet. This is the paywall UI wiring only.');
   };
 
   const handleRestore = () => {
-    // ALERT_ALLOWED: purchase_confirm
-    Alert.alert(
-      'Restore Purchases',
-      'Purchase restoration will be available when payments are enabled.',
-      [{ text: 'OK' }]
-    );
+    toast.info('Purchase restoration will be available when payments are enabled.');
   };
 
   // DEV: Grant/revoke pack (guarded by ENABLE_DEV_TOOLS)
@@ -104,10 +94,8 @@ export default function PaidFeaturesScreen() {
     if (!ENABLE_DEV_TOOLS) return;
     try {
       await grantDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
-      // ALERT_ALLOWED: dev_mode
-      Alert.alert('DEV Mode', 'Granted PREMIUM_CINEMATICS_PACK entitlement.');
+      toast.success('[DEV] Granted PREMIUM_CINEMATICS_PACK entitlement.');
     } catch (e: any) {
-      // Silently fail - DEV tools shouldn't spam alerts on errors
       if (__DEV__) console.warn('[DEV] Grant pack failed:', e.message);
     }
   };
@@ -116,8 +104,7 @@ export default function PaidFeaturesScreen() {
     if (!ENABLE_DEV_TOOLS) return;
     try {
       await revokeDev(ENTITLEMENT_KEYS.PREMIUM_CINEMATICS_PACK);
-      // ALERT_ALLOWED: dev_mode
-      Alert.alert('DEV Mode', 'Revoked PREMIUM_CINEMATICS_PACK entitlement.');
+      toast.success('[DEV] Revoked PREMIUM_CINEMATICS_PACK entitlement.');
     } catch (e: any) {
       if (__DEV__) console.warn('[DEV] Revoke pack failed:', e.message);
     }
@@ -132,8 +119,7 @@ export default function PaidFeaturesScreen() {
     }
     try {
       await setHeroPremiumCinematicOwned(heroId.trim(), true);
-      // ALERT_ALLOWED: dev_mode
-      Alert.alert('DEV Mode', `Granted premium cinematic ownership for: ${heroId.trim()}`);
+      toast.success(`[DEV] Granted premium cinematic ownership for: ${heroId.trim()}`);
       setCustomHeroId('');
     } catch (e: any) {
       if (__DEV__) console.warn('[DEV] Grant hero failed:', e.message);
@@ -145,8 +131,7 @@ export default function PaidFeaturesScreen() {
     if (!ENABLE_DEV_TOOLS) return;
     try {
       await setHeroPremiumCinematicOwned(heroId, false);
-      // ALERT_ALLOWED: dev_mode
-      Alert.alert('DEV Mode', `Revoked premium cinematic ownership for: ${heroId}`);
+      toast.success(`[DEV] Revoked premium cinematic ownership for: ${heroId}`);
     } catch (e: any) {
       if (__DEV__) console.warn('[DEV] Revoke hero failed:', e.message);
     }

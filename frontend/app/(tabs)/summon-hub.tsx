@@ -680,4 +680,6 @@ const styles = StyleSheet.create({
   // Auth gate
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loginText: { color: COLORS.cream.soft, fontSize: 16, textAlign: 'center', marginTop: 16 },
+  // Phase 3.22.4: Pressed-state feedback
+  pressedFeedback: { opacity: PRESS.OPACITY, transform: [{ scale: PRESS.SCALE }] },
 });

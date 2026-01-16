@@ -107,10 +107,10 @@ export function CinematicLoading({
 
   const isDeterminate = typeof progress === 'number' && isFinite(progress);
 
-  const determinateWidth = useMemo(() => {
+  const determinateWidth = useMemo((): `${number}%` => {
     if (!isDeterminate) return '35%';
     const clamped = Math.max(0, Math.min(1, progress!));
-    return `${Math.round(clamped * 100)}%`;
+    return `${Math.round(clamped * 100)}%` as `${number}%`;
   }, [isDeterminate, progress]);
 
   // Indeterminate bar animation (subtle sweep)

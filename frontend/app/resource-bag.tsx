@@ -19,6 +19,8 @@ import COLORS from '../theme/colors';
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.11: Confirm modal hook
 import { useConfirmModal } from '../components/ui/useConfirmModal';
+// Phase 3.22.3: Canonical button
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 
 interface ResourceItem {
   id: string;

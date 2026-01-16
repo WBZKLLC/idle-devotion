@@ -59,6 +59,9 @@ export default function PurchaseButton({
   // Get product from canonical source
   const product = PRODUCTS[productKey];
   
+  // Phase 3.19.10: Local modal state for purchase confirm
+  const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false);
+  
   // Purchase state from store
   const purchaseState = usePurchaseStore(s => s.state);
   const errorCode = usePurchaseStore(s => s.errorCode);

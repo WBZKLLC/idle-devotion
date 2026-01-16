@@ -370,24 +370,15 @@ export default function ChatScreen() {
     const showMessageOptions = () => {
       if (isOwn) return;
       
-      // ALERT_ALLOWED: destructive_confirm
-      Alert.alert(
-        msg.sender_username,
-        'What would you like to do?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Report Message', 
-            onPress: () => handleReportMessage(msg),
-            style: 'destructive'
-          },
-          { 
-            text: 'Block User', 
-            onPress: () => handleBlockUser(msg.sender_username),
-            style: 'destructive'
-          },
-        ]
-      );
+      openConfirm({
+        title: msg.sender_username,
+        message: 'What would you like to do?',
+        tone: 'danger',
+        confirmText: 'Report Message',
+        cancelText: 'Cancel',
+        icon: 'warning-outline',
+        onConfirm: () => handleReportMessage(msg),
+      });
     };
 
     return (

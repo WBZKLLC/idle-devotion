@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   tabText: { color: COLORS.cream.dark, fontWeight: '600' },
   tabTextActive: { color: COLORS.navy.darkest },
 
-  eventsList: { flex: 1, padding: 16 },
+  eventsList: { flex: 1, padding: 16, paddingBottom: LAYOUT.BOTTOM_GUTTER },
   emptyContainer: { alignItems: 'center', paddingTop: 60 },
   emptyText: { color: COLORS.cream.dark, marginTop: 12 },
 

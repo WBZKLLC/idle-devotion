@@ -156,22 +156,15 @@ export default function EventsScreen() {
     if (event.type === 'limited') {
       const banner = eventBanners.find(b => b.id === eventId);
       if (banner) {
-        // ALERT_ALLOWED: purchase_confirm
-        Alert.alert(
-          `🎰 ${banner.name}`,
-          `Featured: ${banner.featured_heroes.slice(0, 3).join(', ')}\n\nPerform a summon?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: '1x Pull (100 💎)', 
-              onPress: () => performEventPull(eventId, false)
-            },
-            { 
-              text: '10x Pull (1000 💎)', 
-              onPress: () => performEventPull(eventId, true)
-            },
-          ]
-        );
+        openConfirm({
+          title: `🎰 ${banner.name}`,
+          message: `Featured: ${banner.featured_heroes.slice(0, 3).join(', ')}\n\nWould you like to summon on this banner?`,
+          tone: 'premium',
+          confirmText: 'Go to Summon',
+          cancelText: 'Cancel',
+          icon: 'sparkles-outline',
+          onConfirm: () => router.push('/summon-hub'),
+        });
       }
       return;
     }

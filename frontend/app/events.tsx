@@ -59,6 +59,19 @@ export default function EventsScreen() {
   const [eventBanners, setEventBanners] = useState<EventBanner[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'limited' | 'daily'>('all');
   const [isPulling, setIsPulling] = useState(false);
+  
+  // Phase 3.19.10: Confirm modal state
+  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
+  const openConfirm = (data: ConfirmModalData) => {
+    setConfirmData({
+      ...data,
+      onConfirm: async () => {
+        setConfirmData(null);
+        await data.onConfirm?.();
+      },
+      onCancel: () => setConfirmData(null),
+    });
+  };
 
   useEffect(() => {
     if (hydrated && user) {

@@ -219,9 +219,10 @@ export const SIGNATURE = {
 /**
  * Check if signature moment can trigger today
  * Requires: daily gate + session budget
+ * IMPORTANT: This only CHECKS, never mutates budget
  */
 export async function canTriggerSignatureToday(): Promise<boolean> {
-  // Must have session budget
+  // Must have session budget (check only, don't spend)
   if (!hasDesireBudget()) return false;
   
   try {
@@ -236,17 +237,25 @@ export async function canTriggerSignatureToday(): Promise<boolean> {
 }
 
 /**
- * Mark signature moment as triggered for today
- * Also consumes session budget
+ * Atomically mark signature moment as triggered
+ * Returns true if budget was available and is now spent + date written
+ * Returns false if budget was already spent (no date write, no side effects)
  */
-export async function markSignatureTriggered(): Promise<void> {
-  spendDesireBudget(); // Consume session budget
+export async function markSignatureTriggered(): Promise<boolean> {
+  // Atomic budget spend — if already spent, bail with no side effects
+  if (!trySpendDesireBudget()) {
+    return false;
+  }
+  
+  // Budget was available and is now spent — write date
   try {
     const today = new Date().toISOString().split('T')[0];
     await AsyncStorage.setItem(SIGNATURE_KEY, today);
   } catch {
-    // Silent fail — this is non-critical
+    // Silent fail — budget is already spent, date write is best-effort
   }
+  
+  return true;
 }
 
 /**

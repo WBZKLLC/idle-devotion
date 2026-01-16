@@ -23,6 +23,9 @@ import { toast } from '../components/ui/Toast';
 // Phase 3.19.1: Skeleton + Empty state components
 import { StageCardSkeleton } from '../components/ui/Skeleton';
 import { NoStagesEmpty } from '../components/ui/EmptyState';
+// Phase 3.19.5: Canonical button components
+import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { SecondaryButton } from '../components/ui/SecondaryButton';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

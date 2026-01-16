@@ -41,7 +41,7 @@ export function CinematicLoading({
   const glow = useRef(new Animated.Value(0)).current;
 
   // Resolve hero source - use login hero by default
-  const resolvedSource = heroSource || { uri: LOGIN_HERO_SOURCE };
+  const resolvedSource = heroSource || { uri: LOGIN_HERO_URI };
 
   useEffect(() => {
     // Ken Burns effect - slow zoom + pan

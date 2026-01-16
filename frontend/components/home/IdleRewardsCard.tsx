@@ -131,6 +131,8 @@ export function IdleRewardsCard({
 
   return (
     <Animated.View style={[styles.card, breathingStyle]}>
+      {/* Phase 3.22.9: Premium anchor glow — focal point behind the card */}
+      <View style={styles.anchorGlow} />
       <LinearGradient colors={cardColors} style={styles.gradient}>
         {/* Inner highlight for depth */}
         <View style={styles.innerHighlight} />

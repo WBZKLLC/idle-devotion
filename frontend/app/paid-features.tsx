@@ -169,7 +169,7 @@ export default function PaidFeaturesScreen() {
                 <Ionicons name="videocam" size={28} color={COLORS.gold.primary} />
               </View>
               <View style={styles.cardTitleContainer}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardTitle}>{item.displayName}</Text>
                 <View style={[styles.badge, packOwned ? styles.badgeOwned : styles.badgeLocked]}>
                   <Text style={styles.badgeText}>{packOwned ? '✓ Owned' : 'Locked'}</Text>
                 </View>
@@ -179,7 +179,7 @@ export default function PaidFeaturesScreen() {
             <Text style={styles.description}>{item.description}</Text>
 
             <View style={styles.priceRow}>
-              <Text style={styles.price}>${item.priceUsd.toFixed(2)}</Text>
+              <Text style={styles.price}>{item.priceFallback}</Text>
               <Text style={styles.currency}>USD</Text>
             </View>
 

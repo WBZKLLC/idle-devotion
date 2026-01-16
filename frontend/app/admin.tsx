@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Alert,
   ActivityIndicator,
   FlatList,
 } from 'react-native';

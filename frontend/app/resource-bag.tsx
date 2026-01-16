@@ -95,26 +95,21 @@ export default function ResourceBagScreen() {
   const useConsumable = async (item: ResourceItem) => {
     if (item.type !== 'consumable' || item.amount <= 0) return;
     
-    // ALERT_ALLOWED: purchase_confirm
-    Alert.alert(
-      `Use ${item.name}?`,
-      item.description,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Use', 
-          onPress: () => {
-            // Update local state
-            setResources(prev => prev.map(r => 
-              r.id === item.id ? { ...r, amount: r.amount - 1 } : r
-            ));
-            setSelectedItem(null);
-            // Phase 3.18.4: Toast for success feedback
-            toast.success(`${item.name} activated!`);
-          }
-        },
-      ]
-    );
+    openConfirm({
+      title: `Use ${item.name}?`,
+      message: item.description,
+      tone: 'premium',
+      confirmText: 'Use',
+      cancelText: 'Cancel',
+      icon: 'sparkles-outline',
+      onConfirm: () => {
+        setResources(prev => prev.map(r => 
+          r.id === item.id ? { ...r, amount: r.amount - 1 } : r
+        ));
+        setSelectedItem(null);
+        toast.success(`${item.name} activated!`);
+      },
+    });
   };
 
   const getRarityColor = (rarity?: string) => {

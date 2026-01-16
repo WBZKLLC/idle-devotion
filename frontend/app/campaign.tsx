@@ -314,7 +314,7 @@ export default function CampaignScreen() {
           <View style={[styles.goldStrokeInner, !unlocked && styles.goldStrokeInnerLocked]}>
             <View style={[styles.chapterCard, !unlocked && styles.chapterLocked]}>
               <LinearGradient
-                colors={unlocked ? visuals.bg : ['#1a1a1a', '#0a0a0a']}
+                colors={unlocked ? visuals.bg : LOCKED_BG}
                 style={styles.chapterGradient}
               >
                 {/* Lock overlay */}
@@ -497,7 +497,7 @@ export default function CampaignScreen() {
             {/* ✅ story banner wrapped in GlassCard */}
             <GlassCard style={styles.glassWrap}>
               <LinearGradient
-                colors={CHAPTER_VISUALS[selectedChapter.id]?.bg || ['#1a1a1a', '#0a0a0a']}
+                colors={CHAPTER_VISUALS[selectedChapter.id]?.bg || LOCKED_BG}
                 style={styles.storyBanner}
               >
                 <Text style={styles.storyBannerIcon}>{CHAPTER_VISUALS[selectedChapter.id]?.icon}</Text>

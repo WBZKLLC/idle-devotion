@@ -222,14 +222,69 @@ export default function PurchaseButton({
   
   // Default purchasable state
   return (
-    <TouchableOpacity
-      style={[styles.button, style]}
-      onPress={handlePurchase}
-      activeOpacity={0.8}
-    >
-      <Text style={styles.buttonText}>{product.displayName}</Text>
-      <Text style={styles.priceText}>{product.priceFallback}</Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        style={[styles.button, style]}
+        onPress={handlePurchase}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.buttonText}>{product.displayName}</Text>
+        <Text style={styles.priceText}>{product.priceFallback}</Text>
+      </TouchableOpacity>
+      
+      {/* Phase 3.19.10: Purchase confirmation modal (simulation mode) */}
+      <Modal
+        visible={showPurchaseConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setShowPurchaseConfirm(false);
+          cancelPurchaseFlow();
+        }}
+      >
+        <Pressable 
+          style={styles.modalBackdrop} 
+          onPress={() => {
+            setShowPurchaseConfirm(false);
+            cancelPurchaseFlow();
+          }}
+        >
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <LinearGradient colors={['#2b1b4d', '#12152a']} style={styles.modalCardInner}>
+              <Text style={styles.modalTitle}>Purchase Flow</Text>
+              <Text style={styles.modalMessage}>
+                This would open the native purchase UI.{'\n\n'}
+                Transaction ID would be passed to verifyAndApplyPurchase() on completion.
+              </Text>
+              <View style={styles.modalButtonRow}>
+                <Pressable 
+                  style={styles.modalCancelButton}
+                  onPress={() => {
+                    setShowPurchaseConfirm(false);
+                    cancelPurchaseFlow();
+                  }}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable 
+                  style={styles.modalConfirmButton}
+                  onPress={async () => {
+                    setShowPurchaseConfirm(false);
+                    const result = await verifyAndApplyPurchase('simulated_txn_' + Date.now());
+                    if (!result.success && !result.shouldRetry) {
+                      toast.error('Verification failed. If you were charged, use Restore Purchases.');
+                      onPurchaseError?.(result.error);
+                    }
+                  }}
+                >
+                  <Text style={styles.modalConfirmText}>Simulate Success</Text>
+                </Pressable>
+              </View>
+            </LinearGradient>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 

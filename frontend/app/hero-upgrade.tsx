@@ -34,7 +34,7 @@ export default function HeroUpgradeScreen() {
   const router = useRouter();
   const { user, fetchUser } = useGameStore();
   // Subscribe to entitlements for reactive bonus updates
-  const entitlements = useEntitlementStore(s => s.entitlements);
+  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
   const [heroDetails, setHeroDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);

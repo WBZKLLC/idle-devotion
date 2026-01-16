@@ -107,7 +107,7 @@ export default function HeroesScreen() {
   }, [userMaxUnlockedTier]);
   
   // Subscribe to entitlements for reactive power updates
-  const entitlements = useEntitlementStore(s => s.entitlements);
+  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
 
   const calculatePower = (hero: any) => {
     const heroData = hero.hero_data;

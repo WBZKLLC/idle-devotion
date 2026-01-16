@@ -28,7 +28,7 @@ const RARITY_COLORS: { [key: string]: string } = {
 export default function TeamScreen() {
   const { user, userHeroes, fetchUserHeroes, isLoading } = useGameStore();
   // Subscribe to entitlements for reactive power updates
-  const entitlements = useEntitlementStore(s => s.entitlements);
+  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
   const [selectedHeroes, setSelectedHeroes] = useState<string[]>([]);
 
   useEffect(() => {

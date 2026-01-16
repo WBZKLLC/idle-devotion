@@ -250,7 +250,7 @@ export default function HeroProgressionScreen() {
   }, [effectiveUnlockedTier, rarityNext]);
   
   // Subscribe to entitlements for reactive power updates
-  const entitlements = useEntitlementStore(s => s.entitlements);
+  const entitlements = useEntitlementStore(s => s.entitlementsByKey);
 
   const calcPower = useCallback((h: any, hd: any, overrideStars?: number) => {
     if (!h || !hd) return 0;

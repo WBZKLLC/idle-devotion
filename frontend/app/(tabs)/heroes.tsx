@@ -302,8 +302,12 @@ export default function HeroesScreen() {
                 return (
                   <Pressable
                     key={hero.id}
-                    style={styles.heroCardOuter}
+                    style={({ pressed }) => [
+                      styles.heroCardOuter,
+                      pressed && styles.heroCardPressed,
+                    ]}
                     onPress={() => {
+                      haptic('light');
                       router.push(`/hero-detail?id=${hero.id}&tier=${effectiveTier}`);
                     }}
                   >

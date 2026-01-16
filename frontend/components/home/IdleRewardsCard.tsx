@@ -36,7 +36,8 @@ import {
   markSignatureTriggered,
   getSignatureCopy,
 } from '../../lib/ui/desire';
-import { playSignatureCue } from '../../lib/ui/ambientAudio';
+// Phase 3.22.10.A: Audio cues
+import { playSignatureCue, playCollectCue, playInstantCue } from '../../lib/ui/ambientAudio';
 
 type IdleStatus = {
   is_capped?: boolean;

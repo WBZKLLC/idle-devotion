@@ -149,28 +149,39 @@ function TabsWithSafeArea() {
   // Phase 3.22.2: Hide tab bar when user is not logged in
   const user = useGameStore(s => s.user);
   
-  // Hidden tab bar style - fully removes from layout on web and native
-  const hiddenTabBarStyle = {
-    display: 'none' as const,
-    height: 0,
-    opacity: 0,
-    position: 'absolute' as const,
-    bottom: -100, // Push off screen as fallback
+  // Visible tab bar style
+  const visibleTabBarStyle = {
+    ...styles.tabBar,
+    paddingBottom: Math.max(insets.bottom, 8),
+    height: 60 + Math.max(insets.bottom, 0),
   };
+  
+  // Hidden tab bar style - fully removes from layout on web and native
+  // Must override the fixed positioning from styles.tabBar on web
+  const hiddenTabBarStyle = Platform.select({
+    web: {
+      display: 'none' as const,
+      position: 'absolute' as const,
+      height: 0,
+      width: 0,
+      overflow: 'hidden' as const,
+      visibility: 'hidden' as const,
+    },
+    default: {
+      display: 'none' as const,
+      height: 0,
+    },
+  });
   
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: COLORS.gold.primary,
         tabBarInactiveTintColor: COLORS.cream.soft + '60',
-        tabBarStyle: user ? {
-          ...styles.tabBar,
-          paddingBottom: Math.max(insets.bottom, 8), // Respect bottom safe area
-          height: 60 + Math.max(insets.bottom, 0), // Add height for safe area
-        } : hiddenTabBarStyle, // Phase 3.22.2: Hide on login
+        tabBarStyle: user ? visibleTabBarStyle : hiddenTabBarStyle,
         headerShown: false,
-        tabBarLabelStyle: styles.tabLabel,
-        tabBarIconStyle: styles.tabIcon,
+        tabBarLabelStyle: user ? styles.tabLabel : { display: 'none' as const },
+        tabBarIconStyle: user ? styles.tabIcon : { display: 'none' as const },
       }}
     >
       {/* ===== 6 MAIN VISIBLE TABS ===== */}

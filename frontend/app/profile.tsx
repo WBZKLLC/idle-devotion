@@ -696,12 +696,8 @@ export default function ProfileScreen() {
         </ScrollView>
       </SafeAreaView>
       
-      {/* Phase 3.19.10: Confirm Modal */}
-      <ConfirmModal
-        visible={!!confirmData}
-        data={confirmData}
-        onClose={() => setConfirmData(null)}
-      />
+      {/* Phase 3.19.11: Confirm Modal via hook */}
+      {confirmNode}
     </LinearGradient>
   );
 }

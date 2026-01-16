@@ -64,7 +64,7 @@ export default function PurchaseButton({
   
   // Purchase state from store
   const purchaseState = usePurchaseStore(s => s.state);
-  const errorCode = usePurchaseStore(s => s.errorCode);
+  const purchaseError = usePurchaseStore(s => s.error);
   const errorMessage = usePurchaseStore(s => s.errorMessage);
   
   // Check if already owned
@@ -78,8 +78,8 @@ export default function PurchaseButton({
   
   // Determine button state
   const isLoading = purchaseState === 'purchase_started' || purchaseState === 'purchase_pending';
-  const hasError = purchaseState === 'failed';
-  const isRetryable = errorCode === 'NETWORK_ERROR';
+  const hasError = purchaseState === 'purchase_failed';
+  const isRetryable = purchaseError === 'NETWORK_ERROR';
   const isVerified = purchaseState === 'purchase_verified';
   
   // Handle success state

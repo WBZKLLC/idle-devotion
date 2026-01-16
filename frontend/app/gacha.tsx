@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.22.3: Canonical button
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 
 // Centralized tier logic (SINGLE SOURCE OF TRUTH)
 import {

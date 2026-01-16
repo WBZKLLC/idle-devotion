@@ -2,6 +2,8 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+// Phase 3.22.10: Global interaction signal
+import { emitInteraction } from '../../lib/ui/interactionSession';
 
 // Phase 3.22.6.C: Tab bar is "the floor" — darker, anchoring, never competing
 const COLORS = {
@@ -42,6 +44,10 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIconStyle: styles.tabIcon,
+      }}
+      // Phase 3.22.10: Emit interaction on any tab press (cancels desire accents)
+      screenListeners={{
+        tabPress: () => emitInteraction(),
       }}
     >
       {/* ===== 6 MAIN VISIBLE TABS ===== */}

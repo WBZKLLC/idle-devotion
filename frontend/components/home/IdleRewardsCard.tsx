@@ -81,31 +81,47 @@ export function IdleRewardsCard({
   const instantLocked = vipLevel < 1;
   const instantCooling = instantCooldown > 0;
 
-  // Ritual subtitle — check for "noticed" moment first
+  // Ritual subtitle — check accents with PRIORITY ORDER:
+  // 1. Signature (daily + highest priority)
+  // 2. Noticed (daily, if signature didn't fire)
+  // 3. Normal rotation
   const [subtitle, setSubtitle] = useState<string>('');
   
   useEffect(() => {
-    const checkNoticed = async () => {
-      const canNotice = await canTriggerNoticed();
+    const checkAccents = async () => {
+      // PRIORITY 1: Signature moment (daily + session budgeted)
+      const canSignature = await canTriggerSignatureToday();
+      if (canSignature) {
+        // Signature consumes budget in markSignatureTriggered
+        const signatureCopy = getSignatureCopy();
+        setSubtitle(signatureCopy);
+        await markSignatureTriggered();
+        playSignatureCue(); // Warm haptic cue
+        
+        // After signature duration (1.4s), revert to normal
+        setTimeout(() => {
+          setSubtitle(getIdleSubtitle());
+        }, 1400);
+        return;
+      }
       
-      // ✅ Must also consume the single session accent budget
+      // PRIORITY 2: Noticed moment (daily, if signature didn't fire)
+      const canNotice = await canTriggerNoticed();
       if (canNotice && trySpendDesireBudget()) {
         const variant = getNoticedVariant();
         if (variant === 'idle') {
-          // One-time "noticed" subtitle: "Still warm."
           setSubtitle(NOTICED_VARIANTS.idleSubtitle);
           await markNoticedTriggered();
           return;
         }
-        // Other noticed variants (copy, audio) — still budget-paid
+        // Other variants — still budget-paid
         await markNoticedTriggered();
-        // For now, fall through to normal subtitle if not 'idle' variant
       }
       
-      // Normal rotating subtitle
+      // PRIORITY 3: Normal rotating subtitle
       setSubtitle(getIdleSubtitle());
     };
-    checkNoticed();
+    checkAccents();
   }, []);
 
   // Phase 3.22.8: Breathing sync with session-unique jitter

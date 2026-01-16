@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
 import type { GradientColors } from '../../lib/ui/gradients';
+// Phase 3.22.4: Micro-interaction constants
+import { PRESS } from '../../lib/ui/interaction';
 
 type BaseTile = {
   key: string;
@@ -45,11 +47,15 @@ export function QuickLinksGrid({ rows }: Props) {
       {rows.map((row) => (
         <View key={row.key} style={styles.quickLinksRow}>
           {row.tiles.map((tile) => (
-            <TouchableOpacity
+            <Pressable
               key={tile.key}
-              style={[styles.quickLink, { flex: tile.flex ?? 1 }]}
+              style={({ pressed }) => [
+                styles.quickLink,
+                { flex: tile.flex ?? 1 },
+                // Phase 3.22.4: Pressed feedback
+                pressed && styles.quickLinkPressed,
+              ]}
               onPress={tile.onPress}
-              activeOpacity={0.85}
             >
               <LinearGradient
                 colors={tile.gradient}
@@ -72,7 +78,7 @@ export function QuickLinksGrid({ rows }: Props) {
                   </>
                 )}
               </LinearGradient>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
       ))}
@@ -89,6 +95,11 @@ const styles = StyleSheet.create({
   quickLink: {
     borderRadius: 12,
     overflow: 'hidden',
+  },
+  // Phase 3.22.4: Pressed state feedback
+  quickLinkPressed: {
+    transform: [{ scale: PRESS.SCALE }],
+    opacity: PRESS.OPACITY,
   },
   quickLinkGradient: {
     paddingVertical: 16,

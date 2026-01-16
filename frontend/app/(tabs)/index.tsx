@@ -155,6 +155,12 @@ export default function HomeScreen() {
     idleCardRef.current?.cancelSignatureRevert();
   };
 
+  // Phase 3.22.10: Subscribe to global interaction bus (tab presses, etc.)
+  useEffect(() => {
+    const unsubscribe = subscribeInteraction(handleUserInteraction);
+    return unsubscribe;
+  }, []);
+
   useEffect(() => {
     if (user) {
       handleLogin();

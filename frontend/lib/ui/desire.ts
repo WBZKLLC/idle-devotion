@@ -109,8 +109,10 @@ export const GLANCE_RULES = {
 
 /**
  * Check if rare glance can trigger
+ * Respects desire budget — only one accent per session
  */
 export function canTriggerGlance(): boolean {
+  if (!hasDesireBudget()) return false; // Budget already spent
   if (sessionState.glanceTriggered) return false;
   
   const sessionTime = Date.now() - sessionState.sessionStartTime;
@@ -129,6 +131,7 @@ export function canTriggerGlance(): boolean {
  */
 export function markGlanceTriggered(): void {
   sessionState.glanceTriggered = true;
+  spendDesireBudget(); // Consume the session's desire budget
 }
 
 /**

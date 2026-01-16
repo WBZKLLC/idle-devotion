@@ -1,121 +1,126 @@
-// /app/frontend/components/home/IdleRewardsCard.tsx
-// Phase 3.22.1: Extracted idle rewards card component
-
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
-import { BG_NAVY, ACCENT_GOLD } from '../../lib/ui/gradients';
-import { SPACING, RADIUS } from '../ui/tokens';
+import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT } from '../ui/tokens';
 
-interface IdleRewardsCardProps {
-  timerDisplay: string;
-  maxHours: number;
-  goldPending: number;
-  isCapped: boolean;
+type IdleStatus = {
+  is_capped?: boolean;
+  time_elapsed?: number;
+  max_hours?: number;
+  gold_pending?: number;
+};
+
+type Props = {
+  idleStatus: IdleStatus | null;
+  vipLevel: number;
+  instantCooldown: number;
+
   isClaimingCollect: boolean;
   isClaimingInstant: boolean;
-  instantCooldown: number;
-  vipLevel: number;
+
+  formatIdleTime: (elapsedSec: number, maxHours: number) => string;
+  formatCooldown: (remainingSec: number) => string;
+
   onCollect: () => void;
   onInstant: () => void;
-  formatCooldown: (seconds: number) => string;
-}
+  onVipLockedPress: () => void;
+};
 
 export function IdleRewardsCard({
-  timerDisplay,
-  maxHours,
-  goldPending,
-  isCapped,
+  idleStatus,
+  vipLevel,
+  instantCooldown,
   isClaimingCollect,
   isClaimingInstant,
-  instantCooldown,
-  vipLevel,
+  formatIdleTime,
+  formatCooldown,
   onCollect,
   onInstant,
-  formatCooldown,
-}: IdleRewardsCardProps) {
-  const isDisabled = isClaimingCollect || isClaimingInstant;
-  const canInstant = vipLevel >= 1 && instantCooldown <= 0;
-  
-  // Determine instant button gradient
-  const instantGradient: readonly [string, string] = 
-    vipLevel < 1 || instantCooldown > 0
-      ? ['#4a4a6a', '#3a3a5a'] as const
-      : ['#8b5cf6', '#6d28d9'] as const;
+  onVipLockedPress,
+}: Props) {
+  const maxHours = idleStatus?.max_hours ?? 8;
+  const elapsed = idleStatus?.time_elapsed ?? 0;
+  const isCapped = !!idleStatus?.is_capped;
+
+  const instantLocked = vipLevel < 1;
+  const instantCooling = instantCooldown > 0;
+
+  const cardColors: readonly [string, string] = isCapped
+    ? [COLORS.gold.primary, COLORS.gold.dark]
+    : [COLORS.navy.medium, COLORS.navy.primary];
+
+  const collectDisabled = isClaimingCollect || isClaimingInstant;
+  const instantDisabled = collectDisabled || instantCooling;
+
+  const instantColors: readonly [string, string] =
+    instantLocked || instantCooling ? ['#4a4a6a', '#3a3a5a'] : ['#8b5cf6', '#6d28d9'];
 
   return (
     <View style={styles.card}>
-      <LinearGradient
-        colors={isCapped ? ACCENT_GOLD : BG_NAVY}
-        style={styles.gradient}
-      >
+      <LinearGradient colors={cardColors} style={styles.gradient}>
         <View style={styles.header}>
-          <Ionicons name="time" size={24} color={COLORS.gold.light} />
+          <Ionicons name="time" size={22} color={COLORS.gold.light} />
           <Text style={styles.title}>Idle Rewards</Text>
         </View>
-        
+
         <View style={styles.timerBox}>
           <Text style={styles.timerLabel}>Time Elapsed</Text>
-          <Text style={styles.timer}>{timerDisplay}</Text>
-          <Text style={styles.capText}>
-            Max: {maxHours}h {isCapped ? '• FULL' : ''}
-          </Text>
+          <Text style={styles.timer}>{formatIdleTime(elapsed, maxHours)}</Text>
+          <Text style={styles.capText}>Max: {maxHours}h {isCapped ? '• FULL' : ''}</Text>
         </View>
-        
+
         <View style={styles.pendingRow}>
           <Ionicons name="star" size={18} color={COLORS.gold.primary} />
-          <Text style={styles.pendingText}>+{goldPending.toLocaleString()} Gold Pending</Text>
+          <Text style={styles.pendingText}>
+            +{(idleStatus?.gold_pending ?? 0).toLocaleString()} Gold Pending
+          </Text>
         </View>
-        
+
         <View style={styles.buttonRow}>
-          {/* Collect Button */}
-          <TouchableOpacity
-            style={[styles.button, { flex: 1 }]}
-            onPress={onCollect}
-            disabled={isDisabled}
-          >
-            <LinearGradient colors={ACCENT_GOLD} style={styles.buttonGradient}>
+          {/* Collect */}
+          <TouchableOpacity style={[styles.btnWrap, { flex: 1 }]} onPress={onCollect} disabled={collectDisabled}>
+            <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark] as const} style={styles.btn}>
               {isClaimingCollect ? (
                 <ActivityIndicator color={COLORS.navy.dark} size="small" />
               ) : (
                 <>
                   <Ionicons name="download" size={18} color={COLORS.navy.dark} />
-                  <Text style={[styles.buttonText, { color: COLORS.navy.dark }]}>Collect</Text>
+                  <Text style={[styles.btnText, { color: COLORS.navy.dark }]}>Collect</Text>
                 </>
               )}
             </LinearGradient>
           </TouchableOpacity>
-          
-          {/* Instant Button */}
+
+          {/* Instant */}
           <TouchableOpacity
-            style={[
-              styles.button,
-              { flex: 1, marginLeft: 8, opacity: canInstant ? 1 : 0.6 },
-            ]}
-            onPress={onInstant}
-            disabled={isDisabled || instantCooldown > 0}
+            style={[styles.btnWrap, { flex: 1, marginLeft: SPACING.sm, opacity: instantLocked || instantCooling ? 0.6 : 1 }]}
+            onPress={() => {
+              if (instantLocked) return onVipLockedPress();
+              onInstant();
+            }}
+            disabled={instantDisabled}
           >
-            <LinearGradient colors={instantGradient} style={styles.buttonGradient}>
+            <LinearGradient colors={instantColors} style={styles.btn}>
               {isClaimingInstant ? (
                 <ActivityIndicator color={COLORS.cream.pure} size="small" />
-              ) : vipLevel < 1 ? (
+              ) : instantLocked ? (
                 <>
                   <Ionicons name="lock-closed" size={16} color={COLORS.cream.soft} />
-                  <Text style={[styles.buttonText, styles.smallText]}>VIP 1+</Text>
+                  <Text style={[styles.btnText, { color: COLORS.cream.soft, fontSize: 11 }]}>VIP 1+</Text>
                 </>
-              ) : instantCooldown > 0 ? (
+              ) : instantCooling ? (
                 <>
                   <Ionicons name="time" size={16} color={COLORS.cream.soft} />
-                  <Text style={[styles.buttonText, styles.smallText]}>
+                  <Text style={[styles.btnText, { color: COLORS.cream.soft, fontSize: 11 }]}>
                     {formatCooldown(instantCooldown)}
                   </Text>
                 </>
               ) : (
                 <>
                   <Ionicons name="flash" size={18} color={COLORS.cream.pure} />
-                  <Text style={styles.buttonText}>⚡ Instant</Text>
+                  <Text style={[styles.btnText, { color: COLORS.cream.pure }]}>⚡ Instant</Text>
                 </>
               )}
             </LinearGradient>
@@ -128,79 +133,50 @@ export function IdleRewardsCard({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: SPACING.md,
-    borderRadius: RADIUS.lg,
-    overflow: 'hidden',
+    marginTop: SPACING.md,
+    paddingHorizontal: SPACING.md,
   },
   gradient: {
+    borderRadius: RADIUS.xl,
     padding: SPACING.md,
-    borderRadius: RADIUS.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
-    gap: SPACING.sm,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.gold.light,
-  },
-  timerBox: {
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
-  },
-  timerLabel: {
-    fontSize: 11,
-    color: COLORS.cream.dark,
-  },
-  timer: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: COLORS.cream.pure,
-    fontVariant: ['tabular-nums'],
-  },
-  capText: {
-    fontSize: 11,
-    color: COLORS.cream.dark,
-  },
-  pendingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.sm,
-    gap: 4,
-  },
-  pendingText: {
-    fontSize: 14,
-    color: COLORS.gold.light,
-    fontWeight: '600',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-  },
-  button: {
-    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.navy.light,
     overflow: 'hidden',
   },
-  buttonGradient: {
-    flexDirection: 'row',
+  header: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  title: {
+    color: COLORS.cream.pure,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+  },
+  timerBox: {
+    marginTop: SPACING.md,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  timerLabel: { color: COLORS.cream.soft, fontSize: FONT_SIZE.sm },
+  timer: {
+    marginTop: SPACING.xs,
+    color: COLORS.cream.pure,
+    fontSize: 22,
+    fontWeight: FONT_WEIGHT.bold,
+    letterSpacing: 1,
+  },
+  capText: { marginTop: SPACING.xs, color: COLORS.gold.light, fontSize: FONT_SIZE.xs },
+  pendingRow: { marginTop: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
+  pendingText: { color: COLORS.cream.pure, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold },
+  buttonRow: { marginTop: SPACING.md, flexDirection: 'row', alignItems: 'center' },
+  btnWrap: { borderRadius: RADIUS.lg, overflow: 'hidden' },
+  btn: {
+    height: 44,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.sm + 2,
-    borderRadius: RADIUS.md,
-    gap: 4,
+    flexDirection: 'row',
+    gap: SPACING.xs,
   },
-  buttonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.cream.pure,
-  },
-  smallText: {
-    fontSize: 11,
-    color: COLORS.cream.soft,
-  },
+  btnText: { fontWeight: FONT_WEIGHT.bold },
 });
-
-export default IdleRewardsCard;

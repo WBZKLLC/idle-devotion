@@ -1,29 +1,31 @@
-// /app/frontend/components/home/CurrencyBar.tsx
-// Phase 3.22.1: Extracted currency bar component
-
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
-import { SPACING, RADIUS } from '../ui/tokens';
+import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT } from '../ui/tokens';
 
-interface CurrencyBarProps {
+type CurrencyItem = {
+  key: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  value: number;
+};
+
+type Props = {
   gems: number;
   gold: number;
   coins: number;
   divineEssence: number;
-}
+};
 
-const CURRENCIES = [
-  { key: 'gems', icon: 'diamond' as const, color: '#9b4dca', label: 'Gems' },
-  { key: 'gold', icon: 'logo-bitcoin' as const, color: COLORS.gold.primary, label: 'Gold' },
-  { key: 'coins', icon: 'cash' as const, color: COLORS.gold.light, label: 'Coins' },
-  { key: 'essence', icon: 'star' as const, color: '#f59e0b', label: 'Essence' },
-] as const;
+export function CurrencyBar({ gems, gold, coins, divineEssence }: Props) {
+  const items: CurrencyItem[] = [
+    { key: 'gems', icon: 'diamond', color: '#9b4dca', value: gems },
+    { key: 'gold', icon: 'logo-bitcoin', color: COLORS.gold.primary, value: gold },
+    { key: 'coins', icon: 'cash', color: COLORS.gold.light, value: coins },
+    { key: 'divine', icon: 'star', color: '#f59e0b', value: divineEssence },
+  ];
 
-export function CurrencyBar({ gems, gold, coins, divineEssence }: CurrencyBarProps) {
-  const values = { gems, gold, coins, essence: divineEssence };
-  
   return (
     <ScrollView
       horizontal
@@ -31,12 +33,10 @@ export function CurrencyBar({ gems, gold, coins, divineEssence }: CurrencyBarPro
       style={styles.scroll}
       contentContainerStyle={styles.content}
     >
-      {CURRENCIES.map((currency) => (
-        <View key={currency.key} style={styles.item}>
-          <Ionicons name={currency.icon} size={14} color={currency.color} />
-          <Text style={styles.text}>
-            {(values[currency.key] || 0).toLocaleString()}
-          </Text>
+      {items.map((it) => (
+        <View key={it.key} style={styles.pill}>
+          <Ionicons name={it.icon} size={14} color={it.color} />
+          <Text style={styles.text}>{(it.value || 0).toLocaleString()}</Text>
         </View>
       ))}
     </ScrollView>
@@ -44,27 +44,22 @@ export function CurrencyBar({ gems, gold, coins, divineEssence }: CurrencyBarPro
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    marginBottom: SPACING.sm,
-  },
-  content: {
-    paddingHorizontal: SPACING.md,
-    gap: SPACING.sm,
-  },
-  item: {
+  scroll: { marginTop: SPACING.xs },
+  content: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm, gap: SPACING.sm },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.navy.medium + '80',
-    paddingHorizontal: SPACING.sm,
+    gap: SPACING.xs,
     paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.sm,
-    gap: 4,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: RADIUS.xl,
+    backgroundColor: COLORS.navy.dark,
+    borderWidth: 1,
+    borderColor: COLORS.navy.light,
   },
   text: {
-    fontSize: 12,
-    color: COLORS.cream.soft,
-    fontWeight: '500',
+    color: COLORS.cream.pure,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
   },
 });
-
-export default CurrencyBar;

@@ -19,6 +19,8 @@ import COLORS from '../theme/colors';
 import { router } from 'expo-router';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.22.3: Canonical button
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { startDetailedCombat } from '../lib/api';

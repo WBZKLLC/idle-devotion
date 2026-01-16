@@ -21,6 +21,8 @@ import COLORS from '../theme/colors';
 import { router } from 'expo-router';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.22.3: Canonical button
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 
 const MONTHS = ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'];
 const DAYS_PER_MONTH = 30;

@@ -18,6 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 // Phase 3.18.7: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.22.3: Canonical button
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 // Phase 3.19.11: Confirm modal hook
 import { useConfirmModal } from '../components/ui/useConfirmModal';
 

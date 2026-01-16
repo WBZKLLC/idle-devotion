@@ -54,8 +54,6 @@ import {
 import { subscribeInteraction } from '../../lib/ui/interactionSession';
 // Phase 3.22.10.C: Seasonal temperature
 import { getTemperatureBias, getSeason } from '../../lib/ui/season';
-// Phase 3.22.12.R1: Centralized store navigation
-import { goToStore } from '../../lib/entitlements/navigation';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';

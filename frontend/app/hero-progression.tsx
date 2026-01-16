@@ -613,9 +613,8 @@ export default function HeroProgressionScreen() {
                     key={tier}
                     onPress={() => {
                       if (locked) {
-                        // ALERT_ALLOWED: rewards_modal
-                        Alert.alert(
-                          isAwakening ? 'Awakening Preview' : 'Locked Tier',
+                        // Phase 3.19.9: Use toast for informational messages (not rewards)
+                        toast.info(
                           isAwakening
                             ? 'Awakening is not active yet. This is preview-only.'
                             : `Unlock ${label} by promoting stars.`

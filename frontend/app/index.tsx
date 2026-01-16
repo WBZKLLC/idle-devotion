@@ -24,6 +24,8 @@ import Sidebar from '../components/Sidebar';
 import { goToStore } from '../lib/entitlements/navigation';
 // Phase 3.18.4: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.19.7: Cinematic loading screen
+import { CinematicLoading } from '../components/ui/CinematicLoading';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../lib/api';

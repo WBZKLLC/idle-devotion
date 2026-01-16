@@ -102,12 +102,12 @@ export default function ResourceBagScreen() {
     });
   };
 
-  const getRarityColor = (rarity?: string) => {
+  const getRarityColor = (rarity?: string): readonly [string, string] => {
     switch (rarity) {
-      case 'legendary': return ['#FFD700', '#FFA500'];
-      case 'epic': return ['#9333ea', '#7c3aed'];
-      case 'rare': return ['#3b82f6', '#2563eb'];
-      default: return [COLORS.navy.light, COLORS.navy.medium];
+      case 'legendary': return ['#FFD700', '#FFA500'] as const;
+      case 'epic': return ['#9333ea', '#7c3aed'] as const;
+      case 'rare': return ['#3b82f6', '#2563eb'] as const;
+      default: return [COLORS.navy.light, COLORS.navy.medium] as const;
     }
   };
 

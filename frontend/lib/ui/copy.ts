@@ -17,16 +17,16 @@
 
 /** 
  * Greeting variants for HomeHeader
- * Only ONE line ever. Power is assumed — it does not announce itself.
- * 10-15% chance of variant, rest default
+ * Only ONE line ever. Power is acknowledged, not celebrated.
+ * Never enthusiastic. Never exclamatory. No urgency.
+ * 85% default, 15% variant
  */
 export const GREETING_VARIANTS = [
-  'Welcome back.',           // default (most common)
-  "You've returned.",
-  "They've been waiting.",
-  'Your absence was noted.',
+  "You've returned.",        // default (most common)
+  'Time was generous.',
+  'They waited.',
   'The Sanctum remembers.',
-  'Time has been kind.',
+  'Your absence was noted.',
 ] as const;
 
 /**

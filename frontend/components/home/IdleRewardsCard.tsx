@@ -101,6 +101,11 @@ export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function Id
     }
   }, []);
   
+  // Expose cancelSignatureRevert to parent via ref
+  useImperativeHandle(ref, () => ({
+    cancelSignatureRevert,
+  }), [cancelSignatureRevert]);
+  
   useEffect(() => {
     const checkAccents = async () => {
       // PRIORITY 1: Signature moment (daily + session budgeted, atomic)

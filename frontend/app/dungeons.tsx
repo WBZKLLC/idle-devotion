@@ -344,7 +344,7 @@ export default function DungeonsScreen() {
               disabled={!unlocked}
             >
               <LinearGradient
-                colors={unlocked ? (selected ? STAGE_TYPES[selectedType].gradient : [COLORS.navy.medium, COLORS.navy.dark]) : [COLORS.dungeon.stone, COLORS.dungeon.dark]}
+                colors={unlocked ? (selected ? STAGE_TYPES[selectedType].gradient : DUNGEON_NAVY) : DUNGEON_LOCKED}
                 style={styles.stageCardGradient}
               >
                 <View style={styles.stageHeader}>
@@ -442,7 +442,7 @@ export default function DungeonsScreen() {
                       }}
                     >
                       <LinearGradient
-                        colors={isSelected ? config.gradient : [COLORS.navy.medium, COLORS.navy.dark]}
+                        colors={isSelected ? config.gradient : DUNGEON_NAVY}
                         style={styles.typeCardGradient}
                       >
                         <Ionicons 

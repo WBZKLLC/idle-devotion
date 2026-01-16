@@ -1,28 +1,32 @@
 <analysis>
+
 <original_problem_statement>
-The user is directing a systematic, multi-phase UX and code quality overhaul. The project has progressed through several phases: eliminating all TypeScript debt (Phase 3.20), passing all custom code guardrails (Phase 3.21), and refactoring the home screen into components (Phase 3.22.1).
+The user is directing a multi-phase UX and code quality overhaul for a mobile game app. The project has progressed through major architectural refactoring (routing, componentization) and is now deep into an emotional design phase for the home screen.
 
-A major architectural refactor was just completed to fix a bug where a bottom tab bar was incorrectly appearing on the login screen and overlaying other content. This was solved by restructuring the application routing using Expo Router's route groups ( and ).
+The overarching goal is to transform the app's feel from a standard robotic dashboard to a premium, quietly indulgent experience that fosters a sense of attachment. The user has provided very specific, layered direction on tone, focusing on concepts like Return to the Sanctum, Quiet Indulgence, and Confident Possession.
 
-Following that, a consistency sweep for authentication gates was completed (Phase 3.22.3), ensuring all Go to Login buttons use a canonical  component.
-
-The current focus is **Phase 3.22.4 — Micro-interactions Polish**, which aims to make the app feel more responsive and visually consistent by adding pressed-state feedback to common touch targets and standardizing layout spacing.
+This has culminated in the creation of a Desire Engine — a system designed to deliver rare, subtle, non-repeatable micro-interactions (e.g., eye-shifts, glances, one-time noticed moments) governed by a strict session-based budget.
 
 **PRODUCT REQUIREMENTS**:
-1.  **Phase 3.22.1 (Done)**: Refactored the main dashboard screen () into reusable components (, , , ).
-2.  **Phase 3.22.2 (Done)**:
-    -   Standardized  usage across core screens for consistent top/left/right insets.
-    -   Fixed a major architectural flaw by restructuring routes into  and  groups, which solved a bug where the tab bar would render on top of unauthenticated screens.
-3.  **Phase 3.22.3 (Done)**: Performed a consistency sweep to replace all ad-hoc Go to Login  elements with the canonical  component across 14 screens and removed all associated dead styles.
-4.  **Phase 3.22.4 (In Progress)**: A polish pass to improve micro-interactions and visual consistency.
-    -   Add pressed-state feedback (scale/opacity) to high-traffic touch targets.
-    -   Ensure consistent bottom padding on scrollable screens.
+1.  **Phase 3.22.4 (Done)**: Standardized  with haptic/visual feedback and  bottom padding across all major screens.
+2.  **Phase 3.22.5 (Done)**: Created a canonical  component and  design tokens to begin standardizing list UIs.
+3.  **Phase 3.22.6 (Done)**: Completed a major emotional and visual recomposition of the Home Screen, refactoring , , and  to feel calmer and more intentional. Introduced a subtle breathing animation to the primary .
+4.  **Phase 3.22.7 (Done)**: Executed a Restraint Pass on the Home Screen, introducing an opacity ladder (primary, secondary, dormant) and rhythmic spacing to reduce visual clutter and establish a clear hierarchy.
+5.  **Phase 3.22.8/10 (In Progress)**: Implemented the Desire Engine to deliver rare, session-budgeted Desire Accents and a once-per-day Signature Moment to make the app feel alive and aware. This involved creating new utility files and integrating them into the Home Screen. The agent is currently fixing logical flaws in this system to ensure its rules are strictly enforced.
 </original_problem_statement>
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is in a very stable state. It has zero TypeScript errors, and all 
+The application is in a highly polished state. A significant amount of work has been done to systematically refactor the UI/UX, moving from technical debt cleanup to a deep, philosophical overhaul of the home screen's emotional tone.
+
+A Desire Engine has been created in  to manage and deliver rare, session-budgeted micro-interactions. This system is integrated into the Home screen () and the  component. The agent has just been working on fixing logical flaws in this system to ensure its rules (e.g., only one accent per session, priority order) are strictly enforced.
+
+**Last working item**:
+-   Last item agent was working: The agent was performing a surgical fix on the Desire Engine to make it more robust. Specifically, it was modifying  to handle the Signature Moment atomically and to make its revert-to-normal-subtitle timeout cancellable. The last action was to add the necessary imports and expose a  function for the parent Home screen to call on any user interaction.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   Which testing method agent to use? Manual testing by screenshot tool. The immediate next actions are code-correctness fixes. After the fixes are applied, the agent should run  and 
 > frontend@1.0.0 guard
 > npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts
 
@@ -127,108 +131,84 @@ The application is in a very stable state. It has zero TypeScript errors, and al
    Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
 
 ✅ All Alert.alert usages are properly annotated.
-   No forbidden error alert patterns found. scripts pass. A major routing refactor was successfully completed, separating authenticated screens ( group) from unauthenticated screens ( group), solving a critical UI bug. A comprehensive sweep has standardized all authentication gates to use .
-
-The agent has now started **Phase 3.22.4**. It has created a central file for interaction constants () and has successfully converted the  and  hero cards to use  with pressed-state feedback. It is currently in the middle of applying the same pattern to the  screen.
-
-**Last working item**:
--   Last item agent was working: Converting  components within  to  components with standardized pressed-state feedback (scale and opacity). The agent had just updated the JSX and was about to add the necessary  style to the .
--   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? manual testing by screenshot tool. After the changes are applied to , the agent should navigate to that screen, and take screenshots while pressing the updated components to verify the visual feedback is working correctly without breaking the layout.
+   No forbidden error alert patterns found.. A screenshot of the home screen can verify the UI hasn't broken, but testing the desire accents themselves is difficult due to their rarity and is not required.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
-There are no outstanding bugs or issues. The current work is a planned refactoring task.
+There are no known bugs. The current work is a planned, in-progress refactoring task.
 
 **In progress Task List**:
--   Task 1: (P0) Complete Phase 3.22.4: Micro-interactions Polish.
+-   Task 1: (P0) Complete the surgical fix for the Desire Engine.
 
  Task Detail:
   -   Task 1:
-     -   Where to resume: The immediate next action is to add the  style definition to the  in  to complete the conversion for that screen.
-     -   What will be achieved with this? The banners and tiles on the summon hub screen will provide tactile feedback when pressed, improving the user experience and consistency.
-     -   Next Steps for this task:
-        1.  **Convert to Pressable:** Convert  elements to  with feedback in  (list items) and  (chapter cards).
-        2.  **Apply Bottom Gutter:** Add  to the  of / components on , , , , and  to prevent content from being obscured by the home indicator.
-        3.  **Audit Loading States & Toasts:** Review screens with network calls to ensure buttons are disabled during loading, and that toast notifications are used appropriately.
+     -   Where to resume: The agent was in the middle of editing . The next step is to add the necessary imports (, ) and create the  to expose the  function. Then, the parent component  needs to be updated to use this ref and call the cancellation function within its  logic.
+     -   What will be achieved with this? This will fix a key flaw in the Signature Moment, ensuring that if a user interacts with the screen during the brief moment, the UI yields instantly and doesn't snap back to the normal subtitle after a delay. This is critical for the quietly dominant tone.
      -   Status: IN PROGRESS
      -   Should Test frontend/backend/both after fix? frontend
-     -   Blocked on something: None.
+     -   Blocked on something: None
 
 **Upcoming and Future Tasks**
--   **Future Tasks (Deferred):**
-    -   P1: **Fix Cinematic Videos**: The video codec for 5+ star hero cinematics is incompatible. The fix involves running the script at .
+-   **Upcoming Tasks:**
+    -   P1: **Phase 3.22.10 — Sensory Mastering**: The user has suggested a future phase focusing on audio mastering, applying seasonal color temperatures, and polishing the parallax effect.
+-   **Future Tasks:**
+    -   P2: **Fix Cinematic Videos**: The video codec for 5+ star hero cinematics is incompatible. The fix involves running the script at . This has been deferred for a long time.
 
 **Completed work in this session**
--   **Phase 3.22.1 (Dashboard Component Extraction)**:
-    -   Successfully extracted the  from  into its own component, completing the dashboard refactor.
-
--   **Phase 3.22.2 (Layout & Route Architecture)**:
-    -   Standardized  usage across , , , , and  for consistent insets.
-    -   **Major Routing Refactor**: Re-architected the app's routing by creating  and  route groups. This fixed a critical bug where the tab bar appeared on the login screen and overlaid other screens. This involved creating new layout files, moving over 6 screens, and refactoring  to separate login and dashboard logic.
-
--   **Phase 3.22.3 (Auth Gate Consistency)**:
-    -   Audited and updated 14 screens (, , , , , , , , , , , , etc.) to use the canonical  for their Go to Login auth gate.
-    -   Removed all associated unused ,  styles from all affected files.
-
--   **Phase 3.22.4 (Micro-interactions - Started)**:
-    -   Created  to centralize pressed-state styles.
-    -   Added  to the design tokens.
-    -   Converted touchable elements in  and  to use  with standardized feedback.
-    -   Started converting .
+-   **Phase 3.22.4: Micro-interactions Polish**: Completed the conversion of  to  and added  to all target screens (, , , , , ).
+-   **Phase 3.22.5: Visual Parity Sweep (Foundation)**: Created  tokens and a reusable  component. Applied it to the guild list modal in .
+-   **Phase 3.22.6: Home Screen Emotional Recomposition**: Executed multiple, deep refactoring passes on the Home Screen's components (, , , tab bar) and copy () to align with the Return to the Sanctum and Quiet Indulgence tones. Introduced a subtle breathing animation.
+-   **Phase 3.22.7: Home Screen Restraint Pass**: Implemented an opacity ladder and rhythmic spacing on the Home Screen using  and  tokens to create a calm, composed hierarchy.
+-   **Phase 3.22.8/10: Desire Engine Scaffolding & Integration**: Created the core systems for delivering rare, session-budgeted Desire Accents and a Signature Moment (, , etc.) and integrated them into the Home screen.
+-   **Desire Engine Bug Fixes**: Identified and fixed multiple logical flaws in the Desire Engine, including enforcing a strict one accent per session budget and ensuring the correct priority order for accents.
 
 **Earlier issues found/mentioned but not fixed**
-   -   Issue 1:
-        -   Incompatible video codec for hero cinematics. This feature is currently broken.
+   -   Issue 1: Incompatible video codec for hero cinematics. This feature is currently broken.
         -   Debug checklist: Run the script at  and test playback on a device.
         -   Why to solve this issue and what will be achieved with this? To restore a broken premium feature.
         -   Should Test frontend/backend/both after fix: frontend
         -   Is recurring issue? Y
 
 **Known issue recurrence from previous fork**
--   None.
+  - None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Systematic Refactoring**: Following a strict, phased approach (3.22.1 → 3.22.2 → 3.22.3 → 3.22.4) for UI/UX polish and code cleanup.
--   **Expo Router (Route Groups)**: Using  and  directory-based groups to create separate navigation stacks for unauthenticated and authenticated users, solving complex layout and state issues.
--   **Component-Driven Development**: Extracting UI into reusable components ().
--   **Interaction Polish**: Using  with a style function () to provide visual feedback (scale, opacity) on user interaction, centralized in .
--   **Code Hygiene**: Proactively identifying and removing dead code (unused styles) after refactoring.
+-   **Emotional Design System**: A complex, layered system for controlling the app's tone through subtle UI/UX choices, including microcopy, animation, spacing, and color.
+-   **Stateful Micro-interactions (Desire Engine)**: Using a combination of  (for session state),  (for daily persistence), and  hooks to create rare, non-repeatable UI events (accents).
+-   **Strict Budgeting**: Enforcing a one accent per session rule via a global budget flag () to maintain the premium feel and prevent the UI from feeling spammy.
+-   **Atomic Operations**: Refactoring state mutation functions (e.g., ) to be atomic, checking for and spending budget in one operation to prevent race conditions.
+-   **Cancellable Timeouts**: Using  to hold timeout IDs so that subtle, timed animations or state changes can be immediately cancelled upon user interaction, making the UI feel responsive and yielding.
+-   **Component-based Animation**: Using  for performant, declarative animations like the subtle breathing and settle effects.
+-   **Design Token-Driven UI**: Centralizing all spacing, color, opacity, and animation values in  to ensure consistency and easy updates.
 
 **key DB schema**
--   No changes to the DB schema.
+- No changes to the DB schema.
 
 **changes in tech stack**
--   No changes to the core tech stack.
+-  has been heavily utilized for animations.
+-  and  are used for the  state management.
 
 **All files of reference**
--   : The file currently being modified to add  feedback.
--   : The new central source for interaction constants and helpers.
--   : Contains shared layout constants, including the new .
--   : The root layout file that now correctly gates access between  and  groups.
--   : Defines the tab bar for authenticated users.
--   The following files are the next targets for the polish sweep: , , , , .
+-   : **The file currently being edited.** It's the centerpiece of the home screen and the integration point for many Desire Engine features.
+-   : The core logic for the Desire Engine. Contains the state and rules for all accents.
+-   : The Home screen. It orchestrates the various components and hooks into the  system to trigger accents based on user behavior (scroll, interaction).
+-   : Contains all the new design tokens for layout, restraint, and animations.
 
 **Areas that need refactoring**:
--   The active refactoring is the micro-interaction polish (Phase 3.22.4), targeting several high-traffic screens.
+- The current work IS the refactoring. No other areas are flagged.
 
 **key api endpoints**
--   No new endpoints.
+- No new endpoints.
 
 **Critical Info for New Agent**
--   You are in the middle of **Phase 3.22.4: Micro-interactions Polish**. Do not start any other task.
--   Your **immediate next action** is to add the  style to the  in .
--   After that, continue with the systematic plan for Phase 3.22.4: convert  and  to use , then apply the  padding to all specified scroll screens.
--   The project's routing has been correctly architected with  and  groups. Respect this structure. Screens inside  have a tab bar; screens outside it are full-screen stack navigators.
--   The project is in a very clean state (0 TS errors, all guards passing). Maintain this standard and run app/(tabs)/heroes.tsx(20,10): error TS2300: Duplicate identifier 'LAYOUT'.
-app/(tabs)/heroes.tsx(52,21): error TS2300: Duplicate identifier 'LAYOUT'.
-app/(tabs)/summon-hub.tsx(451,37): error TS2339: Property 'pressedFeedback' does not exist on type '{ container: { flex: number; }; content: { padding: number; paddingTop: number; paddingBottom: number; }; title: { fontSize: number; fontWeight: "bold"; color: string; textAlign: "center"; marginBottom: number; letterSpacing: number; }; ... 70 more ...; loginText: { ...; }; }'.
-app/(tabs)/summon-hub.tsx(485,79): error TS2339: Property 'pressedFeedback' does not exist on type '{ container: { flex: number; }; content: { padding: number; paddingTop: number; paddingBottom: number; }; title: { fontSize: number; fontWeight: "bold"; color: string; textAlign: "center"; marginBottom: number; letterSpacing: number; }; ... 70 more ...; loginText: { ...; }; }'.
-app/(tabs)/summon-hub.tsx(497,79): error TS2339: Property 'pressedFeedback' does not exist on type '{ container: { flex: number; }; content: { padding: number; paddingTop: number; paddingBottom: number; }; title: { fontSize: number; fontWeight: "bold"; color: string; textAlign: "center"; marginBottom: number; letterSpacing: number; }; ... 70 more ...; loginText: { ...; }; }'. and 
+-   You are in the middle of a delicate, critical refactor. **Your immediate task is to complete the edit on **. The goal is to make the Signature Moment subtitle-revert timeout cancellable. This involves using  and .
+-   After fixing , you must update the parent component, , to call the new cancellation function from its  handler.
+-   The Desire Engine and its one accent per session budget are extremely important to the user. Do not break these rules. The priority of accents is: 1. Signature, 2. Noticed, 3. Eye-shift, 4. Glance.
+-   The project has a very specific and deep emotional design language (Quiet Indulgence, Confident Possession). All changes must respect this tone. Refer to the user's detailed instructions in the history.
+-   Always run  and 
 > frontend@1.0.0 guard
 > npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts
 
@@ -333,38 +313,39 @@ app/(tabs)/summon-hub.tsx(497,79): error TS2339: Property 'pressedFeedback' does
    Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
 
 ✅ All Alert.alert usages are properly annotated.
-   No forbidden error alert patterns found. after your changes.
+   No forbidden error alert patterns found. after making changes. The codebase is expected to be clean.
 
 **documents created in this job**
--   None.
+- None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Confirmed the current plan to continue with Phase 3.22.4 by applying  feedback to , , , and , and then applying  to scroll views.
-2.  **Agent**: Provided a summary of the start of Phase 3.22.4, having converted  and asking for the next steps.
-3.  **User**: Instructed the agent to remove all the dead  styles that were left over from the Phase 3.22.3 cleanup.
-4.  **Agent**: Pasted the list of all leftover style definitions across 10 files.
-5.  **User**: Asked the agent to paste the leftover style definitions that are now unused.
-6.  **Agent**: Provided a summary of Phase 3.22.3 progress and noted the next step is to clean up unused styles.
-7.  **User**: Asked the agent to hit pause, then immediately to continue.
-8.  **Agent**: Ran final verification checks, discovered a TypeScript error in  (missing  import) after the style cleanup.
-9.  **Agent**: Removed the last of the dead styles from .
-10. **Agent**: Discovered and removed more unused login styles from  and .
+1.  **User (LATEST)**: Agreed with the agent's diagnosis of a potential bug (budget-inside vs budget-at-callsite) and provided a detailed plan to make the Signature Moment surgically safe by making the budget spend atomic and the revert timeout cancellable.
+2.  **Agent**: Showed the user the implementation of , confirming it uses a budget-inside pattern.
+3.  **User**: Asked to see the  implementation.
+4.  **Agent**: Summarized that the accent priority order (Signature > Noticed) is now fixed and verified.
+5.  **User**: Confirmed the priority order is correct and pointed out the next risk: ensuring the budget logic is truly safe and not creating regressions.
+6.  **Agent**: Identified that the accent priority order was wrong and fixed it in .
+7.  **User**: Asked the agent to verify the priority order of accents is correctly enforced.
+8.  **Agent**: Summarized the implementation of the Signature Moment and refinement of the Desire Engine.
+9.  **User**: Provided a detailed plan for implementing the Signature Moment (Phase 3.22.10) and refining the existing Desire Accents (Phase 3.22.8).
+10. **Agent**: Summarized the completion of the Restraint Pass (Phase 3.22.7).
 
 **Project Health Check:**
--   **Broken**: Web video playback for cinematics (due to incompatible video codecs).
+-   **Broken**: Web video playback for cinematics.
 -   **Mocked**: RevenueCat is functionally mocked.
--   **In Refactoring**: Several core screens (, , , etc.) are being polished as part of Phase 3.22.4.
+-   **In Refactoring**: The Home Screen's advanced emotional design system (Desire Engine) is undergoing final implementation and bug-fixing.
 
 **3rd Party Integrations**
 -   **RevenueCat**: For IAP, functionally mocked.
 -   **Sentry**: For crash reporting.
 -   **OpenAI GPT-4**: For backend AI narration (uses Emergent LLM Key).
 -   **Zustand**: For frontend state management.
--   **Expo**: Core framework, including  for file-based routing.
+-   **Expo**: Core framework, including  and .
+-   **React Native Reanimated**: For animations.
 
 **Testing status**
--   Testing agent used after significant changes: NO (in this session, but the agent is performing  and  checks frequently).
--   Troubleshoot agent used after agent stuck in loop: NO (The agent correctly identified the band-aid tab bar fix was a dead end and asked the user before getting stuck, which was good).
+-   Testing agent used after significant changes: NO. Agent is relying on  and  scripts for verification.
+-   Troubleshoot agent used after agent stuck in loop: NO.
 -   Test files created: None.
 -   Known regressions: None.
 
@@ -374,6 +355,6 @@ app/(tabs)/summon-hub.tsx(497,79): error TS2339: Property 'pressedFeedback' does
     -   Password: 
 
 **What agent forgot to execute**
--   The agent initially missed fixing the auth gates on  and  during the Phase 3.22.3 sweep, but it self-corrected by running verification  commands, finding the misses, and fixing them before moving on. This demonstrates good diligence.
+- The last action was to start fixing , but the agent only declared its intention. It did not yet execute the tool calls to add the necessary imports (, ) and implement the  to expose the cancellation function. This is the immediate next step.
 
 </analysis>

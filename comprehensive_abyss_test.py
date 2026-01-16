@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://routefix-4.preview.emergentagent.com/api"
+BASE_URL = "https://quietly-indulgent.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

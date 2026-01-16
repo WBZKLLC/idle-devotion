@@ -52,7 +52,7 @@ export function Skeleton({
       style={[
         styles.skeleton,
         {
-          width: computedWidth,
+          width: computedWidth as number | `${number}%`,
           height,
           borderRadius: computedRadius,
           opacity: pulseAnim,

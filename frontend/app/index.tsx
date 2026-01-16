@@ -55,12 +55,22 @@ export default function HomeScreen() {
   
   const [username, setUsername] = useState('');
   const [idleStatus, setIdleStatus] = useState<any>(null);
-  const [isClaiming, setIsClaiming] = useState(false);
+  // Phase 3.19.8: Split loading states for button cadence
+  const [isClaimingCollect, setIsClaimingCollect] = useState(false);
+  const [isClaimingInstant, setIsClaimingInstant] = useState(false);
   const [cr, setCR] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [instantCooldown, setInstantCooldown] = useState<number>(0); // seconds remaining
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Phase 3.19.8: In-app reward recap modal (replaces blocking Alert)
+  type RewardRecap = {
+    title: string;
+    message: string;
+    tone?: 'gold' | 'purple';
+  };
+  const [rewardRecap, setRewardRecap] = useState<RewardRecap | null>(null);
 
   useEffect(() => {
     if (user) {

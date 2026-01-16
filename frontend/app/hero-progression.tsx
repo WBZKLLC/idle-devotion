@@ -33,6 +33,8 @@ import { toast } from '../components/ui/Toast';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { SecondaryButton } from '../components/ui/SecondaryButton';
 import { HeroDetailHeaderSkeleton } from '../components/ui/Skeleton';
+// Phase 3.19.9: Unified reward recap modal
+import { RewardRecapModal, RewardRecapData } from '../components/ui/RewardRecapModal';
 
 // Feature flags (SINGLE SOURCE OF TRUTH)
 import { isFeatureEnabled } from '../lib/features';

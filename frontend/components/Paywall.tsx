@@ -26,7 +26,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 import { PRODUCTS, type ProductKey } from '../lib/entitlements/products';
-import { useHasEntitlement, useEntitlementStore } from '../lib/entitlements/gating';
+import { useHasEntitlement } from '../lib/entitlements/gating';
+import { useRevenueCatStore } from '../stores/revenueCatStore';
 import PurchaseButton from './PurchaseButton';
 import { SecondaryButton } from './ui/SecondaryButton';
 import { toast } from './ui/Toast';
@@ -64,7 +65,7 @@ export const Paywall: React.FC<PaywallProps> = ({
 }) => {
   const product = PRODUCTS[productKey];
   const isOwned = useHasEntitlement(product.entitlementKey);
-  const { restorePurchases } = useEntitlementStore();
+  const { restorePurchases } = useRevenueCatStore();
   const [isRestoring, setIsRestoring] = React.useState(false);
   
   // Dismiss handler - use onDismiss if provided, otherwise fall back to onClose

@@ -105,6 +105,8 @@ const ALLOWED_LEGACY_PAYWALL_FILES = new Set([
   'Paywall.tsx',
   // revenueCatStore.ts is the store file for RevenueCat state (needed for future IAP integration)
   'revenueCatStore.ts',
+  // store.tsx needs restorePurchases from RevenueCat store
+  'store.tsx',
 ]);
 
 // Direct verifyPurchase calls (only allowed in purchase-flow.ts)

@@ -218,7 +218,6 @@ export const RAIL = {
   RADIUS: 16,
   BG_ALPHA_HEX: '22',
 } as const;
-} as const;
 
 // =============================================================================
 // PREMIUM COLORS (from UX spec)

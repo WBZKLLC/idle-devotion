@@ -13,3 +13,4 @@ export { ToastProvider } from './ToastProvider';
 export { Skeleton, HeroGridSkeleton, HeroDetailHeaderSkeleton, BannerSkeleton, StageCardSkeleton, GuildItemSkeleton } from './Skeleton';
 export { EmptyState, NoHeroesEmpty, NoGuildEmpty, NoBannersEmpty, NoStagesEmpty, FilterNoResultsEmpty } from './EmptyState';
 export { DisabledHint, RequiresVIPHint, RequiresCurrencyHint, RequiresLevelHint, RequiresStarsHint } from './DisabledHint';
+export { AppHeader, LAYOUT } from './AppHeader';

@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGameStore } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';
 // Phase 3.18.4: Toast for non-blocking feedback

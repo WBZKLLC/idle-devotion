@@ -579,6 +579,7 @@ export default function HomeScreen() {
           {/* Phase 3.22.1: Extracted idle rewards component */}
           <Pressable onPressIn={handleUserInteraction}>
             <IdleRewardsCard
+              ref={idleCardRef}
               idleStatus={idleStatus}
               vipLevel={user?.vip_level || 0}
               instantCooldown={instantCooldown}

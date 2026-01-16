@@ -122,6 +122,48 @@ export const SHADOW = {
     shadowRadius: 8,
     elevation: 8,
   },
+  // Phase 3.22.7: Single ambient shadow for restraint
+  ambient: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+} as const;
+
+// =============================================================================
+// PHASE 3.22.7: RESTRAINT TOKENS
+// =============================================================================
+
+/** Single Invitation Rule — only one element invites at a time */
+export const INVITATION = {
+  /** Primary element (Idle card) — full presence */
+  primary: 1,
+  /** Secondary elements (Quick links) — available but not eager */
+  secondary: 0.82,
+  /** Dormant elements (banners, tertiary) — quiet until chosen */
+  dormant: 0.72,
+} as const;
+
+/** Vertical Breathing Rhythm — intentional gaps create pacing */
+export const SECTION_GAP = {
+  /** Standard breathing space */
+  breath: 28,
+  /** Smaller rest between related items */
+  rest: 18,
+  /** Larger pause between major sections */
+  pause: 36,
+} as const;
+
+/** Silhouette constraints — presence, not display */
+export const SILHOUETTE = {
+  /** Maximum opacity (felt, not seen) */
+  maxOpacity: 0.06,
+  /** Maximum parallax movement */
+  maxTranslateY: -8,
+  /** Scale range for breathing */
+  scaleRange: [1, 1.015] as const,
 } as const;
 
 // =============================================================================

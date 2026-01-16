@@ -20,3 +20,4 @@ export { RewardRecapModal } from './RewardRecapModal';
 export type { RewardRecapData } from './RewardRecapModal';
 export { ConfirmModal } from './ConfirmModal';
 export type { ConfirmModalData, ConfirmTone } from './ConfirmModal';
+export { useConfirmModal } from './useConfirmModal';

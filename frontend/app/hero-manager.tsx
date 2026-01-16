@@ -335,34 +335,30 @@ export default function HeroManagerScreen() {
     const heroData = slots[slotNumber - 1].heroData;
     if (!heroData) return;
     
-    // ALERT_ALLOWED: destructive_confirm
-    Alert.alert(
-      'Remove Hero',
-      `Remove ${heroData.hero_data?.name || heroData.hero_info?.name || 'this hero'} from Slot ${slotNumber}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            const newSlots = [...slots];
-            const heroName = heroData.hero_data?.name || heroData.hero_info?.name || 'Hero';
-            
-            newSlots[slotNumber - 1] = {
-              ...newSlots[slotNumber - 1],
-              heroId: null,
-              heroData: null,
-            };
-            
-            setSlots(newSlots);
-            setHasChanges(true);
-            calculateTeamPower(newSlots);
-            addChangeLog('removed', heroName, slotNumber);
-            flashSlotAnimation();
-          },
-        },
-      ]
-    );
+    openConfirm({
+      title: 'Remove Hero',
+      message: `Remove ${heroData.hero_data?.name || heroData.hero_info?.name || 'this hero'} from Slot ${slotNumber}?`,
+      tone: 'danger',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      icon: 'remove-circle-outline',
+      onConfirm: () => {
+        const newSlots = [...slots];
+        const heroName = heroData.hero_data?.name || heroData.hero_info?.name || 'Hero';
+        
+        newSlots[slotNumber - 1] = {
+          ...newSlots[slotNumber - 1],
+          heroId: null,
+          heroData: null,
+        };
+        
+        setSlots(newSlots);
+        setHasChanges(true);
+        calculateTeamPower(newSlots);
+        addChangeLog('removed', heroName, slotNumber);
+        flashSlotAnimation();
+      },
+    });
   };
 
   const addChangeLog = (action: string, heroName: string, slot: number) => {

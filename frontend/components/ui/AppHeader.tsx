@@ -54,12 +54,14 @@ interface AppHeaderProps {
 // =============================================================================
 export function AppHeader({
   title,
+  subtitle,
   left = { type: 'none' },
   right,
   transparent = false,
   backgroundColor,
   style,
   includeSafeArea = true,
+  centerTitle = true,
 }: AppHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();

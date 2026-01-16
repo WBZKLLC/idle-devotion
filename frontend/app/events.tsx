@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Pressable,
   ScrollView,
   ActivityIndicator,
   RefreshControl,
@@ -22,6 +23,9 @@ import { toast } from '../components/ui/Toast';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 // Phase 3.19.11: Confirm modal hook
 import { useConfirmModal } from '../components/ui/useConfirmModal';
+// Phase 3.22.4: Micro-interaction utilities
+import { PRESS, haptic } from '../lib/ui/interaction';
+import { LAYOUT } from '../components/ui/tokens';
 
 interface Event {
   id: string;

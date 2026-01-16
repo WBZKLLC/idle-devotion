@@ -83,7 +83,9 @@ export function IdleRewardsCard({
   useEffect(() => {
     const checkNoticed = async () => {
       const canNotice = await canTriggerNoticed();
-      if (canNotice) {
+      
+      // ✅ Must also consume the single session accent budget
+      if (canNotice && trySpendDesireBudget()) {
         const variant = getNoticedVariant();
         if (variant === 'idle') {
           // One-time "noticed" subtitle: "Still warm."
@@ -91,7 +93,11 @@ export function IdleRewardsCard({
           await markNoticedTriggered();
           return;
         }
+        // Other noticed variants (copy, audio) — still budget-paid
+        await markNoticedTriggered();
+        // For now, fall through to normal subtitle if not 'idle' variant
       }
+      
       // Normal rotating subtitle
       setSubtitle(getIdleSubtitle());
     };

@@ -16,3 +16,5 @@ export { DisabledHint, RequiresVIPHint, RequiresCurrencyHint, RequiresLevelHint,
 export { AppHeader, LAYOUT } from './AppHeader';
 export { CinematicLoading } from './CinematicLoading';
 // LOGIN_HERO_URI is exported from lib/assets/loginHero.ts (single source of truth)
+export { RewardRecapModal } from './RewardRecapModal';
+export type { RewardRecapData } from './RewardRecapModal';

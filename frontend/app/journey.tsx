@@ -310,7 +310,7 @@ export default function JourneyScreen() {
                   <View style={styles.milestoneRewards}>
                     {milestone.rewards.map((reward, idx) => (
                       <View key={idx} style={styles.milestoneRewardItem}>
-                        <Text>{getRewardIcon(reward.type)} {reward.amount}</Text>
+                        <Text style={styles.milestoneRewardText}>{getRewardIcon(reward.type)} {reward.amount}</Text>
                       </View>
                     ))}
                   </View>
@@ -394,7 +394,8 @@ const styles = StyleSheet.create({
   progressBarFill: { height: '100%', backgroundColor: COLORS.gold.primary, borderRadius: 4 },
   progressText: { fontSize: 11, color: COLORS.cream.dark, textAlign: 'right', marginTop: 4 },
   milestoneRewards: { flexDirection: 'row', gap: 16, marginBottom: 12 },
-  milestoneRewardItem: { color: COLORS.cream.soft },
+  milestoneRewardItem: { flexDirection: 'row', alignItems: 'center' },
+  milestoneRewardText: { color: COLORS.cream.soft },
   claimButton: { backgroundColor: COLORS.gold.primary, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
   claimButtonClaimed: { backgroundColor: '#22c55e40' },
   claimButtonLocked: { backgroundColor: COLORS.navy.light },

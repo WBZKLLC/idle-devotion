@@ -307,11 +307,18 @@ export default function CampaignScreen() {
     const unlocked = chapter.is_unlocked;
 
     return (
-      <TouchableOpacity
-        style={styles.chapterCardOuter}
-        onPress={() => unlocked && loadChapterStages(chapter)}
+      <Pressable
+        style={({ pressed }) => [
+          styles.chapterCardOuter,
+          pressed && styles.pressedFeedback,
+        ]}
+        onPress={() => {
+          if (unlocked) {
+            haptic('selection');
+            loadChapterStages(chapter);
+          }
+        }}
         disabled={!unlocked}
-        activeOpacity={0.85}
       >
         {/* Premium gold stroke frame */}
         <View style={[styles.goldStrokeFrame, !unlocked && styles.goldStrokeFrameLocked]}>

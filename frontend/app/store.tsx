@@ -92,7 +92,7 @@ export default function StoreScreen() {
   
   // Phase 3.19.10: Confirm modal state
   const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
-  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isConfirmBusy, setIsConfirmBusy] = useState(false);
   const openConfirm = (data: ConfirmModalData) => {
     setConfirmData({
       ...data,

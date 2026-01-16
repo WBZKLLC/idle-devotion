@@ -130,8 +130,8 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    // Phase 3.19.10: Use ConfirmModal instead of Alert.alert
-    setConfirmData({
+    // Phase 3.19.11: Use hook-based openConfirm
+    openConfirm({
       title: 'Logout',
       message: 'Are you sure you want to logout?',
       confirmText: 'Logout',

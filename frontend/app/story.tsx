@@ -278,7 +278,7 @@ export default function StoryScreen() {
               disabled={!chapter.unlocked || chapter.scenes.length === 0}
             >
               <LinearGradient
-                colors={chapter.unlocked ? getActColor(chapter.act) : ['#1a1a1a', '#0a0a0a']}
+                colors={chapter.unlocked ? getActColor(chapter.act) : LOCKED_CHAPTER}
                 style={styles.chapterGradient}
               >
                 {/* Lock overlay */}

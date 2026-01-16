@@ -469,138 +469,31 @@ export default function HomeScreen() {
       <DivineOverlays vignette grain />
       
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{user.username.charAt(0).toUpperCase()}</Text>
-            </View>
-            <View>
-              <Text style={styles.welcomeText}>Welcome back,</Text>
-              <Text style={styles.usernameText}>{user.username}</Text>
-            </View>
-          </View>
-          <View style={styles.crBadge}>
-            <Text style={styles.crLabel}>CR</Text>
-            <Text style={styles.crValue}>{cr.toLocaleString()}</Text>
-          </View>
-        </View>
+        {/* Phase 3.22.1: Extracted header component */}
+        <HomeHeader username={user.username} cr={cr} />
 
-        {/* Currency Bar - Scrollable */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.currencyBarScroll}
-          contentContainerStyle={styles.currencyBarContent}
-        >
-          <View style={styles.currencyItem}>
-            <Ionicons name="diamond" size={14} color="#9b4dca" />
-            <Text style={styles.currencyText}>{(user.gems || 0).toLocaleString()}</Text>
-          </View>
-          <View style={styles.currencyItem}>
-            <Ionicons name="logo-bitcoin" size={14} color={COLORS.gold.primary} />
-            <Text style={styles.currencyText}>{(user.gold || 0).toLocaleString()}</Text>
-          </View>
-          <View style={styles.currencyItem}>
-            <Ionicons name="cash" size={14} color={COLORS.gold.light} />
-            <Text style={styles.currencyText}>{(user.coins || 0).toLocaleString()}</Text>
-          </View>
-          <View style={styles.currencyItem}>
-            <Ionicons name="star" size={14} color="#f59e0b" />
-            <Text style={styles.currencyText}>{(user.divine_essence || 0).toLocaleString()}</Text>
-          </View>
-        </ScrollView>
+        {/* Phase 3.22.1: Extracted currency bar component */}
+        <CurrencyBar
+          gems={user.gems || 0}
+          gold={user.gold || 0}
+          coins={user.coins || 0}
+          divineEssence={user.divine_essence || 0}
+        />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Idle Rewards Card */}
-          <View style={styles.idleCard}>
-            <LinearGradient colors={idleStatus?.is_capped ? [COLORS.gold.primary, COLORS.gold.dark] : [COLORS.navy.medium, COLORS.navy.primary]} style={styles.idleGradient}>
-              <View style={styles.idleHeader}>
-                <Ionicons name="time" size={24} color={COLORS.gold.light} />
-                <Text style={styles.idleTitle}>Idle Rewards</Text>
-              </View>
-              <View style={styles.idleTimerBox}>
-                <Text style={styles.idleTimerLabel}>Time Elapsed</Text>
-                <Text style={styles.idleTimer}>{idleStatus ? formatIdleTime(idleStatus.time_elapsed || 0, idleStatus.max_hours || 8) : '00:00:00'}</Text>
-                <Text style={styles.idleCapText}>Max: {idleStatus?.max_hours || 8}h {idleStatus?.is_capped ? '• FULL' : ''}</Text>
-              </View>
-              <View style={styles.idlePendingRow}>
-                <Ionicons name="star" size={18} color={COLORS.gold.primary} />
-                <Text style={styles.idlePendingText}>+{(idleStatus?.gold_pending || 0).toLocaleString()} Gold Pending</Text>
-              </View>
-              <View style={styles.buttonRow}>
-                {/* Collect Button */}
-                <TouchableOpacity 
-                  style={[styles.claimButton, { flex: 1 }]} 
-                  onPress={handleClaimIdle} 
-                  disabled={isClaimingCollect || isClaimingInstant}
-                >
-                  <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.claimButtonGradient}>
-                    {isClaimingCollect ? (
-                      <ActivityIndicator color={COLORS.navy.dark} size="small" />
-                    ) : (
-                      <>
-                        <Ionicons name="download" size={18} color={COLORS.navy.dark} />
-                        <Text style={styles.claimButtonText}>Collect</Text>
-                      </>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-                
-                {/* Phase 3.19.8: Instant button always visible (VIP lock state for better UX) */}
-                <TouchableOpacity 
-                  style={[
-                    styles.claimButton, 
-                    { 
-                      flex: 1, 
-                      marginLeft: 8, 
-                      opacity: instantCooldown > 0 || (user?.vip_level || 0) < 1 ? 0.6 : 1 
-                    }
-                  ]} 
-                  onPress={() => {
-                    if ((user?.vip_level || 0) < 1) {
-                      toast.info('VIP 1+ unlocks Instant Collect (2 hours of rewards instantly).');
-                      return;
-                    }
-                    handleInstantCollect();
-                  }}
-                  disabled={isClaimingCollect || isClaimingInstant || instantCooldown > 0}
-                >
-                  <LinearGradient 
-                    colors={
-                      (user?.vip_level || 0) < 1 
-                        ? ['#4a4a6a', '#3a3a5a'] 
-                        : instantCooldown > 0 
-                          ? ['#4a4a6a', '#3a3a5a'] 
-                          : ['#8b5cf6', '#6d28d9']
-                    } 
-                    style={styles.claimButtonGradient}
-                  >
-                    {isClaimingInstant ? (
-                      <ActivityIndicator color={COLORS.cream.pure} size="small" />
-                    ) : (user?.vip_level || 0) < 1 ? (
-                      <>
-                        <Ionicons name="lock-closed" size={16} color={COLORS.cream.soft} />
-                        <Text style={[styles.claimButtonText, { color: COLORS.cream.soft, fontSize: 11 }]}>VIP 1+</Text>
-                      </>
-                    ) : instantCooldown > 0 ? (
-                      <>
-                        <Ionicons name="time" size={16} color={COLORS.cream.soft} />
-                        <Text style={[styles.claimButtonText, { color: COLORS.cream.soft, fontSize: 11 }]}>
-                          {formatCooldown(instantCooldown)}
-                        </Text>
-                      </>
-                    ) : (
-                      <>
-                        <Ionicons name="flash" size={18} color={COLORS.cream.pure} />
-                        <Text style={[styles.claimButtonText, { color: COLORS.cream.pure }]}>⚡ Instant</Text>
-                      </>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
-          </View>
+          {/* Phase 3.22.1: Extracted idle rewards component */}
+          <IdleRewardsCard
+            idleStatus={idleStatus}
+            vipLevel={user?.vip_level || 0}
+            instantCooldown={instantCooldown}
+            isClaimingCollect={isClaimingCollect}
+            isClaimingInstant={isClaimingInstant}
+            formatIdleTime={formatIdleTime}
+            formatCooldown={formatCooldown}
+            onCollect={handleClaimIdle}
+            onInstant={handleInstantCollect}
+            onVipLockedPress={() => toast.info('VIP 1+ unlocks Instant Collect (2 hours of rewards instantly).')}
+          />
 
           {/* Quick Links */}
           <View style={styles.quickLinks}>

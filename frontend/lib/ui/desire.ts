@@ -165,6 +165,7 @@ export function shouldCancelGlance(): boolean {
 // =============================================================================
 
 const NOTICED_KEY = 'lastNoticedAt';
+const SIGNATURE_KEY = 'lastSignatureAt';
 
 /** Phase 3.22.8.B: Possession tone — "You're expected. You're claimed." */
 export const NOTICED_VARIANTS = {
@@ -189,6 +190,72 @@ export const IDLE_SUBTITLE_VARIANTS = [
   'Time gathered. Yours.',
   'Still warm.',
 ] as const;
+
+// =============================================================================
+// PHASE 3.22.10: SIGNATURE MOMENT (the "where has this been" lever)
+// =============================================================================
+
+/** 
+ * Signature moment — once per day micro-event
+ * 1.2-2.0 seconds, subtle, then gone
+ */
+export const SIGNATURE = {
+  /** Delay after settle before signature triggers (ms) */
+  delayAfterSettle: 180,
+  /** Duration of the signature moment (ms) */
+  duration: 1400,
+  /** Silhouette tilt angle (degrees) */
+  tiltAngle: 1.5,
+  /** Silhouette fade delta */
+  fadeDelta: 0.02,
+  /** Copy variants for signature subtitle */
+  copyVariants: [
+    'There you are.',
+    'Good.',
+    'Come closer.',
+  ] as const,
+} as const;
+
+/**
+ * Check if signature moment can trigger today
+ * Requires: daily gate + session budget
+ */
+export async function canTriggerSignatureToday(): Promise<boolean> {
+  // Must have session budget
+  if (!hasDesireBudget()) return false;
+  
+  try {
+    const lastSignature = await AsyncStorage.getItem(SIGNATURE_KEY);
+    if (!lastSignature) return true;
+    
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    return lastSignature !== today;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Mark signature moment as triggered for today
+ * Also consumes session budget
+ */
+export async function markSignatureTriggered(): Promise<void> {
+  spendDesireBudget(); // Consume session budget
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    await AsyncStorage.setItem(SIGNATURE_KEY, today);
+  } catch {
+    // Silent fail — this is non-critical
+  }
+}
+
+/**
+ * Get random signature copy
+ */
+export function getSignatureCopy(): string {
+  const index = Math.floor(Math.random() * SIGNATURE.copyVariants.length);
+  return SIGNATURE.copyVariants[index];
+}
 
 /**
  * Check if "noticed" moment can trigger today

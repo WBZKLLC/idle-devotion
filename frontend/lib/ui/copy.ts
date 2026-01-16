@@ -49,29 +49,31 @@ export function getGreeting(): string {
 // =============================================================================
 
 export const IDLE_COPY = {
-  /** Card title — refined for quiet indulgence */
+  /** Card title — confident, possessive */
   title: 'Awaiting You',
   
-  /** Subtitle variants — calm, not enthusiastic */
+  /** Subtitle variants — sensuality via attention */
   subtitles: [
-    'Prepared for you.',
-    'Time was generous.',
-    'They waited.',
-    'Gathered in your absence.',
+    'Prepared in your absence.',
+    'Kept warm for you.',
+    'Time gathered. For you.',
   ] as const,
   
-  /** Button labels — confident, not aggressive */
+  /** Button labels — ritual, controlled */
   collectButton: 'Receive',
   instantButton: 'Take More',
   
-  /** Timer label — refined */
+  /** Timer label */
   timerLabel: 'Time Accrued',
   
   /** Pending label */
-  pendingLabel: 'Prepared for you',
+  pendingLabel: 'For you',
   
   /** Max time note */
   maxTimeNote: (hours: number) => `${hours}h cap`,
+  
+  /** VIP lock copy */
+  vipLock: 'VIP 1+ opens this.',
 } as const;
 
 /**

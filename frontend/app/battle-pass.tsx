@@ -81,7 +81,7 @@ export default function BattlePassScreen() {
         current_tier: Math.min(50, Math.floor((user?.level || 1) * 1.5)),
         current_xp: 750,
         xp_per_tier: 1000,
-        has_premium: user?.vip_level >= 5,
+        has_premium: (user?.vip_level ?? 0) >= 5,
         days_remaining: 28,
         total_tiers: 50,
       });

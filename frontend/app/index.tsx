@@ -70,6 +70,19 @@ export default function HomeScreen() {
   
   // Phase 3.19.9: In-app reward recap modal (unified component)
   const [rewardRecap, setRewardRecap] = useState<RewardRecapData | null>(null);
+  
+  // Phase 3.19.10: Confirm modal state
+  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
+  const openConfirm = (data: ConfirmModalData) => {
+    setConfirmData({
+      ...data,
+      onConfirm: async () => {
+        setConfirmData(null);
+        await data.onConfirm?.();
+      },
+      onCancel: () => setConfirmData(null),
+    });
+  };
 
   useEffect(() => {
     if (user) {

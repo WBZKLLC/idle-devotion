@@ -234,34 +234,30 @@ export default function AdminPanelScreen() {
   const deleteUserAccount = async () => {
     if (!selectedUser || !user) return;
     
-    // ALERT_ALLOWED: destructive_confirm
-    Alert.alert(
-      '⚠️ Delete Account',
-      `Are you absolutely sure you want to DELETE ${selectedUser.username}'s account? This will permanently remove all their data and CANNOT be undone!`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'DELETE FOREVER',
-          style: 'destructive',
-          onPress: async () => {
-            setProcessing(true);
-            try {
-              await adminDeleteAccount(selectedUser.username, user.username);
-              toast.success(`${selectedUser.username}'s account has been deleted`);
-              setShowActionModal(false);
-              setSelectedUser(null);
-              setSearchResults([]);
-            } catch (error: any) {
-              if (!isErrorHandledGlobally(error)) {
-                toast.error(error.response?.data?.detail || 'Failed to delete account');
-              }
-            } finally {
-              setProcessing(false);
-            }
-          },
-        },
-      ]
-    );
+    openConfirm({
+      title: '⚠️ Delete Account',
+      message: `Are you absolutely sure you want to DELETE ${selectedUser.username}'s account? This will permanently remove all their data and CANNOT be undone!`,
+      tone: 'danger',
+      confirmText: 'DELETE FOREVER',
+      cancelText: 'Cancel',
+      icon: 'trash-outline',
+      onConfirm: async () => {
+        setProcessing(true);
+        try {
+          await adminDeleteAccount(selectedUser.username, user.username);
+          toast.success(`${selectedUser.username}'s account has been deleted`);
+          setShowActionModal(false);
+          setSelectedUser(null);
+          setSearchResults([]);
+        } catch (error: any) {
+          if (!isErrorHandledGlobally(error)) {
+            toast.error(error.response?.data?.detail || 'Failed to delete account');
+          }
+        } finally {
+          setProcessing(false);
+        }
+      },
+    });
   };
 
   // Not hydrated yet

@@ -267,15 +267,22 @@ export default function EventsScreen() {
         {/* Tabs */}
         <View style={styles.tabs}>
           {(['all', 'limited', 'daily'] as const).map(tab => (
-            <TouchableOpacity
+            <Pressable
               key={tab}
-              style={[styles.tab, activeTab === tab && styles.tabActive]}
-              onPress={() => setActiveTab(tab)}
+              style={({ pressed }) => [
+                styles.tab,
+                activeTab === tab && styles.tabActive,
+                pressed && styles.pressedFeedback,
+              ]}
+              onPress={() => {
+                haptic('selection');
+                setActiveTab(tab);
+              }}
             >
               <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
 

@@ -609,7 +609,7 @@ export default function HomeScreen() {
         onPressEvents={() => router.push('/events')}
         onPressSummon={() => router.push('/summon-hub')}
         onPressShop={() => goToStore('store')}
-        badges={useRailBadges()}
+        badges={railBadges}
       />
 
       {/* === RITUAL DOCK (bottom-center anchor, the ONE prominent element) === */}

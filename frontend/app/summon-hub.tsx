@@ -400,8 +400,16 @@ export default function SummonHubScreen() {
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container}>
+        {/* Phase 3.19.6: Canonical header */}
+        <AppHeader
+          title="Summon"
+          subtitle="Choose a banner"
+          left={{ type: 'back' }}
+          includeSafeArea={false}
+          centerTitle={false}
+        />
+        
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Summon</Text>
           {/* Scrollable Currency Bar */}
           <ScrollView 
             horizontal 

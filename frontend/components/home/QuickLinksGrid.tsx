@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, TextStyle } from '
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
-
-type GradientColors = readonly [string, string] | readonly [string, string, string];
+import type { GradientColors } from '../../lib/ui/gradients';
 
 type BaseTile = {
   key: string;

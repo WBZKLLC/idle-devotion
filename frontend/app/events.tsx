@@ -175,13 +175,13 @@ export default function EventsScreen() {
     toast.success(`Claimed: ${rewardText}`);
   };
 
-  const getEventTypeColor = (type: string) => {
+  const getEventTypeColor = (type: string): readonly [string, string] => {
     switch (type) {
-      case 'login': return ['#22c55e', '#16a34a'];
-      case 'limited': return ['#ef4444', '#dc2626'];
-      case 'milestone': return ['#f59e0b', '#d97706'];
-      case 'special': return ['#8b5cf6', '#7c3aed'];
-      default: return [COLORS.navy.medium, COLORS.navy.primary];
+      case 'login': return ['#22c55e', '#16a34a'] as const;
+      case 'limited': return ['#ef4444', '#dc2626'] as const;
+      case 'milestone': return ['#f59e0b', '#d97706'] as const;
+      case 'special': return ['#8b5cf6', '#7c3aed'] as const;
+      default: return [COLORS.navy.medium, COLORS.navy.primary] as const;
     }
   };
 

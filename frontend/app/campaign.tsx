@@ -791,8 +791,6 @@ const styles = StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16 },
   errorText: { color: COLORS.cream.dark, fontSize: 16, textAlign: 'center', marginBottom: 16 },
-  loginBtn: { backgroundColor: COLORS.gold.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  loginBtnText: { color: COLORS.navy.darkest, fontWeight: 'bold' },
 
   // Header
   header: {

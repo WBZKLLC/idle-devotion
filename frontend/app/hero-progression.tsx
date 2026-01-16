@@ -987,6 +987,7 @@ const styles = StyleSheet.create({
   loadingText: { color: 'rgba(255,255,255,0.70)', fontSize: 13, fontWeight: '800' },
 
   errorTitle: { color: 'rgba(255,255,255,0.92)', fontSize: 16, fontWeight: '900', marginTop: 8 },
+  errorSubtext: { color: 'rgba(255,255,255,0.50)', fontSize: 13, fontWeight: '500', textAlign: 'center', marginTop: 4, maxWidth: 260 },
   primaryBtn: {
     marginTop: 10,
     paddingVertical: 12,

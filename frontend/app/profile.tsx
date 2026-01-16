@@ -28,13 +28,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../theme/colors';
 import ProfileFrame, { FRAME_DEFINITIONS, getAvailableFrames } from '../components/ProfileFrame';
-// Phase 3.11: Canonical navigation
-import { goToPaywall } from '../lib/entitlements/navigation';
+// Phase 3.11 + 3.19.5: Canonical navigation with returnTo
+import { usePathname } from 'expo-router';
+import { goToPaywall, getSafeReturnTo } from '../lib/entitlements/navigation';
 // Phase 3.18: Toast for success feedback
 import { toast } from '../components/ui/Toast';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, userHeroes, fetchUserHeroes, fetchUser, logout } = useGameStore();
   const hydrated = useHydration();
   const [showCodeModal, setShowCodeModal] = useState(false);

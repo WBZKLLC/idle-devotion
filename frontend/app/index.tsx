@@ -785,6 +785,34 @@ export default function HomeScreen() {
 
         <Sidebar visible={sidebarVisible} onClose={() => setSidebarVisible(false)} user={user} cr={cr} />
       </SafeAreaView>
+      
+      {/* Phase 3.19.8: In-app Reward Recap Modal */}
+      <Modal
+        visible={!!rewardRecap}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRewardRecap(null)}
+      >
+        <Pressable style={styles.recapBackdrop} onPress={() => setRewardRecap(null)}>
+          <Pressable style={styles.recapCard} onPress={() => { /* swallow */ }}>
+            <LinearGradient
+              colors={
+                rewardRecap?.tone === 'purple'
+                  ? ['#2b1b4d', '#12152a']
+                  : [COLORS.navy.primary, COLORS.navy.dark]
+              }
+              style={styles.recapCardInner}
+            >
+              <Text style={styles.recapTitle}>{rewardRecap?.title}</Text>
+              <Text style={styles.recapMessage}>{rewardRecap?.message}</Text>
+
+              <View style={{ height: 12 }} />
+
+              <PrimaryButton title="Continue" onPress={() => setRewardRecap(null)} />
+            </LinearGradient>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

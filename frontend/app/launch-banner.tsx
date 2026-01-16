@@ -164,13 +164,13 @@ export default function LaunchBannerScreen() {
     }
   };
 
-  const getRarityColor = (rarity: string) => {
+  const getRarityColor = (rarity: string): readonly [string, string] | readonly [string, string, string] => {
     switch (rarity) {
-      case 'UR+': return ['#FF6B00', '#FFD700', '#FF6B00'];
-      case 'UR': return ['#FF4500', '#FF8C00'];
-      case 'SSR': return ['#FFD700', '#FFA500'];
-      case 'SR': return ['#9333ea', '#7c3aed'];
-      default: return ['#3b82f6', '#2563eb'];
+      case 'UR+': return ['#FF6B00', '#FFD700', '#FF6B00'] as const;
+      case 'UR': return ['#FF4500', '#FF8C00'] as const;
+      case 'SSR': return ['#FFD700', '#FFA500'] as const;
+      case 'SR': return ['#9333ea', '#7c3aed'] as const;
+      default: return ['#3b82f6', '#2563eb'] as const;
     }
   };
 

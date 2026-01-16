@@ -38,6 +38,7 @@ import { RewardRecapModal, RewardRecapData } from '../components/ui/RewardRecapM
 
 // Feature flags (SINGLE SOURCE OF TRUTH)
 import { isFeatureEnabled } from '../lib/features';
+import { VIDEOS_AVAILABLE } from '../constants/heroCinematics';
 
 // CANONICAL combat stats and power helpers
 import { computeCombatStats } from '../lib/combatStats';

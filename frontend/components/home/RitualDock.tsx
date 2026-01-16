@@ -35,16 +35,19 @@ type Props = {
   formatIdleTime: (elapsedSec: number, maxHours: number) => string;
   onPress: () => void;
   onReceive: () => void;
+  /** Called on any interaction to cancel pending desire accents */
+  onAnyInteraction?: () => void;
 };
 
 /**
  * RitualDock — The one calm focal point
  * 
  * Compact representation of the idle ritual.
- * Shows: title, time, gold, one CTA.
+ * Shows: title, time, gold, one CTA (Receive only).
  * Tapping opens the full ritual sheet.
+ * "Take More" lives in the expanded sheet, not here.
  */
-export function RitualDock({ idleStatus, formatIdleTime, onPress, onReceive }: Props) {
+export function RitualDock({ idleStatus, formatIdleTime, onPress, onReceive, onAnyInteraction }: Props) {
   // Subtle breathing animation (very restrained)
   const breatheValue = useSharedValue(0);
   

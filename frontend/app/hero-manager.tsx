@@ -873,11 +873,15 @@ export default function HeroManagerScreen() {
                 <TouchableOpacity
                   style={styles.clearLogsButton}
                   onPress={() => {
-                    // ALERT_ALLOWED: destructive_confirm
-                    Alert.alert('Clear History', 'Clear all change history?', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Clear', style: 'destructive', onPress: () => setChangeLogs([]) },
-                    ]);
+                    openConfirm({
+                      title: 'Clear History',
+                      message: 'Clear all change history?',
+                      tone: 'danger',
+                      confirmText: 'Clear',
+                      cancelText: 'Cancel',
+                      icon: 'trash-outline',
+                      onConfirm: () => setChangeLogs([]),
+                    });
                   }}
                 >
                   <Text style={styles.clearLogsText}>Clear History</Text>

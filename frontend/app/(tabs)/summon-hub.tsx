@@ -650,5 +650,7 @@ const styles = StyleSheet.create({
   
   closeResultsButton: { backgroundColor: COLORS.gold.primary, paddingVertical: 14, borderRadius: 12, marginTop: 20 },
   closeResultsText: { color: COLORS.navy.darkest, fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
-  loginText: { color: COLORS.cream.soft, fontSize: 16, textAlign: 'center', marginTop: 100 },
+  // Auth gate
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  loginText: { color: COLORS.cream.soft, fontSize: 16, textAlign: 'center', marginTop: 16 },
 });

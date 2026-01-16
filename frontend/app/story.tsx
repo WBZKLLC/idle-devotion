@@ -16,6 +16,8 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
+// Phase 3.22.3: Canonical button
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

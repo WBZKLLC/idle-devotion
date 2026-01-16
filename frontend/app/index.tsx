@@ -530,42 +530,78 @@ export default function HomeScreen() {
               </View>
               <View style={styles.idlePendingRow}>
                 <Ionicons name="star" size={18} color={COLORS.gold.primary} />
-                <Text style={styles.idlePendingText}>+{idleStatus?.gold_pending || 0} Gold Pending</Text>
+                <Text style={styles.idlePendingText}>+{(idleStatus?.gold_pending || 0).toLocaleString()} Gold Pending</Text>
               </View>
               <View style={styles.buttonRow}>
-                <TouchableOpacity style={[styles.claimButton, { flex: 1 }]} onPress={handleClaimIdle} disabled={isClaiming}>
+                {/* Collect Button */}
+                <TouchableOpacity 
+                  style={[styles.claimButton, { flex: 1 }]} 
+                  onPress={handleClaimIdle} 
+                  disabled={isClaimingCollect || isClaimingInstant}
+                >
                   <LinearGradient colors={[COLORS.gold.primary, COLORS.gold.dark]} style={styles.claimButtonGradient}>
-                    {isClaiming ? <ActivityIndicator color={COLORS.navy.dark} size="small" /> : <><Ionicons name="download" size={18} color={COLORS.navy.dark} /><Text style={styles.claimButtonText}>Collect</Text></>}
+                    {isClaimingCollect ? (
+                      <ActivityIndicator color={COLORS.navy.dark} size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="download" size={18} color={COLORS.navy.dark} />
+                        <Text style={styles.claimButtonText}>Collect</Text>
+                      </>
+                    )}
                   </LinearGradient>
                 </TouchableOpacity>
-                {(user.vip_level || 0) >= 1 && (
-                  <TouchableOpacity 
-                    style={[styles.claimButton, { flex: 1, marginLeft: 8, opacity: instantCooldown > 0 ? 0.6 : 1 }]} 
-                    onPress={handleInstantCollect} 
-                    disabled={isClaiming || instantCooldown > 0}
+                
+                {/* Phase 3.19.8: Instant button always visible (VIP lock state for better UX) */}
+                <TouchableOpacity 
+                  style={[
+                    styles.claimButton, 
+                    { 
+                      flex: 1, 
+                      marginLeft: 8, 
+                      opacity: instantCooldown > 0 || (user?.vip_level || 0) < 1 ? 0.6 : 1 
+                    }
+                  ]} 
+                  onPress={() => {
+                    if ((user?.vip_level || 0) < 1) {
+                      toast.info('VIP 1+ unlocks Instant Collect (2 hours of rewards instantly).');
+                      return;
+                    }
+                    handleInstantCollect();
+                  }}
+                  disabled={isClaimingCollect || isClaimingInstant || instantCooldown > 0}
+                >
+                  <LinearGradient 
+                    colors={
+                      (user?.vip_level || 0) < 1 
+                        ? ['#4a4a6a', '#3a3a5a'] 
+                        : instantCooldown > 0 
+                          ? ['#4a4a6a', '#3a3a5a'] 
+                          : ['#8b5cf6', '#6d28d9']
+                    } 
+                    style={styles.claimButtonGradient}
                   >
-                    <LinearGradient 
-                      colors={instantCooldown > 0 ? ['#4a4a6a', '#3a3a5a'] : ['#8b5cf6', '#6d28d9']} 
-                      style={styles.claimButtonGradient}
-                    >
-                      {isClaiming ? (
-                        <ActivityIndicator color={COLORS.cream.pure} size="small" />
-                      ) : instantCooldown > 0 ? (
-                        <>
-                          <Ionicons name="time" size={16} color={COLORS.cream.soft} />
-                          <Text style={[styles.claimButtonText, { color: COLORS.cream.soft, fontSize: 11 }]}>
-                            {formatCooldown(instantCooldown)}
-                          </Text>
-                        </>
-                      ) : (
-                        <>
-                          <Ionicons name="flash" size={18} color={COLORS.cream.pure} />
-                          <Text style={[styles.claimButtonText, { color: COLORS.cream.pure }]}>⚡ Instant</Text>
-                        </>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
-                )}
+                    {isClaimingInstant ? (
+                      <ActivityIndicator color={COLORS.cream.pure} size="small" />
+                    ) : (user?.vip_level || 0) < 1 ? (
+                      <>
+                        <Ionicons name="lock-closed" size={16} color={COLORS.cream.soft} />
+                        <Text style={[styles.claimButtonText, { color: COLORS.cream.soft, fontSize: 11 }]}>VIP 1+</Text>
+                      </>
+                    ) : instantCooldown > 0 ? (
+                      <>
+                        <Ionicons name="time" size={16} color={COLORS.cream.soft} />
+                        <Text style={[styles.claimButtonText, { color: COLORS.cream.soft, fontSize: 11 }]}>
+                          {formatCooldown(instantCooldown)}
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <Ionicons name="flash" size={18} color={COLORS.cream.pure} />
+                        <Text style={[styles.claimButtonText, { color: COLORS.cream.pure }]}>⚡ Instant</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             </LinearGradient>
           </View>

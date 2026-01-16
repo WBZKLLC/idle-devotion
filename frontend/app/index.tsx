@@ -66,13 +66,8 @@ export default function HomeScreen() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Phase 3.19.8: In-app reward recap modal (replaces blocking Alert)
-  type RewardRecap = {
-    title: string;
-    message: string;
-    tone?: 'gold' | 'purple';
-  };
-  const [rewardRecap, setRewardRecap] = useState<RewardRecap | null>(null);
+  // Phase 3.19.9: In-app reward recap modal (unified component)
+  const [rewardRecap, setRewardRecap] = useState<RewardRecapData | null>(null);
 
   useEffect(() => {
     if (user) {

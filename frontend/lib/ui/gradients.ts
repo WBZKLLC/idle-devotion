@@ -82,20 +82,20 @@ export const ACCENT_ERROR = ['#e74c3c', '#c0392b'] as const;
 // SPECIAL THEME GRADIENTS
 // ============================================================
 
-/** War/blood theme (guild war) */
-export const BG_WAR = [COLORS.war.blood, COLORS.navy.darkest] as const;
+/** War/blood theme (guild war) - using available colors */
+export const BG_WAR = ['#7f1d1d', COLORS.navy.darkest] as const;
 
 /** War action button */
-export const ACCENT_WAR = [COLORS.war.red, COLORS.war.blood] as const;
+export const ACCENT_WAR = ['#dc2626', '#7f1d1d'] as const;
 
 /** Cave/dungeon theme */
-export const BG_CAVE = [COLORS.cave.surface, COLORS.cave.deep] as const;
+export const BG_CAVE = ['#44403c', '#1c1917'] as const;
 
 /** Chrono/time theme */
-export const ACCENT_CHRONO = [COLORS.chrono.primary, COLORS.chrono.dark] as const;
+export const ACCENT_CHRONO = ['#8b5cf6', '#4c1d95'] as const;
 
 /** Chrono secondary */
-export const ACCENT_CHRONO_SECONDARY = [COLORS.chrono.primary, COLORS.chrono.secondary] as const;
+export const ACCENT_CHRONO_SECONDARY = ['#8b5cf6', '#7c3aed'] as const;
 
 /** Mystical purple (2-stop) */
 export const BG_MYSTICAL_2 = ['#1e1b4b', COLORS.navy.dark] as const;

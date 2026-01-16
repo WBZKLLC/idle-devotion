@@ -31,28 +31,35 @@ type RailItem = {
 type Props = {
   items?: RailItem[];
   onDoorsPress: () => void;
+  /** Called on any interaction to cancel pending desire accents */
+  onAnyInteraction?: () => void;
 };
 
 /**
  * Default rail items for the sanctuary home
+ * Pinned set: Summon, Events, Quest, Shop, Mail (5 items)
+ * Everything else lives in DoorsSheet
  */
 const defaultItems: RailItem[] = [
-  { key: 'quest', icon: 'map-outline', label: 'Quest', route: '/journey' },
-  { key: 'events', icon: 'calendar-outline', label: 'Events', route: '/events' },
   { key: 'summon', icon: 'gift-outline', label: 'Summon', route: '/summon-hub' },
+  { key: 'events', icon: 'calendar-outline', label: 'Events', route: '/events' },
+  { key: 'quest', icon: 'map-outline', label: 'Quest', route: '/journey' },
   { key: 'shop', icon: 'storefront-outline', label: 'Shop', route: '/store' },
+  { key: 'mail', icon: 'mail-outline', label: 'Mail', route: '/rewards' },
 ];
 
 /**
  * HomeSideRail — Peripheral hot actions
  * 
  * Positioned on the right side, always visible.
+ * Shows 5-6 pinned actions + Doors button.
  * Tapping an item navigates or triggers action.
  */
-export function HomeSideRail({ items = defaultItems, onDoorsPress }: Props) {
+export function HomeSideRail({ items = defaultItems, onDoorsPress, onAnyInteraction }: Props) {
   const router = useRouter();
   
   const handleItemPress = (item: RailItem) => {
+    onAnyInteraction?.();
     haptic('light');
     if (item.onPress) {
       item.onPress();

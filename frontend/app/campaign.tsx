@@ -489,7 +489,6 @@ export default function CampaignScreen() {
           includeSafeArea={false}
           centerTitle={false}
         />
-        </View>
 
         {/* Chapters List */}
         {activeTab === 'chapters' && (

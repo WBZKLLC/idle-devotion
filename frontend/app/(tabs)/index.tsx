@@ -817,7 +817,6 @@ const styles = StyleSheet.create({
   currencyBarContent: { paddingHorizontal: 16, gap: 10, alignItems: 'center' },
   currencyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.navy.medium + '90', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, gap: 5, borderWidth: 1, borderColor: COLORS.navy.light + '30' },
   currencyText: { color: COLORS.cream.soft, fontWeight: '600', fontSize: 12 },
-  content: { padding: 16, paddingBottom: 100 },
   idleCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 20 },
   idleGradient: { padding: 20 },
   idleHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },

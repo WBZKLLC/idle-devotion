@@ -55,84 +55,83 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.sm,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.xs,
   },
   
-  // Identity Layer
+  // Identity Layer — quieter, smaller
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
   
-  // Avatar with subtle glow behind
+  // Avatar — smaller glow, less prominent
   avatarContainer: {
     position: 'relative',
-    marginRight: SPACING.md,
+    marginRight: SPACING.sm,
   },
   avatarGlow: {
     position: 'absolute',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: COLORS.gold.dark,
-    opacity: 0.15,
-    top: -4,
-    left: -4,
-  },
-  avatarCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: COLORS.gold.dark,
+    opacity: 0.08, // subtle
+    top: -2,
+    left: -2,
+  },
+  avatarCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: COLORS.navy.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.gold.dark + '60', // softer border
+    borderColor: COLORS.gold.dark + '40', // softer
   },
   avatarText: {
-    color: COLORS.gold.light,
-    fontSize: FONT_SIZE.lg,
-    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.cream.soft, // quieter
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
   },
   
-  // Text block — greeting dominant, username secondary
+  // Text block — greeting quieter, username smaller
   textBlock: {
     flex: 1,
   },
   greetingText: {
-    color: COLORS.cream.soft,
-    fontSize: FONT_SIZE.md,
+    color: COLORS.cream.dark, // muted
+    fontSize: FONT_SIZE.sm,
     fontWeight: FONT_WEIGHT.medium,
-    letterSpacing: 0.3,
   },
   usernameText: {
-    color: COLORS.cream.pure,
-    fontSize: FONT_SIZE.lg,
+    color: COLORS.cream.soft,
+    fontSize: FONT_SIZE.md,
     fontWeight: FONT_WEIGHT.semibold,
-    marginTop: 2,
+    marginTop: 1,
   },
   
-  // CR Badge — recessed, quiet confidence
+  // CR Badge — recessed, subordinate
   crBadge: {
-    minWidth: 72,
-    paddingVertical: SPACING.xs + 2,
-    paddingHorizontal: SPACING.sm + 2,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.navy.dark + 'CC', // slightly transparent
+    minWidth: 64,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.navy.darkest + 'AA', // transparent
     alignItems: 'center',
   },
   crLabel: {
-    color: COLORS.cream.dark, // more muted
-    fontSize: FONT_SIZE.xs,
-    letterSpacing: 1.5,
+    color: COLORS.cream.dark + 'AA', // very muted
+    fontSize: 9,
+    letterSpacing: 1.2,
     fontWeight: FONT_WEIGHT.medium,
   },
   crValue: {
-    color: COLORS.cream.soft, // softer than gold — power doesn't shout
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.cream.dark, // quiet - power doesn't shout
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
     marginTop: 1,
   },
 });

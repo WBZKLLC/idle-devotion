@@ -28,6 +28,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ENTITLEMENT_KEYS, premiumCinematicOwnedKey } from '../lib/entitlements';
+import { PRODUCTS } from '../lib/entitlements/products';
 import { useEntitlementStore } from '../stores/entitlementStore';
 import { useHasEntitlement } from '../lib/entitlements/gating';
 import { useGameStore } from '../stores/gameStore';

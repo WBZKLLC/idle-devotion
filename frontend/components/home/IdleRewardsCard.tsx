@@ -290,7 +290,7 @@ export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function Id
       </LinearGradient>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

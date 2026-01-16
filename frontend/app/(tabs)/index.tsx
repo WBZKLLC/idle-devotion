@@ -83,6 +83,71 @@ export default function HomeScreen() {
   // Phase 3.19.11: Confirm modal hook
   const { openConfirm, confirmNode } = useConfirmModal();
 
+  // Phase 3.22.8: Desire accents - eye-shift trigger after first scroll + delay
+  const eyeShiftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  useEffect(() => {
+    // Attempt eye-shift trigger after scroll is detected + short delay
+    const attemptEyeShift = () => {
+      if (!canTriggerEyeShift()) return;
+      
+      eyeShiftTimeoutRef.current = setTimeout(() => {
+        if (canTriggerEyeShift()) {
+          // Eye-shift would trigger subtle animation here
+          // For now, just mark as triggered (spends budget)
+          markEyeShiftTriggered();
+        }
+      }, 700); // 700ms delay after scroll for "noticed after movement" feel
+    };
+    
+    attemptEyeShift();
+    
+    return () => {
+      if (eyeShiftTimeoutRef.current) clearTimeout(eyeShiftTimeoutRef.current);
+    };
+  }, []);
+
+  // Phase 3.22.8: Rare glance - trigger only if user is idle 30-90s
+  const glanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const glanceCancelledRef = useRef(false);
+  
+  useEffect(() => {
+    glanceCancelledRef.current = false;
+    
+    const scheduleGlance = () => {
+      if (!canTriggerGlance()) return;
+      
+      // Random delay 30-90s
+      const delay = 30_000 + Math.floor(Math.random() * 60_000);
+      
+      glanceTimeoutRef.current = setTimeout(() => {
+        if (glanceCancelledRef.current) return;
+        if (!canTriggerGlance()) return;
+        
+        // Glance would trigger subtle animation here
+        // For now, just mark as triggered (spends budget)
+        markGlanceTriggered();
+      }, delay);
+    };
+    
+    scheduleGlance();
+    
+    return () => {
+      glanceCancelledRef.current = true;
+      if (glanceTimeoutRef.current) clearTimeout(glanceTimeoutRef.current);
+    };
+  }, []);
+
+  // Cancel glance on any user interaction
+  const handleUserInteraction = () => {
+    markInteraction();
+    glanceCancelledRef.current = true;
+    if (glanceTimeoutRef.current) {
+      clearTimeout(glanceTimeoutRef.current);
+      glanceTimeoutRef.current = null;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       handleLogin();

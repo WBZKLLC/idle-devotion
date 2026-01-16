@@ -411,7 +411,7 @@ export default function ChatScreen() {
             bubble.glow_effect && { shadowColor: bubble.colors[0], shadowOpacity: 0.8, shadowRadius: 10, elevation: 10 }
           ]}>
             <LinearGradient
-              colors={bubble.colors.length >= 2 ? bubble.colors.slice(0, 2) : [...bubble.colors, bubble.colors[0]]}
+              colors={toGradientTuple(bubble.colors)}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[
@@ -510,7 +510,7 @@ export default function ChatScreen() {
             <Text style={styles.headerTitle}>💬 Chat</Text>
             <TouchableOpacity onPress={() => setShowBubbleModal(true)} style={styles.bubbleButton}>
               <LinearGradient
-                colors={equippedBubble.colors.slice(0, 2)}
+                colors={toGradientTuple(equippedBubble.colors)}
                 style={styles.bubbleButtonGradient}
               >
                 {equippedBubble.icon && <Text style={{ fontSize: 12 }}>{equippedBubble.icon}</Text>}

@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://quietly-indulgent.preview.emergentagent.com/api"
+BACKEND_URL = "https://game-inbox-friends.preview.emergentagent.com/api"
 TEST_USERNAME = "EntitlementTester"
 TEST_PASSWORD = "TestPass123!"
 

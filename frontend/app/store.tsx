@@ -156,7 +156,7 @@ export default function StoreScreen() {
       cancelText: 'Cancel',
       icon: 'diamond-outline',
       onConfirm: async () => {
-        setIsConfirmBusy(true);
+        setBusy(true);
         try {
           const result = await apiPurchaseCrystals(user?.username || '', packageId);
           toast.premium(
@@ -170,7 +170,7 @@ export default function StoreScreen() {
             toast.error(error?.message || 'Purchase failed');
           }
         } finally {
-          setIsConfirmBusy(false);
+          setBusy(false);
         }
       },
     });
@@ -191,7 +191,7 @@ export default function StoreScreen() {
       cancelText: 'Cancel',
       icon: 'sparkles-outline',
       onConfirm: async () => {
-        setIsConfirmBusy(true);
+        setBusy(true);
         try {
           const result = await apiPurchaseDivine(user?.username || '', packageId);
           toast.premium(
@@ -204,7 +204,7 @@ export default function StoreScreen() {
             toast.error(error?.message || 'Purchase failed');
           }
         } finally {
-          setIsConfirmBusy(false);
+          setBusy(false);
         }
       },
     });

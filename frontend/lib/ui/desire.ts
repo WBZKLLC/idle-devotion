@@ -22,7 +22,28 @@ const sessionState = {
   sessionStartTime: Date.now(),
   lastInteractionTime: Date.now(),
   scrollDetected: false,
+  // Phase 3.22.8.B: Global desire budget — only ONE accent per session
+  desireBudgetSpent: false,
 };
+
+// =============================================================================
+// GLOBAL DESIRE BUDGET (keeps it premium)
+// =============================================================================
+
+/**
+ * Check if desire budget is available
+ * If user sees >1 accent per session, it feels like a trick.
+ */
+export function hasDesireBudget(): boolean {
+  return !sessionState.desireBudgetSpent;
+}
+
+/**
+ * Spend the desire budget (only one accent fires per session)
+ */
+export function spendDesireBudget(): void {
+  sessionState.desireBudgetSpent = true;
+}
 
 // =============================================================================
 // EYE-LINE SHIFT (Peripheral Attention)

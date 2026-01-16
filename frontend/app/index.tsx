@@ -65,8 +65,8 @@ export default function HomeScreen() {
   const [cr, setCR] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [instantCooldown, setInstantCooldown] = useState<number>(0); // seconds remaining
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // Phase 3.19.9: In-app reward recap modal (unified component)
   const [rewardRecap, setRewardRecap] = useState<RewardRecapData | null>(null);

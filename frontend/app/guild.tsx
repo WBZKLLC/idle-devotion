@@ -36,6 +36,8 @@ import { GuildItemSkeleton } from '../components/ui/Skeleton';
 import { NoGuildEmpty } from '../components/ui/EmptyState';
 // Phase 3.19.5: Canonical button components
 import { PrimaryButton } from '../components/ui/PrimaryButton';
+// Phase 3.19.6: Canonical header + layout constants
+import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 
 export default function GuildScreen() {
   const { user, fetchUser } = useGameStore();

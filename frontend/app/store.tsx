@@ -692,7 +692,7 @@ export default function StoreScreen() {
         */}
         
         {/* Phase 3.19.10: Confirm Modal */}
-        <ConfirmModal visible={!!confirmData} data={confirmData} onClose={() => setConfirmData(null)} busy={isPurchasing} />
+        <ConfirmModal visible={!!confirmData} data={confirmData} onClose={() => setConfirmData(null)} busy={isConfirmBusy} />
       </SafeAreaView>
     </LinearGradient>
   );

@@ -384,27 +384,38 @@ function SearchTab({ username, onUpdate }: { username: string; onUpdate: () => v
   const [searching, setSearching] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0); // Track request version to ignore stale responses
   
-  // Debounced search
+  // Debounced search with stale request cancellation
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
     
-    if (query.length < 2) {
+    // Minimum 3 characters for search
+    if (query.length < 3) {
       setResults([]);
+      setSearching(false);
       return;
     }
     
     debounceRef.current = setTimeout(async () => {
+      const currentRequestId = ++requestIdRef.current;
       setSearching(true);
       try {
         const data = await searchPlayers(query, username);
-        setResults(data);
+        // Ignore stale responses
+        if (currentRequestId === requestIdRef.current) {
+          setResults(data);
+        }
       } catch {
-        setResults([]);
+        if (currentRequestId === requestIdRef.current) {
+          setResults([]);
+        }
       } finally {
-        setSearching(false);
+        if (currentRequestId === requestIdRef.current) {
+          setSearching(false);
+        }
       }
     }, 400); // 400ms debounce
     

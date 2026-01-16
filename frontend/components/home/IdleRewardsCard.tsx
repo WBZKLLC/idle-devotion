@@ -1,13 +1,27 @@
 // /app/frontend/components/home/IdleRewardsCard.tsx
-// Phase 3.22.6: "The Offering" — the emotional heart of the home screen
+// Phase 3.22.6.C: "Subtle Breathing" — the emotional heart of the home screen
 //
 // This card represents: "What was prepared for you while you were away"
-// Not a timer + buttons — an offering waiting to be received.
+// The only surface that breathes — slow, felt, not seen.
+//
+// Breathing rules:
+// - 8-10 second sine-like loop
+// - Opacity delta: ±3-4%
+// - No translation, no scale on idle
+// - Easing: easeInOut, never linear
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+  interpolate,
+} from 'react-native-reanimated';
 import COLORS from '../../theme/colors';
 import { SPACING, RADIUS, FONT_SIZE, FONT_WEIGHT } from '../ui/tokens';
 import { PRESS, haptic } from '../../lib/ui/interaction';

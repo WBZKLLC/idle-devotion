@@ -732,6 +732,9 @@ export default function AdminPanelScreen() {
             </View>
           </View>
         </Modal>
+        
+        {/* Phase 3.19.10: Confirm Modal */}
+        <ConfirmModal visible={!!confirmData} data={confirmData} onClose={() => setConfirmData(null)} />
       </SafeAreaView>
     </LinearGradient>
   );

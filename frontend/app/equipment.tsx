@@ -367,7 +367,7 @@ export default function EquipmentScreen() {
                       {Object.entries(selectedItem.sub_stats || {}).map(([stat, value]) => (
                         <View key={stat} style={styles.statRow}>
                           <Text style={styles.subStatLabel}>{stat.replace('_', ' ').toUpperCase()}</Text>
-                          <Text style={styles.subStatValue}>+{value}%</Text>
+                          <Text style={styles.subStatValue}>+{String(value)}%</Text>
                         </View>
                       ))}
                     </View>

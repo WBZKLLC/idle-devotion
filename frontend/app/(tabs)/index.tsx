@@ -672,7 +672,60 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: COLORS.gold.primary, marginTop: 12, fontSize: 16, fontWeight: '500' },
   
-  // Phase 3.22.7: Restraint pass — intentional vertical rhythm
+  // Phase 3.22.12: Sanctuary scene layout
+  hudContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 5,
+  },
+  hudContent: {
+    // Quiet, peripheral — not competing with the scene
+  },
+  
+  // Phase 3.22.12: Ritual sheet (expanded idle rewards)
+  ritualOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  ritualBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  ritualSheet: {
+    backgroundColor: COLORS.navy.dark,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 32,
+    maxHeight: '85%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.35)',
+      },
+    }),
+  },
+  ritualHandle: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  handleBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.cream.pure + '30',
+  },
+  
+  // Legacy content styles (kept for reference, no longer used in main layout)
   content: { 
     paddingHorizontal: LAYOUT.SCREEN_PADDING,
     paddingTop: SECTION_GAP.breath,

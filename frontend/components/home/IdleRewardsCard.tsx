@@ -144,7 +144,7 @@ export function IdleRewardsCard({
             ]}
             onPress={() => {
               if (instantLocked) {
-                haptic('warning');
+                haptic('heavy');
                 return onVipLockedPress();
               }
               haptic('medium');

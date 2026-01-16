@@ -26,6 +26,8 @@ import { NoStagesEmpty } from '../components/ui/EmptyState';
 // Phase 3.19.5: Canonical button components
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { SecondaryButton } from '../components/ui/SecondaryButton';
+// Phase 3.19.6: Canonical header + layout constants
+import { AppHeader, LAYOUT } from '../components/ui/AppHeader';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

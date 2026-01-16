@@ -241,7 +241,8 @@ export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function Id
             ]}
             onPressIn={onAnyInteraction}
             onPress={() => {
-              haptic('medium');
+              // Phase 3.22.10.A: Audio cue replaces simple haptic
+              playCollectCue();
               onCollect();
             }}
             disabled={collectDisabled}
@@ -269,7 +270,8 @@ export const IdleRewardsCard = forwardRef<IdleRewardsCardRef, Props>(function Id
                 haptic('heavy');
                 return onVipLockedPress();
               }
-              haptic('medium');
+              // Phase 3.22.10.A: Audio cue replaces simple haptic
+              playInstantCue();
               onInstant();
             }}
             disabled={instantDisabled}

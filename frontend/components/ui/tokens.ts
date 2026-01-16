@@ -67,6 +67,37 @@ export const LAYOUT = {
 } as const;
 
 // =============================================================================
+// LIST ROW TOKENS (Phase 3.22.5)
+// =============================================================================
+export const LIST = {
+  /** Minimum row height for touch accessibility */
+  ROW_MIN_HEIGHT: 56,
+  /** Horizontal padding inside rows */
+  ROW_PAD_X: 14,
+  /** Vertical padding inside rows */
+  ROW_PAD_Y: 12,
+  /** Gap between rows (gap-based separation, not borders) */
+  ROW_GAP: 12,
+  /** Leading icon/avatar container size */
+  LEADING_SIZE: 44,
+  /** Icon size inside leading container */
+  LEADING_ICON: 22,
+  /** Trailing chevron/icon size */
+  TRAILING_ICON: 18,
+} as const;
+
+/** Dense variant for compact lists (optional) */
+export const LIST_DENSE = {
+  ROW_MIN_HEIGHT: 48,
+  ROW_PAD_X: 12,
+  ROW_PAD_Y: 10,
+  ROW_GAP: 10,
+  LEADING_SIZE: 40,
+  LEADING_ICON: 20,
+  TRAILING_ICON: 16,
+} as const;
+
+// =============================================================================
 // SHADOWS
 // =============================================================================
 export const SHADOW = {

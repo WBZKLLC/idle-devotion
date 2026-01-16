@@ -48,9 +48,11 @@ export type QuickLinkRow = {
 
 type Props = {
   rows: QuickLinkRow[];
+  // Phase 3.22.10: Global interaction signal (cancels pending desire accents)
+  onAnyInteraction?: () => void;
 };
 
-export function QuickLinksGrid({ rows }: Props) {
+export function QuickLinksGrid({ rows, onAnyInteraction }: Props) {
   return (
     <>
       {rows.map((row, rowIndex) => (
@@ -71,6 +73,7 @@ export function QuickLinksGrid({ rows }: Props) {
                 // Phase 3.22.4: Pressed feedback
                 pressed && styles.quickLinkPressed,
               ]}
+              onPressIn={onAnyInteraction}
               onPress={tile.onPress}
             >
               <LinearGradient

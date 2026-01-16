@@ -695,6 +695,13 @@ export default function ProfileScreen() {
           <Text style={styles.versionText}>Divine Heroes v1.0</Text>
         </ScrollView>
       </SafeAreaView>
+      
+      {/* Phase 3.19.10: Confirm Modal */}
+      <ConfirmModal
+        visible={!!confirmData}
+        data={confirmData}
+        onClose={() => setConfirmData(null)}
+      />
     </LinearGradient>
   );
 }

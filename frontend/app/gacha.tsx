@@ -429,14 +429,6 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#05060A' },
   centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   noUserText: { color: 'rgba(255,255,255,0.8)', fontSize: 16, fontWeight: '700' },
-  loginBtn: { 
-    backgroundColor: 'rgba(255, 215, 140, 0.92)', 
-    paddingHorizontal: 24, 
-    paddingVertical: 12, 
-    borderRadius: 14,
-    marginTop: 8,
-  },
-  loginBtnText: { color: '#0A0B10', fontSize: 14, fontWeight: '900' },
 
   // Top Bar
   topBar: {

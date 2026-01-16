@@ -185,7 +185,7 @@ export const SETTLE = {
 } as const;
 
 // =============================================================================
-// SANCTUARY HOME LAYOUT (Phase 3.22.7)
+// SANCTUARY HOME LAYOUT (Phase 3.22.7 + 3.22.12.R1)
 // =============================================================================
 
 /** Ritual Dock — the one calm focal point */
@@ -200,24 +200,24 @@ export const DOCK = {
   bottomOffset: 12,
 } as const;
 
-/** Home overlay positioning */
+/** Home overlay positioning (Phase 3.22.12.R1) */
 export const HOME_OVERLAY = {
-  /** Side inset for rails */
-  sideInset: 10,
-  /** Top inset for header */
-  topInset: 8,
-  /** Gap between rail items */
-  railGap: 10,
+  SIDE_INSET: 10,
+  TOP_INSET: 110,
+  BOTTOM_CLEARANCE: 90, // keep above tab bar + dock
 } as const;
 
-/** Side rail actions */
+/** Side rail actions (Phase 3.22.12.R1) */
 export const RAIL = {
-  /** Size of each item */
-  itemSize: 44,
-  /** Border radius */
-  radius: 14,
-  /** Background alpha */
-  bgAlpha: 0.22,
+  WIDTH: 56,
+  ITEM_SIZE: 44,
+  ITEM_RADIUS: 14,
+  ICON_SIZE: 22,
+  PAD_Y: 10,
+  GAP: 10,
+  RADIUS: 16,
+  BG_ALPHA_HEX: '22',
+} as const;
 } as const;
 
 // =============================================================================

@@ -1,159 +1,9 @@
 <analysis>
-**original_problem_statement**: The user is guiding a systematic, multi-phase UX and code quality overhaul. Having completed a major UX polish (Phase 3.19), the current focus has shifted to resolving technical debt, starting with a large number of TypeScript errors. The immediate task is **Phase 3.20.1 — Entitlements Type Tightening**, which aims to fix all TypeScript errors related to the app's entitlement system by creating a single source of truth for types and refactoring the code to use a consistent API.
+**original_problem_statement**: The user is directing a systematic, multi-phase UX and code quality overhaul. After completing a massive TypeScript debt cleanup (Phase 3.20) and a regression/consistency check (Phase 3.21), the current focus is **Phase 3.22 — UI Parity Polish Sweep**. The goal of this phase is to refactor core screens to use a consistent set of UI components and design tokens to improve maintainability and visual consistency.
 
 **PRODUCT REQUIREMENTS**:
-1.  **Phase 3.19 (Done)**: A comprehensive UX polish including cinematic loading screens, standardized headers, buttons, and a complete replacement of native  calls with themed, in-app  and  components.
-2.  **Phase 3.20 (In Progress)**: A systematic effort to eliminate all pre-existing TypeScript errors in the codebase, starting with the highest-impact areas.
-    - **3.20.1 (Current Task)**: Fix all TypeScript errors related to the entitlements system.
-    - **3.20.2 (Upcoming)**: Fix  color tuple typing errors.
-    - **3.20.3 (Upcoming)**: Fix  interface property inconsistencies.
-
-**User's preferred language**: English
-
-**what currently exists?**
-The application's UI has been significantly refactored and polished. All native  calls have been replaced by two canonical, themed modal components:
--    for celebratory reward notifications.
--    for all blocking decisions (destructive actions, purchases, logout).
-
-To reduce boilerplate, the logic for the confirmation modal has been extracted into a  custom hook, which is now used consistently across 9 different screens. The agent has just begun **Phase 3.20.1** by analyzing the files and TypeScript errors related to the entitlements system to formulate a plan.
-
-**Last working item**:
--   Last item agent was working: The agent was starting **Phase 3.20.1 - Entitlements Type Tightening**. It had successfully identified the primary sources of the TypeScript errors by examining , , , and the main  barrel file. The agent correctly diagnosed the issues as a mix of old API usage, naming mismatches ( vs. ), and missing exports.
--   Status: NOT STARTED (The agent has completed the analysis phase but has not yet written any code to fix the issues).
--   Agent Testing Done: N
--   Which testing method agent to use? The primary method will be running  to verify that the TypeScript errors are resolved. A manual frontend smoke test should follow to ensure no functional regressions were introduced.
--   User Testing Done: N
-
-**All Pending/In progress Issue list**:
--   Issue 1: (P0) Fix all TypeScript errors related to the app's entitlement system.
--   Issue 2: (P1) The cinematic video feature for 5+ star heroes is non-functional due to an incompatible video codec. This remains a known but deferred issue.
-
-Issues Detail:
--   Issue 1:
-    -   Attempted fixes: N/A. Analysis phase just completed.
-    -   Next debug checklist:
-        1.  Create a single source of truth for entitlement types (, , etc.) in  and ensure they are exported.
-        2.  Refactor  to use and expose a modern, consistent API (e.g., ,  selector) and remove legacy properties like .
-        3.  Update all screens and utility files (, , , etc.) to import from the new single source of truth and use the new store API.
-        4.  Fix specific type mismatches identified, such as the  type.
-        5.  Run  and ensure all entitlement-related errors are gone.
-    -   Why fix this issue and what will be achieved with the fix? This will resolve a large category of TypeScript errors, making the code more robust, predictable, and easier to maintain. It will provide a solid, type-safe foundation for all features that rely on user entitlements and purchases.
-    -   Status: NOT STARTED
-    -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? frontend (via typecheck and smoke test).
-    -   Blocked on other issue: None.
-
--   Issue 2:
-    -   Attempted fixes: None in this session.
-    -   Next debug checklist: Run the script at  and verify playback on a real device or emulator.
-    -   Why fix this issue and what will be achieved with the fix? This restores a broken premium feature.
-    -   Status: NOT STARTED
-    -   Is recurring issue? Y (Known from previous sessions)
-    -   Should Test frontend/backend/both after fix? frontend
-    -   Blocked on other issue: None
-
-**In progress Task List**:
--   Task 1: (P0) Phase 3.20.1 - Entitlements Type Tightening.
-
-Task Detail:
--   Task 1:
-    -   Where to resume: The agent has analyzed the problem. The next step is to formulate a concrete plan based on the Next debug checklist above and begin applying fixes, starting with consolidating types in .
-    -   What will be achieved with this? Elimination of all TypeScript errors related to the entitlements system.
-    -   Status: IN PROGRESS (Analysis complete, implementation pending).
-    -   Should Test frontend/backend/both after fix? frontend
-    -   Blocked on something: None.
-
-**Upcoming and Future Tasks**
--   **Upcoming Tasks (Phase 3.20 - TS Debt):**
-    -   P1: **Phase 3.20.2**: Fix  color tuple typing errors across 15+ files.
-    -   P1: **Phase 3.20.3**: Consolidate the  interface to fix 14+ errors related to missing properties.
-    -   P2: **Phase 3.20.4**: Fix all remaining miscellaneous TypeScript errors.
--   **Future Tasks (Paused):**
-    -   **P0: Walter-required Testing**: Perform end-to-end testing on real devices.
-    -   **P1: Fix Cinematic Videos**: Address the video codec issue.
-
-**Completed work in this session**
--   **Phase 3.19.7**: Successfully replaced initial skeleton loaders with a new  component across all 6 major screens and refactored the hero image to use a single source of truth.
--   **Phase 3.19.8**: Polished the  screen by replacing reward alerts with an in-app  and improving button loading state management.
--   **Phase 3.19.9**: Extracted the  into a reusable component and applied it to , unifying reward notifications.
--   **Phase 3.19.10**: Created a canonical  component and systematically replaced all 23 native  calls for confirmations across the entire application.
--   **Phase 3.19.11**: Created a  hook to abstract away modal state management and migrated all 9 relevant screens to use it, drastically reducing boilerplate code.
--   **Phase 3.19.12**: Performed a final cleanup pass, removing stale imports and verifying the hook migration was complete.
-
-**Earlier issues found/mentioned but not fixed**
--   A large number of pre-existing TypeScript errors were identified and categorized. The agent is now systematically working through them, starting with the entitlement system.
--   The cinematic video codec issue remains deferred.
-
-**Known issue recurrence from previous fork**
--   None.
-
-**Code Architecture**
-
-
-**Key Technical Concepts**
--   **Systematic Phased Refactoring**: Following a detailed, multi-phase plan (3.19.7 through 3.20.1) to incrementally polish the app and pay down technical debt.
--   **Component-Driven UI Development**: Creating reusable, canonical components (, , ) to enforce consistency.
--   **React Custom Hooks**: Creating and using the  hook to abstract stateful logic, reduce boilerplate, and improve code reusability.
--   **Single Source of Truth**: Refactoring assets () and modal logic () to ensure there is one canonical implementation, making the code easier to maintain.
--   **TypeScript Type-Safety**: The current focus is on improving compile-time safety by resolving existing  types and API mismatches in the codebase.
-
-**key DB schema**
--   No changes to the DB schema in this session.
-
-**changes in tech stack**
--   No changes to the core tech stack.
-
-**All files of reference**
--   : The Zustand store for managing user entitlements. **(Next Target)**
--   : The file intended to be the single source of truth for entitlement-related types. **(Next Target)**
--   : Contains helper functions for checking entitlements. **(Next Target)**
--   : The newly created hook for managing confirmation modals.
--   : The canonical component for user decisions.
--   : The canonical component for reward notifications.
-
-**Areas that need refactoring**:
--   The entire entitlements system (, ) is the current refactoring target to resolve TypeScript errors.
-
-**key api endpoints**
--   No new API endpoints were created. The agent interacted with existing endpoints for idle rewards, user data, and various game actions.
-
-**Critical Info for New Agent**
--   You are at the beginning of **Phase 3.20.1**, a TypeScript debt cleanup task focused on the entitlements system.
--   Your immediate goal is to fix all TS errors related to entitlements by creating a single source of truth for types and refactoring screens to use a new, consistent API from .
--   The user has laid out a clear, systematic order for tackling the remaining TS debt after entitlements are fixed.
--   The application's UI modal system is now highly standardized. Use  for celebrations and  for all user decisions. **Do not use **.
--   The previous agent's analysis of the entitlement system's problems is a great starting point: API/naming mismatches and missing exports are the key issues to solve.
-
-**documents created in this job**
--   None.
-
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Initiated Phase 3.20.1 to fix entitlement-related TS errors and asked the agent to analyze the current state and error blocks. .
-2.  **Agent**: Provided a complete summary of the now-finished Phase 3.19. .
-3.  **User**: Confirmed the agent's work was adequate and provided the systematic plan for the next phase (3.19.12 cleanup) and the one after (TypeScript debt). .
-4.  **Agent**: Provided a checkpoint summary after creating the  hook and migrating one screen, asking to continue. .
-5.  **User**: Instructed the agent to continue and complete all 8 remaining hook migrations without pausing. .
-6.  **Agent**: Completed the full migration to the  hook and provided a summary. .
-7.  **User**: Confirmed the agent's work and initiated Phase 3.19.11, instructing the agent to extract the confirm modal logic into a  hook. .
-8.  **Agent**: Provided a final summary for the  sweep (Phase 3.19.10), including fixes for a regression and a guard-rail false positive. .
-9.  **User**: Instructed the agent to validate the  sweep and fix the false positive guard errors. .
-10. **Agent**: Summarized the completion of the entire 23-alert  sweep. .
-
-**Project Health Check:**
--   **Broken**:
-    -   Web video playback for cinematics (due to incompatible video codecs).
--   **In Refactoring**:
-    -   The application's entitlements system is being refactored to resolve numerous TypeScript errors.
-
-**3rd Party Integrations**
--   **RevenueCat**: Architecturally central but functionally mocked.
--   **Sentry**: For crash reporting.
--   **OpenAI GPT-4**: For backend AI narration (via Emergent LLM Key).
--   **Zustand**: For frontend state management.
--   **Expo**: Core framework.
-
-**Testing status**
--   Testing agent used after significant changes: NO (The agent used 
+1.  **Phase 3.20 (Done)**: Eliminated all TypeScript errors from the codebase (from over 100 down to 0). This was done in four sub-phases: Entitlements, LinearGradient, User types, and miscellaneous errors.
+2.  **Phase 3.21 (Done)**: Ran a regression and consistency gate. This involved fixing all violations reported by the 
 > frontend@1.0.0 guard
 > npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts
 
@@ -258,10 +108,556 @@ Task Detail:
    Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
 
 ✅ All Alert.alert usages are properly annotated.
-   No forbidden error alert patterns found. and manual  checks, which was appropriate for this refactoring).
+   No forbidden error alert patterns found. scripts, primarily by abstracting direct store access behind hooks like  and whitelisting legitimate exceptions for dev-tool screens.
+3.  **Phase 3.22 (In Progress)**: A UI Parity Polish Sweep to make the app feel more like a shipped product.
+    -   **3.22.1 (Current Task)**: Refactor the main dashboard screen () by extracting its major UI sections (Header, Currency Bar, Idle Rewards Card, Quick Links) into reusable, token-driven components.
+
+**User's preferred language**: English
+
+**what currently exists?**
+The application is in a very healthy state: it is fully type-safe ( passes with 0 errors) and all custom guard scripts (
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.
+
+
+> frontend@1.0.0 guard:no-error-alerts
+> node scripts/guard-no-error-alerts.mjs
+
+🚫 Checking Alert.alert patterns (Phase 3.18.4 STRICT)...
+
+   Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
+
+✅ All Alert.alert usages are properly annotated.
+   No forbidden error alert patterns found.) pass. The agent has begun **Phase 3.22.1** by refactoring the main dashboard screen (). Following the user's detailed plan, the agent has created a new directory  and populated it with four placeholder components: , , , and , along with a barrel file . The agent successfully integrated the  component into , replacing the previous inline code. The other three components are created but not yet integrated.
+
+**Last working item**:
+-   Last item agent was working: The agent was in the middle of refactoring  by extracting its UI sections into the newly created components. It had just successfully integrated the  component. The user's last instruction was to provide the code for the Quick Links section of the dashboard so they could return a precise patch plan for the  component.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N (The agent has been running  and 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.
+
+
+> frontend@1.0.0 guard:no-error-alerts
+> node scripts/guard-no-error-alerts.mjs
+
+🚫 Checking Alert.alert patterns (Phase 3.18.4 STRICT)...
+
+   Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
+
+✅ All Alert.alert usages are properly annotated.
+   No forbidden error alert patterns found. to ensure no regressions, but no functional/visual testing has occurred for the  refactor).
+-   Which testing method agent to use? manual testing by screenshot tool. After the full refactor of  is complete, the agent should take a screenshot of the dashboard to verify there are no visual regressions compared to its previous state.
+-   User Testing Done: N
+
+**All Pending/In progress Issue list**:
+There are no outstanding bugs or issues. The current work is a planned refactoring task.
+
+**In progress Task List**:
+-   Task 1: (P0) Complete the refactoring of .
+
+Task Detail:
+-   Task 1:
+    -   Where to resume: The immediate next action is to fulfill the user's request from the last message: **Paste the code for the Quick Links grid from **. After receiving the user's patch plan, proceed to:
+        1.  Integrate the  component.
+        2.  Integrate the  component.
+        3.  Integrate the  component.
+        4.  Remove all now-unused styles and logic from .
+    -   What will be achieved with this?  will be significantly simplified, relying on reusable, token-driven components for its UI, which improves maintainability and consistency.
+    -   Status: IN PROGRESS
+    -   Should Test frontend/backend/both after fix? frontend
+    -   Blocked on something: Waiting for user input on how to implement the  after providing the requested code.
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks (Phase 3.22 - UI Polish):**
+    -   P1: **Phase 3.22.2**: Ensure Header and Safe-Area consistency across all other core screens (, , , etc.).
+    -   P1: **Phase 3.22.3**: Perform a loading/empty/error state consistency sweep across the app.
+    -   P2: **Phase 3.22.4**: Perform a micro-interactions and visual noise reduction pass.
+-   **Future Tasks (Deferred):**
+    -   P1: **Fix Cinematic Videos**: The video codec for 5+ star hero cinematics is incompatible. The fix involves running the script at .
+
+**Completed work in this session**
+-   **Phase 3.20.1 - 3.20.4 (Full TypeScript Cleanup)**: Systematically eliminated all TypeScript errors, bringing the error count from over 100 to 0. This involved fixing types for entitlements, LinearGradient colors, the User model, and numerous miscellaneous issues.
+-   **Phase 3.21 (Regression + Consistency Gate)**: Fixed all 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.
+
+
+> frontend@1.0.0 guard:no-error-alerts
+> node scripts/guard-no-error-alerts.mjs
+
+🚫 Checking Alert.alert patterns (Phase 3.18.4 STRICT)...
+
+   Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
+
+✅ All Alert.alert usages are properly annotated.
+   No forbidden error alert patterns found. violations by introducing a  hook to avoid direct store access and whitelisting dev-tool screens that require it. Confirmed all guards and  pass cleanly.
+-   **Phase 3.22.1 (Component Extraction - Started)**:
+    -   Created , , , and  components in .
+    -   Refactored  to use the canonical  from the theme instead of a local definition.
+    -   Successfully integrated the  component into .
+
+**Earlier issues found/mentioned but not fixed**
+-   Issue 1:
+    -   Incompatible video codec for hero cinematics. This feature is currently broken.
+    -   Debug checklist: Run the script at  and test playback on a device.
+    -   Why to solve this issue and what will be achieved with this? To restore a broken premium feature.
+    -   Should Test frontend/backend/both after fix: frontend
+    -   Is recurring issue? Y
+
+**Known issue recurrence from previous fork**
+-   None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Systematic Refactoring**: Following a strict, phased approach (3.20 → 3.21 → 3.22) to pay down tech debt and then polish the UI.
+-   **Component-Driven Development**: Extracting complex UI sections from a screen () into smaller, reusable, and maintainable components (, , etc.).
+-   **Design Tokens**: Utilizing a central token file () for spacing, radii, and fonts to enforce visual consistency.
+-   **Custom Hooks for State Subscriptions**: Using the  hook to allow components to react to state changes without accessing the raw state object, satisfying a code guardrail.
+
+**key DB schema**
+-   No changes to the DB schema in this session.
+
+**changes in tech stack**
+-   No changes to the core tech stack.
+
+**All files of reference**
+-   : The main dashboard screen, currently undergoing a major refactor.
+-   : The newly extracted and integrated header component.
+-   : Created, but not yet integrated.
+-   : Created, but not yet integrated.
+-   : Created, but not yet integrated. The user is waiting for the agent to provide the original code for this section to plan the implementation.
+-   : The central file for UI design tokens.
+-   : The central file for  color constants.
+
+**Areas that need refactoring**:
+-   The dashboard section of  is the active refactoring target. The , , and  still need to be replaced with their component counterparts.
+
+**key api endpoints**
+-   No new endpoints. The agent interacted with existing idle reward and user data endpoints.
+
+**Critical Info for New Agent**
+-   You are in the middle of **Phase 3.22.1**, a refactor of . Do not start any other task.
+-   Your **immediate next action** is to respond to the user's request: provide the code for the Quick Links grid from  so they can give you a patch plan.
+-   Once you receive the plan, your goal is to finish the refactor by integrating , , and  into .
+-   The project is in a very clean state (0 TS errors, all guards passing). Maintain this standard. Use the existing token files (, , ) for all styling.
+-   The user is providing very detailed, step-by-step instructions. Follow them precisely.
+
+**documents created in this job**
+-   None.
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User (LATEST)**: Asked the agent to paste the code for the  section from  to provide the next patch plan. .
+2.  **Agent**: Provided a summary of the component extraction work done on  and asked for next steps. .
+3.  **Agent**: Ran [13:14:55] Starting project at /app/frontend after the first component integration. .
+4.  **Agent**: Ran 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.
+
+
+> frontend@1.0.0 guard:no-error-alerts
+> node scripts/guard-no-error-alerts.mjs
+
+🚫 Checking Alert.alert patterns (Phase 3.18.4 STRICT)...
+
+   Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
+
+✅ All Alert.alert usages are properly annotated.
+   No forbidden error alert patterns found. and , both passed. .
+5.  **Agent**: Replaced the inline header in  with the new  component. .
+6.  **Agent**: Added the import for the new home components to . .
+7.  **Agent**: Updated the newly created home components with the user's detailed implementation plan. .
+8.  **User**: Provided a comprehensive, multi-step patch plan to extract the  dashboard into four new components (, , , ). .
+9.  **Agent**: Provided the full code for the  dashboard section as requested by the user. .
+10. **User**: Confirmed Phase 3.21 was complete and initiated Phase 3.22 (UI Polish), asking for the code of the  header and dashboard area to begin the refactor. .
+
+**Project Health Check:**
+-   **Broken**: Web video playback for cinematics (due to incompatible video codecs).
+-   **Mocked**: No new mocks. RevenueCat is architecturally central but functionally mocked.
+-   **In Refactoring**: The main dashboard screen () is in the middle of a significant component-based refactoring.
+
+**3rd Party Integrations**
+-   **RevenueCat**: For IAP, functionally mocked.
+-   **Sentry**: For crash reporting.
+-   **OpenAI GPT-4**: For backend AI narration (uses Emergent LLM Key).
+-   **Zustand**: For frontend state management.
+-   **Expo**: Core framework.
+
+**Testing status**
+-   Testing agent used after significant changes: YES (After the full TS cleanup, a frontend testing agent was run).
 -   Troubleshoot agent used after agent stuck in loop: NO.
 -   Test files created: None.
--   Known regressions: A minor  import regression was introduced and immediately fixed during the  sweep.
+-   Known regressions: None. The agent is actively running guards and  to prevent them.
 
 **Credentials to test flow:**
 -   **Super Admin**:
@@ -269,6 +665,6 @@ Task Detail:
     -   Password: 
 
 **What agent forgot to execute**
--   The agent has followed the user's detailed, phased plan with extreme precision and has not forgotten or skipped any requested steps.
+-   The agent has followed the user's phased plan precisely. The next pending action is to provide the user with the requested code snippet from .
 
 </analysis>

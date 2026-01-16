@@ -6,7 +6,7 @@ Quick Backend API Status Check
 import requests
 import json
 
-BASE_URL = "https://entitlement-types.preview.emergentagent.com/api"
+BASE_URL = "https://ui-tokens-refine.preview.emergentagent.com/api"
 TEST_USERNAME = "testplayer"
 
 def test_endpoint(method, endpoint, **kwargs):

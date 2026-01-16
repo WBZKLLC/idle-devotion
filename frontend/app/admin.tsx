@@ -71,18 +71,8 @@ export default function AdminPanelScreen() {
   // Processing states
   const [processing, setProcessing] = useState(false);
   
-  // Phase 3.19.10: Confirm modal state
-  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
-  const openConfirm = (data: ConfirmModalData) => {
-    setConfirmData({
-      ...data,
-      onConfirm: async () => {
-        setConfirmData(null);
-        await data.onConfirm?.();
-      },
-      onCancel: () => setConfirmData(null),
-    });
-  };
+  // Phase 3.19.11: Confirm modal hook
+  const { openConfirm, confirmNode, setBusy } = useConfirmModal();
 
   // Check if user is admin
   const isAdmin = user?.is_admin === true;

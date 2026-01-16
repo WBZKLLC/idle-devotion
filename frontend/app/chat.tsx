@@ -108,6 +108,19 @@ export default function ChatScreen() {
   const [userBubbles, setUserBubbles] = useState<{ available: any[], locked: any[] }>({ available: [], locked: [] });
   const [equippedBubble, setEquippedBubble] = useState<ChatBubble>(DEFAULT_BUBBLE);
   
+  // Phase 3.19.10: Confirm modal state
+  const [confirmData, setConfirmData] = useState<ConfirmModalData | null>(null);
+  const openConfirm = (data: ConfirmModalData) => {
+    setConfirmData({
+      ...data,
+      onConfirm: async () => {
+        setConfirmData(null);
+        await data.onConfirm?.();
+      },
+      onCancel: () => setConfirmData(null),
+    });
+  };
+  
   // Report modal state
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportTarget, setReportTarget] = useState<ChatMessage | null>(null);

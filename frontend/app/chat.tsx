@@ -34,6 +34,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import COLORS from '../theme/colors';
 // Phase 3.19.11: Confirm modal hook
 import { useConfirmModal } from '../components/ui/useConfirmModal';
+// Phase 3.20.2: Gradient tuple helper
+import { BG_NAVY } from '../lib/ui/gradients';
+
+// Helper to extract gradient tuple from dynamic color arrays
+const toGradientTuple = (colors: string[]): readonly [string, string] => {
+  if (colors.length >= 2) return [colors[0], colors[1]] as const;
+  if (colors.length === 1) return [colors[0], colors[0]] as const;
+  return BG_NAVY;
+};
 
 // Report reasons
 const REPORT_REASONS = [

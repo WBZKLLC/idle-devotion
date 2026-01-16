@@ -980,6 +980,13 @@ export default function HeroProgressionScreen() {
             </View>
           </View>
         </Modal>
+        
+        {/* Phase 3.19.9: Reward Recap Modal for tier unlock celebrations */}
+        <RewardRecapModal 
+          visible={!!rewardRecap} 
+          data={rewardRecap} 
+          onClose={() => setRewardRecap(null)} 
+        />
       </SafeAreaView>
     </View>
   );

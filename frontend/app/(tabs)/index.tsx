@@ -850,29 +850,52 @@ const styles = StyleSheet.create({
   buttonRow: { flexDirection: 'row', alignItems: 'center' },
   // Phase 3.22.1: quickLinks styles moved to QuickLinksGrid component
   // Phase 3.22.7: Pity section — quiet ledger, not another loud tile
+  // Phase 3.22.11: Event banner — silk/glass material, not grid tile
   pitySection: { marginTop: SECTION_GAP.pause },
   sectionTitle: { 
-    fontSize: FONT_SIZE.sm, 
-    fontWeight: FONT_WEIGHT.semibold, 
+    fontSize: FONT_SIZE.xs, 
+    fontWeight: FONT_WEIGHT.medium, 
     color: COLORS.cream.soft, 
-    letterSpacing: 0.4,
-    opacity: INVITATION.dormant,
-    marginBottom: 10,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    opacity: INVITATION.dormant * 0.9,
+    marginBottom: 8,
   },
   pityCard: { 
-    backgroundColor: COLORS.navy.dark, 
-    borderRadius: RADIUS.lg, 
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1, 
-    borderColor: COLORS.gold.dark + '18',
+    // Phase 3.22.11: Glass/silk material — transparent, subtle
+    backgroundColor: COLORS.navy.darkest + '50',
+    borderRadius: RADIUS.md, 
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    // Phase 3.22.11: Very subtle highlight edge (glass effect)
+    borderWidth: 0.5, 
+    borderColor: COLORS.cream.pure + '06',
+    // Lower overall presence
+    opacity: INVITATION.secondary,
   },
-  pityRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  pityInfo: { width: 80 },
-  pityLabel: { fontSize: 12, color: COLORS.cream.dark },
-  pityValue: { fontSize: 14, fontWeight: 'bold', color: COLORS.cream.pure },
-  pityBarOuter: { flex: 1, height: 8, backgroundColor: COLORS.navy.dark, borderRadius: 4, overflow: 'hidden', marginLeft: 12 },
-  pityBarFill: { height: '100%', borderRadius: 4 },
+  pityRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  pityInfo: { width: 70 },
+  pityLabel: { 
+    fontSize: 10, 
+    color: COLORS.cream.dark, 
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  pityValue: { 
+    fontSize: 12, 
+    fontWeight: '600', 
+    color: COLORS.cream.soft,
+    opacity: 0.9,
+  },
+  pityBarOuter: { 
+    flex: 1, 
+    height: 6, 
+    backgroundColor: COLORS.navy.darkest + '80', 
+    borderRadius: 3, 
+    overflow: 'hidden', 
+    marginLeft: 10 
+  },
+  pityBarFill: { height: '100%', borderRadius: 3 },
 });
 
 // ============ 2DLIVE SHELL COMPONENTS (UI-only) ============

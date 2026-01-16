@@ -12,6 +12,7 @@ import {
   TextInput,
   Animated,
   Switch,
+  Dimensions,
 } from 'react-native';
 import { useGameStore, useHydration } from '../stores/gameStore';
 import { isErrorHandledGlobally } from '../lib/api';

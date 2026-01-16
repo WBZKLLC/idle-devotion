@@ -167,7 +167,7 @@ export default function StoreScreen() {
       cancelText: 'Cancel',
       icon: 'diamond-outline',
       onConfirm: async () => {
-        setIsPurchasing(true);
+        setIsConfirmBusy(true);
         try {
           const result = await apiPurchaseCrystals(user?.username || '', packageId);
           toast.premium(
@@ -181,7 +181,7 @@ export default function StoreScreen() {
             toast.error(error?.message || 'Purchase failed');
           }
         } finally {
-          setIsPurchasing(false);
+          setIsConfirmBusy(false);
         }
       },
     });

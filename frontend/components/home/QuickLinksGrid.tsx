@@ -1,5 +1,6 @@
 // /app/frontend/components/home/QuickLinksGrid.tsx
 // Phase 3.22.6.C: "Desire Without Demand"
+// Phase 3.22.7: Restraint Pass — dormant until chosen
 //
 // Quick links are not buttons — they are rituals you may or may not perform today.
 // Nothing flashes. Nothing pulses. Only the Idle card breathes.
@@ -12,6 +13,8 @@ import COLORS from '../../theme/colors';
 import type { GradientColors } from '../../lib/ui/gradients';
 // Phase 3.22.4: Micro-interaction constants
 import { PRESS } from '../../lib/ui/interaction';
+// Phase 3.22.7: Restraint tokens
+import { INVITATION, SECTION_GAP } from '../ui/tokens';
 
 type BaseTile = {
   key: string;

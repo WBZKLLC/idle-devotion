@@ -26,6 +26,8 @@ import Sidebar from '../components/Sidebar';
 import { goToStore } from '../lib/entitlements/navigation';
 // Phase 3.19.2: Canonical button component
 import { PrimaryButton } from '../components/ui/PrimaryButton';
+// Phase 3.19.9: Unified reward recap modal
+import { RewardRecapModal, RewardRecapData } from '../components/ui/RewardRecapModal';
 // Phase 3.18.4: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen

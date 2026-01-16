@@ -55,6 +55,18 @@ export const TOUCH_TARGET = {
 } as const;
 
 // =============================================================================
+// LAYOUT CONSTANTS
+// =============================================================================
+export const LAYOUT = {
+  /** Standard screen horizontal padding */
+  SCREEN_PADDING: 16,
+  /** Bottom gutter for scroll content (prevents home indicator overlap on iOS) */
+  BOTTOM_GUTTER: 16,
+  /** Tab bar safe padding (when tabs are visible) */
+  TAB_BAR_HEIGHT: 65,
+} as const;
+
+// =============================================================================
 // SHADOWS
 // =============================================================================
 export const SHADOW = {

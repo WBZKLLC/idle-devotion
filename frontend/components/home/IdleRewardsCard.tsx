@@ -295,9 +295,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pendingText: {
-    color: COLORS.cream.soft,
-    fontSize: FONT_SIZE.sm,
-    fontWeight: FONT_WEIGHT.medium,
+    color: COLORS.cream.pure,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+  },
+  pendingLabel: {
+    color: COLORS.cream.dark,
+    fontSize: FONT_SIZE.xs,
+    fontStyle: 'italic',
+    marginLeft: 'auto',
   },
 
   // Buttons

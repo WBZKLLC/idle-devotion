@@ -249,19 +249,20 @@ export default function HeroDetailScreen() {
       <DivineOverlays vignette grain />
 
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
-          </TouchableOpacity>
-          <View style={styles.titleWrap}>
-            <Text style={styles.title} numberOfLines={1}>{heroData.name}</Text>
-            <Text style={styles.rarityLabel}>{heroData.rarity} • {heroData.hero_class} • Idle Devotion</Text>
-          </View>
-          <View style={[styles.rarityBadgeHeader, { backgroundColor: rarityColor }]}>
-            <Text style={styles.rarityBadgeText}>{heroData.rarity}</Text>
-          </View>
-        </View>
+        {/* Phase 3.19.6: Canonical header - back on LEFT */}
+        <AppHeader
+          title={heroData.name}
+          subtitle={`${heroData.rarity} • ${heroData.hero_class}`}
+          left={{ type: 'back' }}
+          right={
+            <View style={[styles.rarityBadgeHeader, { backgroundColor: rarityColor }]}>
+              <Text style={styles.rarityBadgeText}>{heroData.rarity}</Text>
+            </View>
+          }
+          transparent
+          includeSafeArea={false}
+          centerTitle={false}
+        />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Hero Portrait */}

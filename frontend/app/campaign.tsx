@@ -278,7 +278,7 @@ export default function CampaignScreen() {
   }
 
   // ----------------------------
-  // 2Dlive wrapped not-logged-in (UI-only)
+  // 2Dlive wrapped not-logged-in (UI-only) - Phase 3.19.5: Deterministic escape paths
   // ----------------------------
   if (!user) {
     return (
@@ -289,9 +289,14 @@ export default function CampaignScreen() {
 
         <SafeAreaView style={styles.centerContainer}>
           <Text style={styles.errorText}>Please login to access the campaign</Text>
-          <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/')}>
-            <Text style={styles.loginBtnText}>Go to Login</Text>
-          </TouchableOpacity>
+          <View style={{ gap: 10, marginTop: 16, width: '80%' }}>
+            <PrimaryButton
+              title="Go to Login"
+              onPress={() => router.replace('/')}
+              variant="gold"
+              size="md"
+            />
+          </View>
         </SafeAreaView>
       </View>
     );

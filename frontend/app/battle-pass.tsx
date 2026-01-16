@@ -55,6 +55,7 @@ const PASS_REWARDS: PassReward[] = Array.from({ length: 50 }, (_, i) => ({
 
 export default function BattlePassScreen() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, fetchUser } = useGameStore();
   const hydrated = useHydration();
   

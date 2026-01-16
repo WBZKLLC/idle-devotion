@@ -93,10 +93,10 @@ export const TOAST_COPY = {
   
   // Error (Steel voice)
   error: {
-    default: 'That didn't take. Try again.',
+    default: "That didn't take. Try again.",
     connection: 'Connection faltered.',
     notReady: 'Not yet ready.',
-    failed: 'It didn't hold.',
+    failed: "It didn't hold.",
   },
   
   // Locked/Gated (Neutral, clear)

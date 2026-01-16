@@ -389,11 +389,13 @@ export default function HeroProgressionScreen() {
       // Compute newTier using authoritative server values
       const newTier = unlockedTierForHero({ ...optimisticHero, stars: newStars, duplicates: remaining });
       if (newTier > effectiveUnlockedTier) {
-        // ALERT_ALLOWED: rewards_modal
-        Alert.alert(
-          'Star Promoted! 🌟',
-          `New tier art unlocked: ${labelForTier(newTier)}\n\nReturn to Hero Detail to preview your new art!`
-        );
+        // Phase 3.19.9: In-app reward recap modal
+        setRewardRecap({
+          title: 'Star Promoted! 🌟',
+          message: `New tier art unlocked: ${labelForTier(newTier)}\n\nReturn to Hero Detail to preview your new art!`,
+          tone: 'gold',
+          buttonText: 'Awesome!',
+        });
       } else {
         toast.success(`Star Promoted! Now at ${newStars} star(s).`);
       }

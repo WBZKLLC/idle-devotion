@@ -149,6 +149,8 @@ export default function HomeScreen() {
       clearTimeout(glanceTimeoutRef.current);
       glanceTimeoutRef.current = null;
     }
+    // Phase 3.22.10: Cancel signature moment revert (yields immediately to user)
+    idleCardRef.current?.cancelSignatureRevert();
   };
 
   useEffect(() => {

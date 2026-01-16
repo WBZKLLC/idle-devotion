@@ -47,7 +47,7 @@ const SANCTUM_BG_IMAGE = require('../assets/backgrounds/sanctum_environment_01.j
 // Phase 3.22.1: Use canonical theme colors (no local duplication)
 import COLORS from '../theme/colors';
 // Phase 3.22.1: Extracted home screen components
-import { HomeHeader, CurrencyBar, IdleRewardsCard } from '../components/home';
+import { HomeHeader, CurrencyBar, IdleRewardsCard, QuickLinksGrid, QuickLinkRow } from '../components/home';
 
 export default function HomeScreen() {
   const { user, initUser, login, claimIdleRewards, isLoading, fetchCR, fetchUser } = useGameStore();

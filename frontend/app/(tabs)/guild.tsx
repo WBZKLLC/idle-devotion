@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: COLORS.gold.primary },
   tabText: { fontSize: 14, fontWeight: '600', color: COLORS.cream.soft },
   tabTextActive: { color: COLORS.navy.darkest },
-  pressedFeedback: { opacity: 0.7 },
+  pressedFeedback: { opacity: PRESS.OPACITY, transform: [{ scale: PRESS.SCALE }] },
   tabContent: { flex: 1 },
   
   // Benefits

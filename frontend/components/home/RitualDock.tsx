@@ -108,6 +108,7 @@ export function RitualDock({ idleStatus, formatIdleTime, onPress, onReceive, onA
                 styles.cta,
                 pressed && styles.ctaPressed,
               ]}
+              onPressIn={onAnyInteraction}
               onPress={(e) => {
                 e.stopPropagation();
                 haptic('medium');

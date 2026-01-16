@@ -325,7 +325,7 @@ export default function StoryScreen() {
                   </View>
                 )}
               </LinearGradient>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </ScrollView>
 

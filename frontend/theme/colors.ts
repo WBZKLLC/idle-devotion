@@ -19,6 +19,7 @@ export const COLORS = {
     medium: '#d4af37',
     light: '#e6c666',
     pale: '#f5e6c4',
+    muted: '#9a8a5a',  // Phase 3.20.4: Added muted gold variant
   },
   
   // Neutral - Cream/White shades

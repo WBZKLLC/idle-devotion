@@ -176,7 +176,7 @@ export default function HeroesScreen() {
       <SanctumAtmosphere />
       <DivineOverlays vignette rays={false} grain />
 
-      <SafeAreaView style={styles.safe} edges={['left', 'right']}>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         {/* Phase 3.19.6: Canonical header - back on LEFT per mobile UX convention */}
         <AppHeader
           title="Heroes"

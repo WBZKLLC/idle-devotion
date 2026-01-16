@@ -605,7 +605,7 @@ export default function HomeScreen() {
         onPressQuest={() => router.push('/journey')}
         onPressEvents={() => router.push('/events')}
         onPressSummon={() => router.push('/summon-hub')}
-        onPressShop={() => router.push('/store')}
+        onPressShop={() => goToStore('home_rail')}
         badges={{
           mail: true,
           events: true,

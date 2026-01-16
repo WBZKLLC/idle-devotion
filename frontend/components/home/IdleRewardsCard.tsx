@@ -99,7 +99,7 @@ export function IdleRewardsCard({
   const instantDisabled = collectDisabled || instantCooling;
 
   return (
-    <View style={styles.card}>
+    <Animated.View style={[styles.card, breathingStyle]}>
       <LinearGradient colors={cardColors} style={styles.gradient}>
         {/* Inner highlight for depth */}
         <View style={styles.innerHighlight} />

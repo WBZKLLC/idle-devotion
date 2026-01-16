@@ -202,7 +202,7 @@ export default function StoreScreen() {
       cancelText: 'Cancel',
       icon: 'sparkles-outline',
       onConfirm: async () => {
-        setIsPurchasing(true);
+        setIsConfirmBusy(true);
         try {
           const result = await apiPurchaseDivine(user?.username || '', packageId);
           toast.premium(
@@ -215,7 +215,7 @@ export default function StoreScreen() {
             toast.error(error?.message || 'Purchase failed');
           }
         } finally {
-          setIsPurchasing(false);
+          setIsConfirmBusy(false);
         }
       },
     });

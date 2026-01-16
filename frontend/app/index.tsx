@@ -291,9 +291,9 @@ export default function HomeScreen() {
   if (!user) {
     return (
       <View style={loginStyles.screenContainer}>
-        {/* Background: Raphael 5+ Star Skin - MATH-CENTERED (Login "wow" moment) */}
+        {/* Background: Login hero - MATH-CENTERED (Login "wow" moment) */}
         <CenteredBackground
-          source={{ uri: RAPHAEL_5PLUS_IMAGE }}
+          source={{ uri: LOGIN_HERO_URI }}
           mode="contain"
           zoom={1.06}
           opacity={1}

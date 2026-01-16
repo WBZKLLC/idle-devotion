@@ -143,6 +143,28 @@ export function useHasEntitlement(key: string): boolean {
 }
 
 /**
+ * Hook to subscribe to entitlement changes for reactive re-renders.
+ * Returns a version number that changes when entitlements update.
+ * 
+ * Use this when you need components to re-render on entitlement changes
+ * but don't need to access the raw entitlements data directly.
+ * 
+ * Example:
+ *   const entitlementVersion = useEntitlementVersion();
+ *   const power = useMemo(() => computeCombatStats(hero, heroData), [hero, heroData, entitlementVersion]);
+ */
+export function useEntitlementVersion(): number {
+  const store = getEntitlementStore();
+  // Subscribe to the snapshot's server_time as a proxy for "entitlements changed"
+  // This updates whenever entitlements are refreshed from server
+  const serverTime = store((s: any) => s.snapshot?.server_time);
+  // Also subscribe to the keys length as a secondary signal
+  const keysCount = store((s: any) => Object.keys(s.entitlementsByKey || {}).length);
+  // Return a hash that changes when either changes
+  return (serverTime?.length || 0) + keysCount;
+}
+
+/**
  * Check premium cinematics pack ownership
  */
 export function hasPremiumCinematicsPack(): boolean {

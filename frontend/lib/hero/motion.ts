@@ -263,17 +263,58 @@ export function getMotionParams(tier: MotionTier): MotionParams {
 }
 
 // =============================================================================
+// PARALLAX PLANES (Phase 3.26)
+// =============================================================================
+
+export interface ParallaxPlane {
+  id: string;
+  depth: 'far' | 'mid' | 'near' | 'foreground';
+  opacity: number;
+  scale: number;
+  blur?: number;
+}
+
+/**
+ * Parallax planes per tier (static styling, no animation loops)
+ */
+export const PARALLAX_PLANES: Record<MotionTier, ParallaxPlane[]> = {
+  0: [],
+  1: [],
+  2: [
+    { id: 'shelf', depth: 'mid', opacity: 0.08, scale: 1.02 },
+  ],
+  3: [
+    { id: 'shelf', depth: 'mid', opacity: 0.10, scale: 1.02 },
+    { id: 'veil', depth: 'foreground', opacity: 0.04, scale: 1.0, blur: 2 },
+  ],
+  4: [
+    { id: 'shelf', depth: 'mid', opacity: 0.12, scale: 1.03 },
+    { id: 'veil', depth: 'foreground', opacity: 0.06, scale: 1.0, blur: 2 },
+    { id: 'halo', depth: 'far', opacity: 0.08, scale: 1.05 },
+  ],
+  5: [
+    { id: 'shelf', depth: 'mid', opacity: 0.14, scale: 1.04 },
+    { id: 'veil', depth: 'foreground', opacity: 0.08, scale: 1.0, blur: 2 },
+    { id: 'halo', depth: 'far', opacity: 0.10, scale: 1.06 },
+    { id: 'rim', depth: 'near', opacity: 0.05, scale: 1.01 },
+  ],
+};
+
+// =============================================================================
 // STAGE CONFIG DERIVATION
 // =============================================================================
 
-export type CameraMode = 'standard' | 'intimate';
+export type CameraMode = 'distant' | 'standard' | 'intimate';
 
 export interface HeroStageConfig {
   heroDataId: string | undefined;
   motionSpecId: string | undefined;
   tier: MotionTier;
   cameraMode: CameraMode;
+  cameraLabel: string;
+  intimacyUnlocked: boolean;
   motionParams: MotionParams;
+  parallaxPlanes: ParallaxPlane[];
   intensityMultiplier: number;
   safeZones: HeroMotionSpec['safeZones'];
   reduceMotion: boolean;
@@ -294,15 +335,22 @@ export function deriveHeroStageConfig(opts: {
   const motionSpec = getHeroMotionSpecByHeroDataId(resolvedId);
   
   const tier = resolveMotionTier(affinityLevel);
-  const cameraMode: CameraMode = tier >= 4 ? 'intimate' : 'standard';
+  const tierInfo = getTierInfo(tier);
   const motionParams = getMotionParams(tier);
+  const parallaxPlanes = PARALLAX_PLANES[tier];
+  
+  // Camera mode: distant (0-1), standard (2-3), intimate (4-5)
+  const cameraMode: CameraMode = tier >= 4 ? 'intimate' : tier >= 2 ? 'standard' : 'distant';
   
   return {
     heroDataId: resolvedId,
     motionSpecId: motionSpec?.heroDataId,
     tier,
     cameraMode,
+    cameraLabel: tierInfo.cameraLabel,
+    intimacyUnlocked: tier >= 4,
     motionParams,
+    parallaxPlanes,
     intensityMultiplier: motionSpec?.intensityMultiplier ?? 1.0,
     safeZones: motionSpec?.safeZones ?? {},
     reduceMotion,

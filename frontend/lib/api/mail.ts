@@ -287,3 +287,122 @@ export async function claimMailGift(username: string, giftId: string): Promise<R
     throw error;
   }
 }
+
+// ==================== MAIL RECEIPTS (Phase 3.26) ====================
+// Fallback queue receipts that were queued via backend queue_receipt_to_mail()
+
+/**
+ * Mail receipt type (Phase 3.26)
+ */
+export interface MailReceipt {
+  id: string;
+  original_source: string;
+  original_source_id: string;
+  rewards: Array<{ type: string; amount: number; hero_id?: string; item_id?: string }>;
+  description: string;
+  claimed: boolean;
+  created_at: string;
+  expires_at: string;
+}
+
+/**
+ * Get queued mail receipts list
+ * Phase 3.26: Returns receipts waiting to be claimed
+ */
+export async function getMailReceipts(): Promise<MailReceipt[]> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/mail/receipts`, { headers });
+    if (!res.ok) throw new Error('Failed to fetch receipts');
+    
+    const receipts = await res.json();
+    
+    // Emit telemetry
+    track(Events.MAIL_RECEIPTS_VIEWED, { 
+      count: receipts.length 
+    });
+    
+    return receipts;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Claim a mail receipt (idempotent)
+ * Phase 3.26: Returns canonical receipt + emits telemetry
+ */
+export async function claimMailReceipt(receiptId: string): Promise<RewardReceipt> {
+  // Emit submission event
+  track(Events.MAIL_RECEIPT_CLAIM_SUBMITTED, { 
+    source: 'mail_receipt_claim', 
+    sourceId: receiptId 
+  });
+  
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/mail/receipts/${receiptId}/claim`, {
+      method: 'POST',
+      headers,
+    });
+    
+    if (!res.ok) {
+      track(Events.REWARD_CLAIM_ERROR, { 
+        source: 'mail_receipt_claim', 
+        sourceId: receiptId,
+        status: res.status,
+      });
+      throw new Error('Failed to claim receipt');
+    }
+    
+    const receipt = await res.json();
+    
+    // Phase 3.24: Validate receipt shape
+    if (isValidReceipt(receipt)) {
+      // Emit receipt received
+      track(Events.REWARD_RECEIPT_RECEIVED, { 
+        source: receipt.source, 
+        sourceId: receipt.sourceId,
+        itemCount: receipt.items.length,
+      });
+      
+      // Emit success/already claimed
+      if (receipt.alreadyClaimed) {
+        track(Events.REWARD_CLAIM_ALREADY_CLAIMED, { 
+          source: receipt.source, 
+          sourceId: receipt.sourceId 
+        });
+      } else {
+        track(Events.REWARD_CLAIM_SUCCESS, { 
+          source: receipt.source, 
+          sourceId: receipt.sourceId,
+          itemCount: receipt.items.length,
+        });
+      }
+      
+      return receipt;
+    }
+    
+    // Fallback to ensure we always return a valid receipt shape
+    console.warn('[claimMailReceipt] Unexpected response, creating fallback receipt');
+    return {
+      source: 'mail_receipt_claim',
+      sourceId: receiptId,
+      items: [],
+      balances: {
+        gold: 0, coins: 0, gems: 0, divine_gems: 0, crystals: 0,
+        stamina: 0, divine_essence: 0, soul_dust: 0, skill_essence: 0,
+        enhancement_stones: 0, hero_shards: 0, rune_essence: 0,
+      },
+      alreadyClaimed: false,
+      message: 'Receipt claimed',
+    };
+  } catch (error) {
+    track(Events.REWARD_CLAIM_ERROR, { 
+      source: 'mail_receipt_claim', 
+      sourceId: receiptId,
+      error: String(error),
+    });
+    throw error;
+  }
+}

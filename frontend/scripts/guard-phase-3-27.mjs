@@ -70,8 +70,9 @@ check(
   'Camera drift is tier-gated (intimate tier in inspect mode only)'
 );
 
-// Check no timers in motion file
-const hasTimers = /setTimeout|setInterval|requestAnimationFrame/.test(motionContent);
+// Check no timers in motion file (excluding comments)
+const nonCommentContent = motionContent.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+const hasTimers = /setTimeout|setInterval|requestAnimationFrame/.test(nonCommentContent);
 check(
   !hasTimers,
   'No timers/RAF in motion.ts (Reanimated-only)'

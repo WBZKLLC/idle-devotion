@@ -408,7 +408,12 @@ const styles = StyleSheet.create({
   backgroundArt: {
     width: '100%',
     height: '100%',
-    opacity: 0.4, // Dim for focus on hero
+    opacity: 0.5,
+  },
+  backgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: COLORS.navy.darkest,
+    opacity: 0.4,
   },
   
   // Layer 3: Hero
@@ -416,10 +421,13 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: HERO_STAGE.TOP_SAFE,
+    paddingBottom: HERO_STAGE.BOTTOM_SAFE,
+    paddingHorizontal: HERO_STAGE.SIDE_PADDING,
   },
   heroContainer: {
-    width: '80%',
-    height: '70%',
+    width: '85%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -427,23 +435,37 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  heroPlaceholder: {
+    width: 200,
+    height: 280,
+    borderRadius: RADIUS.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  heroInitial: {
+    fontSize: 72,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.cream.dark,
+    opacity: 0.5,
+  },
   
   // Layer 4: Parallax (reserved)
   parallaxLayer: {
     ...StyleSheet.absoluteFillObject,
   },
   
-  // Layer 5: UI
+  // Layer 5: UI Chrome
   uiLayer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
   },
   
-  // Top zone
+  // Top zone (HUD)
   topZone: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: LAYOUT.SCREEN_PADDING,
+    paddingHorizontal: HERO_STAGE.SIDE_PADDING,
     paddingTop: 8,
     gap: 12,
   },
@@ -452,11 +474,12 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.navy.dark + '80',
+    backgroundColor: COLORS.navy.dark + '90',
     borderRadius: 20,
   },
   heroInfo: {
     flex: 1,
+    gap: 4,
   },
   heroName: {
     fontSize: FONT_SIZE.xl,
@@ -464,10 +487,9 @@ const styles = StyleSheet.create({
     color: COLORS.cream.pure,
     letterSpacing: 0.5,
   },
-  heroMeta: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.cream.dark,
-    marginTop: 2,
+  rarityStars: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   affinityBadge: {
     flexDirection: 'row',
@@ -475,7 +497,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: COLORS.navy.dark + '80',
+    backgroundColor: COLORS.navy.dark + '90',
     borderRadius: 12,
   },
   affinityText: {
@@ -484,21 +506,35 @@ const styles = StyleSheet.create({
     color: COLORS.gold.light,
   },
   
-  // Bottom zone
+  // Bottom zone (actions)
   bottomZone: {
-    paddingHorizontal: LAYOUT.SCREEN_PADDING,
+    paddingHorizontal: HERO_STAGE.SIDE_PADDING,
     paddingBottom: LAYOUT.BOTTOM_GUTTER,
+    gap: 12,
+  },
+  powerDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+  },
+  powerValue: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.gold.medium,
+    letterSpacing: 0.5,
   },
   actionsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 5,
     paddingVertical: 14,
     backgroundColor: COLORS.navy.dark + 'D0',
     borderRadius: RADIUS.md,
@@ -509,6 +545,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gold.primary,
     borderColor: COLORS.gold.dark,
   },
+  actionButtonDisabled: {
+    backgroundColor: COLORS.navy.dark + '60',
+    borderColor: 'transparent',
+    opacity: 0.6,
+  },
   actionText: {
     fontSize: FONT_SIZE.sm,
     fontWeight: FONT_WEIGHT.medium,
@@ -516,5 +557,9 @@ const styles = StyleSheet.create({
   },
   actionTextPrimary: {
     color: COLORS.navy.darkest,
+    fontWeight: FONT_WEIGHT.semibold,
+  },
+  actionTextDisabled: {
+    color: COLORS.cream.dark,
   },
 });

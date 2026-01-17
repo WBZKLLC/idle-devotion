@@ -92,6 +92,13 @@ export const Events = {
   STORE_REDEEM_ALREADY_CLAIMED: 'store_redeem_already_claimed',
   STORE_REDEEM_ERROR: 'store_redeem_error',
   
+  // Phase 3.31: Idle loop telemetry
+  IDLE_VIEWED: 'idle_viewed',
+  IDLE_ELAPSED: 'idle_elapsed',
+  IDLE_CLAIM_SUBMITTED: 'idle_claim_submitted',
+  IDLE_CLAIM_SUCCESS: 'idle_claim_success',
+  IDLE_CLAIM_ALREADY_CLAIMED: 'idle_claim_already_claimed',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

@@ -139,19 +139,19 @@ const styles = StyleSheet.create({
     minHeight: DOCK.minHeight,
     borderRadius: DOCK.radius,
     overflow: 'hidden',
-    // Shadow for lift
+    // Phase 3.23.6: Gold glow shadow for focal anchor
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
+        shadowColor: COLORS.gold.primary,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 6,
+        elevation: 8,
       },
       web: {
-        boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+        boxShadow: `0 0 24px ${COLORS.gold.primary}40, 0 4px 12px rgba(0,0,0,0.25)`,
       },
     }),
   },

@@ -5995,9 +5995,9 @@ class GachaReceipt(BaseModel):
     pityBefore: int
     pityAfter: int
     pityTriggered: bool
-    currencySpent: Dict[str, any]
+    currencySpent: Dict[str, Any]
     balances: Dict[str, int]
-    items: List[Dict[str, any]]  # Canonical items array
+    items: List[Dict[str, Any]]  # Canonical items array
     alreadyClaimed: bool = False
 
 

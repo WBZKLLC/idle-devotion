@@ -50,6 +50,15 @@ export const Events = {
   PREMIUM_GATE_DENIED: 'premium_gate_denied',
   PREMIUM_GATE_ALLOWED: 'premium_gate_allowed',
   
+  // Phase 3.24: Reward receipt telemetry
+  // MUST include: source, sourceId in props
+  REWARD_RECEIPT_RECEIVED: 'reward_receipt_received',
+  REWARD_CLAIM_SUCCESS: 'reward_claim_success',
+  REWARD_CLAIM_ALREADY_CLAIMED: 'reward_claim_already_claimed',
+  REWARD_CLAIM_ERROR: 'reward_claim_error',
+  MAIL_CLAIM_SUBMITTED: 'mail_claim_submitted',
+  BOND_TRIBUTE_SUBMITTED: 'bond_tribute_submitted',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

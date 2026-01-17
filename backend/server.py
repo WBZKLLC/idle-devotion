@@ -6207,13 +6207,31 @@ async def gacha_summon_canonical(request: Request, body: GachaSummonRequest):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Validate banner
+    # Phase 3.35: Validate banner exists and is active
     banner_id = body.banner_id
     if banner_id not in GACHA_BANNERS:
-        raise HTTPException(status_code=400, detail=f"Invalid banner: {banner_id}")
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "code": "INVALID_BANNER",
+                "message": f"Banner '{banner_id}' does not exist or is inactive",
+                "valid_banners": list(GACHA_BANNERS.keys())
+            }
+        )
     
     banner = GACHA_BANNERS[banner_id]
     count = body.count if body.count in [1, 10] else 1
+    
+    # Phase 3.35: Validate odds sum to ~1.0 (allow small float errors)
+    total_odds = sum(banner["rates"].values())
+    if abs(total_odds - 1.0) > 0.001:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INVALID_BANNER_CONFIG",
+                "message": f"Banner rates do not sum to 1.0 (got {total_odds})"
+            }
+        )
     
     # Calculate cost
     cost = banner["cost_single"] if count == 1 else banner["cost_multi"]
@@ -6222,18 +6240,37 @@ async def gacha_summon_canonical(request: Request, body: GachaSummonRequest):
     # Map currency to user field
     currency_map = {
         "coins": "coins",
-        "crystals": "crystals",
+        "crystals": "crystals", 
         "divine_essence": "divine_essence"
     }
     user_field = currency_map.get(currency_field, currency_field)
     
-    # Check balance
+    # Phase 3.35: Enhanced affordability check with structured error
     user_balance = user.get(user_field, 0)
     if user_balance < cost:
-        raise HTTPException(status_code=400, detail=f"Insufficient {currency_field}. Need {cost}, have {user_balance}")
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "code": "INSUFFICIENT_FUNDS",
+                "message": f"Not enough {currency_field}",
+                "currency": currency_field,
+                "required": cost,
+                "available": user_balance,
+                "deficit": cost - user_balance
+            }
+        )
     
-    # Generate source ID
-    source_id = body.source_id or f"summon_{user['id']}_{datetime.utcnow().timestamp()}_{random.randint(1000, 9999)}"
+    # Phase 3.35: Require sourceId for idempotency
+    if not body.source_id:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "SOURCE_ID_REQUIRED",
+                "message": "sourceId is required for summon requests"
+            }
+        )
+    
+    source_id = body.source_id
     
     # Check idempotency
     existing = await db.gacha_receipts.find_one({"sourceId": source_id})

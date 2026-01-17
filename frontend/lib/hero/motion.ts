@@ -361,6 +361,7 @@ export interface HeroStageConfig {
   cameraLabel: string;
   intimacyUnlocked: boolean;
   motionParams: MotionParams;
+  cameraDriftParams: CameraDriftParams;  // Phase 3.27
   parallaxPlanes: ParallaxPlane[];
   intensityMultiplier: number;
   safeZones: HeroMotionSpec['safeZones'];
@@ -384,6 +385,7 @@ export function deriveHeroStageConfig(opts: {
   const tier = resolveMotionTier(affinityLevel);
   const tierInfo = getTierInfo(tier);
   const motionParams = getMotionParams(tier);
+  const cameraDriftParams = getCameraDriftParams(tier);  // Phase 3.27
   const parallaxPlanes = PARALLAX_PLANES[tier];
   
   // Camera mode: distant (0-1), standard (2-3), intimate (4-5)
@@ -397,6 +399,7 @@ export function deriveHeroStageConfig(opts: {
     cameraLabel: tierInfo.cameraLabel,
     intimacyUnlocked: tier >= 4,
     motionParams,
+    cameraDriftParams,  // Phase 3.27
     parallaxPlanes,
     intensityMultiplier: motionSpec?.intensityMultiplier ?? 1.0,
     safeZones: motionSpec?.safeZones ?? {},

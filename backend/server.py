@@ -3772,6 +3772,28 @@ async def claim_idle_rewards(
 
 @api_router.get("/idle/status/{username}")
 async def get_idle_status(username: str):
+    """Get current idle collection status (legacy route)"""
+    # Redirect to auth-based endpoint logic
+    user = await get_user_readonly(username)
+    return await _get_idle_status_impl(user)
+
+
+@api_router.get("/idle/status")
+async def get_idle_status_auth(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current idle collection status (auth-token identity)
+    
+    Phase 3.31: Returns simplified idle status:
+    - lastClaimAt: timestamp of last claim
+    - elapsedSeconds: time since last claim
+    - capSeconds: max idle time (8h default)
+    - pendingRewards: { gold, stamina, gems }
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    return await _get_idle_status_impl(user)
+
+
+async def _get_idle_status_impl(user: dict):
+    """Shared implementation for idle status"""
     """Get current idle collection status with VIP rates and progression caps"""
     user = await get_user_readonly(username)  # Includes frozen check
     

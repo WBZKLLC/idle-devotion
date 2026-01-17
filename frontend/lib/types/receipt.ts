@@ -26,7 +26,8 @@ export type RewardSource =
   | 'daily_login_claim'
   | 'idle_claim'
   | 'admin_grant'
-  | 'event_claim';  // Phase 3.29: Events/Quests
+  | 'event_claim'  // Phase 3.29: Events/Quests
+  | 'store_redeem';  // Phase 3.30: Store dev redeem
 
 /**
  * Single reward item in a receipt

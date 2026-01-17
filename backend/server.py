@@ -3628,6 +3628,9 @@ async def claim_idle_rewards(username: str):
     """
     Claim idle rewards with VIP-tiered rates and progression-based caps.
     
+    Phase 3.24: Returns canonical receipt shape alongside legacy fields:
+    { source, sourceId, items, balances, alreadyClaimed, ...legacyFields }
+    
     VIP Rate Schedule:
     - VIP 0-6: 5% base rate
     - VIP 7: 15% rate
@@ -3637,6 +3640,9 @@ async def claim_idle_rewards(username: str):
     Caps based on: Abyss floor, Dungeon tier, Campaign chapter
     """
     user = await get_user_for_mutation(username)  # Includes frozen check
+    
+    # Generate unique sourceId for this claim
+    claim_id = f"idle_{user['id']}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
     
     # Calculate VIP level
     vip_level = calculate_vip_level(user.get("total_spent", 0))
@@ -3653,7 +3659,7 @@ async def claim_idle_rewards(username: str):
     # Get idle collection start time
     collection_started = user.get("idle_collection_started_at")
     if not collection_started:
-        # First time - start collection
+        # First time - start collection, return empty receipt
         await db.users.update_one(
             {"username": username},
             {"$set": {
@@ -3661,7 +3667,19 @@ async def claim_idle_rewards(username: str):
                 "vip_level": vip_level
             }}
         )
+        
+        # Get fresh balances
+        fresh_user = await db.users.find_one({"username": username})
+        balances = await get_user_balances(fresh_user or user)
+        
         return {
+            # Canonical receipt fields
+            "source": "idle_claim",
+            "sourceId": claim_id,
+            "items": [],
+            "balances": balances,
+            "alreadyClaimed": False,
+            # Legacy fields
             "resources": {},
             "time_away": 0,
             "collection_started": True,
@@ -3709,11 +3727,27 @@ async def claim_idle_rewards(username: str):
     await db.users.update_one({"username": username}, update_ops)
     
     # Refresh user for return
-    await db.users.find_one({"username": username})
+    fresh_user = await db.users.find_one({"username": username})
+    balances = await get_user_balances(fresh_user or user)
+    
+    # Build canonical items list
+    items = [{"type": k, "amount": v} for k, v in resources.items() if v > 0]
+    
+    # Log telemetry
+    if items:
+        logging.info(f"[REWARD_GRANTED] source=idle_claim sourceId={claim_id} "
+                    f"user={username} items_count={len(items)}")
     
     return {
+        # Canonical receipt fields
+        "source": "idle_claim",
+        "sourceId": claim_id,
+        "items": items,
+        "balances": balances,
+        "alreadyClaimed": False,
+        # Legacy fields for backward compatibility
         "resources": resources,
-        "gold_earned": resources.get("gold", 0),  # Legacy compatibility
+        "gold_earned": resources.get("gold", 0),
         "time_away": int(time_away_seconds),
         "hours_away": round(idle_result["hours_elapsed"], 2),
         "is_time_capped": idle_result["is_time_capped"],

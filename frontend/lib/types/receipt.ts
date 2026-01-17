@@ -24,6 +24,7 @@ export type RewardSource =
   | 'mail_gift_claim'
   | 'mail_receipt_claim'  // Phase 3.26: Fallback queue receipts
   | 'daily_login_claim'
+  | 'daily_claim'  // Phase 3.32: Daily login calendar
   | 'idle_claim'
   | 'admin_grant'
   | 'event_claim'  // Phase 3.29: Events/Quests

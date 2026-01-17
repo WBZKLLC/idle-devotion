@@ -155,12 +155,12 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 - [x] Hero stage renders static parallax planes with tier-based opacity/scale
 
 #### C) Mail Fallback Queue
-- [ ] Backend: `mail_queue_receipt()` helper
-- [ ] Backend: `/api/mail/receipts` list endpoint
-- [ ] Backend: `/api/mail/receipts/{id}/claim` endpoint (idempotent)
-- [ ] Backend: Mail summary includes `receiptsAvailable` count
-- [ ] Frontend: Mail API `getMailReceipts()`, `claimMailReceipt()`
-- [ ] Frontend: Mail UI Receipts tab/section
+- [x] Backend: `queue_receipt_to_mail()` helper in server.py
+- [x] Backend: `/api/mail/receipts` list endpoint
+- [x] Backend: `/api/mail/receipts/{id}/claim` endpoint (idempotent)
+- [x] Backend: Mail summary includes `receiptsAvailable` count
+- [x] Frontend: Mail API `getMailReceipts()`, `claimMailReceipt()` in lib/api/mail.ts
+- [x] Frontend: Mail UI Receipts tab (only visible when receipts available)
 
 #### Telemetry Events
 - [x] `BOND_VIEWED`

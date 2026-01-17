@@ -5792,6 +5792,167 @@ async def redeem_store_intent(
 
 
 # ==================== PLAYER CHARACTER SYSTEM ====================
+
+
+# ==================== DAILY LOGIN SYSTEM (Phase 3.32) ====================
+# 7-day calendar loop with canonical receipts
+
+DAILY_CALENDAR = [
+    {"day": 1, "rewards": [{"type": "gold", "amount": 500}]},
+    {"day": 2, "rewards": [{"type": "stamina", "amount": 30}]},
+    {"day": 3, "rewards": [{"type": "gold", "amount": 1000}]},
+    {"day": 4, "rewards": [{"type": "stamina", "amount": 50}]},
+    {"day": 5, "rewards": [{"type": "gold", "amount": 2000}]},
+    {"day": 6, "rewards": [{"type": "stamina", "amount": 80}]},
+    {"day": 7, "rewards": [{"type": "gold", "amount": 5000}, {"type": "gems", "amount": 50}]},  # Bonus day
+]
+
+
+@api_router.get("/daily/status")
+async def get_daily_status(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get daily login calendar status (auth-token identity)
+    
+    Phase 3.32: Returns 7-day calendar loop info:
+    - currentDay: 1-7 (which day in the cycle)
+    - claimedToday: boolean
+    - nextResetAt: ISO timestamp for next UTC midnight
+    - calendar: array of day rewards with claimed status
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    
+    # Get or create daily login record
+    daily_data = await db.daily_login.find_one({"user_id": user["id"]})
+    if not daily_data:
+        daily_data = {
+            "user_id": user["id"],
+            "current_day": 1,
+            "last_claim_date": None,
+            "streak": 0,
+        }
+        await db.daily_login.insert_one(daily_data)
+    
+    # Check if claimed today
+    today = datetime.utcnow().date().isoformat()
+    claimed_today = daily_data.get("last_claim_date") == today
+    
+    # Current day in cycle (1-7)
+    current_day = daily_data.get("current_day", 1)
+    if current_day < 1 or current_day > 7:
+        current_day = 1
+    
+    # Calculate next reset (UTC midnight)
+    now = datetime.utcnow()
+    next_reset = datetime(now.year, now.month, now.day) + timedelta(days=1)
+    
+    # Build calendar with today's reward highlighted
+    calendar = []
+    for day_info in DAILY_CALENDAR:
+        day_num = day_info["day"]
+        calendar.append({
+            "day": day_num,
+            "rewards": day_info["rewards"],
+            "isCurrent": day_num == current_day,
+            "isClaimable": day_num == current_day and not claimed_today,
+            "isClaimed": day_num < current_day or (day_num == current_day and claimed_today),
+        })
+    
+    return {
+        "currentDay": current_day,
+        "claimedToday": claimed_today,
+        "nextResetAt": next_reset.isoformat() + "Z",
+        "streak": daily_data.get("streak", 0),
+        "calendar": calendar,
+    }
+
+
+@api_router.post("/daily/claim")
+async def claim_daily_reward(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Claim today's daily login reward (canonical receipt, idempotent)
+    
+    Phase 3.32: Returns canonical receipt.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    
+    # Get daily login record
+    daily_data = await db.daily_login.find_one({"user_id": user["id"]})
+    if not daily_data:
+        daily_data = {
+            "user_id": user["id"],
+            "current_day": 1,
+            "last_claim_date": None,
+            "streak": 0,
+        }
+        await db.daily_login.insert_one(daily_data)
+    
+    today = datetime.utcnow().date().isoformat()
+    
+    # Idempotent: already claimed today
+    if daily_data.get("last_claim_date") == today:
+        return await grant_rewards_canonical(
+            user=user,
+            source="daily_claim",
+            source_id=f"daily_{user['id']}_{today}",
+            rewards=[],
+            already_claimed=True,
+            message="Already claimed today"
+        )
+    
+    # Get current day rewards
+    current_day = daily_data.get("current_day", 1)
+    if current_day < 1 or current_day > 7:
+        current_day = 1
+    
+    day_info = DAILY_CALENDAR[current_day - 1]
+    
+    # Calculate next day (cycle back to 1 after 7)
+    next_day = (current_day % 7) + 1
+    
+    # Calculate streak
+    yesterday = (datetime.utcnow() - timedelta(days=1)).date().isoformat()
+    if daily_data.get("last_claim_date") == yesterday:
+        new_streak = daily_data.get("streak", 0) + 1
+    else:
+        new_streak = 1  # Reset streak if missed a day
+    
+    # Update daily record (atomic)
+    result = await db.daily_login.update_one(
+        {"user_id": user["id"], "last_claim_date": {"$ne": today}},
+        {
+            "$set": {
+                "current_day": next_day,
+                "last_claim_date": today,
+                "streak": new_streak,
+            }
+        }
+    )
+    
+    # Race condition check
+    if result.modified_count == 0:
+        return await grant_rewards_canonical(
+            user=user,
+            source="daily_claim",
+            source_id=f"daily_{user['id']}_{today}",
+            rewards=[],
+            already_claimed=True,
+            message="Already claimed today"
+        )
+    
+    if __debug__:
+        print(f"[DAILY_CLAIMED] user={user['username']} day={current_day} streak={new_streak}")
+    
+    # Grant rewards using canonical system
+    return await grant_rewards_canonical(
+        user=user,
+        source="daily_claim",
+        source_id=f"daily_{user['id']}_{today}",
+        rewards=day_info["rewards"],
+        already_claimed=False,
+        message=f"Day {current_day} claimed!"
+    )
+
+
+# ==================== PLAYER CHARACTER SYSTEM (Original) ====================
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):
     """Get or create player character"""

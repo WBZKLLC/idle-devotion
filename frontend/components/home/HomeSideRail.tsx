@@ -18,8 +18,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
-import { HOME_OVERLAY, RAIL, PRESS } from '../ui/tokens';
+import { HOME_OVERLAY, RAIL } from '../ui/tokens';
 import { haptic } from '../../lib/ui/interaction';
+
+// Press feedback constants
+const PRESS = {
+  OPACITY: 0.85,
+  SCALE: 0.97,
+};
 
 type RailKey = 'doors' | 'mail' | 'friends' | 'quest' | 'events' | 'summon' | 'shop';
 

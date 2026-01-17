@@ -72,6 +72,10 @@ export const Events = {
   HERO_STAGE_INSPECT_TOGGLED: 'hero_stage_inspect_toggled',
   HERO_STAGE_CAMERA_MODE_RESOLVED: 'hero_stage_camera_mode_resolved',
   
+  // Phase 3.28: Friend gift telemetry
+  FRIEND_GIFT_SENT: 'friend_gift_sent',
+  FRIEND_GIFT_CLAIM_SUBMITTED: 'friend_gift_claim_submitted',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

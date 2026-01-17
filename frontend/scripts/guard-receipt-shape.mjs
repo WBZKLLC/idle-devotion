@@ -217,6 +217,50 @@ function checkNoDirectBalanceMutation() {
 }
 
 // =============================================================================
+// 5. Check telemetry events for receipts
+// =============================================================================
+function checkTelemetryEvents() {
+  console.log('\n--- Receipt Telemetry Events ---');
+  
+  // Check events.ts has receipt events
+  const eventsPath = path.join(ROOT, 'lib', 'telemetry', 'events.ts');
+  if (!fs.existsSync(eventsPath)) {
+    warn('lib/telemetry/events.ts not found');
+    return;
+  }
+  
+  const eventsContent = fs.readFileSync(eventsPath, 'utf-8');
+  
+  const requiredEvents = [
+    'REWARD_RECEIPT_RECEIVED',
+    'REWARD_CLAIM_SUCCESS',
+    'REWARD_CLAIM_ALREADY_CLAIMED',
+    'REWARD_CLAIM_ERROR',
+    'MAIL_CLAIM_SUBMITTED',
+  ];
+  
+  for (const event of requiredEvents) {
+    if (eventsContent.includes(event)) {
+      success(`Event ${event} defined`);
+    } else {
+      error(`Missing telemetry event: ${event}`);
+    }
+  }
+  
+  // Check mail.ts emits events with source + sourceId
+  const mailApiPath = path.join(ROOT, 'lib', 'api', 'mail.ts');
+  if (fs.existsSync(mailApiPath)) {
+    const mailContent = fs.readFileSync(mailApiPath, 'utf-8');
+    
+    if (mailContent.includes('track(Events.') && mailContent.includes('source:') && mailContent.includes('sourceId:')) {
+      success('Mail API emits telemetry with source + sourceId');
+    } else {
+      warn('Mail API may not emit telemetry with source + sourceId');
+    }
+  }
+}
+
+// =============================================================================
 // Run all checks
 // =============================================================================
 console.log('='.repeat(60));
@@ -227,6 +271,7 @@ checkBackendReceipts();
 checkFrontendReceiptType();
 checkMailApiReceipts();
 checkNoDirectBalanceMutation();
+checkTelemetryEvents();
 
 // Summary
 console.log('\n' + '='.repeat(60));

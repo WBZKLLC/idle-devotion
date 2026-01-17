@@ -343,6 +343,54 @@ All guards wired to `npm run guard`:
 
 ---
 
+## Phase 3.31 — Daily/Idle Loop Completion
+
+**Status:** ✅ CLOSED
+
+**Goal:** Make the app worth opening every day with reliable idle rewards.
+
+### Deliverables
+
+#### Backend
+- [x] `GET /api/idle/status` - Auth-based, returns elapsedSeconds, capSeconds, pendingRewards
+- [x] `POST /api/idle/claim` - Auth-based, canonical receipt, idempotent
+- [x] Idle cap enforcement (8h default, VIP extensible)
+- [x] Fixed rates: Gold 120/hr, Stamina 6/hr, Gems 0/hr
+- [x] Persist last-claim timestamp server-side
+
+#### Frontend
+- [x] Created `/app/idle.tsx` sanctuary screen
+- [x] Progress bar showing elapsed vs cap
+- [x] Pending rewards display (gold, stamina)
+- [x] "Claim" button with canonical receipt handling
+- [x] "Speed Up (Coming Soon)" placeholder (visible, disabled)
+- [x] No timers/polling (event-driven refresh only)
+
+#### Telemetry
+- [x] `IDLE_VIEWED`
+- [x] `IDLE_ELAPSED`
+- [x] `IDLE_CLAIM_SUBMITTED`
+- [x] `IDLE_CLAIM_SUCCESS`
+- [x] `IDLE_CLAIM_ALREADY_CLAIMED`
+
+#### Guards
+- [x] `guard-phase-3-31.mjs` created
+- [x] Added to `npm run guard`
+- [x] Enforces: no timers/RAF, canonical receipt, idempotency
+
+### Exit Checks
+- [x] Leave app → return → claim idle reliably
+- [x] Receipt-only balance mutations
+- [x] No timers/polling
+- [x] Guard: `npm run guard:phase-3-31` passes
+
+### Notes
+- Idle is baseline progression (no gems from idle)
+- Speed Up feature placeholder for future monetization
+- VIP levels increase cap time
+
+---
+
 ## Documentation
 
 - `docs/hero-stage-language.md` - Tier table, motion rules, parallax planes

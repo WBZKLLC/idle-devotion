@@ -346,6 +346,9 @@ function FriendsTab({ friends, onSwitchToSearch }: {
   friends: Friend[];
   onSwitchToSearch: () => void;
 }) {
+  // Phase 3.28: Gift modal state
+  const [giftTarget, setGiftTarget] = useState<Friend | null>(null);
+  
   if (friends.length === 0) {
     return (
       <View style={styles.emptyState}>
@@ -384,6 +387,17 @@ function FriendsTab({ friends, onSwitchToSearch }: {
               {friend.status === 'online' ? 'Online' : `Last seen ${friend.lastOnline}`}
             </Text>
           </View>
+          {/* Phase 3.28: Gift button */}
+          <Pressable 
+            style={({ pressed }) => [styles.giftBtn, pressed && styles.giftBtnPressed]}
+            onPress={() => { 
+              haptic('light'); 
+              setGiftTarget(friend);
+            }}
+          >
+            <Ionicons name="gift" size={16} color={COLORS.gold.primary} />
+            <Text style={styles.giftBtnText}>Gift</Text>
+          </Pressable>
           {friend.affinity !== undefined && (
             <View style={styles.affinityBadge}>
               <Ionicons name="heart" size={12} color={COLORS.gold.primary} />
@@ -392,6 +406,14 @@ function FriendsTab({ friends, onSwitchToSearch }: {
           )}
         </Pressable>
       ))}
+      
+      {/* Phase 3.28: Gift Modal */}
+      {giftTarget && (
+        <GiftModal 
+          friend={giftTarget}
+          onClose={() => setGiftTarget(null)}
+        />
+      )}
     </View>
   );
 }

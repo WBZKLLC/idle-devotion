@@ -68,6 +68,49 @@ const SWAY_DURATION = 4800;
 const BOB_DURATION = 3600;
 
 // =============================================================================
+// PHASE 3.27: CAMERA DRIFT PARAMETERS (LOCKED VALUES)
+// =============================================================================
+
+/**
+ * Camera drift creates subtle "creep" feeling at higher intimacy tiers.
+ * These are very small values - barely perceptible but adding presence.
+ * 
+ * | Tier | driftScale | driftX | driftY | enabled |
+ * |------|------------|--------|--------|---------|
+ * | 0-1  | 0          | 0      | 0      | false   |
+ * | 2-3  | 0.002      | 0.5    | 0.3    | true (subtle) |
+ * | 4-5  | 0.004      | 1.0    | 0.6    | true (intimate) |
+ */
+export interface CameraDriftParams {
+  /** Scale drift (zoom creep) - very subtle */
+  driftScale: number;
+  /** Horizontal drift in px */
+  driftX: number;
+  /** Vertical drift in px */
+  driftY: number;
+  /** Whether drift is enabled */
+  enabled: boolean;
+}
+
+export const CAMERA_DRIFT_PARAMS: Record<MotionTier, CameraDriftParams> = {
+  0: { driftScale: 0, driftX: 0, driftY: 0, enabled: false },
+  1: { driftScale: 0, driftX: 0, driftY: 0, enabled: false },
+  2: { driftScale: 0.002, driftX: 0.5, driftY: 0.3, enabled: true },
+  3: { driftScale: 0.002, driftX: 0.5, driftY: 0.3, enabled: true },
+  4: { driftScale: 0.004, driftX: 1.0, driftY: 0.6, enabled: true },
+  5: { driftScale: 0.004, driftX: 1.0, driftY: 0.6, enabled: true },
+};
+
+const CAMERA_DRIFT_DURATION = 8000; // Slower than body motion for "camera" feel
+
+/**
+ * Get camera drift params for tier
+ */
+export function getCameraDriftParams(tier: MotionTier): CameraDriftParams {
+  return CAMERA_DRIFT_PARAMS[tier];
+}
+
+// =============================================================================
 // HERO DATA ID RESOLUTION (ALIAS-AWARE)
 // =============================================================================
 

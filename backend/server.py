@@ -5956,6 +5956,479 @@ async def claim_daily_reward(credentials: HTTPAuthorizationCredentials = Depends
     )
 
 
+# =============================================================================
+# PHASE 3.33: GACHA SUMMON (CANONICAL RECEIPT)
+# =============================================================================
+# Server-authoritative RNG + pity system.
+# Returns canonical receipt with full results.
+# NO CLIENT-SIDE RNG ALLOWED.
+# =============================================================================
+
+class GachaSummonRequest(BaseModel):
+    """Request body for canonical gacha summon"""
+    banner_id: str  # standard, premium, divine
+    count: int = Field(ge=1, le=10)  # 1 for single, 10 for multi
+    source_id: Optional[str] = None  # Client-generated ID for idempotency
+
+class GachaPullResult(BaseModel):
+    """Individual pull result"""
+    rarity: str  # SR, SSR, SSR+, UR, UR+
+    heroDataId: str  # Hero pool ID
+    heroName: str  # Display name
+    outcome: str  # "new" or "dupe"
+    shardsGranted: Optional[int] = None  # Shards if dupe
+    imageUrl: Optional[str] = None
+    element: Optional[str] = None
+    heroClass: Optional[str] = None
+    isPityReward: bool = False
+    isFiller: bool = False
+    fillerType: Optional[str] = None
+    fillerAmount: Optional[int] = None
+
+class GachaReceipt(BaseModel):
+    """Canonical gacha receipt"""
+    source: str  # summon_single or summon_multi
+    sourceId: str
+    bannerId: str
+    pullCount: int
+    results: List[GachaPullResult]
+    pityBefore: int
+    pityAfter: int
+    pityTriggered: bool
+    currencySpent: Dict[str, any]
+    balances: Dict[str, int]
+    items: List[Dict[str, any]]  # Canonical items array
+    alreadyClaimed: bool = False
+
+
+# Gacha banner configuration
+GACHA_BANNERS = {
+    "standard": {
+        "id": "standard",
+        "name": "Coin Summon",
+        "description": "Standard pool with SSR+ heroes",
+        "currency": "coins",
+        "cost_single": 1000,
+        "cost_multi": 9000,
+        "rates": {"SR": 0.908, "SSR": 0.080, "SSR+": 0.012},
+        "pity": 50,
+        "guaranteed": "SSR+"
+    },
+    "premium": {
+        "id": "premium",
+        "name": "Crystal Summon",
+        "description": "Premium pool with UR heroes",
+        "currency": "crystals",
+        "cost_single": 300,
+        "cost_multi": 2700,
+        "rates": {"SR": 0.85, "SSR": 0.12, "UR": 0.02, "SSR+": 0.01},
+        "pity": 50,
+        "guaranteed": "UR"
+    },
+    "divine": {
+        "id": "divine",
+        "name": "Divine Summon",
+        "description": "Ultimate pool with UR+ heroes and filler rewards",
+        "currency": "divine_essence",
+        "cost_single": 1,
+        "cost_multi": 10,
+        "rates": {"UR+": 0.008, "UR": 0.027, "crystal_8k": 0.005, "crystal_5k": 0.010, "crystal_3k": 0.020, "filler": 0.930},
+        "pity": 40,
+        "guaranteed": "UR+"
+    }
+}
+
+def _gacha_roll_rarity(rates: Dict[str, float]) -> str:
+    """Roll for rarity using server-side RNG"""
+    roll = random.random()
+    cumulative = 0.0
+    for rarity, rate in rates.items():
+        cumulative += rate
+        if roll <= cumulative:
+            return rarity
+    return list(rates.keys())[0]
+
+def _gacha_rarity_rank(rarity: str) -> int:
+    """Numeric rank for rarity comparison"""
+    ranks = {"N": 0, "R": 1, "SR": 2, "SSR": 3, "SSR+": 4, "UR": 5, "UR+": 6}
+    return ranks.get(rarity, 0)
+
+async def _get_gacha_hero(rarity: str) -> Optional[Dict]:
+    """Get a random hero of specified rarity from DB"""
+    heroes = await db.heroes.find({"rarity": rarity}).to_list(100)
+    if not heroes:
+        # Fallback placeholder
+        return {
+            "id": f"hero_{rarity}_{random.randint(1000, 9999)}",
+            "name": f"Divine {rarity} Hero",
+            "rarity": rarity,
+            "element": random.choice(["Fire", "Water", "Earth", "Wind", "Light", "Dark"]),
+            "hero_class": random.choice(["Warrior", "Mage", "Archer"]),
+            "image_url": None
+        }
+    hero = random.choice(heroes)
+    return {
+        "id": hero.get("id"),
+        "name": hero.get("name"),
+        "rarity": hero.get("rarity"),
+        "element": hero.get("element"),
+        "hero_class": hero.get("hero_class"),
+        "image_url": hero.get("image_url")
+    }
+
+
+@api_router.get("/gacha/banners")
+async def get_gacha_banners_canonical(request: Request):
+    """Get all available gacha banners + user pity state (Phase 3.33)"""
+    # Auth optional for banner info, required for pity
+    user = None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            username = payload.get("sub") or payload.get("username")
+            if username:
+                user = await db.users.find_one({"username": username})
+        except:
+            pass
+    
+    banners = []
+    for banner_id, config in GACHA_BANNERS.items():
+        banners.append({
+            "id": config["id"],
+            "name": config["name"],
+            "description": config["description"],
+            "currency": config["currency"],
+            "cost_single": config["cost_single"],
+            "cost_multi": config["cost_multi"],
+            "rates": config["rates"],
+            "pity": config["pity"],
+            "guaranteed": config["guaranteed"]
+        })
+    
+    # Include pity state if authenticated
+    pity = {}
+    if user:
+        pity = {
+            "standard": {
+                "bannerId": "standard",
+                "current": user.get("pity_counter", 0),
+                "threshold": 50,
+                "guaranteed": "SSR+"
+            },
+            "premium": {
+                "bannerId": "premium",
+                "current": user.get("pity_counter_premium", 0),
+                "threshold": 50,
+                "guaranteed": "UR"
+            },
+            "divine": {
+                "bannerId": "divine",
+                "current": user.get("pity_counter_divine", 0),
+                "threshold": 40,
+                "guaranteed": "UR+"
+            }
+        }
+    
+    return {"banners": banners, "pity": pity}
+
+
+@api_router.get("/gacha/pity")
+async def get_gacha_pity(request: Request):
+    """Get user's pity counters for all banners (Phase 3.33)"""
+    # Auth required
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        username = payload.get("sub") or payload.get("username")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "standard": {
+            "bannerId": "standard",
+            "current": user.get("pity_counter", 0),
+            "threshold": 50,
+            "guaranteed": "SSR+"
+        },
+        "premium": {
+            "bannerId": "premium",
+            "current": user.get("pity_counter_premium", 0),
+            "threshold": 50,
+            "guaranteed": "UR"
+        },
+        "divine": {
+            "bannerId": "divine",
+            "current": user.get("pity_counter_divine", 0),
+            "threshold": 40,
+            "guaranteed": "UR+"
+        }
+    }
+
+
+@api_router.post("/gacha/summon")
+async def gacha_summon_canonical(request: Request, body: GachaSummonRequest):
+    """
+    Perform gacha summon with canonical receipt (Phase 3.33).
+    
+    Server-authoritative RNG. Returns canonical receipt.
+    Handles pity, duplicates -> shards, currency deduction.
+    """
+    # Auth required
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        username = payload.get("sub") or payload.get("username")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Validate banner
+    banner_id = body.banner_id
+    if banner_id not in GACHA_BANNERS:
+        raise HTTPException(status_code=400, detail=f"Invalid banner: {banner_id}")
+    
+    banner = GACHA_BANNERS[banner_id]
+    count = body.count if body.count in [1, 10] else 1
+    
+    # Calculate cost
+    cost = banner["cost_single"] if count == 1 else banner["cost_multi"]
+    currency_field = banner["currency"]
+    
+    # Map currency to user field
+    currency_map = {
+        "coins": "coins",
+        "crystals": "crystals",
+        "divine_essence": "divine_essence"
+    }
+    user_field = currency_map.get(currency_field, currency_field)
+    
+    # Check balance
+    user_balance = user.get(user_field, 0)
+    if user_balance < cost:
+        raise HTTPException(status_code=400, detail=f"Insufficient {currency_field}. Need {cost}, have {user_balance}")
+    
+    # Generate source ID
+    source_id = body.source_id or f"summon_{user['id']}_{datetime.utcnow().timestamp()}_{random.randint(1000, 9999)}"
+    
+    # Check idempotency
+    existing = await db.gacha_receipts.find_one({"sourceId": source_id})
+    if existing:
+        # Return existing receipt (idempotent)
+        balances = await get_user_balances(user)
+        existing["alreadyClaimed"] = True
+        existing["balances"] = balances
+        return existing
+    
+    # Get pity counter
+    pity_field_map = {
+        "standard": "pity_counter",
+        "premium": "pity_counter_premium",
+        "divine": "pity_counter_divine"
+    }
+    pity_field = pity_field_map.get(banner_id, "pity_counter")
+    pity_before = user.get(pity_field, 0)
+    pity_current = pity_before
+    pity_threshold = banner["pity"]
+    guaranteed_rarity = banner["guaranteed"]
+    
+    # Perform pulls (server-side RNG)
+    results = []
+    items = []  # Canonical items
+    pity_triggered = False
+    filler_totals = {"crystals": 0, "gold": 0, "coins": 0, "divine_essence": 0, "hero_shards": 0}
+    
+    for _ in range(count):
+        pity_current += 1
+        is_pity_pull = pity_current >= pity_threshold
+        
+        if is_pity_pull:
+            # Pity triggered - get guaranteed rarity
+            rarity = guaranteed_rarity
+            pity_triggered = True
+            pity_current = 0  # Reset
+        else:
+            # Normal roll
+            rarity = _gacha_roll_rarity(banner["rates"])
+        
+        # Handle filler rewards (divine banner special)
+        if rarity in ["filler", "crystal_8k", "crystal_5k", "crystal_3k"]:
+            filler_result = {"isFiller": True, "heroDataId": "", "heroName": "", "rarity": rarity, "outcome": "new"}
+            
+            if rarity == "crystal_8k":
+                filler_result["fillerType"] = "crystals"
+                filler_result["fillerAmount"] = 8000
+                filler_result["heroName"] = "8,000 Crystals"
+                filler_totals["crystals"] += 8000
+            elif rarity == "crystal_5k":
+                filler_result["fillerType"] = "crystals"
+                filler_result["fillerAmount"] = 5000
+                filler_result["heroName"] = "5,000 Crystals"
+                filler_totals["crystals"] += 5000
+            elif rarity == "crystal_3k":
+                filler_result["fillerType"] = "crystals"
+                filler_result["fillerAmount"] = 3000
+                filler_result["heroName"] = "3,000 Crystals"
+                filler_totals["crystals"] += 3000
+            else:
+                # Generic filler
+                filler_options = [
+                    {"type": "gold", "amount": 500000, "name": "500K Gold"},
+                    {"type": "gold", "amount": 250000, "name": "250K Gold"},
+                    {"type": "coins", "amount": 50000, "name": "50K Coins"},
+                    {"type": "hero_shards", "amount": 50, "name": "50 Hero Shards"},
+                    {"type": "hero_shards", "amount": 25, "name": "25 Hero Shards"},
+                    {"type": "divine_essence", "amount": 5, "name": "5 Divine Essence"}
+                ]
+                filler = random.choice(filler_options)
+                filler_result["fillerType"] = filler["type"]
+                filler_result["fillerAmount"] = filler["amount"]
+                filler_result["heroName"] = filler["name"]
+                filler_totals[filler["type"]] = filler_totals.get(filler["type"], 0) + filler["amount"]
+            
+            filler_result["isPityReward"] = is_pity_pull
+            results.append(filler_result)
+            continue
+        
+        # Get hero from pool
+        hero = await _get_gacha_hero(rarity)
+        if not hero:
+            continue
+        
+        # Check if user already owns this hero
+        existing_hero = await db.user_heroes.find_one({
+            "user_id": user["id"],
+            "hero_id": hero["id"]
+        })
+        
+        is_dupe = existing_hero is not None
+        shards_granted = 0
+        
+        if is_dupe:
+            # Duplicate -> shards
+            shard_map = {"SR": 10, "SSR": 20, "SSR+": 30, "UR": 50, "UR+": 100}
+            shards_granted = shard_map.get(rarity, 10)
+            await db.user_heroes.update_one(
+                {"_id": existing_hero["_id"]},
+                {"$inc": {"shards": shards_granted, "duplicates": 1}}
+            )
+            items.append({"type": "hero_shard", "amount": shards_granted, "hero_id": hero["id"]})
+        else:
+            # New hero unlock
+            new_hero = {
+                "user_id": user["id"],
+                "hero_id": hero["id"],
+                "hero_name": hero["name"],
+                "rarity": hero["rarity"],
+                "element": hero.get("element"),
+                "hero_class": hero.get("hero_class"),
+                "level": 1,
+                "stars": 1,
+                "rank": 1,
+                "shards": 0,
+                "duplicates": 0,
+                "obtained_at": datetime.utcnow().isoformat(),
+                "current_hp": 1000,
+                "current_atk": 100,
+                "current_def": 50
+            }
+            await db.user_heroes.insert_one(new_hero)
+            items.append({"type": "hero_unlock", "amount": 1, "hero_id": hero["id"]})
+        
+        results.append({
+            "rarity": rarity,
+            "heroDataId": hero["id"],
+            "heroName": hero["name"],
+            "outcome": "dupe" if is_dupe else "new",
+            "shardsGranted": shards_granted if is_dupe else None,
+            "imageUrl": hero.get("image_url"),
+            "element": hero.get("element"),
+            "heroClass": hero.get("hero_class"),
+            "isPityReward": is_pity_pull,
+            "isFiller": False
+        })
+    
+    # Apply filler rewards
+    inc_ops = {user_field: -cost}  # Deduct cost
+    if filler_totals["crystals"] > 0:
+        inc_ops["crystals"] = inc_ops.get("crystals", 0) + filler_totals["crystals"]
+        items.append({"type": "crystals", "amount": filler_totals["crystals"]})
+    if filler_totals["gold"] > 0:
+        inc_ops["gold"] = inc_ops.get("gold", 0) + filler_totals["gold"]
+        items.append({"type": "gold", "amount": filler_totals["gold"]})
+    if filler_totals["coins"] > 0:
+        inc_ops["coins"] = inc_ops.get("coins", 0) + filler_totals["coins"]
+        items.append({"type": "coins", "amount": filler_totals["coins"]})
+    if filler_totals["divine_essence"] > 0:
+        inc_ops["divine_essence"] = inc_ops.get("divine_essence", 0) + filler_totals["divine_essence"]
+        items.append({"type": "divine_essence", "amount": filler_totals["divine_essence"]})
+    if filler_totals["hero_shards"] > 0:
+        inc_ops["hero_shards"] = inc_ops.get("hero_shards", 0) + filler_totals["hero_shards"]
+        items.append({"type": "hero_shards", "amount": filler_totals["hero_shards"]})
+    
+    # Update pity counter
+    set_ops = {pity_field: pity_current}
+    
+    # Apply DB updates
+    await db.users.update_one(
+        {"username": username},
+        {"$inc": inc_ops, "$set": set_ops}
+    )
+    
+    # Fetch updated balances
+    updated_user = await db.users.find_one({"username": username})
+    balances = await get_user_balances(updated_user)
+    
+    # Build receipt
+    receipt = {
+        "source": "summon_single" if count == 1 else "summon_multi",
+        "sourceId": source_id,
+        "bannerId": banner_id,
+        "pullCount": count,
+        "results": results,
+        "pityBefore": pity_before,
+        "pityAfter": pity_current,
+        "pityTriggered": pity_triggered,
+        "currencySpent": {"type": currency_field, "amount": cost},
+        "balances": balances,
+        "items": items,
+        "alreadyClaimed": False
+    }
+    
+    # Store receipt for idempotency
+    await db.gacha_receipts.insert_one({
+        **receipt,
+        "username": username,
+        "createdAt": datetime.utcnow()
+    })
+    
+    return receipt
+
+
 # ==================== PLAYER CHARACTER SYSTEM (Original) ====================
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):

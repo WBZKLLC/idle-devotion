@@ -185,8 +185,11 @@ export async function summon(
 
 /**
  * Generate a client-side source ID for idempotency
- * Uses timestamp + random to ensure uniqueness
+ * Uses timestamp + counter to ensure uniqueness
+ * NOTE: This is NOT used for RNG decisions - only for deduplication
  */
+let sourceIdCounter = 0;
 export function generateSourceId(): string {
-  return `summon_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  sourceIdCounter = (sourceIdCounter + 1) % 10000;
+  return `summon_${Date.now()}_${sourceIdCounter.toString().padStart(4, '0')}`;
 }

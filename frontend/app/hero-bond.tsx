@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: FONT_SIZE.sm,
-    color: COLORS.cream.medium,
+    color: COLORS.cream.soft,
   },
   
   // Tier Ladder

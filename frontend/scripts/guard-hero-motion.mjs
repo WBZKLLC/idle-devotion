@@ -8,6 +8,7 @@
 // 3. NO manual animation loops in JS
 // 4. Uses only Reanimated worklets for motion
 // 5. Respects Reduce Motion accessibility
+// 6. Uses centralized deriveHeroStageConfig + useHeroIdleMotion
 //
 // "Motion via Reanimated only - no JS animation loops."
 
@@ -87,10 +88,7 @@ function checkMotionFile(filePath) {
   // Check for forbidden patterns
   for (const { pattern, name } of FORBIDDEN_PATTERNS) {
     if (pattern.test(content)) {
-      // Special case: setInterval in interactions.ts is for idle tick (not motion)
-      if (name === 'setInterval' && filePath.includes('interactions.ts')) {
-        warn(`${fileName}: ${name} found (verify it's not for visual motion)`);
-      } else if (name === 'setInterval' || name === 'requestAnimationFrame') {
+      if (name === 'setInterval' || name === 'requestAnimationFrame') {
         error(`${fileName}: Forbidden API "${name}" found - use Reanimated instead`);
       } else {
         warn(`${fileName}: ${name} found`);
@@ -109,8 +107,14 @@ function checkMotionFile(filePath) {
     }
   }
   
-  // Check hero screen uses motion hook
+  // Check hero screen uses centralized config
   if (filePath.includes('[id].tsx')) {
+    if (content.includes('deriveHeroStageConfig')) {
+      success(`${fileName}: Uses deriveHeroStageConfig (centralized)`);
+    } else {
+      error(`${fileName}: Not using deriveHeroStageConfig - tier/camera should come from centralized config`);
+    }
+    
     if (content.includes('useHeroIdleMotion')) {
       success(`${fileName}: Uses useHeroIdleMotion hook`);
     } else {
@@ -121,6 +125,10 @@ function checkMotionFile(filePath) {
       success(`${fileName}: Drifting fog disabled`);
     } else if (content.includes('AtmosphereStack')) {
       warn(`${fileName}: Verify drifting fog is disabled`);
+    }
+    
+    if (content.includes('logHeroStageConfig')) {
+      success(`${fileName}: Has DEV logging for config`);
     }
   }
 }
@@ -136,19 +144,41 @@ function checkMotionTierConfig() {
   
   const content = fs.readFileSync(motionPath, 'utf-8');
   
-  // Check tier 0-1 are static
-  if (content.includes('breathing: false') && content.includes('sway: false')) {
-    success('Tier 0-1 are properly static');
+  // Check MOTION_PARAMS exists with locked values
+  if (content.includes('MOTION_PARAMS')) {
+    success('MOTION_PARAMS table exists (single source of truth)');
+  } else {
+    error('Missing MOTION_PARAMS table');
+  }
+  
+  // Check tier 0-1 are static (breathingScale: 0)
+  const tier0Match = content.match(/0:\s*\{[^}]*breathingScale:\s*0/);
+  const tier1Match = content.match(/1:\s*\{[^}]*breathingScale:\s*0/);
+  if (tier0Match && tier1Match) {
+    success('Tier 0-1 are properly static (breathingScale: 0)');
   } else {
     warn('Verify Tier 0-1 have no motion');
   }
   
-  // Check tiers exist
-  const tierCount = (content.match(/\/\/ Tier \d:/g) || []).length;
-  if (tierCount >= 5) {
-    success(`${tierCount} motion tiers defined`);
+  // Check locked values for tier 2-5
+  const lockedValues = [
+    { tier: 2, breathing: 0.006, bobY: 0.8 },
+    { tier: 3, breathing: 0.010, swayX: 1.2 },
+    { tier: 4, breathing: 0.013, swayX: 1.8 },
+    { tier: 5, breathing: 0.016, swayX: 2.4 },
+  ];
+  
+  let valuesCorrect = true;
+  for (const v of lockedValues) {
+    if (!content.includes(`breathingScale: ${v.breathing}`)) {
+      valuesCorrect = false;
+    }
+  }
+  
+  if (valuesCorrect) {
+    success('Locked motion values match spec (0.006, 0.010, 0.013, 0.016)');
   } else {
-    warn(`Only ${tierCount} tiers found (expected 6: 0-5)`);
+    error('Motion values do not match locked spec');
   }
   
   // Check resolveMotionTier exists
@@ -156,6 +186,27 @@ function checkMotionTierConfig() {
     success('resolveMotionTier function exists');
   } else {
     error('Missing resolveMotionTier function');
+  }
+  
+  // Check deriveHeroStageConfig exists
+  if (content.includes('deriveHeroStageConfig')) {
+    success('deriveHeroStageConfig function exists');
+  } else {
+    error('Missing deriveHeroStageConfig function');
+  }
+  
+  // Check getHeroMotionSpecByHeroDataId (alias-aware)
+  if (content.includes('getHeroMotionSpecByHeroDataId')) {
+    success('getHeroMotionSpecByHeroDataId (alias-aware) exists');
+  } else {
+    warn('Missing getHeroMotionSpecByHeroDataId');
+  }
+  
+  // Check Selene alias resolution
+  if (content.includes('char_selene_ssr') && content.includes('HERO_ID_ALIASES')) {
+    success('Selene alias resolution exists (char_selene_ssr)');
+  } else {
+    warn('Verify Selene alias resolution');
   }
 }
 

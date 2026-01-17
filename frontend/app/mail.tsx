@@ -463,6 +463,82 @@ function GiftsTab({ gifts, username, onClaim }: {
   );
 }
 
+// Phase 3.26: Receipts Tab - Fallback queue receipts
+function ReceiptsTab({ receipts, onClaim }: { 
+  receipts: MailReceipt[]; 
+  onClaim: (receipt?: RewardReceipt) => void;
+}) {
+  const [claiming, setClaiming] = useState<string | null>(null);
+  
+  const handleClaim = async (id: string) => {
+    setClaiming(id);
+    try {
+      const receipt = await claimMailReceipt(id);
+      
+      // Show receipt-based feedback
+      if (receipt.alreadyClaimed) {
+        toast.success('Already claimed.');
+      } else if (receipt.items.length > 0) {
+        toast.success(`Claimed: ${formatReceiptItems(receipt)}`);
+      } else {
+        toast.success('Claimed.');
+      }
+      
+      triggerBadgeRefresh(); // Update side rail badge
+      onClaim(receipt);  // Pass receipt for balance application
+    } catch {
+      toast.error('Not now.');
+    } finally {
+      setClaiming(null);
+    }
+  };
+  
+  // Format rewards for display
+  const formatRewards = (rewards: Array<{ type: string; amount: number }>) => {
+    return rewards.map(r => `${r.amount} ${r.type}`).join(', ');
+  };
+  
+  const pendingReceipts = receipts.filter(r => !r.claimed);
+  
+  if (pendingReceipts.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Ionicons name="receipt-outline" size={48} color={COLORS.cream.dark} />
+        <Text style={styles.emptyTitle}>No Receipts</Text>
+        <Text style={styles.emptySubtitle}>Nothing waiting. Not yet.</Text>
+      </View>
+    );
+  }
+  
+  return (
+    <View style={styles.section}>
+      {pendingReceipts.map((receipt) => (
+        <Pressable 
+          key={receipt.id}
+          style={({ pressed }) => [styles.listRow, pressed && styles.pressed]}
+          onPress={() => handleClaim(receipt.id)}
+          disabled={claiming === receipt.id}
+        >
+          <View style={[styles.listRowIcon, { backgroundColor: COLORS.violet.dark + '30' }]}>
+            <Ionicons name="receipt" size={22} color={COLORS.violet.light} />
+          </View>
+          <View style={styles.listRowContent}>
+            <Text style={styles.listRowTitle}>{receipt.description}</Text>
+            <Text style={styles.listRowSubtitle}>{formatRewards(receipt.rewards)}</Text>
+          </View>
+          {claiming === receipt.id ? (
+            <ActivityIndicator size="small" color={COLORS.gold.primary} />
+          ) : (
+            <View style={styles.claimButton}>
+              <Text style={styles.claimButtonText}>Claim</Text>
+            </View>
+          )}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

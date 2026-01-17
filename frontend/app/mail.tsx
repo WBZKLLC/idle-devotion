@@ -189,6 +189,15 @@ export default function MailScreen() {
           onPress={() => setActiveTab('gifts')} 
           badge={summary.giftsAvailable}
         />
+        {/* Phase 3.26: Receipts tab (only show if receipts available) */}
+        {(summary.receiptsAvailable > 0 || receipts.length > 0) && (
+          <TabButton 
+            label="Receipts" 
+            active={activeTab === 'receipts'} 
+            onPress={() => setActiveTab('receipts')} 
+            badge={summary.receiptsAvailable}
+          />
+        )}
       </View>
       
       {/* Content */}

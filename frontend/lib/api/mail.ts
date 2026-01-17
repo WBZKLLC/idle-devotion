@@ -1,11 +1,17 @@
 // /app/frontend/lib/api/mail.ts
 // Phase 3.23.2.P: Mail API Layer with Auth
+// Phase 3.24: Canonical Receipt Integration
 //
 // Canonical API calls for mail system.
 // Uses auth token from gameStore for server identity.
-// Graceful error handling — returns defaults on failure.
+// Returns canonical receipts for all claim operations.
 
 import { loadAuthToken } from '../authStorage';
+import { 
+  RewardReceipt, 
+  assertValidReceipt,
+  isValidReceipt,
+} from '../types/receipt';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
 
@@ -106,26 +112,70 @@ export async function getMailGifts(username: string): Promise<Array<{
 
 /**
  * Claim a mail reward (idempotent)
+ * Phase 3.24: Returns canonical receipt
  */
-export async function claimMailReward(username: string, rewardId: string): Promise<{ alreadyClaimed?: boolean }> {
+export async function claimMailReward(username: string, rewardId: string): Promise<RewardReceipt> {
   const headers = await getAuthHeaders();
   const res = await fetch(`${API_BASE}/api/mail/rewards/${username}/${rewardId}/claim`, {
     method: 'POST',
     headers,
   });
   if (!res.ok) throw new Error('Failed to claim reward');
-  return await res.json();
+  
+  const receipt = await res.json();
+  
+  // Phase 3.24: Validate receipt shape
+  if (isValidReceipt(receipt)) {
+    return receipt;
+  }
+  
+  // Legacy fallback: convert old response to canonical receipt
+  console.warn('[claimMailReward] Legacy response detected, converting to receipt');
+  return {
+    source: 'mail_reward_claim',
+    sourceId: rewardId,
+    items: [],
+    balances: {
+      gold: 0, coins: 0, gems: 0, divine_gems: 0, crystals: 0,
+      stamina: 0, divine_essence: 0, soul_dust: 0, skill_essence: 0,
+      enhancement_stones: 0, hero_shards: 0, rune_essence: 0,
+    },
+    alreadyClaimed: receipt.alreadyClaimed ?? false,
+    message: receipt.message,
+  };
 }
 
 /**
  * Claim a mail gift (idempotent)
+ * Phase 3.24: Returns canonical receipt
  */
-export async function claimMailGift(username: string, giftId: string): Promise<{ alreadyClaimed?: boolean }> {
+export async function claimMailGift(username: string, giftId: string): Promise<RewardReceipt> {
   const headers = await getAuthHeaders();
   const res = await fetch(`${API_BASE}/api/mail/gifts/${username}/${giftId}/claim`, {
     method: 'POST',
     headers,
   });
   if (!res.ok) throw new Error('Failed to claim gift');
-  return await res.json();
+  
+  const receipt = await res.json();
+  
+  // Phase 3.24: Validate receipt shape
+  if (isValidReceipt(receipt)) {
+    return receipt;
+  }
+  
+  // Legacy fallback: convert old response to canonical receipt
+  console.warn('[claimMailGift] Legacy response detected, converting to receipt');
+  return {
+    source: 'mail_gift_claim',
+    sourceId: giftId,
+    items: [],
+    balances: {
+      gold: 0, coins: 0, gems: 0, divine_gems: 0, crystals: 0,
+      stamina: 0, divine_essence: 0, soul_dust: 0, skill_essence: 0,
+      enhancement_stones: 0, hero_shards: 0, rune_essence: 0,
+    },
+    alreadyClaimed: receipt.alreadyClaimed ?? false,
+    message: receipt.message,
+  };
 }

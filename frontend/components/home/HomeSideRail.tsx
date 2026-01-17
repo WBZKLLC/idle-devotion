@@ -123,32 +123,31 @@ export function HomeSideRail(props: HomeSideRailProps) {
     action();
   }, [props, expanded, collapse]);
   
-  // Handle Doors press separately (it opens DoorsSheet AND should collapse rail)
-  const handleDoorsPress = useCallback(() => {
+  // Handle Doors press - ONLY toggles rail, does NOT open DoorsSheet
+  const handleDoorsToggle = useCallback(() => {
     haptic('light');
     props.onAnyInteraction?.();
     
-    if (expanded) {
-      // If expanded, collapse and open DoorsSheet
-      collapse();
-      props.onPressDoors();
+    const newExpanded = !expanded;
+    setExpanded(newExpanded);
+    
+    if (reduceMotion) {
+      expandProgress.value = newExpanded ? 1 : 0;
     } else {
-      // If collapsed, just expand the rail
-      setExpanded(true);
-      if (reduceMotion) {
-        expandProgress.value = 1;
-      } else {
-        expandProgress.value = withTiming(1, {
-          duration: EXPAND_DURATION,
-          easing: Easing.out(Easing.ease),
-        });
-      }
+      expandProgress.value = withTiming(
+        newExpanded ? 1 : 0,
+        {
+          duration: newExpanded ? EXPAND_DURATION : COLLAPSE_DURATION,
+          easing: newExpanded ? Easing.out(Easing.ease) : Easing.in(Easing.ease),
+        }
+      );
     }
-  }, [expanded, reduceMotion, expandProgress, props, collapse]);
+  }, [expanded, reduceMotion, expandProgress, props]);
   
-  // Items for expanded rail (excluding Doors)
+  // Items for expanded rail - includes Doors/Library as first item
   const expandedItems = useMemo(
     () => [
+      { key: 'doors' as const, icon: 'apps' as const, onPress: props.onPressDoors, accent: true }, // Library/Grid
       { key: 'mail' as const, icon: 'mail' as const, onPress: props.onPressMail },
       { key: 'friends' as const, icon: 'people' as const, onPress: props.onPressFriends },
       { key: 'quest' as const, icon: 'map' as const, onPress: props.onPressQuest },

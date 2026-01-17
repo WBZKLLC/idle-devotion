@@ -230,6 +230,39 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 
 ---
 
+## Phase 3.28 — Social Loop v2 (Friend Gifts)
+
+**Goal:** Allow friends to send gifts to each other, creating mail gifts for recipients using canonical receipts.
+
+### Deliverables
+
+#### Backend
+- [x] `FRIEND_GIFT_TYPES` config (gold, stamina, gems with limits)
+- [x] `POST /api/friends/gifts/send` endpoint (auth-token identity)
+- [x] `GET /api/friends/gifts/status` endpoint (remaining gifts by type)
+- [x] Gift daily limit tracking per sender/recipient/type
+- [x] Creates mail gift in `mail_gifts` collection
+
+#### Frontend
+- [x] `sendFriendGift()` API function in lib/api/friends.ts
+- [x] `getFriendGiftStatus()` API function
+- [x] Telemetry: `FRIEND_GIFT_SENT`, `FRIEND_GIFT_CLAIM_SUBMITTED`
+- [ ] "Send Gift" button on friends screen (UI deferred)
+
+### Exit Checks
+- [x] Gift endpoints use auth-token identity
+- [x] Gift creates mail gift for recipient
+- [x] Daily limits enforced (5 gold, 3 stamina, 1 gem per friend)
+- [x] TypeScript compiles
+- [ ] UI integration (deferred to next session)
+
+### Notes
+- Gift claiming uses existing mail gift claim endpoint (canonical receipt)
+- Daily limits reset at UTC midnight
+- Gift expires after 7 days
+
+---
+
 ## Upcoming Phases
 
 ### Phase 3.27 — Daily Login System (Planned)

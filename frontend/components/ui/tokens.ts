@@ -230,5 +230,23 @@ export const PREMIUM_COLORS = {
   amber: '#F59E0B',
 } as const;
 
+// =============================================================================
+// PHASE 3.23.9: HERO STAGE TOKENS
+// =============================================================================
+
+/** Hero presentation screen stage layout */
+export const HERO_STAGE = {
+  /** Side padding for hero content */
+  SIDE_PADDING: 16,
+  /** Top safe zone height (for HUD: back + name + rarity) */
+  TOP_SAFE: 72,
+  /** Bottom safe zone height (for action buttons) */
+  BOTTOM_SAFE: 120,
+  /** Hero vertical baseline offset (0 = centered) */
+  HERO_ANCHOR_Y: 0,
+  /** Maximum hero width on tablets/web */
+  HERO_MAX_WIDTH: 420,
+} as const;
+
 // Re-export theme colors for convenience
 export { COLORS };

@@ -59,6 +59,14 @@ export const Events = {
   MAIL_CLAIM_SUBMITTED: 'mail_claim_submitted',
   BOND_TRIBUTE_SUBMITTED: 'bond_tribute_submitted',
   
+  // Phase 3.26: Affinity unlock + bond telemetry
+  BOND_VIEWED: 'bond_viewed',
+  BOND_TIER_LADDER_VIEWED: 'bond_tier_ladder_viewed',
+  BOND_NEXT_UNLOCK_VIEWED: 'bond_next_unlock_viewed',
+  BOND_TIER_ADVANCED: 'bond_tier_advanced',
+  MAIL_RECEIPTS_VIEWED: 'mail_receipts_viewed',
+  MAIL_RECEIPT_CLAIM_SUBMITTED: 'mail_receipt_claim_submitted',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

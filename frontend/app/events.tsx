@@ -30,13 +30,13 @@ import { LAYOUT } from '../components/ui/tokens';
 import { track, Events as TelemetryEvents } from '../lib/telemetry/events';
 import { RewardReceipt, isValidReceipt, formatReceiptItems } from '../lib/types/receipt';
 import { triggerBadgeRefresh } from '../lib/ui/badges';
-import { tokenManager } from '../lib/api/token';
+import { loadAuthToken } from '../lib/authStorage';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
 
 // Phase 3.29: Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await tokenManager.getAccessToken();
+  const token = await loadAuthToken();
   if (!token) {
     return { 'Content-Type': 'application/json' };
   }

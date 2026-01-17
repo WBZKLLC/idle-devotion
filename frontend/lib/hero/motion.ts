@@ -1,5 +1,6 @@
 // /app/frontend/lib/hero/motion.ts
 // Phase 3.25: Hero Stage Motion v1
+// Phase 3.27: Hero Stage Intimacy v2 (Camera Drift)
 //
 // Tier-gated "alive" feeling for heroes.
 // Uses ONLY Reanimated worklets - NO timers, setInterval, or RAF.
@@ -7,7 +8,7 @@
 // LOCKED VALUES - Single source of truth for motion parameters.
 // "Motion that makes heroes feel present, not distracting."
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import {
   useSharedValue,
   useAnimatedStyle,
@@ -16,6 +17,9 @@ import {
   withTiming,
   withDelay,
   Easing,
+  SharedValue,
+  interpolate,
+  Extrapolation,
 } from 'react-native-reanimated';
 
 // =============================================================================

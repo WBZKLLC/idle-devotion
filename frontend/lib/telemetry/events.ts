@@ -120,6 +120,11 @@ export const Events = {
   GACHA_NEW_HERO_ACQUIRED: 'gacha_new_hero_acquired',
   GACHA_DUPLICATE_CONVERTED: 'gacha_duplicate_converted',
   
+  // Phase 3.35: Banner Integrity telemetry
+  GACHA_INSUFFICIENT_FUNDS: 'gacha_insufficient_funds',
+  GACHA_RATES_VIEWED: 'gacha_rates_viewed',
+  GACHA_HISTORY_VIEWED: 'gacha_history_viewed',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

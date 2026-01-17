@@ -570,6 +570,7 @@ const styles = StyleSheet.create({
   authGateSubtitle: {
     fontSize: FONT_SIZE.md,
     color: COLORS.cream.dark,
+    fontStyle: 'italic',
   },
   authGateButton: {
     marginTop: 16,
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: LAYOUT.SCREEN_PADDING,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: COLORS.cream.pure + '10',
+    borderBottomColor: COLORS.cream.pure + '08',
   },
   backButton: {
     padding: 4,
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: FONT_WEIGHT.semibold,
     color: COLORS.cream.pure,
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   headerRight: {
     minWidth: 60,
@@ -602,7 +603,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.navy.dark,
+    backgroundColor: COLORS.navy.dark + '80',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -616,7 +617,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: LAYOUT.SCREEN_PADDING,
     paddingVertical: 12,
-    gap: 8,
+    gap: 10,
   },
   tab: {
     flex: 1,
@@ -625,13 +626,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.navy.dark,
+    backgroundColor: COLORS.navy.dark + '80',
     gap: 6,
   },
   tabActive: {
-    backgroundColor: COLORS.gold.dark + '30',
+    backgroundColor: COLORS.gold.dark + '20',
     borderWidth: 1,
-    borderColor: COLORS.gold.dark + '40',
+    borderColor: COLORS.gold.dark + '30',
   },
   tabText: {
     fontSize: FONT_SIZE.sm,

@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://reward-motion.preview.emergentagent.com/api"
+BASE_URL = "https://hero-gacha-portal.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

@@ -1,31 +1,27 @@
 <analysis>
 <original_problem_statement>
-The user is directing a multi-phase UX and code quality overhaul for a mobile game app. The project has progressed through major architectural refactoring (routing, componentization), a deep emotional design overhaul of the home screen (Sanctuary Home), and the implementation of Mail, Friends, and a foundational Hero Presentation screen.
+The user is directing a multi-phase UX and code quality overhaul for a mobile game app. The project has progressed through major architectural refactoring, UI polish, and the implementation of foundational systems like Mail, Friends, and a Hero Presentation screen.
 
-The current work revolves around a series of phased-in features to add depth and clarity to the game's systems.
+The current work revolves around implementing a series of core retention and live-ops features, adhering to a strict, phase-based development process driven by Guard scripts and a Canonical Reward Receipt architecture.
 
 **PRODUCT REQUIREMENTS (current & upcoming):**
-1.  **Phase 3.24: Canonical Reward Receipts:** Ensure all reward-granting systems (Mail, Idle, etc.) use a standardized, idempotent  object.
-2.  **Phase 3.25: Hero Stage Motion v1:** Introduce subtle, tier-gated idle animations (breathing/sway) to the hero presentation screen, implemented safely with Reanimated worklets and no JS timers.
-3.  **Phase 3.26: Affinity Unlock Surface, Parallax & Mail Fallback:**
-    *   **(A) Affinity Unlock Surface:** Create a  screen to visualize the affinity tier ladder and its associated unlocks.
-    *   **(B) Camera & Parallax Language:** Implement static, tier-based parallax layers on the hero screen to create more visual depth and communicate intimacy levels.
-    *   **(C) Mail Fallback Queue:** Implement a backend system to queue rewards to a user's mail if they cannot be granted instantly, with a corresponding UI in the mail screen.
-4.  **Future Phases (3.27-3.29):**
-    *   **3.27:** Add richer camera and parallax motion to the hero screen.
-    *   **3.28:** Implement a friend-gifting system.
-    *   **3.29:** Scaffold a new Events/Quests system.
-5.  **Guards & Documentation:** Continuously add guard scripts to prevent regressions and maintain documentation (, etc.).
+1.  **Phase 3.31: Daily / Idle Loop Completion:** Implement a time-based idle reward system.
+2.  **Phase 3.32: Daily Login System:** Implement a 7-day looping daily login calendar.
+3.  **Phase 3.33: Gacha Summon System:** Build the core summoning loop for acquiring new heroes.
+4.  **Phase 3.34: Monetization Enablement:** Integrate a payment provider (RevenueCat) to enable real-money purchases.
+5.  **Guards & Documentation:** Continuously add guard scripts to prevent regressions and maintain documentation for each implemented phase.
 </original_problem_statement>
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application features a highly polished Sanctuary home screen with layered atmospheric effects. The Mail and Friends systems are functional and use a canonical, idempotent reward receipt system. The Hero Presentation screen at  is fully functional and includes tier-gated idle motion (subtle breathing/sway) powered by Reanimated, respecting Reduce Motion settings.
+The application is a polished mobile game with a Sanctuary home screen, functional Mail and Friends systems, and a sophisticated Hero Presentation screen featuring tier-gated animations and parallax effects. Core systems for Events, a Store, and Idle Rewards have been scaffolded.
 
-A comprehensive set of guard scripts (
+Development is highly structured, relying on two key principles:
+1.  **Canonical Reward Receipts**: All systems that grant rewards (currency, items, heroes) do so through a standardized, idempotent  object, ensuring a single source of truth for all economic transactions.
+2.  **Guard-Driven Development**: A comprehensive suite of scripts (
 > frontend@1.0.0 guard
-> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion && npm run guard:phase-3-27 && npm run guard:phase-3-28 && npm run guard:phase-3-29 && npm run guard:phase-3-30 && npm run guard:phase-3-31
 
 
 > frontend@1.0.0 guard:hero
@@ -262,75 +258,1032 @@ Phase 3.25: Hero Motion Guard
 
 ============================================================
 [32mHero motion guard PASSED![0m
-============================================================) has been established to enforce architectural contracts, such as preventing forbidden timer APIs, ensuring correct auth patterns, and validating receipt shapes. Key documentation, including a  and , has been created to track progress and define design contracts.
+============================================================
 
-The foundational logic for Phase 3.26 is partially in place:  has been updated with tier tables and parallax plane definitions, and the file for the new bond screen () has been created.
+> frontend@1.0.0 guard:phase-3-27
+> node scripts/guard-phase-3-27.mjs
+
+============================================================
+Phase 3.27: Hero Stage Intimacy v2 Guard
+============================================================
+
+--- Camera Drift System ---
+
+[32m✓[0m CAMERA_DRIFT_PARAMS table exists
+[32m✓[0m useHeroCameraDrift hook exists
+[32m✓[0m Camera drift is tier-gated (intimate tier in inspect mode only)
+[32m✓[0m No timers/RAF in motion.ts (Reanimated-only)
+
+--- Hero Screen Integration ---
+
+[32m✓[0m Hero screen uses useHeroCameraDrift hook
+[32m✓[0m Hero screen has inspect mode state
+[32m✓[0m Hero screen emits HERO_STAGE_VIEWED telemetry
+[32m✓[0m Hero screen emits HERO_STAGE_CAMERA_MODE_RESOLVED telemetry
+
+--- Telemetry Events ---
+
+[32m✓[0m HERO_STAGE_VIEWED event defined
+[32m✓[0m HERO_STAGE_INSPECT_TOGGLED event defined
+[32m✓[0m HERO_STAGE_CAMERA_MODE_RESOLVED event defined
+
+--- Reduce Motion Support ---
+
+[32m✓[0m Camera drift respects Reduce Motion preference
+
+============================================================
+[32mPhase 3.27 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-28
+> node scripts/guard-phase-3-28.mjs
+
+============================================================
+Phase 3.28: Friends Gift System Guard
+============================================================
+
+--- Friends Gift UI ---
+
+[32m✓[0m Gift button exists in friends screen
+[32m✓[0m GiftModal component exists
+[32m✓[0m Gift type choices displayed (gold, stamina, gems)
+
+--- Friends Gift API ---
+
+[32m✓[0m sendFriendGift API function exists
+[32m✓[0m getFriendGiftStatus API function exists
+[32m✓[0m FRIEND_GIFT_SENT telemetry emitted
+
+--- Mail Gift Claim (Canonical Receipt) ---
+
+[32m✓[0m Gifts tab exists in mail screen
+[32m✓[0m Mail gift claim uses canonical receipt handling
+
+============================================================
+[32mPhase 3.28 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-29
+> node scripts/guard-phase-3-29.mjs
+
+============================================================
+Phase 3.29: Events/Quests System Guard
+============================================================
+
+[32m✓[0m /app/events.tsx screen exists
+--- Events Screen ---
+
+[32m✓[0m Event claim function integrated
+[32m✓[0m EVENTS_VIEWED telemetry emitted
+[32m✓[0m EVENT_CLAIM_SUBMITTED telemetry emitted
+[32m✓[0m Canonical receipt handling in events screen
+
+--- RewardSource Validation ---
+
+[32m✓[0m event_claim is valid RewardSource
+
+--- No Timers/RAF Check ---
+
+[32m✓[0m No timers/RAF in events screen
+
+============================================================
+[32mPhase 3.29 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-30
+> node scripts/guard-phase-3-30.mjs
+
+============================================================
+Phase 3.30: Store & Economy System Guard
+============================================================
+
+[32m✓[0m /app/shop.tsx screen exists
+--- Shop Screen ---
+
+[32m✓[0m createPurchaseIntent function used in shop
+[32m✓[0m getStoreCatalog function used in shop
+[32m✓[0m STORE_VIEWED telemetry emitted
+[32m✓[0m STORE_ITEM_SELECTED telemetry emitted
+
+--- No Billing Libraries ---
+
+[32m✓[0m No direct billing library imports in shop.tsx
+
+--- Store API ---
+
+[32m✓[0m lib/api/store.ts exists
+[32m✓[0m createPurchaseIntent API function exists
+[32m✓[0m redeemIntent (DEV-only) API function exists
+
+--- Canonical Receipt (Redeem) ---
+
+[32m✓[0m store_redeem is valid RewardSource
+[32m✓[0m Redeem uses canonical receipt validation
+
+============================================================
+[32mPhase 3.30 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-31
+> node scripts/guard-phase-3-31.mjs
+
+============================================================
+Phase 3.31: Idle Loop Completion Guard
+============================================================
+
+[32m✓[0m /app/idle.tsx screen exists
+--- Idle Screen ---
+
+[32m✓[0m Idle claim function exists
+[32m✓[0m Idle status fetch function exists
+[32m✓[0m Progress bar component present
+[32m✓[0m Claim button present
+
+--- No Timers/Polling ---
+
+[32m✓[0m No timers/RAF in idle screen (event-driven only)
+
+--- Canonical Receipt Handling ---
+
+[32m✓[0m Uses canonical receipt validation
+[32m✓[0m Uses receipt item formatting
+[32m✓[0m Handles alreadyClaimed idempotency
+
+--- Telemetry Events ---
+
+[32m✓[0m IDLE_VIEWED event defined
+[32m✓[0m IDLE_CLAIM_SUBMITTED event defined
+[32m✓[0m IDLE_CLAIM_SUCCESS event defined
+[32m✓[0m IDLE_VIEWED telemetry emitted
+[32m✓[0m IDLE_CLAIM_SUBMITTED telemetry emitted
+
+============================================================
+[32mPhase 3.31 guard PASSED![0m
+============================================================) automatically enforces architectural rules (e.g., no forbidden APIs, correct data shapes, required UI elements), preventing regressions and ensuring consistency across phases.
+
+Numerous documentation files (, , etc.) track progress and define system contracts.
 
 **Last working item**:
-- Last item agent was working: The agent was in the middle of implementing **Phase 3.26**, specifically parts (A) and (B). It had created the new  screen and was modifying  to render static parallax planes and link to the new bond screen. The agent was actively debugging TypeScript errors that arose from these changes.
+- Last item agent was working: The agent was implementing **Phase 3.32 — Daily Login System**. It successfully created the backend endpoints (, ) in , the frontend screen at , and the corresponding guard file at .
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? The agent should first resolve the TypeScript errors by running . After the errors are fixed and the frontend is restarted, it should use the  to view the  and  screens to verify the new UI elements.
+- Which testing method agent to use? The main agent should first complete the setup and then perform manual testing.
+  1.  Add the new guard script to .
+  2.  Run 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion && npm run guard:phase-3-27 && npm run guard:phase-3-28 && npm run guard:phase-3-29 && npm run guard:phase-3-30 && npm run guard:phase-3-31
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.
+
+
+> frontend@1.0.0 guard:no-error-alerts
+> node scripts/guard-no-error-alerts.mjs
+
+🚫 Checking Alert.alert patterns (Phase 3.18.4 STRICT)...
+
+   Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
+
+✅ All Alert.alert usages are properly annotated.
+   No forbidden error alert patterns found.
+
+
+> frontend@1.0.0 guard:receipt-shape
+> node scripts/guard-receipt-shape.mjs
+
+============================================================
+Phase 3.24: Receipt Shape Guard
+============================================================
+
+--- Backend Receipt Shape ---
+[32m✓ Backend has grant_rewards_canonical helper[0m
+[32m✓ mail reward claim uses grant_rewards_canonical helper[0m
+[32m✓ mail gift claim uses grant_rewards_canonical helper[0m
+[32m✓ idle claim returns canonical receipt shape directly[0m
+
+--- Frontend Receipt Type ---
+[32m✓ RewardReceipt type guard exists[0m
+[32m✓ RewardReceipt type defined with required fields[0m
+
+--- Mail API Receipt Usage ---
+[32m✓ mail.ts imports RewardReceipt[0m
+[32m✓ Claim functions return RewardReceipt type[0m
+[32m✓ Receipt validation is used[0m
+
+--- Balance Application Guard ---
+[32m✓ No suspicious direct balance mutations found[0m
+
+--- Receipt Telemetry Events ---
+[32m✓ Event REWARD_RECEIPT_RECEIVED defined[0m
+[32m✓ Event REWARD_CLAIM_SUCCESS defined[0m
+[32m✓ Event REWARD_CLAIM_ALREADY_CLAIMED defined[0m
+[32m✓ Event REWARD_CLAIM_ERROR defined[0m
+[32m✓ Event MAIL_CLAIM_SUBMITTED defined[0m
+[32m✓ Mail API emits telemetry with source + sourceId[0m
+
+============================================================
+[32mAll receipt shape checks passed![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-22
+> node scripts/guard-phase-3-22-closure.mjs
+
+============================================================
+Phase 3.22 Closure Guard
+============================================================
+
+--- Phase 3.22.12: Rail Behavior Contract ---
+[32m✓ Rail has no auto-collapse timers[0m
+[32m✓ Rail has no polling intervals[0m
+[32m✓ Doors button toggles rail (not DoorsSheet)[0m
+[32m✓ Library icon (apps) wired to open DoorsSheet[0m
+[32m✓ Backdrop tap-to-collapse implemented[0m
+
+--- Phase 3.22.12: AtmosphereStack Contract ---
+[32m✓ AtmosphereStack has pointerEvents="none"[0m
+[32m✓ AtmosphereStack respects Reduce Motion[0m
+[32m✓ Animations disabled when Reduce Motion enabled[0m
+[32m✓ Vignette opacity budget OK (max: 0.26)[0m
+
+--- Phase 3.22/3.23: Badges Event-Driven ---
+[32m✓ Badges have no polling intervals[0m
+[32m✓ Manual triggerBadgeRefresh() available[0m
+[32m✓ Badges refresh on app foreground (event-driven)[0m
+[32m✓ Events badge defaults to undefined (no always-lit)[0m
+
+============================================================
+[32mPhase 3.22 closure checks PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-23
+> node scripts/guard-phase-3-23-closure.mjs
+
+============================================================
+Phase 3.23 Closure Guard
+============================================================
+
+--- Phase 3.23.3-4: Social Screens ---
+[32m✓ Mail screen has Rewards/Messages/Gifts tabs[0m
+[32m✓ Mail screen uses canonical receipt type[0m
+[32m✓ Friends screen has Requests/Friends/Search tabs[0m
+[32m✓ Friends search has debounce[0m
+
+--- Phase 3.23.2: Auth-Token Identity ---
+[32m✓ Mail endpoints use auth token (6/6)[0m
+[32m✓ Friends endpoints use auth token (3/5)[0m
+[32m✓ Legacy routes document that username param is ignored[0m
+
+--- Phase 3.23.4: Idempotent Operations ---
+[32m✓ Accept friend request has idempotency check[0m
+[32m✓ Claim endpoints return alreadyClaimed flag[0m
+
+--- Phase 3.23.5: Desire Engine Cleanup ---
+[32m✓ Home timers have cleanup handlers[0m
+[32m✓ IdleRewardsCard has timeout cleanup[0m
+
+--- Phase 3.23.6-8: Chromatic Consistency ---
+[32m✓ Hero screen disables drifting fog[0m
+
+============================================================
+[33mPhase 3.23 passed with 1 warning(s)[0m
+============================================================
+
+> frontend@1.0.0 guard:hero-motion
+> node scripts/guard-hero-motion.mjs
+
+============================================================
+Phase 3.25: Hero Motion Guard
+============================================================
+
+--- Motion File Checks ---
+
+  Checking motion.ts...
+[32m✓ motion.ts: useAnimatedStyle (Reanimated) found[0m
+[32m✓ motion.ts: Reanimated timing functions found[0m
+[32m✓ motion.ts: Reduce Motion check found[0m
+
+  Checking [id].tsx...
+[32m✓ [id].tsx: Uses deriveHeroStageConfig (centralized)[0m
+[32m✓ [id].tsx: Uses useHeroIdleMotion hook[0m
+[32m✓ [id].tsx: Drifting fog disabled[0m
+[32m✓ [id].tsx: Has DEV logging for config[0m
+
+--- Motion Tier Configuration ---
+[32m✓ MOTION_PARAMS table exists (single source of truth)[0m
+[32m✓ Tier 0-1 are properly static (breathingScale: 0)[0m
+[32m✓ Locked motion values match spec (0.006, 0.010, 0.013, 0.016)[0m
+[32m✓ resolveMotionTier function exists[0m
+[32m✓ deriveHeroStageConfig function exists[0m
+[32m✓ getHeroMotionSpecByHeroDataId (alias-aware) exists[0m
+[32m✓ Selene alias resolution exists (char_selene_ssr)[0m
+
+============================================================
+[32mHero motion guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-27
+> node scripts/guard-phase-3-27.mjs
+
+============================================================
+Phase 3.27: Hero Stage Intimacy v2 Guard
+============================================================
+
+--- Camera Drift System ---
+
+[32m✓[0m CAMERA_DRIFT_PARAMS table exists
+[32m✓[0m useHeroCameraDrift hook exists
+[32m✓[0m Camera drift is tier-gated (intimate tier in inspect mode only)
+[32m✓[0m No timers/RAF in motion.ts (Reanimated-only)
+
+--- Hero Screen Integration ---
+
+[32m✓[0m Hero screen uses useHeroCameraDrift hook
+[32m✓[0m Hero screen has inspect mode state
+[32m✓[0m Hero screen emits HERO_STAGE_VIEWED telemetry
+[32m✓[0m Hero screen emits HERO_STAGE_CAMERA_MODE_RESOLVED telemetry
+
+--- Telemetry Events ---
+
+[32m✓[0m HERO_STAGE_VIEWED event defined
+[32m✓[0m HERO_STAGE_INSPECT_TOGGLED event defined
+[32m✓[0m HERO_STAGE_CAMERA_MODE_RESOLVED event defined
+
+--- Reduce Motion Support ---
+
+[32m✓[0m Camera drift respects Reduce Motion preference
+
+============================================================
+[32mPhase 3.27 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-28
+> node scripts/guard-phase-3-28.mjs
+
+============================================================
+Phase 3.28: Friends Gift System Guard
+============================================================
+
+--- Friends Gift UI ---
+
+[32m✓[0m Gift button exists in friends screen
+[32m✓[0m GiftModal component exists
+[32m✓[0m Gift type choices displayed (gold, stamina, gems)
+
+--- Friends Gift API ---
+
+[32m✓[0m sendFriendGift API function exists
+[32m✓[0m getFriendGiftStatus API function exists
+[32m✓[0m FRIEND_GIFT_SENT telemetry emitted
+
+--- Mail Gift Claim (Canonical Receipt) ---
+
+[32m✓[0m Gifts tab exists in mail screen
+[32m✓[0m Mail gift claim uses canonical receipt handling
+
+============================================================
+[32mPhase 3.28 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-29
+> node scripts/guard-phase-3-29.mjs
+
+============================================================
+Phase 3.29: Events/Quests System Guard
+============================================================
+
+[32m✓[0m /app/events.tsx screen exists
+--- Events Screen ---
+
+[32m✓[0m Event claim function integrated
+[32m✓[0m EVENTS_VIEWED telemetry emitted
+[32m✓[0m EVENT_CLAIM_SUBMITTED telemetry emitted
+[32m✓[0m Canonical receipt handling in events screen
+
+--- RewardSource Validation ---
+
+[32m✓[0m event_claim is valid RewardSource
+
+--- No Timers/RAF Check ---
+
+[32m✓[0m No timers/RAF in events screen
+
+============================================================
+[32mPhase 3.29 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-30
+> node scripts/guard-phase-3-30.mjs
+
+============================================================
+Phase 3.30: Store & Economy System Guard
+============================================================
+
+[32m✓[0m /app/shop.tsx screen exists
+--- Shop Screen ---
+
+[32m✓[0m createPurchaseIntent function used in shop
+[32m✓[0m getStoreCatalog function used in shop
+[32m✓[0m STORE_VIEWED telemetry emitted
+[32m✓[0m STORE_ITEM_SELECTED telemetry emitted
+
+--- No Billing Libraries ---
+
+[32m✓[0m No direct billing library imports in shop.tsx
+
+--- Store API ---
+
+[32m✓[0m lib/api/store.ts exists
+[32m✓[0m createPurchaseIntent API function exists
+[32m✓[0m redeemIntent (DEV-only) API function exists
+
+--- Canonical Receipt (Redeem) ---
+
+[32m✓[0m store_redeem is valid RewardSource
+[32m✓[0m Redeem uses canonical receipt validation
+
+============================================================
+[32mPhase 3.30 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-31
+> node scripts/guard-phase-3-31.mjs
+
+============================================================
+Phase 3.31: Idle Loop Completion Guard
+============================================================
+
+[32m✓[0m /app/idle.tsx screen exists
+--- Idle Screen ---
+
+[32m✓[0m Idle claim function exists
+[32m✓[0m Idle status fetch function exists
+[32m✓[0m Progress bar component present
+[32m✓[0m Claim button present
+
+--- No Timers/Polling ---
+
+[32m✓[0m No timers/RAF in idle screen (event-driven only)
+
+--- Canonical Receipt Handling ---
+
+[32m✓[0m Uses canonical receipt validation
+[32m✓[0m Uses receipt item formatting
+[32m✓[0m Handles alreadyClaimed idempotency
+
+--- Telemetry Events ---
+
+[32m✓[0m IDLE_VIEWED event defined
+[32m✓[0m IDLE_CLAIM_SUBMITTED event defined
+[32m✓[0m IDLE_CLAIM_SUCCESS event defined
+[32m✓[0m IDLE_VIEWED telemetry emitted
+[32m✓[0m IDLE_CLAIM_SUBMITTED telemetry emitted
+
+============================================================
+[32mPhase 3.31 guard PASSED![0m
+============================================================ and  to ensure no errors were introduced.
+  3.  Restart the frontend and backend services.
+  4.  Use the  to log in and navigate to the  screen to verify its functionality.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1 (P0):** TypeScript compilation errors are blocking progress on Phase 3.26.
-  - **Details:** The agent introduced errors while creating  and modifying .
-  - **Attempted fixes:** The agent started fixing the errors by changing an invalid color constant () and attempting to correct a router type mismatch. These fixes are incomplete.
+- **Issue 1 (P1): Missed Task - Mail Gift Claim UI Not Updated:** The agent implemented the Send Gift feature in Phase 3.28 but did not complete the corresponding Block B task from the user's instructions (message 231). The  tab in  may not be using the canonical receipt renderer to display claimed gifts, potentially leading to an inconsistent user experience.
   - **Next debug checklist:**
-    1.  Inspect  at line 380:  is invalid. Replace it with a valid color from , likely  or .
-    2.  Inspect  at line 382: The  call has a type mismatch. The  is being passed a hero object instead of a string path. It should be corrected to pass a path like .
-    3.  Inspect  at line 427: The  for the Bond button is attempting to navigate to  but is likely passing the wrong type of parameters to . It should be corrected to .
-    4.  Run  after each fix to confirm resolution.
-  - **Why fix this issue and what will be achieved with the fix?** This is a hard blocker. Fixing it will allow the agent to complete the UI for Phase 3.26 (A) and (B).
-  - **Status:** IN PROGRESS
+    1.  Review .
+    2.  Locate the  function or equivalent logic within the  component.
+    3.  Ensure that after a gift is claimed, the result (a canonical receipt) is passed to a shared receipt renderer component/toast, rather than just showing a simple text message.
+    4.  Verify the UI correctly displays the items received from the gift.
+  - **Why fix this issue and what will be achieved with the fix?** To ensure all reward-granting actions provide a consistent, clear, and detailed user experience, upholding the Canonical Receipts Everywhere principle.
+  - **Status:** NOT STARTED
   - **Is recurring issue?** N
   - **Should Test frontend/backend/both after fix?** frontend
 
 **In progress Task List**:
-- **Task 1 (P0):** Complete UI for Phase 3.26 (A) - Affinity Unlock Surface.
-  - **Where to resume**: In .
-  - **What will be achieved with this?** A new screen that displays the affinity tier ladder, showing players what each tier unlocks and their progress towards the next tier.
-  - **Status**: IN PROGRESS
-  - **Should Test frontend/backend/both after fix?**: frontend
-  - **Blocked on something**: **Issue 1: TypeScript compilation errors**.
+- **Task 1 (P0): Complete Phase 3.32 — Daily Login System:** The foundational files have been created, but the phase is not yet fully integrated or verified.
+  - **Where to resume**:
+    1.  Open .
+    2.  Add  to the  section.
+    3.  Update the main  script to include .
+    4.  Run 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion && npm run guard:phase-3-27 && npm run guard:phase-3-28 && npm run guard:phase-3-29 && npm run guard:phase-3-30 && npm run guard:phase-3-31
 
-- **Task 2 (P1):** Complete UI for Phase 3.26 (B) - Static Parallax Rendering.
-  - **Where to resume**: In .
-  - **What will be achieved with this?** The hero presentation screen will render static, layered visual elements (parallax planes) based on the hero's affinity tier, adding visual depth.
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.
+
+
+> frontend@1.0.0 guard:no-error-alerts
+> node scripts/guard-no-error-alerts.mjs
+
+🚫 Checking Alert.alert patterns (Phase 3.18.4 STRICT)...
+
+   Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
+
+✅ All Alert.alert usages are properly annotated.
+   No forbidden error alert patterns found.
+
+
+> frontend@1.0.0 guard:receipt-shape
+> node scripts/guard-receipt-shape.mjs
+
+============================================================
+Phase 3.24: Receipt Shape Guard
+============================================================
+
+--- Backend Receipt Shape ---
+[32m✓ Backend has grant_rewards_canonical helper[0m
+[32m✓ mail reward claim uses grant_rewards_canonical helper[0m
+[32m✓ mail gift claim uses grant_rewards_canonical helper[0m
+[32m✓ idle claim returns canonical receipt shape directly[0m
+
+--- Frontend Receipt Type ---
+[32m✓ RewardReceipt type guard exists[0m
+[32m✓ RewardReceipt type defined with required fields[0m
+
+--- Mail API Receipt Usage ---
+[32m✓ mail.ts imports RewardReceipt[0m
+[32m✓ Claim functions return RewardReceipt type[0m
+[32m✓ Receipt validation is used[0m
+
+--- Balance Application Guard ---
+[32m✓ No suspicious direct balance mutations found[0m
+
+--- Receipt Telemetry Events ---
+[32m✓ Event REWARD_RECEIPT_RECEIVED defined[0m
+[32m✓ Event REWARD_CLAIM_SUCCESS defined[0m
+[32m✓ Event REWARD_CLAIM_ALREADY_CLAIMED defined[0m
+[32m✓ Event REWARD_CLAIM_ERROR defined[0m
+[32m✓ Event MAIL_CLAIM_SUBMITTED defined[0m
+[32m✓ Mail API emits telemetry with source + sourceId[0m
+
+============================================================
+[32mAll receipt shape checks passed![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-22
+> node scripts/guard-phase-3-22-closure.mjs
+
+============================================================
+Phase 3.22 Closure Guard
+============================================================
+
+--- Phase 3.22.12: Rail Behavior Contract ---
+[32m✓ Rail has no auto-collapse timers[0m
+[32m✓ Rail has no polling intervals[0m
+[32m✓ Doors button toggles rail (not DoorsSheet)[0m
+[32m✓ Library icon (apps) wired to open DoorsSheet[0m
+[32m✓ Backdrop tap-to-collapse implemented[0m
+
+--- Phase 3.22.12: AtmosphereStack Contract ---
+[32m✓ AtmosphereStack has pointerEvents="none"[0m
+[32m✓ AtmosphereStack respects Reduce Motion[0m
+[32m✓ Animations disabled when Reduce Motion enabled[0m
+[32m✓ Vignette opacity budget OK (max: 0.26)[0m
+
+--- Phase 3.22/3.23: Badges Event-Driven ---
+[32m✓ Badges have no polling intervals[0m
+[32m✓ Manual triggerBadgeRefresh() available[0m
+[32m✓ Badges refresh on app foreground (event-driven)[0m
+[32m✓ Events badge defaults to undefined (no always-lit)[0m
+
+============================================================
+[32mPhase 3.22 closure checks PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-23
+> node scripts/guard-phase-3-23-closure.mjs
+
+============================================================
+Phase 3.23 Closure Guard
+============================================================
+
+--- Phase 3.23.3-4: Social Screens ---
+[32m✓ Mail screen has Rewards/Messages/Gifts tabs[0m
+[32m✓ Mail screen uses canonical receipt type[0m
+[32m✓ Friends screen has Requests/Friends/Search tabs[0m
+[32m✓ Friends search has debounce[0m
+
+--- Phase 3.23.2: Auth-Token Identity ---
+[32m✓ Mail endpoints use auth token (6/6)[0m
+[32m✓ Friends endpoints use auth token (3/5)[0m
+[32m✓ Legacy routes document that username param is ignored[0m
+
+--- Phase 3.23.4: Idempotent Operations ---
+[32m✓ Accept friend request has idempotency check[0m
+[32m✓ Claim endpoints return alreadyClaimed flag[0m
+
+--- Phase 3.23.5: Desire Engine Cleanup ---
+[32m✓ Home timers have cleanup handlers[0m
+[32m✓ IdleRewardsCard has timeout cleanup[0m
+
+--- Phase 3.23.6-8: Chromatic Consistency ---
+[32m✓ Hero screen disables drifting fog[0m
+
+============================================================
+[33mPhase 3.23 passed with 1 warning(s)[0m
+============================================================
+
+> frontend@1.0.0 guard:hero-motion
+> node scripts/guard-hero-motion.mjs
+
+============================================================
+Phase 3.25: Hero Motion Guard
+============================================================
+
+--- Motion File Checks ---
+
+  Checking motion.ts...
+[32m✓ motion.ts: useAnimatedStyle (Reanimated) found[0m
+[32m✓ motion.ts: Reanimated timing functions found[0m
+[32m✓ motion.ts: Reduce Motion check found[0m
+
+  Checking [id].tsx...
+[32m✓ [id].tsx: Uses deriveHeroStageConfig (centralized)[0m
+[32m✓ [id].tsx: Uses useHeroIdleMotion hook[0m
+[32m✓ [id].tsx: Drifting fog disabled[0m
+[32m✓ [id].tsx: Has DEV logging for config[0m
+
+--- Motion Tier Configuration ---
+[32m✓ MOTION_PARAMS table exists (single source of truth)[0m
+[32m✓ Tier 0-1 are properly static (breathingScale: 0)[0m
+[32m✓ Locked motion values match spec (0.006, 0.010, 0.013, 0.016)[0m
+[32m✓ resolveMotionTier function exists[0m
+[32m✓ deriveHeroStageConfig function exists[0m
+[32m✓ getHeroMotionSpecByHeroDataId (alias-aware) exists[0m
+[32m✓ Selene alias resolution exists (char_selene_ssr)[0m
+
+============================================================
+[32mHero motion guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-27
+> node scripts/guard-phase-3-27.mjs
+
+============================================================
+Phase 3.27: Hero Stage Intimacy v2 Guard
+============================================================
+
+--- Camera Drift System ---
+
+[32m✓[0m CAMERA_DRIFT_PARAMS table exists
+[32m✓[0m useHeroCameraDrift hook exists
+[32m✓[0m Camera drift is tier-gated (intimate tier in inspect mode only)
+[32m✓[0m No timers/RAF in motion.ts (Reanimated-only)
+
+--- Hero Screen Integration ---
+
+[32m✓[0m Hero screen uses useHeroCameraDrift hook
+[32m✓[0m Hero screen has inspect mode state
+[32m✓[0m Hero screen emits HERO_STAGE_VIEWED telemetry
+[32m✓[0m Hero screen emits HERO_STAGE_CAMERA_MODE_RESOLVED telemetry
+
+--- Telemetry Events ---
+
+[32m✓[0m HERO_STAGE_VIEWED event defined
+[32m✓[0m HERO_STAGE_INSPECT_TOGGLED event defined
+[32m✓[0m HERO_STAGE_CAMERA_MODE_RESOLVED event defined
+
+--- Reduce Motion Support ---
+
+[32m✓[0m Camera drift respects Reduce Motion preference
+
+============================================================
+[32mPhase 3.27 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-28
+> node scripts/guard-phase-3-28.mjs
+
+============================================================
+Phase 3.28: Friends Gift System Guard
+============================================================
+
+--- Friends Gift UI ---
+
+[32m✓[0m Gift button exists in friends screen
+[32m✓[0m GiftModal component exists
+[32m✓[0m Gift type choices displayed (gold, stamina, gems)
+
+--- Friends Gift API ---
+
+[32m✓[0m sendFriendGift API function exists
+[32m✓[0m getFriendGiftStatus API function exists
+[32m✓[0m FRIEND_GIFT_SENT telemetry emitted
+
+--- Mail Gift Claim (Canonical Receipt) ---
+
+[32m✓[0m Gifts tab exists in mail screen
+[32m✓[0m Mail gift claim uses canonical receipt handling
+
+============================================================
+[32mPhase 3.28 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-29
+> node scripts/guard-phase-3-29.mjs
+
+============================================================
+Phase 3.29: Events/Quests System Guard
+============================================================
+
+[32m✓[0m /app/events.tsx screen exists
+--- Events Screen ---
+
+[32m✓[0m Event claim function integrated
+[32m✓[0m EVENTS_VIEWED telemetry emitted
+[32m✓[0m EVENT_CLAIM_SUBMITTED telemetry emitted
+[32m✓[0m Canonical receipt handling in events screen
+
+--- RewardSource Validation ---
+
+[32m✓[0m event_claim is valid RewardSource
+
+--- No Timers/RAF Check ---
+
+[32m✓[0m No timers/RAF in events screen
+
+============================================================
+[32mPhase 3.29 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-30
+> node scripts/guard-phase-3-30.mjs
+
+============================================================
+Phase 3.30: Store & Economy System Guard
+============================================================
+
+[32m✓[0m /app/shop.tsx screen exists
+--- Shop Screen ---
+
+[32m✓[0m createPurchaseIntent function used in shop
+[32m✓[0m getStoreCatalog function used in shop
+[32m✓[0m STORE_VIEWED telemetry emitted
+[32m✓[0m STORE_ITEM_SELECTED telemetry emitted
+
+--- No Billing Libraries ---
+
+[32m✓[0m No direct billing library imports in shop.tsx
+
+--- Store API ---
+
+[32m✓[0m lib/api/store.ts exists
+[32m✓[0m createPurchaseIntent API function exists
+[32m✓[0m redeemIntent (DEV-only) API function exists
+
+--- Canonical Receipt (Redeem) ---
+
+[32m✓[0m store_redeem is valid RewardSource
+[32m✓[0m Redeem uses canonical receipt validation
+
+============================================================
+[32mPhase 3.30 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-31
+> node scripts/guard-phase-3-31.mjs
+
+============================================================
+Phase 3.31: Idle Loop Completion Guard
+============================================================
+
+[32m✓[0m /app/idle.tsx screen exists
+--- Idle Screen ---
+
+[32m✓[0m Idle claim function exists
+[32m✓[0m Idle status fetch function exists
+[32m✓[0m Progress bar component present
+[32m✓[0m Claim button present
+
+--- No Timers/Polling ---
+
+[32m✓[0m No timers/RAF in idle screen (event-driven only)
+
+--- Canonical Receipt Handling ---
+
+[32m✓[0m Uses canonical receipt validation
+[32m✓[0m Uses receipt item formatting
+[32m✓[0m Handles alreadyClaimed idempotency
+
+--- Telemetry Events ---
+
+[32m✓[0m IDLE_VIEWED event defined
+[32m✓[0m IDLE_CLAIM_SUBMITTED event defined
+[32m✓[0m IDLE_CLAIM_SUCCESS event defined
+[32m✓[0m IDLE_VIEWED telemetry emitted
+[32m✓[0m IDLE_CLAIM_SUBMITTED telemetry emitted
+
+============================================================
+[32mPhase 3.31 guard PASSED![0m
+============================================================ and  to verify correctness.
+    5.  Manually test the  screen.
+  - **What will be achieved with this?** A functional daily login system that rewards players for returning each day, a core retention mechanic.
   - **Status**: IN PROGRESS
   - **Should Test frontend/backend/both after fix?**: frontend
-  - **Blocked on something**: **Issue 1: TypeScript compilation errors**.
+  - **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - P2: **Implement Phase 3.26 (C) - Mail Fallback Queue:**
-        - **Backend:** Create  helper, add  list/claim endpoints, and update .
-        - **Frontend:** Add Receipts tab to , implement API calls in , and ensure the unified receipt renderer is used.
-    - P3: **Implement Phase 3.27 - Hero Stage Intimacy v2:**
-        - In  and , add tier-based camera creep and parallax micro-motion using Reanimated worklets.
-    - P4: **Implement Phase 3.28 - Mail + Friends Loop v2:**
-        - **Backend:** Add  endpoint.
-        - **Frontend:** Add Send Gift action on the friends screen.
-    - P5: **Implement Phase 3.29 - Events/Quests Scaffold v1:**
-        - **Backend:** Create  and  endpoints.
-        - **Frontend:** Create new  screen and link it from the home side rail.
+  - **P1: Implement Phase 3.33 — Gacha Summon System:**
+    - **Backend:** Create  and  endpoints. Implement server-side RNG and pity counters.
+    - **Frontend:** Create  screen with banner display and a single-summon flow that shows results in a modal.
+  - **P2: Implement Phase 3.34 — Monetization Enablement:**
+    - **Backend:** Integrate RevenueCat webhooks, create  endpoint, and implement a mail fallback for failed verifications.
+    - **Frontend:** Replace the dev-only redeem flow in the store with a real purchase flow that handles verification states.
 - **Future Tasks:**
-    - **Fix Cinematic Videos:** A long-deferred task to fix an incompatible video codec by running the script at .
+  - **Fix Cinematic Videos:** A long-deferred task to fix an incompatible video codec by running the script at .
 
 **Completed work in this session**
-- **Phase 3.23.9: Hero Screen Foundation:** Created the static shell and UI for .
-- **Phase 3.24: Canonical Reward Receipts:** Implemented a unified, idempotent reward receipt system across the backend ( in ) and frontend (, ). A guard script () was created to enforce this.
-- **Phase 3.22 & 3.23 Closure Audit:** Performed a verification pass and created new guard scripts (, ) to lock in behaviors for the Home screen rail and Mail/Friends auth.
-- **Phase 3.25: Hero Stage Motion v1:** Implemented tier-gated idle animations (breathing/sway) in  using Reanimated worklets, governed by a central logic file . Created  to prevent usage of JS timers.
-- **Documentation:** Created  and .
-- **Telemetry:** Added extensive telemetry events for reward receipts in  and .
-- **Phase 3.26 Foundation:** Partially completed by updating  with tier/parallax logic and creating the  file.
+- **Phase 3.26 (A, B, C):** Affinity Unlock Surface (), Parallax Language (in ), and Mail Fallback Queue (new endpoints and UI in ).
+- **Phase 3.27: Hero Stage Intimacy v2:** Implemented tier-gated camera drift on the hero screen using Reanimated worklets.
+- **Phase 3.28: Friend Gifts:** Implemented the backend endpoint and frontend UI () for sending gifts to friends.
+- **Phase 3.29: Events/Quests Scaffold:** Implemented backend endpoints and integrated a quest list into .
+- **Phase 3.30: Store & Economy Scaffold:** Implemented backend endpoints () and the frontend UI () for a non-monetized store.
+- **Phase 3.31: Daily/Idle Loop Completion:** Refactored the backend idle system and created the  screen for claiming idle rewards.
+- **Documentation:** Created and updated numerous  files, including , , , , and .
+- **Guards:** Created and integrated new guard scripts for Phases 3.27, 3.28, 3.29, 3.30, and 3.31.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1**: Incompatible video codec for hero cinematics. This feature is currently broken.
+- **Issue 1**: Incompatible video codec for hero cinematics, breaking a premium feature.
   - **Debug checklist**: Run the script at  and test playback on a device.
-  - **Why to solve this issue and what will be achieved with this?**: To restore a broken premium feature.
+  - **Why to solve this issue and what will be achieved with this?**: To restore a broken feature.
   - **Should Test frontend/backend/both after fix?**: frontend
   - **Is recurring issue?**: Y
 
@@ -341,10 +1294,9 @@ The foundational logic for Phase 3.26 is partially in place:  has been updated w
 
 
 **Key Technical Concepts**
-- **Declarative Stage Configuration:** Using a central function ( in ) to compute all presentational aspects of the Hero Screen (camera mode, motion, parallax, labels) from a single state (affinity tier). The UI component just renders this config.
-- **Guard-Driven Development:** Proactively creating scripts to enforce architectural rules (e.g., no JS timers, correct API response shapes, consistent auth patterns), which are run as part of 
+- **Guard-Driven Development:** Proactively creating scripts to enforce architectural rules, run via 
 > frontend@1.0.0 guard
-> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion && npm run guard:phase-3-27 && npm run guard:phase-3-28 && npm run guard:phase-3-29 && npm run guard:phase-3-30 && npm run guard:phase-3-31
 
 
 > frontend@1.0.0 guard:hero
@@ -581,40 +1533,203 @@ Phase 3.25: Hero Motion Guard
 
 ============================================================
 [32mHero motion guard PASSED![0m
-============================================================.
-- **Canonical Receipts:** A standardized, idempotent data structure for all rewards granted in the game, ensuring a single source of truth for inventory and balance updates.
-- **Tier-gated Motion & Presentation:** Using a player's affinity with a hero to unlock progressively richer visual presentations, including idle animations (Reanimated worklets) and parallax effects.
-- **Centralized Telemetry Events:** Defining all analytics events as constants in  and using a shared  function to track user behavior.
+============================================================
+
+> frontend@1.0.0 guard:phase-3-27
+> node scripts/guard-phase-3-27.mjs
+
+============================================================
+Phase 3.27: Hero Stage Intimacy v2 Guard
+============================================================
+
+--- Camera Drift System ---
+
+[32m✓[0m CAMERA_DRIFT_PARAMS table exists
+[32m✓[0m useHeroCameraDrift hook exists
+[32m✓[0m Camera drift is tier-gated (intimate tier in inspect mode only)
+[32m✓[0m No timers/RAF in motion.ts (Reanimated-only)
+
+--- Hero Screen Integration ---
+
+[32m✓[0m Hero screen uses useHeroCameraDrift hook
+[32m✓[0m Hero screen has inspect mode state
+[32m✓[0m Hero screen emits HERO_STAGE_VIEWED telemetry
+[32m✓[0m Hero screen emits HERO_STAGE_CAMERA_MODE_RESOLVED telemetry
+
+--- Telemetry Events ---
+
+[32m✓[0m HERO_STAGE_VIEWED event defined
+[32m✓[0m HERO_STAGE_INSPECT_TOGGLED event defined
+[32m✓[0m HERO_STAGE_CAMERA_MODE_RESOLVED event defined
+
+--- Reduce Motion Support ---
+
+[32m✓[0m Camera drift respects Reduce Motion preference
+
+============================================================
+[32mPhase 3.27 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-28
+> node scripts/guard-phase-3-28.mjs
+
+============================================================
+Phase 3.28: Friends Gift System Guard
+============================================================
+
+--- Friends Gift UI ---
+
+[32m✓[0m Gift button exists in friends screen
+[32m✓[0m GiftModal component exists
+[32m✓[0m Gift type choices displayed (gold, stamina, gems)
+
+--- Friends Gift API ---
+
+[32m✓[0m sendFriendGift API function exists
+[32m✓[0m getFriendGiftStatus API function exists
+[32m✓[0m FRIEND_GIFT_SENT telemetry emitted
+
+--- Mail Gift Claim (Canonical Receipt) ---
+
+[32m✓[0m Gifts tab exists in mail screen
+[32m✓[0m Mail gift claim uses canonical receipt handling
+
+============================================================
+[32mPhase 3.28 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-29
+> node scripts/guard-phase-3-29.mjs
+
+============================================================
+Phase 3.29: Events/Quests System Guard
+============================================================
+
+[32m✓[0m /app/events.tsx screen exists
+--- Events Screen ---
+
+[32m✓[0m Event claim function integrated
+[32m✓[0m EVENTS_VIEWED telemetry emitted
+[32m✓[0m EVENT_CLAIM_SUBMITTED telemetry emitted
+[32m✓[0m Canonical receipt handling in events screen
+
+--- RewardSource Validation ---
+
+[32m✓[0m event_claim is valid RewardSource
+
+--- No Timers/RAF Check ---
+
+[32m✓[0m No timers/RAF in events screen
+
+============================================================
+[32mPhase 3.29 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-30
+> node scripts/guard-phase-3-30.mjs
+
+============================================================
+Phase 3.30: Store & Economy System Guard
+============================================================
+
+[32m✓[0m /app/shop.tsx screen exists
+--- Shop Screen ---
+
+[32m✓[0m createPurchaseIntent function used in shop
+[32m✓[0m getStoreCatalog function used in shop
+[32m✓[0m STORE_VIEWED telemetry emitted
+[32m✓[0m STORE_ITEM_SELECTED telemetry emitted
+
+--- No Billing Libraries ---
+
+[32m✓[0m No direct billing library imports in shop.tsx
+
+--- Store API ---
+
+[32m✓[0m lib/api/store.ts exists
+[32m✓[0m createPurchaseIntent API function exists
+[32m✓[0m redeemIntent (DEV-only) API function exists
+
+--- Canonical Receipt (Redeem) ---
+
+[32m✓[0m store_redeem is valid RewardSource
+[32m✓[0m Redeem uses canonical receipt validation
+
+============================================================
+[32mPhase 3.30 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-31
+> node scripts/guard-phase-3-31.mjs
+
+============================================================
+Phase 3.31: Idle Loop Completion Guard
+============================================================
+
+[32m✓[0m /app/idle.tsx screen exists
+--- Idle Screen ---
+
+[32m✓[0m Idle claim function exists
+[32m✓[0m Idle status fetch function exists
+[32m✓[0m Progress bar component present
+[32m✓[0m Claim button present
+
+--- No Timers/Polling ---
+
+[32m✓[0m No timers/RAF in idle screen (event-driven only)
+
+--- Canonical Receipt Handling ---
+
+[32m✓[0m Uses canonical receipt validation
+[32m✓[0m Uses receipt item formatting
+[32m✓[0m Handles alreadyClaimed idempotency
+
+--- Telemetry Events ---
+
+[32m✓[0m IDLE_VIEWED event defined
+[32m✓[0m IDLE_CLAIM_SUBMITTED event defined
+[32m✓[0m IDLE_CLAIM_SUCCESS event defined
+[32m✓[0m IDLE_VIEWED telemetry emitted
+[32m✓[0m IDLE_CLAIM_SUBMITTED telemetry emitted
+
+============================================================
+[32mPhase 3.31 guard PASSED![0m
+============================================================. This is central to the project's stability.
+- **Canonical Receipts:** A standardized, idempotent data structure for all rewards. The agent successfully extended this pattern to all new economic systems (gifts, events, store, idle, daily).
+- **Phase-based Scaffolding:** A workflow where new systems (Events, Store, Idle) are built out with their backend, frontend, telemetry, and guards in self-contained, verifiable phases.
+- **Reanimated Worklets:** Used for all performance-critical animations (hero motion, camera drift), explicitly avoiding JS-thread timers (, ).
 
 **key DB schema**
-- No new tables were added. The upcoming Mail Fallback Queue will add a  type to the  collection in MongoDB.
+- No new collections were added. Logic was added to  to handle new document types within existing collections (e.g.,  in the mail collection,  in the store collection).
 
 **changes in tech stack**
-- No new packages were added. The session focused on advanced use of  and building robust development practices (guards).
+- No new libraries or technologies were added. The focus was on building features using the existing stack.
 
 **All files of reference**
--   : **The file with active TS errors to fix first.**
--   : **The other file with active TS errors.**
--   : The central source of truth for all hero presentation logic.
--   : Contains the  helper.
--   : The project's progress tracker.
+-   : The new screen being built. **(Priority)**
+-   : The guard for the new screen. **(Priority)**
+-   : Needs to be updated to include the new guard. **(Priority)**
+-   : Contains all the new backend logic for recent phases.
+-   : The project's progress tracker and Definition of Done checklists.
+-   : Needs to be reviewed to fix the missed gift claim UI task.
 
 **Areas that need refactoring**:
-- None. The session was focused on adding features and guards, resulting in a more robust and organized codebase.
+- The agent has been copying the  and  helper functions into multiple API client files (, ). These should be extracted into a shared utility file (e.g., ) to reduce code duplication.
 
 **key api endpoints**
--    (Updated to return canonical receipt)
--    (Updated to return canonical receipt)
--    (Updated to return canonical receipt fields)
--   **Upcoming:** , , , , 
+-   ,  **(New)**
+-    **(New)**
+-   ,  **(New)**
+-   , ,  **(New)**
+-   ,  **(New/Refactored)**
+-   ,  **(New, In Progress)**
 
 **Critical Info for New Agent**
--   Your immediate task is to **fix the TypeScript errors in  and **. See the **All Pending/In progress Issue list** for a detailed debug checklist. This is blocking all other work.
--   Once the errors are fixed, continue implementing **Phase 3.26**. The next step is to finish the UI for the  screen.
--   The user has provided a detailed roadmap for Phases 3.26 through 3.29. Adhere to it strictly.
--   The project heavily relies on Guard-Driven Development. After making changes, always run 
+-   Your immediate task is to **complete the implementation of Phase 3.32 (Daily Login)**. See the In progress Task List for the exact steps to resume.
+-   The user has provided a strict, multi-phase roadmap. **Do not deviate**. Proceed to Phase 3.33 (Gacha) after 3.32 is fully closed.
+-   **Always run 
 > frontend@1.0.0 guard
-> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion && npm run guard:phase-3-27 && npm run guard:phase-3-28 && npm run guard:phase-3-29 && npm run guard:phase-3-30 && npm run guard:phase-3-31
 
 
 > frontend@1.0.0 guard:hero
@@ -851,31 +1966,195 @@ Phase 3.25: Hero Motion Guard
 
 ============================================================
 [32mHero motion guard PASSED![0m
-============================================================ to ensure you haven't violated any architectural rules.
--   The file  is the single source of truth for hero presentation. Do not add tier, camera, or parallax logic directly in the UI components; use the helpers exported from this file.
+============================================================
+
+> frontend@1.0.0 guard:phase-3-27
+> node scripts/guard-phase-3-27.mjs
+
+============================================================
+Phase 3.27: Hero Stage Intimacy v2 Guard
+============================================================
+
+--- Camera Drift System ---
+
+[32m✓[0m CAMERA_DRIFT_PARAMS table exists
+[32m✓[0m useHeroCameraDrift hook exists
+[32m✓[0m Camera drift is tier-gated (intimate tier in inspect mode only)
+[32m✓[0m No timers/RAF in motion.ts (Reanimated-only)
+
+--- Hero Screen Integration ---
+
+[32m✓[0m Hero screen uses useHeroCameraDrift hook
+[32m✓[0m Hero screen has inspect mode state
+[32m✓[0m Hero screen emits HERO_STAGE_VIEWED telemetry
+[32m✓[0m Hero screen emits HERO_STAGE_CAMERA_MODE_RESOLVED telemetry
+
+--- Telemetry Events ---
+
+[32m✓[0m HERO_STAGE_VIEWED event defined
+[32m✓[0m HERO_STAGE_INSPECT_TOGGLED event defined
+[32m✓[0m HERO_STAGE_CAMERA_MODE_RESOLVED event defined
+
+--- Reduce Motion Support ---
+
+[32m✓[0m Camera drift respects Reduce Motion preference
+
+============================================================
+[32mPhase 3.27 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-28
+> node scripts/guard-phase-3-28.mjs
+
+============================================================
+Phase 3.28: Friends Gift System Guard
+============================================================
+
+--- Friends Gift UI ---
+
+[32m✓[0m Gift button exists in friends screen
+[32m✓[0m GiftModal component exists
+[32m✓[0m Gift type choices displayed (gold, stamina, gems)
+
+--- Friends Gift API ---
+
+[32m✓[0m sendFriendGift API function exists
+[32m✓[0m getFriendGiftStatus API function exists
+[32m✓[0m FRIEND_GIFT_SENT telemetry emitted
+
+--- Mail Gift Claim (Canonical Receipt) ---
+
+[32m✓[0m Gifts tab exists in mail screen
+[32m✓[0m Mail gift claim uses canonical receipt handling
+
+============================================================
+[32mPhase 3.28 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-29
+> node scripts/guard-phase-3-29.mjs
+
+============================================================
+Phase 3.29: Events/Quests System Guard
+============================================================
+
+[32m✓[0m /app/events.tsx screen exists
+--- Events Screen ---
+
+[32m✓[0m Event claim function integrated
+[32m✓[0m EVENTS_VIEWED telemetry emitted
+[32m✓[0m EVENT_CLAIM_SUBMITTED telemetry emitted
+[32m✓[0m Canonical receipt handling in events screen
+
+--- RewardSource Validation ---
+
+[32m✓[0m event_claim is valid RewardSource
+
+--- No Timers/RAF Check ---
+
+[32m✓[0m No timers/RAF in events screen
+
+============================================================
+[32mPhase 3.29 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-30
+> node scripts/guard-phase-3-30.mjs
+
+============================================================
+Phase 3.30: Store & Economy System Guard
+============================================================
+
+[32m✓[0m /app/shop.tsx screen exists
+--- Shop Screen ---
+
+[32m✓[0m createPurchaseIntent function used in shop
+[32m✓[0m getStoreCatalog function used in shop
+[32m✓[0m STORE_VIEWED telemetry emitted
+[32m✓[0m STORE_ITEM_SELECTED telemetry emitted
+
+--- No Billing Libraries ---
+
+[32m✓[0m No direct billing library imports in shop.tsx
+
+--- Store API ---
+
+[32m✓[0m lib/api/store.ts exists
+[32m✓[0m createPurchaseIntent API function exists
+[32m✓[0m redeemIntent (DEV-only) API function exists
+
+--- Canonical Receipt (Redeem) ---
+
+[32m✓[0m store_redeem is valid RewardSource
+[32m✓[0m Redeem uses canonical receipt validation
+
+============================================================
+[32mPhase 3.30 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-31
+> node scripts/guard-phase-3-31.mjs
+
+============================================================
+Phase 3.31: Idle Loop Completion Guard
+============================================================
+
+[32m✓[0m /app/idle.tsx screen exists
+--- Idle Screen ---
+
+[32m✓[0m Idle claim function exists
+[32m✓[0m Idle status fetch function exists
+[32m✓[0m Progress bar component present
+[32m✓[0m Claim button present
+
+--- No Timers/Polling ---
+
+[32m✓[0m No timers/RAF in idle screen (event-driven only)
+
+--- Canonical Receipt Handling ---
+
+[32m✓[0m Uses canonical receipt validation
+[32m✓[0m Uses receipt item formatting
+[32m✓[0m Handles alreadyClaimed idempotency
+
+--- Telemetry Events ---
+
+[32m✓[0m IDLE_VIEWED event defined
+[32m✓[0m IDLE_CLAIM_SUBMITTED event defined
+[32m✓[0m IDLE_CLAIM_SUCCESS event defined
+[32m✓[0m IDLE_VIEWED telemetry emitted
+[32m✓[0m IDLE_CLAIM_SUBMITTED telemetry emitted
+
+============================================================
+[32mPhase 3.31 guard PASSED![0m
+============================================================ and ** after completing a feature or before handing off. This is a non-negotiable step in the project's workflow.
+-   A task was missed: updating the mail screen's gift claim flow to use the canonical receipt renderer. This should be addressed as a high-priority bugfix (P1), likely after the current in-progress task (P0) is finished.
+-   All new economic features must use the canonical receipt system. Reference  and existing implementations.
 
 **documents created in this job**
--   /app/docs/PHASE_LEDGER.md
--   /app/docs/hero-stage-language.md
+- /app/docs/reward-receipts.md
+- /app/docs/hero-stage-language.md
+- /app/docs/events-system.md
+- /app/docs/store-system.md
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Provided a detailed, multi-phase plan for Phases 3.26 through 3.29, covering the Affinity Unlock Surface, Parallax, Mail Fallback Queue, and future features like Gifting and Events.
-2.  **Agent**: Acknowledged the user's plan and began work on Phase 3.26.
-3.  **User**: Provided the final, detailed Phase 3.26 instruction set.
-4.  **Agent**: Provided a summary of the foundational work done for Phase 3.26 (A & B).
-5.  **User**: Gave the go-ahead for Phase 3.26, detailing requirements for the Bond screen, parallax, and mail fallback queue.
-6.  **Agent**: Provided a closure summary for Phase 3.25.
-7.  **User**: Instructed the agent to perform a final closure audit on Phase 3.25, focusing on cleaning up duplicate definitions and ensuring all guard scripts are wired correctly.
-8.  **Agent**: Provided summary for implementing the Phase Ledger and Telemetry.
-9.  **User**: Instructed agent to create a  file and add telemetry for reward receipts. Flagged an inconsistency with missing guard scripts.
-10. **Agent**: Provided a refined summary for Phase 3.25, completing the motion implementation.
+10. **User (LATEST)**: Provided a detailed list of all tasks for phases 3.22 through 3.33, including what each guard script locks down. (Status: Acknowledged, being executed)
+9.  **Agent**: Provided a summary upon completing Phase 3.31.
+8.  **User**: Provided detailed execution plan and DoD checklists for Phases 3.31 - 3.34. (Status: In Progress)
+7.  **Agent**: Acknowledged the user's new 4-phase roadmap.
+6.  **User**: Proposed a new 4-phase roadmap (3.31-3.34) focusing on retention and live-ops. (Status: Acknowledged)
+5.  **Agent**: Provided summary upon completing Blocks D-F (Phases 3.28-3.30).
+4.  **User**: Provided instructions for Blocks D-F to complete Phases 3.28-3.30. (Status: Completed)
+3.  **Agent**: Provided summary upon completing Blocks A-C (Phases 3.28-3.29).
+2.  **User**: Provided instructions for Blocks A-F to finish implementation of Phases 3.28-3.30. (Status: In Progress)
+1.  **Agent**: Provided summary upon completing the initial set of user-directed blocks (1-4).
 
 **Project Health Check:**
 -   **Broken**: Web video playback for cinematics (long-standing issue).
--   **Mocked**: IAP (RevenueCat) is functionally mocked.
--   **In Refactoring/In Progress**:
-    -   The  screen is newly created and has blocking TypeScript errors.
-    -   The  screen is being modified for parallax and has blocking TypeScript errors.
+-   **Mocked**: IAP (RevenueCat) is functionally mocked; the store uses a dev-only redeem flow.
+-   **In Progress**:
+    -   Phase 3.32 (Daily Login) screen and backend are created but not fully integrated or verified.
+-   **Inconsistent**: The mail screen's gift claim UI might not be using the standard canonical receipt renderer.
 
 **3rd Party Integrations**
 -   **RevenueCat**: For IAP, functionally mocked.
@@ -886,9 +2165,9 @@ Phase 3.25: Hero Motion Guard
 -   **React Native Reanimated**: For all animations and motion.
 
 **Testing status**
--   Testing agent used after significant changes: NO (Agent uses  and 
+-   Testing agent used after significant changes: NO (Agent relies heavily on 
 > frontend@1.0.0 guard
-> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion && npm run guard:phase-3-27 && npm run guard:phase-3-28 && npm run guard:phase-3-29 && npm run guard:phase-3-30 && npm run guard:phase-3-31
 
 
 > frontend@1.0.0 guard:hero
@@ -1125,9 +2404,170 @@ Phase 3.25: Hero Motion Guard
 
 ============================================================
 [32mHero motion guard PASSED![0m
-============================================================ for verification).
+============================================================
+
+> frontend@1.0.0 guard:phase-3-27
+> node scripts/guard-phase-3-27.mjs
+
+============================================================
+Phase 3.27: Hero Stage Intimacy v2 Guard
+============================================================
+
+--- Camera Drift System ---
+
+[32m✓[0m CAMERA_DRIFT_PARAMS table exists
+[32m✓[0m useHeroCameraDrift hook exists
+[32m✓[0m Camera drift is tier-gated (intimate tier in inspect mode only)
+[32m✓[0m No timers/RAF in motion.ts (Reanimated-only)
+
+--- Hero Screen Integration ---
+
+[32m✓[0m Hero screen uses useHeroCameraDrift hook
+[32m✓[0m Hero screen has inspect mode state
+[32m✓[0m Hero screen emits HERO_STAGE_VIEWED telemetry
+[32m✓[0m Hero screen emits HERO_STAGE_CAMERA_MODE_RESOLVED telemetry
+
+--- Telemetry Events ---
+
+[32m✓[0m HERO_STAGE_VIEWED event defined
+[32m✓[0m HERO_STAGE_INSPECT_TOGGLED event defined
+[32m✓[0m HERO_STAGE_CAMERA_MODE_RESOLVED event defined
+
+--- Reduce Motion Support ---
+
+[32m✓[0m Camera drift respects Reduce Motion preference
+
+============================================================
+[32mPhase 3.27 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-28
+> node scripts/guard-phase-3-28.mjs
+
+============================================================
+Phase 3.28: Friends Gift System Guard
+============================================================
+
+--- Friends Gift UI ---
+
+[32m✓[0m Gift button exists in friends screen
+[32m✓[0m GiftModal component exists
+[32m✓[0m Gift type choices displayed (gold, stamina, gems)
+
+--- Friends Gift API ---
+
+[32m✓[0m sendFriendGift API function exists
+[32m✓[0m getFriendGiftStatus API function exists
+[32m✓[0m FRIEND_GIFT_SENT telemetry emitted
+
+--- Mail Gift Claim (Canonical Receipt) ---
+
+[32m✓[0m Gifts tab exists in mail screen
+[32m✓[0m Mail gift claim uses canonical receipt handling
+
+============================================================
+[32mPhase 3.28 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-29
+> node scripts/guard-phase-3-29.mjs
+
+============================================================
+Phase 3.29: Events/Quests System Guard
+============================================================
+
+[32m✓[0m /app/events.tsx screen exists
+--- Events Screen ---
+
+[32m✓[0m Event claim function integrated
+[32m✓[0m EVENTS_VIEWED telemetry emitted
+[32m✓[0m EVENT_CLAIM_SUBMITTED telemetry emitted
+[32m✓[0m Canonical receipt handling in events screen
+
+--- RewardSource Validation ---
+
+[32m✓[0m event_claim is valid RewardSource
+
+--- No Timers/RAF Check ---
+
+[32m✓[0m No timers/RAF in events screen
+
+============================================================
+[32mPhase 3.29 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-30
+> node scripts/guard-phase-3-30.mjs
+
+============================================================
+Phase 3.30: Store & Economy System Guard
+============================================================
+
+[32m✓[0m /app/shop.tsx screen exists
+--- Shop Screen ---
+
+[32m✓[0m createPurchaseIntent function used in shop
+[32m✓[0m getStoreCatalog function used in shop
+[32m✓[0m STORE_VIEWED telemetry emitted
+[32m✓[0m STORE_ITEM_SELECTED telemetry emitted
+
+--- No Billing Libraries ---
+
+[32m✓[0m No direct billing library imports in shop.tsx
+
+--- Store API ---
+
+[32m✓[0m lib/api/store.ts exists
+[32m✓[0m createPurchaseIntent API function exists
+[32m✓[0m redeemIntent (DEV-only) API function exists
+
+--- Canonical Receipt (Redeem) ---
+
+[32m✓[0m store_redeem is valid RewardSource
+[32m✓[0m Redeem uses canonical receipt validation
+
+============================================================
+[32mPhase 3.30 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-31
+> node scripts/guard-phase-3-31.mjs
+
+============================================================
+Phase 3.31: Idle Loop Completion Guard
+============================================================
+
+[32m✓[0m /app/idle.tsx screen exists
+--- Idle Screen ---
+
+[32m✓[0m Idle claim function exists
+[32m✓[0m Idle status fetch function exists
+[32m✓[0m Progress bar component present
+[32m✓[0m Claim button present
+
+--- No Timers/Polling ---
+
+[32m✓[0m No timers/RAF in idle screen (event-driven only)
+
+--- Canonical Receipt Handling ---
+
+[32m✓[0m Uses canonical receipt validation
+[32m✓[0m Uses receipt item formatting
+[32m✓[0m Handles alreadyClaimed idempotency
+
+--- Telemetry Events ---
+
+[32m✓[0m IDLE_VIEWED event defined
+[32m✓[0m IDLE_CLAIM_SUBMITTED event defined
+[32m✓[0m IDLE_CLAIM_SUCCESS event defined
+[32m✓[0m IDLE_VIEWED telemetry emitted
+[32m✓[0m IDLE_CLAIM_SUBMITTED telemetry emitted
+
+============================================================
+[32mPhase 3.31 guard PASSED![0m
+============================================================ and ).
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None. However, numerous guard scripts in  serve a similar purpose.
+-   Test files created: None. The  scripts in  serve as the primary regression tests.
 -   Known regressions: None.
 
 **Credentials to test flow:**
@@ -1136,5 +2576,406 @@ Phase 3.25: Hero Motion Guard
     -   Password: 
 
 **What agent forgot to execute**
-- The agent has not forgotten to execute any tasks. It was in the middle of a multi-step implementation (Phase 3.26) and was actively debugging when the session ended. The user's concern about missing guard scripts (, ) was investigated and correctly identified as a non-issue, as those scripts did not exist and were not part of the final  command.
+- The agent did not implement **Block B — Phase 3.28 UI: Mail Gifts claim uses canonical receipts** from the user's instructions in message #231. It implemented the Send Gift UI but forgot to update the corresponding claim UI on the Mail screen.
+- The agent created  but did not add it to the  in  to complete its integration into the 
+> frontend@1.0.0 guard
+> npm run guard:hero && npm run guard:tier && npm run guard:select-hero && npm run guard:user-heroes-map && npm run guard:feature-flags && npm run guard:hero-signature && npm run guard:no-free-cinematics && npm run guard:no-inline-power && npm run guard:no-paid-wording && npm run guard:entitlements-access && npm run guard:purchase-flow && npm run guard:auth-epoch && npm run guard:refresh-discipline && npm run guard:env-detection && npm run guard:no-error-alerts && npm run guard:receipt-shape && npm run guard:phase-3-22 && npm run guard:phase-3-23 && npm run guard:hero-motion && npm run guard:phase-3-27 && npm run guard:phase-3-28 && npm run guard:phase-3-29 && npm run guard:phase-3-30 && npm run guard:phase-3-31
+
+
+> frontend@1.0.0 guard:hero
+> node scripts/guard-no-hero-list-fallback.mjs
+
+[guard:no-hero-list-fallback] ✅ Flag is true and there is no runtime path to list fetch (fallback may exist but is unreachable).
+
+> frontend@1.0.0 guard:tier
+> node scripts/guard-no-direct-tier-imports.mjs
+
+[guard:no-direct-tier-imports] ✅ No direct tier imports found in UI.
+
+> frontend@1.0.0 guard:select-hero
+> node scripts/guard-select-user-hero-by-id.mjs
+
+[guard:selectUserHeroById] ✅ O(1) selector enforced.
+
+> frontend@1.0.0 guard:user-heroes-map
+> node scripts/guard-user-heroes-map-sync.mjs
+
+[guard:user-heroes-map] ✅ userHeroes/userHeroesById sync enforced.
+
+> frontend@1.0.0 guard:feature-flags
+> node scripts/guard-feature-flags.mjs
+
+[guard:feature-flags] Checking feature flag architecture...
+[guard:feature-flags] ✅ Feature flag architecture enforced (read-only UI).
+
+> frontend@1.0.0 guard:hero-signature
+> node scripts/guard-get-user-hero-signature.mjs
+
+[guard:get-user-hero-signature] Checking getUserHeroById call signatures...
+[guard:get-user-hero-signature] ✅ All getUserHeroById calls use correct signature.
+
+> frontend@1.0.0 guard:no-free-cinematics
+> node scripts/guard-no-free-cinematics.mjs
+
+✅ guard-no-free-cinematics: No free cinematic preview UI in app/ screens.
+
+> frontend@1.0.0 guard:no-inline-power
+> node scripts/guard-no-inline-power.mjs
+
+✅ guard-no-inline-power: No inline power formulas in app/ screens.
+
+> frontend@1.0.0 guard:no-paid-wording
+> node scripts/guard-no-paid-wording.mjs
+
+✅ guard-no-paid-wording: No forbidden paid wording found.
+
+> frontend@1.0.0 guard:entitlements-access
+> node scripts/guard-entitlements-access.mjs
+
+🔒 Checking entitlement store access patterns...
+
+✅ No direct entitlement store access found.
+   All screens use gating helpers correctly.
+
+
+> frontend@1.0.0 guard:purchase-flow
+> node scripts/guard-purchase-flow.mjs
+
+🔒 Checking purchase flow patterns...
+
+✅ No purchase flow violations found.
+   All screens use PurchaseButton and canonical products.
+
+
+> frontend@1.0.0 guard:auth-epoch
+> node scripts/guard-auth-epoch.mjs
+
+🔒 Checking authEpoch guards in stores...
+
+✅ All async store actions have proper authEpoch guards.
+   No race conditions from stale in-flight requests possible.
+
+
+> frontend@1.0.0 guard:refresh-discipline
+> node scripts/guard-entitlements-refresh-discipline.mjs
+
+🔄 Checking entitlements refresh discipline (Phase 3.14)...
+
+✅ Entitlements refresh discipline is maintained.
+   All refresh calls go through canonical entry points.
+
+
+> frontend@1.0.0 guard:env-detection
+> node scripts/guard-env-detection.mjs
+
+🌍 Checking centralized environment detection (Phase 3.17)...
+
+✅ Environment detection is centralized.
+   All code uses getEnvironmentMode() / isProductionEnvironment() helpers.
+
+
+> frontend@1.0.0 guard:no-error-alerts
+> node scripts/guard-no-error-alerts.mjs
+
+🚫 Checking Alert.alert patterns (Phase 3.18.4 STRICT)...
+
+   Valid annotations: destructive_confirm, logout_confirm, purchase_confirm, rewards_modal, legacy_account_flow, dev_mode
+
+✅ All Alert.alert usages are properly annotated.
+   No forbidden error alert patterns found.
+
+
+> frontend@1.0.0 guard:receipt-shape
+> node scripts/guard-receipt-shape.mjs
+
+============================================================
+Phase 3.24: Receipt Shape Guard
+============================================================
+
+--- Backend Receipt Shape ---
+[32m✓ Backend has grant_rewards_canonical helper[0m
+[32m✓ mail reward claim uses grant_rewards_canonical helper[0m
+[32m✓ mail gift claim uses grant_rewards_canonical helper[0m
+[32m✓ idle claim returns canonical receipt shape directly[0m
+
+--- Frontend Receipt Type ---
+[32m✓ RewardReceipt type guard exists[0m
+[32m✓ RewardReceipt type defined with required fields[0m
+
+--- Mail API Receipt Usage ---
+[32m✓ mail.ts imports RewardReceipt[0m
+[32m✓ Claim functions return RewardReceipt type[0m
+[32m✓ Receipt validation is used[0m
+
+--- Balance Application Guard ---
+[32m✓ No suspicious direct balance mutations found[0m
+
+--- Receipt Telemetry Events ---
+[32m✓ Event REWARD_RECEIPT_RECEIVED defined[0m
+[32m✓ Event REWARD_CLAIM_SUCCESS defined[0m
+[32m✓ Event REWARD_CLAIM_ALREADY_CLAIMED defined[0m
+[32m✓ Event REWARD_CLAIM_ERROR defined[0m
+[32m✓ Event MAIL_CLAIM_SUBMITTED defined[0m
+[32m✓ Mail API emits telemetry with source + sourceId[0m
+
+============================================================
+[32mAll receipt shape checks passed![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-22
+> node scripts/guard-phase-3-22-closure.mjs
+
+============================================================
+Phase 3.22 Closure Guard
+============================================================
+
+--- Phase 3.22.12: Rail Behavior Contract ---
+[32m✓ Rail has no auto-collapse timers[0m
+[32m✓ Rail has no polling intervals[0m
+[32m✓ Doors button toggles rail (not DoorsSheet)[0m
+[32m✓ Library icon (apps) wired to open DoorsSheet[0m
+[32m✓ Backdrop tap-to-collapse implemented[0m
+
+--- Phase 3.22.12: AtmosphereStack Contract ---
+[32m✓ AtmosphereStack has pointerEvents="none"[0m
+[32m✓ AtmosphereStack respects Reduce Motion[0m
+[32m✓ Animations disabled when Reduce Motion enabled[0m
+[32m✓ Vignette opacity budget OK (max: 0.26)[0m
+
+--- Phase 3.22/3.23: Badges Event-Driven ---
+[32m✓ Badges have no polling intervals[0m
+[32m✓ Manual triggerBadgeRefresh() available[0m
+[32m✓ Badges refresh on app foreground (event-driven)[0m
+[32m✓ Events badge defaults to undefined (no always-lit)[0m
+
+============================================================
+[32mPhase 3.22 closure checks PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-23
+> node scripts/guard-phase-3-23-closure.mjs
+
+============================================================
+Phase 3.23 Closure Guard
+============================================================
+
+--- Phase 3.23.3-4: Social Screens ---
+[32m✓ Mail screen has Rewards/Messages/Gifts tabs[0m
+[32m✓ Mail screen uses canonical receipt type[0m
+[32m✓ Friends screen has Requests/Friends/Search tabs[0m
+[32m✓ Friends search has debounce[0m
+
+--- Phase 3.23.2: Auth-Token Identity ---
+[32m✓ Mail endpoints use auth token (6/6)[0m
+[32m✓ Friends endpoints use auth token (3/5)[0m
+[32m✓ Legacy routes document that username param is ignored[0m
+
+--- Phase 3.23.4: Idempotent Operations ---
+[32m✓ Accept friend request has idempotency check[0m
+[32m✓ Claim endpoints return alreadyClaimed flag[0m
+
+--- Phase 3.23.5: Desire Engine Cleanup ---
+[32m✓ Home timers have cleanup handlers[0m
+[32m✓ IdleRewardsCard has timeout cleanup[0m
+
+--- Phase 3.23.6-8: Chromatic Consistency ---
+[32m✓ Hero screen disables drifting fog[0m
+
+============================================================
+[33mPhase 3.23 passed with 1 warning(s)[0m
+============================================================
+
+> frontend@1.0.0 guard:hero-motion
+> node scripts/guard-hero-motion.mjs
+
+============================================================
+Phase 3.25: Hero Motion Guard
+============================================================
+
+--- Motion File Checks ---
+
+  Checking motion.ts...
+[32m✓ motion.ts: useAnimatedStyle (Reanimated) found[0m
+[32m✓ motion.ts: Reanimated timing functions found[0m
+[32m✓ motion.ts: Reduce Motion check found[0m
+
+  Checking [id].tsx...
+[32m✓ [id].tsx: Uses deriveHeroStageConfig (centralized)[0m
+[32m✓ [id].tsx: Uses useHeroIdleMotion hook[0m
+[32m✓ [id].tsx: Drifting fog disabled[0m
+[32m✓ [id].tsx: Has DEV logging for config[0m
+
+--- Motion Tier Configuration ---
+[32m✓ MOTION_PARAMS table exists (single source of truth)[0m
+[32m✓ Tier 0-1 are properly static (breathingScale: 0)[0m
+[32m✓ Locked motion values match spec (0.006, 0.010, 0.013, 0.016)[0m
+[32m✓ resolveMotionTier function exists[0m
+[32m✓ deriveHeroStageConfig function exists[0m
+[32m✓ getHeroMotionSpecByHeroDataId (alias-aware) exists[0m
+[32m✓ Selene alias resolution exists (char_selene_ssr)[0m
+
+============================================================
+[32mHero motion guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-27
+> node scripts/guard-phase-3-27.mjs
+
+============================================================
+Phase 3.27: Hero Stage Intimacy v2 Guard
+============================================================
+
+--- Camera Drift System ---
+
+[32m✓[0m CAMERA_DRIFT_PARAMS table exists
+[32m✓[0m useHeroCameraDrift hook exists
+[32m✓[0m Camera drift is tier-gated (intimate tier in inspect mode only)
+[32m✓[0m No timers/RAF in motion.ts (Reanimated-only)
+
+--- Hero Screen Integration ---
+
+[32m✓[0m Hero screen uses useHeroCameraDrift hook
+[32m✓[0m Hero screen has inspect mode state
+[32m✓[0m Hero screen emits HERO_STAGE_VIEWED telemetry
+[32m✓[0m Hero screen emits HERO_STAGE_CAMERA_MODE_RESOLVED telemetry
+
+--- Telemetry Events ---
+
+[32m✓[0m HERO_STAGE_VIEWED event defined
+[32m✓[0m HERO_STAGE_INSPECT_TOGGLED event defined
+[32m✓[0m HERO_STAGE_CAMERA_MODE_RESOLVED event defined
+
+--- Reduce Motion Support ---
+
+[32m✓[0m Camera drift respects Reduce Motion preference
+
+============================================================
+[32mPhase 3.27 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-28
+> node scripts/guard-phase-3-28.mjs
+
+============================================================
+Phase 3.28: Friends Gift System Guard
+============================================================
+
+--- Friends Gift UI ---
+
+[32m✓[0m Gift button exists in friends screen
+[32m✓[0m GiftModal component exists
+[32m✓[0m Gift type choices displayed (gold, stamina, gems)
+
+--- Friends Gift API ---
+
+[32m✓[0m sendFriendGift API function exists
+[32m✓[0m getFriendGiftStatus API function exists
+[32m✓[0m FRIEND_GIFT_SENT telemetry emitted
+
+--- Mail Gift Claim (Canonical Receipt) ---
+
+[32m✓[0m Gifts tab exists in mail screen
+[32m✓[0m Mail gift claim uses canonical receipt handling
+
+============================================================
+[32mPhase 3.28 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-29
+> node scripts/guard-phase-3-29.mjs
+
+============================================================
+Phase 3.29: Events/Quests System Guard
+============================================================
+
+[32m✓[0m /app/events.tsx screen exists
+--- Events Screen ---
+
+[32m✓[0m Event claim function integrated
+[32m✓[0m EVENTS_VIEWED telemetry emitted
+[32m✓[0m EVENT_CLAIM_SUBMITTED telemetry emitted
+[32m✓[0m Canonical receipt handling in events screen
+
+--- RewardSource Validation ---
+
+[32m✓[0m event_claim is valid RewardSource
+
+--- No Timers/RAF Check ---
+
+[32m✓[0m No timers/RAF in events screen
+
+============================================================
+[32mPhase 3.29 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-30
+> node scripts/guard-phase-3-30.mjs
+
+============================================================
+Phase 3.30: Store & Economy System Guard
+============================================================
+
+[32m✓[0m /app/shop.tsx screen exists
+--- Shop Screen ---
+
+[32m✓[0m createPurchaseIntent function used in shop
+[32m✓[0m getStoreCatalog function used in shop
+[32m✓[0m STORE_VIEWED telemetry emitted
+[32m✓[0m STORE_ITEM_SELECTED telemetry emitted
+
+--- No Billing Libraries ---
+
+[32m✓[0m No direct billing library imports in shop.tsx
+
+--- Store API ---
+
+[32m✓[0m lib/api/store.ts exists
+[32m✓[0m createPurchaseIntent API function exists
+[32m✓[0m redeemIntent (DEV-only) API function exists
+
+--- Canonical Receipt (Redeem) ---
+
+[32m✓[0m store_redeem is valid RewardSource
+[32m✓[0m Redeem uses canonical receipt validation
+
+============================================================
+[32mPhase 3.30 guard PASSED![0m
+============================================================
+
+> frontend@1.0.0 guard:phase-3-31
+> node scripts/guard-phase-3-31.mjs
+
+============================================================
+Phase 3.31: Idle Loop Completion Guard
+============================================================
+
+[32m✓[0m /app/idle.tsx screen exists
+--- Idle Screen ---
+
+[32m✓[0m Idle claim function exists
+[32m✓[0m Idle status fetch function exists
+[32m✓[0m Progress bar component present
+[32m✓[0m Claim button present
+
+--- No Timers/Polling ---
+
+[32m✓[0m No timers/RAF in idle screen (event-driven only)
+
+--- Canonical Receipt Handling ---
+
+[32m✓[0m Uses canonical receipt validation
+[32m✓[0m Uses receipt item formatting
+[32m✓[0m Handles alreadyClaimed idempotency
+
+--- Telemetry Events ---
+
+[32m✓[0m IDLE_VIEWED event defined
+[32m✓[0m IDLE_CLAIM_SUBMITTED event defined
+[32m✓[0m IDLE_CLAIM_SUCCESS event defined
+[32m✓[0m IDLE_VIEWED telemetry emitted
+[32m✓[0m IDLE_CLAIM_SUBMITTED telemetry emitted
+
+============================================================
+[32mPhase 3.31 guard PASSED![0m
+============================================================ command. This is the immediate next step for the current task.
 </analysis>

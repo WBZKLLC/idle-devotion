@@ -128,21 +128,23 @@ const styles = StyleSheet.create({
     right: 0,
     width: RAIL.WIDTH,
     borderRadius: RAIL.RADIUS,
-    backgroundColor: COLORS.navy.dark + RAIL.BG_ALPHA_HEX,
+    // Phase 3.23.8: Richer housing - glass/ink panel
+    backgroundColor: COLORS.navy.dark + 'D0',  // More opaque housing
     borderWidth: 1,
-    borderColor: COLORS.cream.pure + '10',
+    borderColor: COLORS.cream.pure + '08',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.22,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 14,
+        shadowOffset: { width: -2, height: 8 },
       },
       android: {
-        elevation: 6,
+        elevation: 8,
       },
       web: {
-        boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
+        boxShadow: '-2px 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(8px)',
       },
     }),
   },

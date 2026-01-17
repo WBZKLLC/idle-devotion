@@ -3863,9 +3863,7 @@ async def _get_idle_status_impl(user: dict):
         "isCollecting": True,
         "rates": IDLE_RATES,
     }
-        "next_milestones": next_milestones,
-        "vip_upgrade_info": vip_upgrade,
-    }
+
 
 @api_router.post("/idle/instant-collect/{username}")
 async def instant_collect_idle(username: str):

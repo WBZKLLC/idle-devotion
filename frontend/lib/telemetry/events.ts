@@ -76,6 +76,13 @@ export const Events = {
   FRIEND_GIFT_SENT: 'friend_gift_sent',
   FRIEND_GIFT_CLAIM_SUBMITTED: 'friend_gift_claim_submitted',
   
+  // Phase 3.29: Events/Quests telemetry
+  EVENTS_VIEWED: 'events_viewed',
+  EVENT_CLAIM_SUBMITTED: 'event_claim_submitted',
+  EVENT_CLAIM_SUCCESS: 'event_claim_success',
+  EVENT_CLAIM_ALREADY_CLAIMED: 'event_claim_already_claimed',
+  EVENT_CLAIM_ERROR: 'event_claim_error',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

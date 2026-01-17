@@ -98,6 +98,7 @@ export default function HeroPresentationScreen() {
   const [hero, setHero] = useState<any>(null);
   const [heroData, setHeroData] = useState<any>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const hasLoggedConfig = useRef(false);
   
   // Check for reduce motion preference
   useEffect(() => {
@@ -147,26 +148,28 @@ export default function HeroPresentationScreen() {
     return resolveTierArt(heroData, tier);
   }, [heroData, tier]);
   
-  // Get effective content level for this screen
-  const contentLevel = useMemo(() => {
-    const affinityLevel = hero?.affinity_level || 0;
-    return getEffectiveContentLevel('heroPresentation', affinityLevel);
-  }, [hero]);
+  // Phase 3.25: Derive stage config using centralized function
+  const stageConfig = useMemo<HeroStageConfig>(() => {
+    return deriveHeroStageConfig({
+      heroData,
+      affinityLevel: hero?.affinity_level || 0,
+      reduceMotion,
+    });
+  }, [heroData, hero?.affinity_level, reduceMotion]);
   
-  // Phase 3.25: Motion tier based on affinity
-  const affinityLevel = hero?.affinity_level || 0;
-  const { animatedStyle: motionStyle, motionTier, isAnimating } = useHeroIdleMotion(
-    affinityLevel,
-    reduceMotion
-  );
+  // Phase 3.25: Motion hook (uses stageConfig)
+  const { animatedStyle: motionStyle, isAnimating } = useHeroIdleMotion(stageConfig);
   
-  // Camera mode: standard for tier 0-3, intimate for tier 4-5 if unlocked
-  const cameraMode = useMemo<CameraMode>(() => {
-    if (motionTier >= 4 && isCameraModeUnlocked('intimate', affinityLevel)) {
-      return 'intimate';
+  // DEV: Log config once on mount
+  useEffect(() => {
+    if (heroData && !hasLoggedConfig.current) {
+      hasLoggedConfig.current = true;
+      logHeroStageConfig(stageConfig);
     }
-    return 'standard';
-  }, [motionTier, affinityLevel]);
+  }, [heroData, stageConfig]);
+  
+  // Camera mode from stageConfig (tier-driven)
+  const cameraMode = stageConfig.cameraMode;
   
   // Base camera transform
   const baseCameraTransform = getCameraTransform(cameraMode);
@@ -176,9 +179,6 @@ export default function HeroPresentationScreen() {
     if (!hero) return 0;
     return Math.floor((hero.current_atk || 0) + (hero.current_hp || 0) / 10 + (hero.current_def || 0));
   }, [hero]);
-  
-  // Check if this is Selene for special handling
-  const isSelene = isSeleneHero(heroData?.id);
   
   // Handle back navigation
   const handleBack = () => {

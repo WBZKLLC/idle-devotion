@@ -755,7 +755,7 @@ def get_ascension_images(hero_name: str) -> dict:
 # - admin_grant
 # =============================================================================
 
-from typing import Literal
+from typing import Literal, Any
 
 RewardSource = Literal[
     "bond_tribute",

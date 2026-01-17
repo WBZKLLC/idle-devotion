@@ -30,9 +30,21 @@ import { LAYOUT } from '../components/ui/tokens';
 import { track, Events as TelemetryEvents } from '../lib/telemetry/events';
 import { RewardReceipt, isValidReceipt, formatReceiptItems } from '../lib/types/receipt';
 import { triggerBadgeRefresh } from '../lib/ui/badges';
-import { getAuthHeaders } from '../lib/api/shared';
+import { tokenManager } from '../lib/api/token';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+
+// Phase 3.29: Auth header helper
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await tokenManager.getAccessToken();
+  if (!token) {
+    return { 'Content-Type': 'application/json' };
+  }
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+}
 
 // Phase 3.29: Quest event type from new API
 interface QuestEvent {

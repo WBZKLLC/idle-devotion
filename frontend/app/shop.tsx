@@ -100,7 +100,7 @@ export default function ShopScreen() {
           toast.info('Already redeemed.');
         } else {
           toast.success(`Redeemed: ${formatReceiptItems(receipt)}`);
-          await refreshUser();
+          await fetchUser();
         }
       } else {
         toast.success('Redeemed!');

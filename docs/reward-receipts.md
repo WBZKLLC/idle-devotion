@@ -54,6 +54,8 @@ interface Balances {
 | `daily_login_claim` | Daily login reward | `daily_2024-01-15` |
 | `idle_claim` | Idle rewards | `idle_user123_ts` |
 | `admin_grant` | Admin-granted reward | `admin_grant_xyz` |
+| `event_claim` | Event/quest reward claim | `welcome_2024_user123` |
+| `store_redeem` | DEV-only store intent redeem | `intent_abc123` |
 
 ---
 

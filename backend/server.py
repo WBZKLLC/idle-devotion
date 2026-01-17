@@ -3628,22 +3628,26 @@ async def get_hero_change_logs(username: str, hero_id: str = None, limit: int = 
     return [convert_objectid(log) for log in logs]
 
 @api_router.post("/idle/claim")
-async def claim_idle_rewards(username: str):
+async def claim_idle_rewards(
+    username: str = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     """
-    Claim idle rewards with VIP-tiered rates and progression-based caps.
+    Claim idle rewards with canonical receipt.
     
-    Phase 3.24: Returns canonical receipt shape alongside legacy fields:
-    { source, sourceId, items, balances, alreadyClaimed, ...legacyFields }
+    Phase 3.31: Simplified idle loop with fixed rates:
+    - Gold: 120/hr
+    - Stamina: 6/hr
+    - Gems: 0/hr
+    - Cap: 8h default (VIP extensible)
     
-    VIP Rate Schedule:
-    - VIP 0-6: 5% base rate
-    - VIP 7: 15% rate
-    - VIP 8+: +5% per level (20%, 25%, etc.)
-    
-    Resources: Gold, Coins, Enhancement Stones, Skill Essence, Stamina, Rune Stones
-    Caps based on: Abyss floor, Dungeon tier, Campaign chapter
+    Returns canonical receipt shape:
+    { source, sourceId, items, balances, alreadyClaimed }
     """
-    user = await get_user_for_mutation(username)  # Includes frozen check
+    # Phase 3.31: Use auth-token identity
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    username = user["username"]
     
     # Generate unique sourceId for this claim
     claim_id = f"idle_{user['id']}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"

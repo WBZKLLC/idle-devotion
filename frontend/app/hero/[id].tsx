@@ -309,9 +309,26 @@ export default function HeroPresentationScreen() {
         </Animated.View>
       </Pressable>
       
-      {/* LAYER 4: Parallax foreground accents (future: cloth, hair tips) */}
-      {/* Currently empty - reserved for future phases */}
-      <View style={styles.parallaxLayer} pointerEvents="none" />
+      {/* LAYER 4: Parallax planes (Phase 3.26 - static styling) */}
+      <View style={styles.parallaxLayer} pointerEvents="none">
+        {stageConfig.parallaxPlanes.map((plane) => (
+          <View
+            key={plane.id}
+            style={[
+              styles.parallaxPlane,
+              {
+                opacity: plane.opacity,
+                transform: [{ scale: plane.scale }],
+                zIndex: plane.depth === 'far' ? 1 : plane.depth === 'mid' ? 2 : plane.depth === 'near' ? 3 : 4,
+              },
+              plane.id === 'shelf' && styles.parallaxShelf,
+              plane.id === 'veil' && styles.parallaxVeil,
+              plane.id === 'halo' && styles.parallaxHalo,
+              plane.id === 'rim' && styles.parallaxRim,
+            ]}
+          />
+        ))}
+      </View>
       
       {/* LAYER 5: UI chrome */}
       <SafeAreaView style={styles.uiLayer} edges={['top', 'bottom']}>
@@ -326,19 +343,44 @@ export default function HeroPresentationScreen() {
             <Ionicons name="chevron-back" size={24} color={COLORS.cream.pure} />
           </Pressable>
           
-          {/* Hero name + rarity */}
+          {/* Hero name + rarity + camera label */}
           <View style={styles.heroInfo}>
             <Text style={styles.heroName} numberOfLines={1}>{heroData.name}</Text>
-            {renderRarityStars(heroData.rarity)}
+            <View style={styles.heroMetaRow}>
+              {renderRarityStars(heroData.rarity)}
+              {/* Phase 3.26: Camera label microcopy */}
+              <Text style={styles.cameraLabel}>{stageConfig.cameraLabel}</Text>
+            </View>
           </View>
           
-          {/* Affinity indicator (optional) */}
-          {(hero.affinity_level ?? 0) > 0 && (
-            <View style={styles.affinityBadge}>
-              <Ionicons name="heart" size={14} color={COLORS.gold.light} />
-              <Text style={styles.affinityText}>{hero.affinity_level}</Text>
-            </View>
-          )}
+          {/* Affinity + Intimacy badge */}
+          <View style={styles.topRightBadges}>
+            {(hero.affinity_level ?? 0) > 0 && (
+              <View style={styles.affinityBadge}>
+                <Ionicons name="heart" size={14} color={COLORS.gold.light} />
+                <Text style={styles.affinityText}>{hero.affinity_level}</Text>
+              </View>
+            )}
+            {/* Phase 3.26: Intimacy lock badge */}
+            {stageConfig.tier >= 2 && (
+              <View style={[
+                styles.intimacyBadge,
+                stageConfig.intimacyUnlocked && styles.intimacyUnlocked,
+              ]}>
+                <Ionicons 
+                  name={stageConfig.intimacyUnlocked ? "eye" : "eye-off-outline"} 
+                  size={12} 
+                  color={stageConfig.intimacyUnlocked ? COLORS.gold.light : COLORS.cream.dark} 
+                />
+                <Text style={[
+                  styles.intimacyText,
+                  stageConfig.intimacyUnlocked && styles.intimacyTextUnlocked,
+                ]}>
+                  {stageConfig.intimacyUnlocked ? 'Intimate' : 'T4'}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
         
         {/* Bottom safe zone (actions) */}

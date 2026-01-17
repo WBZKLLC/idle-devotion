@@ -228,6 +228,13 @@ export default function MailScreen() {
             onClaim={loadData}
           />
         )}
+        {/* Phase 3.26: Receipts tab */}
+        {activeTab === 'receipts' && (
+          <ReceiptsTab 
+            receipts={receipts}
+            onClaim={loadData}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );

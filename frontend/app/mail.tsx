@@ -435,6 +435,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: FONT_SIZE.md,
     color: COLORS.cream.dark,
+    fontStyle: 'italic',
   },
   authGate: {
     flex: 1,
@@ -452,6 +453,7 @@ const styles = StyleSheet.create({
   authGateSubtitle: {
     fontSize: FONT_SIZE.md,
     color: COLORS.cream.dark,
+    fontStyle: 'italic',
   },
   authGateButton: {
     marginTop: 16,
@@ -464,7 +466,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: LAYOUT.SCREEN_PADDING,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: COLORS.cream.pure + '10',
+    borderBottomColor: COLORS.cream.pure + '08',
   },
   backButton: {
     padding: 4,
@@ -474,7 +476,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: FONT_WEIGHT.semibold,
     color: COLORS.cream.pure,
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   headerRight: {
     width: 32,

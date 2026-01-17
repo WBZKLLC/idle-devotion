@@ -442,6 +442,7 @@ function SearchTab({ username, onUpdate }: { username: string; onUpdate: () => v
     try {
       await sendFriendRequest(username, toUsername);
       toast.success('Request sent.');
+      triggerBadgeRefresh(); // Update side rail badge
       onUpdate();
       // Update local state
       setResults(prev => prev.map(r => 

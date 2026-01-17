@@ -201,35 +201,87 @@ export async function claimMailReward(username: string, rewardId: string): Promi
 
 /**
  * Claim a mail gift (idempotent)
- * Phase 3.24: Returns canonical receipt
+ * Phase 3.24: Returns canonical receipt + emits telemetry
  */
 export async function claimMailGift(username: string, giftId: string): Promise<RewardReceipt> {
-  const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/mail/gifts/${username}/${giftId}/claim`, {
-    method: 'POST',
-    headers,
+  // Emit submission event
+  track(Events.MAIL_CLAIM_SUBMITTED, { 
+    source: 'mail_gift_claim', 
+    sourceId: giftId 
   });
-  if (!res.ok) throw new Error('Failed to claim gift');
   
-  const receipt = await res.json();
-  
-  // Phase 3.24: Validate receipt shape
-  if (isValidReceipt(receipt)) {
-    return receipt;
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/mail/gifts/${username}/${giftId}/claim`, {
+      method: 'POST',
+      headers,
+    });
+    
+    if (!res.ok) {
+      track(Events.REWARD_CLAIM_ERROR, { 
+        source: 'mail_gift_claim', 
+        sourceId: giftId,
+        status: res.status,
+      });
+      throw new Error('Failed to claim gift');
+    }
+    
+    const receipt = await res.json();
+    
+    // Phase 3.24: Validate receipt shape
+    if (isValidReceipt(receipt)) {
+      // Emit receipt received
+      track(Events.REWARD_RECEIPT_RECEIVED, { 
+        source: receipt.source, 
+        sourceId: receipt.sourceId,
+        itemCount: receipt.items.length,
+      });
+      
+      // Emit success/already claimed
+      if (receipt.alreadyClaimed) {
+        track(Events.REWARD_CLAIM_ALREADY_CLAIMED, { 
+          source: receipt.source, 
+          sourceId: receipt.sourceId 
+        });
+      } else {
+        track(Events.REWARD_CLAIM_SUCCESS, { 
+          source: receipt.source, 
+          sourceId: receipt.sourceId,
+          itemCount: receipt.items.length,
+        });
+      }
+      
+      return receipt;
+    }
+    
+    // Legacy fallback: convert old response to canonical receipt
+    console.warn('[claimMailGift] Legacy response detected, converting to receipt');
+    const legacyReceipt: RewardReceipt = {
+      source: 'mail_gift_claim',
+      sourceId: giftId,
+      items: [],
+      balances: {
+        gold: 0, coins: 0, gems: 0, divine_gems: 0, crystals: 0,
+        stamina: 0, divine_essence: 0, soul_dust: 0, skill_essence: 0,
+        enhancement_stones: 0, hero_shards: 0, rune_essence: 0,
+      },
+      alreadyClaimed: receipt.alreadyClaimed ?? false,
+      message: receipt.message,
+    };
+    
+    track(Events.REWARD_RECEIPT_RECEIVED, { 
+      source: legacyReceipt.source, 
+      sourceId: legacyReceipt.sourceId,
+      legacy: true,
+    });
+    
+    return legacyReceipt;
+  } catch (error) {
+    track(Events.REWARD_CLAIM_ERROR, { 
+      source: 'mail_gift_claim', 
+      sourceId: giftId,
+      error: String(error),
+    });
+    throw error;
   }
-  
-  // Legacy fallback: convert old response to canonical receipt
-  console.warn('[claimMailGift] Legacy response detected, converting to receipt');
-  return {
-    source: 'mail_gift_claim',
-    sourceId: giftId,
-    items: [],
-    balances: {
-      gold: 0, coins: 0, gems: 0, divine_gems: 0, crystals: 0,
-      stamina: 0, divine_essence: 0, soul_dust: 0, skill_essence: 0,
-      enhancement_stones: 0, hero_shards: 0, rune_essence: 0,
-    },
-    alreadyClaimed: receipt.alreadyClaimed ?? false,
-    message: receipt.message,
-  };
 }

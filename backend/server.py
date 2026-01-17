@@ -4600,7 +4600,11 @@ async def get_mail_gifts_legacy(username: str, credentials: HTTPAuthorizationCre
 
 @api_router.post("/mail/rewards/{reward_id}/claim")
 async def claim_mail_reward(reward_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Claim a specific reward (idempotent - already claimed returns success)"""
+    """Claim a specific reward (idempotent - already claimed returns canonical receipt)
+    
+    Phase 3.24: Returns canonical receipt shape:
+    { source, sourceId, items, balances, alreadyClaimed }
+    """
     user, _ = await authenticate_request(credentials, require_auth=True)
     assert_account_active(user)
     
@@ -4613,17 +4617,51 @@ async def claim_mail_reward(reward_id: str, credentials: HTTPAuthorizationCreden
     if not reward:
         raise HTTPException(status_code=404, detail="Reward not found")
     
-    # Idempotent: if already claimed, return success with flag
+    # Idempotent: if already claimed, return canonical receipt with alreadyClaimed=True
     if reward.get("claimed"):
-        return {"message": "Reward claimed", "alreadyClaimed": True}
+        return await grant_rewards_canonical(
+            user=user,
+            source="mail_reward_claim",
+            source_id=reward_id,
+            rewards=[],  # Empty items for already claimed
+            already_claimed=True,
+            message="Reward already claimed"
+        )
     
-    # Mark as claimed
-    await db.mail_rewards.update_one(
-        {"id": reward_id, "user_id": user["id"], "claimed": False},  # Atomic check
+    # Mark as claimed (atomic check)
+    result = await db.mail_rewards.update_one(
+        {"id": reward_id, "user_id": user["id"], "claimed": False},
         {"$set": {"claimed": True, "claimed_at": datetime.utcnow()}}
     )
     
-    return {"message": "Reward claimed", "alreadyClaimed": False}
+    # Double-check atomic update succeeded (race condition protection)
+    if result.modified_count == 0:
+        return await grant_rewards_canonical(
+            user=user,
+            source="mail_reward_claim",
+            source_id=reward_id,
+            rewards=[],
+            already_claimed=True,
+            message="Reward already claimed"
+        )
+    
+    # Extract rewards from the mail reward record
+    reward_items = reward.get("rewards", [])
+    if not reward_items:
+        # Legacy fallback: single reward format
+        reward_type = reward.get("reward_type", "gold")
+        reward_amount = reward.get("reward_amount", 100)
+        reward_items = [{"type": reward_type, "amount": reward_amount}]
+    
+    # Grant rewards using canonical helper
+    return await grant_rewards_canonical(
+        user=user,
+        source="mail_reward_claim",
+        source_id=reward_id,
+        rewards=reward_items,
+        already_claimed=False,
+        message="Reward claimed"
+    )
 
 # Legacy route for backwards compatibility
 @api_router.post("/mail/rewards/{username}/{reward_id}/claim")
@@ -4633,7 +4671,11 @@ async def claim_mail_reward_legacy(username: str, reward_id: str, credentials: H
 
 @api_router.post("/mail/gifts/{gift_id}/claim")
 async def claim_mail_gift(gift_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Claim a gift (idempotent - already claimed returns success)"""
+    """Claim a gift (idempotent - already claimed returns canonical receipt)
+    
+    Phase 3.24: Returns canonical receipt shape:
+    { source, sourceId, items, balances, alreadyClaimed }
+    """
     user, _ = await authenticate_request(credentials, require_auth=True)
     assert_account_active(user)
     
@@ -4646,17 +4688,51 @@ async def claim_mail_gift(gift_id: str, credentials: HTTPAuthorizationCredential
     if not gift:
         raise HTTPException(status_code=404, detail="Gift not found")
     
-    # Idempotent: if already claimed, return success with flag
+    # Idempotent: if already claimed, return canonical receipt with alreadyClaimed=True
     if gift.get("claimed"):
-        return {"message": "Gift accepted", "alreadyClaimed": True}
+        return await grant_rewards_canonical(
+            user=user,
+            source="mail_gift_claim",
+            source_id=gift_id,
+            rewards=[],  # Empty items for already claimed
+            already_claimed=True,
+            message="Gift already claimed"
+        )
     
     # Mark as claimed (atomic check)
-    await db.mail_gifts.update_one(
+    result = await db.mail_gifts.update_one(
         {"id": gift_id, "to_user_id": user["id"], "claimed": False},
         {"$set": {"claimed": True, "claimed_at": datetime.utcnow()}}
     )
     
-    return {"message": "Gift accepted", "alreadyClaimed": False}
+    # Double-check atomic update succeeded (race condition protection)
+    if result.modified_count == 0:
+        return await grant_rewards_canonical(
+            user=user,
+            source="mail_gift_claim",
+            source_id=gift_id,
+            rewards=[],
+            already_claimed=True,
+            message="Gift already claimed"
+        )
+    
+    # Extract gift rewards
+    gift_items = gift.get("items", [])
+    if not gift_items:
+        # Legacy fallback: single item format
+        gift_type = gift.get("item_type", gift.get("item", "gold"))
+        gift_amount = gift.get("quantity", 1)
+        gift_items = [{"type": gift_type, "amount": gift_amount}]
+    
+    # Grant rewards using canonical helper
+    return await grant_rewards_canonical(
+        user=user,
+        source="mail_gift_claim",
+        source_id=gift_id,
+        rewards=gift_items,
+        already_claimed=False,
+        message="Gift claimed"
+    )
 
 # Legacy route for backwards compatibility
 @api_router.post("/mail/gifts/{username}/{gift_id}/claim")

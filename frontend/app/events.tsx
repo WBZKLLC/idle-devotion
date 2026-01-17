@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,46 @@ import { useConfirmModal } from '../components/ui/useConfirmModal';
 // Phase 3.22.4: Micro-interaction utilities
 import { PRESS, haptic } from '../lib/ui/interaction';
 import { LAYOUT } from '../components/ui/tokens';
+// Phase 3.29: Canonical receipt system
+import { track, Events as TelemetryEvents } from '../lib/telemetry/events';
+import { RewardReceipt, isValidReceipt, formatReceiptItems } from '../lib/types/receipt';
+import { triggerBadgeRefresh } from '../lib/ui/badges';
+import { getAuthHeaders } from '../lib/api/shared';
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+
+// Phase 3.29: Quest event type from new API
+interface QuestEvent {
+  id: string;
+  title: string;
+  description: string;
+  type: 'one_time' | 'daily';
+  rewards_preview: string[];
+  is_claimable: boolean;
+  ends_at: string | null;
+}
+
+// Phase 3.29: API functions for new events system
+async function getActiveQuests(): Promise<{ events: QuestEvent[]; claimable_count: number }> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/events/active`, { headers });
+    if (!res.ok) return { events: [], claimable_count: 0 };
+    return await res.json();
+  } catch {
+    return { events: [], claimable_count: 0 };
+  }
+}
+
+async function claimQuestReward(eventId: string): Promise<RewardReceipt> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/api/events/${eventId}/claim`, {
+    method: 'POST',
+    headers,
+  });
+  if (!res.ok) throw new Error('Failed to claim');
+  return await res.json();
+}
 
 interface Event {
   id: string;

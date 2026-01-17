@@ -1076,12 +1076,110 @@ function CenteredBackground(props: {
 }
 
 /**
- * DivineOverlays - Premium overlay effects for celestial gacha aesthetic
+ * DivineOverlays - Premium overlay effects for sanctuary depth
+ * Phase 3.23.8: Enhanced with top haze, vignette corners, and focal lift
  */
-function DivineOverlays(props: { vignette?: boolean; rays?: boolean; grain?: boolean }) {
+function DivineOverlays(props: { vignette?: boolean; rays?: boolean; grain?: boolean; topHaze?: boolean; focalLift?: boolean }) {
   return (
     <>
-      {props.rays ? (
+      {/* Top Haze — HUD sits in atmospheric mist */}
+      {props.topHaze !== false && (
+        <LinearGradient
+          colors={[
+            'rgba(12,16,28,0.7)',
+            'rgba(12,16,28,0.4)',
+            'rgba(12,16,28,0.1)',
+            'transparent',
+          ]}
+          locations={[0, 0.3, 0.6, 1]}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 160,
+            zIndex: 3,
+          }}
+          pointerEvents="none"
+        />
+      )}
+      
+      {/* Vignette — darkens corners for depth */}
+      {props.vignette && (
+        <>
+          <LinearGradient
+            colors={['rgba(8,10,18,0.55)', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.5, y: 0.5 }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '50%',
+              height: '40%',
+            }}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={['rgba(8,10,18,0.55)', 'transparent']}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0.5, y: 0.5 }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '50%',
+              height: '40%',
+            }}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={['rgba(8,10,18,0.45)', 'transparent']}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 0.5, y: 0.5 }}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: '50%',
+              height: '35%',
+            }}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={['rgba(8,10,18,0.45)', 'transparent']}
+            start={{ x: 1, y: 1 }}
+            end={{ x: 0.5, y: 0.5 }}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              width: '50%',
+              height: '35%',
+            }}
+            pointerEvents="none"
+          />
+        </>
+      )}
+      
+      {/* Focal Lift — warm glow near dock area (candlelight) */}
+      {props.focalLift !== false && (
+        <LinearGradient
+          colors={['transparent', 'transparent', `${COLORS.gold.primary}06`, `${COLORS.gold.primary}10`, 'transparent']}
+          locations={[0, 0.55, 0.72, 0.88, 1]}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '42%',
+            zIndex: 2,
+          }}
+          pointerEvents="none"
+        />
+      )}
+      
+      {props.rays && (
         <View
           pointerEvents="none"
           style={{
@@ -1091,12 +1189,13 @@ function DivineOverlays(props: { vignette?: boolean; rays?: boolean; grain?: boo
             right: -120,
             bottom: -120,
             transform: [{ rotate: "-12deg" }],
-            backgroundColor: "rgba(255,255,255,0.04)",
+            backgroundColor: "rgba(255,255,255,0.03)",
           }}
         />
-      ) : null}
+      )}
 
-      {props.vignette ? (
+      {/* Grain — very subtle film texture */}
+      {props.grain && (
         <View
           pointerEvents="none"
           style={{
@@ -1105,24 +1204,11 @@ function DivineOverlays(props: { vignette?: boolean; rays?: boolean; grain?: boo
             top: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.28)",
+            backgroundColor: "rgba(255,255,255,0.012)",
+            zIndex: 4,
           }}
         />
-      ) : null}
-
-      {props.grain ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(255,255,255,0.02)",
-          }}
-        />
-      ) : null}
+      )}
     </>
   );
 }

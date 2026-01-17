@@ -30,6 +30,7 @@ import {
   searchPlayers,
   sendFriendRequest,
 } from '../lib/api/friends';
+import { triggerBadgeRefresh } from '../lib/ui/badges';
 
 type FriendTab = 'requests' | 'friends' | 'search';
 

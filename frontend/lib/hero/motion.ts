@@ -517,6 +517,80 @@ export function useHeroIdleMotion(stageConfig: HeroStageConfig) {
   };
 }
 
+// =============================================================================
+// PHASE 3.27: CAMERA DRIFT HOOK (NO TIMERS - WORKLETS ONLY)
+// =============================================================================
+
+/**
+ * Hook that provides animated styles for camera drift/creep.
+ * Creates subtle "camera" motion distinct from body motion.
+ * 
+ * Uses ONLY Reanimated worklets - NO timers, setInterval, or RAF.
+ * 
+ * @param stageConfig - Config from deriveHeroStageConfig
+ * @param isInspectMode - Whether user is in inspect/zoom mode (intimate drift only in inspect)
+ */
+export function useHeroCameraDrift(
+  stageConfig: HeroStageConfig,
+  isInspectMode: boolean = false
+) {
+  const { tier, cameraDriftParams, reduceMotion } = stageConfig;
+  
+  // Shared values for camera drift
+  const driftProgress = useSharedValue(0);
+  
+  // Camera drift enabled only at tier >= 2, and intimate drift only in inspect mode
+  const hasDrift = useMemo(() => {
+    if (reduceMotion) return false;
+    if (!cameraDriftParams.enabled) return false;
+    // Intimate tier (4-5) drift only active in inspect mode
+    if (tier >= 4 && !isInspectMode) return false;
+    return tier >= 2;
+  }, [tier, cameraDriftParams.enabled, reduceMotion, isInspectMode]);
+  
+  // Start/stop drift animation
+  useEffect(() => {
+    if (!hasDrift) {
+      driftProgress.value = 0;
+      return;
+    }
+    
+    // Slow, subtle drift animation
+    driftProgress.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: CAMERA_DRIFT_DURATION / 2, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-1, { duration: CAMERA_DRIFT_DURATION / 2, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      false
+    );
+  }, [hasDrift]);
+  
+  // Animated style for camera drift layer
+  const cameraDriftStyle = useAnimatedStyle(() => {
+    if (!hasDrift) {
+      return { transform: [] };
+    }
+    
+    const scale = 1 + driftProgress.value * cameraDriftParams.driftScale;
+    const translateX = driftProgress.value * cameraDriftParams.driftX;
+    const translateY = driftProgress.value * cameraDriftParams.driftY;
+    
+    return {
+      transform: [
+        { scale },
+        { translateX },
+        { translateY },
+      ],
+    };
+  }, [hasDrift, cameraDriftParams]);
+  
+  return {
+    cameraDriftStyle,
+    hasDrift,
+  };
+}
+
 /**
  * Get motion transform style without hook (for static usage)
  * Returns identity transform if reduce motion or tier < 2

@@ -589,7 +589,8 @@ export default function HomeScreen() {
         opacity={1}
       />
       <SanctumAtmosphere />
-      <DivineOverlays vignette grain bottomMist driftFog />
+      {/* Phase 3.23.8: Use dedicated AtmosphereStack component */}
+      <AtmosphereStack />
       
       {/* === PERIMETER HUD (top overlay, quiet) === */}
       <SafeAreaView style={styles.hudContainer} edges={['top', 'left', 'right']} pointerEvents="box-none">

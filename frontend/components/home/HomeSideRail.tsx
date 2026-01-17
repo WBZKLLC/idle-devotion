@@ -1,17 +1,25 @@
 // /app/frontend/components/home/HomeSideRail.tsx
-// Phase 3.22.12.R1: Side Rail (Mail + Friends)
+// Phase 3.23.8: Collapsible Side Rail
 //
-// Decoupled: rail only emits intent (callbacks). Home decides navigation.
-// Icons only, 7 actions, scrollable, no-bounce, subtle bottom fade.
+// Collapsed by default - only Doors icon visible.
+// Tap Doors to expand, tap outside or tap Doors again to collapse.
+// Auto-collapse after 5s of no interaction.
 //
-// "The rail is reflex. DoorsSheet is the library."
+// "The rail is a tool you summon, not furniture."
 
-import React, { useMemo } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, Platform, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { View, Pressable, StyleSheet, Platform, Text, AccessibilityInfo } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  runOnJS,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
-import { HOME_OVERLAY, RAIL } from '../ui/tokens';
+import { HOME_OVERLAY, RAIL, PRESS } from '../ui/tokens';
+import { haptic } from '../../lib/ui/interaction';
 
 type RailKey = 'doors' | 'mail' | 'friends' | 'quest' | 'events' | 'summon' | 'shop';
 
@@ -31,9 +39,13 @@ export type HomeSideRailProps = {
   badges?: HomeSideRailBadges;
 };
 
+const EXPAND_DURATION = 240;
+const COLLAPSE_DURATION = 200;
+const AUTO_COLLAPSE_DELAY = 5000; // 5 seconds
+
 function Badge({ value }: { value: number | boolean }) {
   const label =
-    typeof value === 'number' ? (value > 99 ? '99+' : String(value)) : '';
+    typeof value === 'number' ? (value > 9 ? '9+' : String(value)) : '';
 
   return (
     <View style={styles.badge}>
@@ -43,9 +55,89 @@ function Badge({ value }: { value: number | boolean }) {
 }
 
 export function HomeSideRail(props: HomeSideRailProps) {
-  const items = useMemo(
+  const [expanded, setExpanded] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const autoCollapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Animation value: 0 = collapsed, 1 = expanded
+  const expandProgress = useSharedValue(0);
+  
+  // Check for reduce motion preference
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      setReduceMotion
+    );
+    return () => subscription.remove();
+  }, []);
+  
+  // Clear auto-collapse timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoCollapseTimer.current) {
+        clearTimeout(autoCollapseTimer.current);
+      }
+    };
+  }, []);
+  
+  // Reset auto-collapse timer on interaction
+  const resetAutoCollapse = useCallback(() => {
+    if (autoCollapseTimer.current) {
+      clearTimeout(autoCollapseTimer.current);
+    }
+    if (expanded) {
+      autoCollapseTimer.current = setTimeout(() => {
+        setExpanded(false);
+        expandProgress.value = reduceMotion 
+          ? 0 
+          : withTiming(0, { duration: COLLAPSE_DURATION, easing: Easing.in(Easing.ease) });
+      }, AUTO_COLLAPSE_DELAY);
+    }
+  }, [expanded, reduceMotion, expandProgress]);
+  
+  // Start/reset auto-collapse when expanded changes
+  useEffect(() => {
+    if (expanded) {
+      resetAutoCollapse();
+    } else {
+      if (autoCollapseTimer.current) {
+        clearTimeout(autoCollapseTimer.current);
+        autoCollapseTimer.current = null;
+      }
+    }
+  }, [expanded, resetAutoCollapse]);
+  
+  const toggleExpand = useCallback(() => {
+    haptic('light');
+    props.onAnyInteraction?.();
+    
+    const newExpanded = !expanded;
+    setExpanded(newExpanded);
+    
+    if (reduceMotion) {
+      expandProgress.value = newExpanded ? 1 : 0;
+    } else {
+      expandProgress.value = withTiming(
+        newExpanded ? 1 : 0,
+        {
+          duration: newExpanded ? EXPAND_DURATION : COLLAPSE_DURATION,
+          easing: newExpanded ? Easing.out(Easing.ease) : Easing.in(Easing.ease),
+        }
+      );
+    }
+  }, [expanded, reduceMotion, expandProgress, props]);
+  
+  const handleItemPress = useCallback((action: () => void) => {
+    haptic('light');
+    props.onAnyInteraction?.();
+    resetAutoCollapse();
+    action();
+  }, [props, resetAutoCollapse]);
+  
+  // Items for expanded rail (excluding Doors)
+  const expandedItems = useMemo(
     () => [
-      { key: 'doors' as const, icon: 'grid' as const, onPress: props.onPressDoors, accent: true },
       { key: 'mail' as const, icon: 'mail' as const, onPress: props.onPressMail },
       { key: 'friends' as const, icon: 'people' as const, onPress: props.onPressFriends },
       { key: 'quest' as const, icon: 'map' as const, onPress: props.onPressQuest },
@@ -55,58 +147,79 @@ export function HomeSideRail(props: HomeSideRailProps) {
     ],
     [props],
   );
-
+  
+  // Animated styles for expanded content
+  const expandedStyle = useAnimatedStyle(() => ({
+    opacity: expandProgress.value,
+    transform: [
+      { translateX: (1 - expandProgress.value) * 20 },
+      { scale: 0.9 + expandProgress.value * 0.1 },
+    ],
+    maxHeight: expandProgress.value * 400, // Content-based height
+  }));
+  
+  // Animated style for housing
+  const housingStyle = useAnimatedStyle(() => ({
+    opacity: 0.4 + expandProgress.value * 0.55,
+  }));
+  
+  // Check for any badges
+  const hasAnyBadge = props.badges && Object.values(props.badges).some(v => v);
+  
   return (
     <View pointerEvents="box-none" style={styles.wrap}>
-      {/* Rail background */}
-      <View style={styles.railBack} />
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        {items.map((it) => {
-          const badgeValue = props.badges?.[it.key];
-          const showBadge = badgeValue === true || (typeof badgeValue === 'number' && badgeValue > 0);
-
-          return (
-            <Pressable
-              key={it.key}
-              onPress={() => {
-                props.onAnyInteraction?.();
-                it.onPress();
-              }}
-              onPressIn={props.onAnyInteraction}
-              style={({ pressed }) => [
-                styles.item,
-                it.accent ? styles.itemAccent : null,
-                pressed ? styles.itemPressed : null,
-              ]}
-              hitSlop={10}
-            >
-              <Ionicons
-                name={it.icon}
-                size={RAIL.ICON_SIZE}
-                color={it.accent ? COLORS.gold.primary : COLORS.cream.pure}
-                style={{ opacity: it.accent ? 1 : 0.92 }}
-              />
-              {showBadge ? <Badge value={badgeValue!} /> : null}
-            </Pressable>
-          );
-        })}
-
-        {/* bottom spacer */}
-        <View style={{ height: 8 }} />
-      </ScrollView>
-
-      {/* Subtle bottom fade */}
-      <LinearGradient
-        colors={['transparent', COLORS.navy.darkest + '60']}
-        style={styles.fadeBottom}
-        pointerEvents="none"
-      />
+      <View style={styles.railContainer}>
+        {/* Housing background */}
+        <Animated.View style={[styles.railBack, housingStyle]} />
+        
+        {/* Doors button (always visible) */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.doorsButton,
+            pressed && styles.itemPressed,
+          ]}
+          onPress={toggleExpand}
+          hitSlop={12}
+        >
+          <Ionicons
+            name="grid"
+            size={RAIL.ICON_SIZE}
+            color={COLORS.gold.primary}
+          />
+          {/* Show dot indicator if there are badges and rail is collapsed */}
+          {!expanded && hasAnyBadge && (
+            <View style={styles.collapsedIndicator} />
+          )}
+        </Pressable>
+        
+        {/* Expanded items */}
+        <Animated.View style={[styles.expandedContent, expandedStyle]} pointerEvents={expanded ? 'auto' : 'none'}>
+          {expandedItems.map((it) => {
+            const badgeValue = props.badges?.[it.key];
+            const showBadge = badgeValue !== undefined && badgeValue !== false && badgeValue !== 0;
+            
+            return (
+              <Pressable
+                key={it.key}
+                style={({ pressed }) => [
+                  styles.item,
+                  pressed && styles.itemPressed,
+                ]}
+                onPress={() => handleItemPress(it.onPress)}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name={it.icon}
+                  size={RAIL.ICON_SIZE}
+                  color={COLORS.cream.pure}
+                  style={{ opacity: 0.92 }}
+                />
+                {showBadge ? <Badge value={badgeValue!} /> : null}
+              </Pressable>
+            );
+          })}
+        </Animated.View>
+      </View>
     </View>
   );
 }
@@ -116,91 +229,85 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: HOME_OVERLAY.SIDE_INSET,
     top: HOME_OVERLAY.TOP_INSET,
-    bottom: HOME_OVERLAY.BOTTOM_CLEARANCE,
-    width: RAIL.WIDTH,
-    alignItems: 'flex-end',
     zIndex: 5,
+  },
+  railContainer: {
+    alignItems: 'center',
   },
   railBack: {
     position: 'absolute',
-    top: 0,
-    bottom: 0,
-    right: 0,
-    width: RAIL.WIDTH,
-    borderRadius: RAIL.RADIUS,
-    // Phase 3.23.8: Richer housing - glass/ink panel
-    backgroundColor: COLORS.navy.dark + 'D0',  // More opaque housing
+    top: -6,
+    bottom: -6,
+    right: -6,
+    left: -6,
+    borderRadius: RAIL.RADIUS + 4,
+    // Phase 3.23.8: Glass/ink panel housing
+    backgroundColor: COLORS.navy.dark + 'E8',
     borderWidth: 1,
     borderColor: COLORS.cream.pure + '08',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.35,
-        shadowRadius: 14,
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
         shadowOffset: { width: -2, height: 8 },
       },
       android: {
-        elevation: 8,
+        elevation: 10,
       },
       web: {
-        boxShadow: '-2px 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(8px)',
+        boxShadow: '-2px 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(12px)',
       },
     }),
   },
-  scroll: {
+  doorsButton: {
     width: RAIL.WIDTH,
+    height: RAIL.WIDTH,
     borderRadius: RAIL.RADIUS,
-  },
-  scrollContent: {
-    paddingTop: RAIL.PAD_Y,
-    paddingBottom: RAIL.PAD_Y,
-    alignItems: 'center',
-    gap: RAIL.GAP,
-  },
-  item: {
-    width: RAIL.ITEM_SIZE,
-    height: RAIL.ITEM_SIZE,
-    borderRadius: RAIL.ITEM_RADIUS,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.navy.dark + '14',
-    borderWidth: 1,
-    borderColor: COLORS.cream.pure + '10',
   },
-  itemAccent: {
-    backgroundColor: COLORS.navy.dark + '1C',
-    borderColor: COLORS.gold.dark + '22',
+  collapsedIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.gold.primary,
+  },
+  expandedContent: {
+    overflow: 'hidden',
+  },
+  item: {
+    width: RAIL.WIDTH,
+    height: RAIL.WIDTH,
+    borderRadius: RAIL.RADIUS,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   itemPressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.96,
+    opacity: PRESS.OPACITY,
+    transform: [{ scale: PRESS.SCALE }],
   },
   badge: {
     position: 'absolute',
-    top: -3,
-    right: -3,
+    top: 4,
+    right: 4,
     minWidth: 16,
     height: 16,
-    paddingHorizontal: 4,
-    borderRadius: 999,
+    borderRadius: 8,
     backgroundColor: COLORS.gold.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
   },
   badgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.navy.dark,
-    letterSpacing: 0.2,
-  },
-  fadeBottom: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 18,
-    borderBottomLeftRadius: RAIL.RADIUS,
-    borderBottomRightRadius: RAIL.RADIUS,
+    color: COLORS.navy.darkest,
   },
 });
+
+export default HomeSideRail;

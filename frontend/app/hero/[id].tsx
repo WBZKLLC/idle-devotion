@@ -127,7 +127,8 @@ export default function HeroPresentationScreen() {
   // Resolve tier art
   const tier = useMemo(() => {
     if (!hero) return 1 as DisplayTier;
-    return effectiveTierForHero(hero);
+    // Use tier 1 (standard) as default requested tier
+    return effectiveTierForHero(hero, 1 as DisplayTier);
   }, [hero]);
   
   const heroArtUrl = useMemo(() => {

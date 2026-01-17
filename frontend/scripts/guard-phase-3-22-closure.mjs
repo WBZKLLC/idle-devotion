@@ -187,10 +187,15 @@ function checkBadgesNoPoll() {
   }
   
   // Check: Events badge defaults to false/undefined (no always-lit)
-  if (content.match(/events:.*undefined|events:.*false/) && !content.match(/events:.*true/)) {
+  const hasNoAlwaysLit = content.includes('events: undefined') || content.includes('events: false');
+  const hasAlwaysTrue = content.match(/events:\s*true(?!\s*\?)/);  // Avoid matching ternary
+  
+  if (hasNoAlwaysLit && !hasAlwaysTrue) {
     success('Events badge defaults to undefined (no always-lit)');
-  } else {
+  } else if (hasAlwaysTrue) {
     error('Events badge may be always-lit - breaks sanctuary vibe');
+  } else {
+    warn('Verify events badge is not always-lit');
   }
 }
 

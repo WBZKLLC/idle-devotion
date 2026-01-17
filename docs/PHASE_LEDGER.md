@@ -340,6 +340,7 @@ All guards wired to `npm run guard`:
 - `guard:phase-3-28` - Friends gift system
 - `guard:phase-3-29` - Events/Quests system
 - `guard:phase-3-30` - Store system
+- `guard:phase-3-31` - Daily/Idle Loop system
 
 ---
 

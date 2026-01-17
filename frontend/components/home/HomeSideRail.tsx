@@ -192,13 +192,13 @@ export function HomeSideRail(props: HomeSideRailProps) {
           {/* Housing background */}
           <Animated.View style={[styles.railBack, housingStyle]} />
           
-          {/* Doors button (always visible) */}
+          {/* Doors button (always visible) - ONLY toggles rail */}
           <Pressable
             style={({ pressed }) => [
               styles.doorsButton,
               pressed && styles.itemPressed,
             ]}
-            onPress={handleDoorsPress}
+            onPress={handleDoorsToggle}
             hitSlop={12}
           >
             <Ionicons

@@ -1077,31 +1077,127 @@ function CenteredBackground(props: {
 
 /**
  * DivineOverlays - Premium overlay effects for sanctuary depth
- * Phase 3.23.8: Enhanced with top haze, vignette corners, and focal lift
+ * Phase 3.23.8: Enhanced with top haze, vignette corners, focal lift, and atmosphere
  */
-function DivineOverlays(props: { vignette?: boolean; rays?: boolean; grain?: boolean; topHaze?: boolean; focalLift?: boolean }) {
+function DivineOverlays(props: { 
+  vignette?: boolean; 
+  rays?: boolean; 
+  grain?: boolean; 
+  topHaze?: boolean; 
+  focalLift?: boolean;
+  bottomMist?: boolean;
+  driftFog?: boolean;
+}) {
+  // Check for reduce motion
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
+  
+  // Drifting fog animation
+  const driftAnim = useRef(new RNAnimated.Value(0)).current;
+  useEffect(() => {
+    if (props.driftFog !== false && !reduceMotion) {
+      const loop = RNAnimated.loop(
+        RNAnimated.timing(driftAnim, {
+          toValue: 1,
+          duration: 15000, // 15s loop
+          easing: RNEasing.linear,
+          useNativeDriver: true,
+        })
+      );
+      loop.start();
+      return () => loop.stop();
+    }
+  }, [driftAnim, reduceMotion, props.driftFog]);
+  
+  const driftStyle = {
+    transform: [{
+      translateX: driftAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-60, 60],
+      }),
+    }],
+  };
+  
   return (
     <>
       {/* Top Haze — HUD sits in atmospheric mist */}
       {props.topHaze !== false && (
         <LinearGradient
           colors={[
-            'rgba(12,16,28,0.7)',
-            'rgba(12,16,28,0.4)',
-            'rgba(12,16,28,0.1)',
+            'rgba(12,16,28,0.72)',
+            'rgba(12,16,28,0.45)',
+            'rgba(12,16,28,0.12)',
             'transparent',
           ]}
-          locations={[0, 0.3, 0.6, 1]}
+          locations={[0, 0.25, 0.55, 1]}
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            height: 160,
+            height: 180,
             zIndex: 3,
           }}
           pointerEvents="none"
         />
+      )}
+      
+      {/* Bottom Mist — fog shelf above tab bar */}
+      {props.bottomMist !== false && (
+        <LinearGradient
+          colors={[
+            'transparent',
+            'rgba(12,16,28,0.08)',
+            'rgba(12,16,28,0.25)',
+            'rgba(12,16,28,0.55)',
+          ]}
+          locations={[0, 0.4, 0.7, 1]}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 140,
+            zIndex: 2,
+          }}
+          pointerEvents="none"
+        />
+      )}
+      
+      {/* Drifting Fog Band — slow horizontal drift for "breath" */}
+      {props.driftFog !== false && (
+        <RNAnimated.View
+          style={[
+            {
+              position: 'absolute',
+              top: '35%',
+              left: -80,
+              right: -80,
+              height: 100,
+              zIndex: 1,
+            },
+            !reduceMotion && driftStyle,
+          ]}
+          pointerEvents="none"
+        >
+          <LinearGradient
+            colors={[
+              'transparent',
+              'rgba(255,255,255,0.025)',
+              'rgba(255,255,255,0.04)',
+              'rgba(255,255,255,0.025)',
+              'transparent',
+            ]}
+            locations={[0, 0.2, 0.5, 0.8, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ flex: 1 }}
+          />
+        </RNAnimated.View>
       )}
       
       {/* Vignette — darkens corners for depth */}
@@ -1165,7 +1261,7 @@ function DivineOverlays(props: { vignette?: boolean; rays?: boolean; grain?: boo
       {/* Focal Lift — warm glow near dock area (candlelight) */}
       {props.focalLift !== false && (
         <LinearGradient
-          colors={['transparent', 'transparent', `${COLORS.gold.primary}06`, `${COLORS.gold.primary}10`, 'transparent']}
+          colors={['transparent', 'transparent', `${COLORS.gold.primary}05`, `${COLORS.gold.primary}0C`, 'transparent']}
           locations={[0, 0.55, 0.72, 0.88, 1]}
           style={{
             position: 'absolute',

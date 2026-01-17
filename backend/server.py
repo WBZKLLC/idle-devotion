@@ -833,7 +833,8 @@ async def grant_rewards_canonical(
     
     # Guard: source must be valid
     valid_sources = ["bond_tribute", "mail_reward_claim", "mail_gift_claim", 
-                     "mail_receipt_claim", "daily_login_claim", "idle_claim", "admin_grant"]
+                     "mail_receipt_claim", "daily_login_claim", "idle_claim", 
+                     "admin_grant", "event_claim"]
     if source not in valid_sources:
         raise ValueError(f"grant_rewards_canonical: invalid source '{source}'")
     

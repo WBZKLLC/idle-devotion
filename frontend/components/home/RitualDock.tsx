@@ -137,6 +137,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 10,
   },
+  // Phase 3.23.8: Pedestal glow ellipse under dock
+  pedestalGlow: {
+    position: 'absolute',
+    bottom: -8,
+    width: '70%',
+    height: 24,
+    borderRadius: 100,
+    backgroundColor: COLORS.gold.primary,
+    opacity: 0.12,
+    transform: [{ scaleY: 0.4 }],
+  },
   dock: {
     width: `${DOCK.widthPct * 100}%` as any,
     minHeight: DOCK.minHeight,

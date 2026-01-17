@@ -365,21 +365,26 @@ function MessagesTab({ messages }: { messages: MessageItem[] }) {
 function GiftsTab({ gifts, username, onClaim }: { 
   gifts: GiftItem[]; 
   username: string;
-  onClaim: () => void;
+  onClaim: (receipt?: RewardReceipt) => void;
 }) {
   const [claiming, setClaiming] = useState<string | null>(null);
   
   const handleAccept = async (id: string) => {
     setClaiming(id);
     try {
-      const result = await claimMailGift(username, id);
-      if (result.alreadyClaimed) {
+      const receipt = await claimMailGift(username, id);
+      
+      // Phase 3.24: Show receipt-based feedback
+      if (receipt.alreadyClaimed) {
         toast.success('Already accepted.');
+      } else if (receipt.items.length > 0) {
+        toast.success(`Accepted: ${formatReceiptItems(receipt)}`);
       } else {
         toast.success('Accepted.');
       }
+      
       triggerBadgeRefresh(); // Update side rail badge
-      onClaim();
+      onClaim(receipt);  // Pass receipt for balance application
     } catch {
       toast.error('Not now.');
     } finally {

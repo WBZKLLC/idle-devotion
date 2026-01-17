@@ -89,7 +89,7 @@ function renderRarityStars(rarity: string): React.ReactNode {
 export default function HeroPresentationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const hydrated = useHydration();
-  const { user, getUserHeroById, selectUserHeroById } = useGameStore();
+  const { user, getUserHeroById } = useGameStore();
   
   const [loading, setLoading] = useState(true);
   const [hero, setHero] = useState<any>(null);

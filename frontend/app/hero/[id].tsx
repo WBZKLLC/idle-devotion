@@ -64,6 +64,28 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
  * 5. UI chrome (top stats, bottom actions)
  */
 
+// Rarity star rendering helper
+function renderRarityStars(rarity: string): React.ReactNode {
+  const starCount = rarity === 'UR' || rarity === 'UR+' ? 5 
+    : rarity === 'SSR' || rarity === 'SSR+' ? 4 
+    : rarity === 'SR' ? 3 
+    : 2;
+  
+  return (
+    <View style={styles.rarityStars}>
+      {Array(starCount).fill(0).map((_, i) => (
+        <Ionicons 
+          key={i} 
+          name="star" 
+          size={12} 
+          color={COLORS.gold.light} 
+          style={{ marginRight: 1 }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export default function HeroPresentationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const hydrated = useHydration();
@@ -119,13 +141,37 @@ export default function HeroPresentationScreen() {
     return getEffectiveContentLevel('heroPresentation', affinityLevel);
   }, [hero]);
   
-  // Camera animation (static for now - will animate in future phases)
+  // Camera transform (static for now - will animate in future phases)
   const cameraTransform = getCameraTransform(cameraMode);
+  
+  // Calculate hero power (simple single value)
+  const heroPower = useMemo(() => {
+    if (!hero) return 0;
+    return Math.floor((hero.current_atk || 0) + (hero.current_hp || 0) / 10 + (hero.current_def || 0));
+  }, [hero]);
   
   // Handle back navigation
   const handleBack = () => {
     haptic('light');
     router.back();
+  };
+  
+  // Action handlers
+  const handleUpgrade = () => {
+    haptic('medium');
+    router.push(`/hero-upgrade?id=${id}`);
+  };
+  
+  const handleBond = () => {
+    haptic('light');
+    // Future: Bond/Gift interaction
+    console.log('[HeroPresentation] Bond tapped');
+  };
+  
+  const handleEquip = () => {
+    haptic('light');
+    // Future: Equipment screen
+    console.log('[HeroPresentation] Equip tapped');
   };
   
   // Loading state
@@ -172,14 +218,17 @@ export default function HeroPresentationScreen() {
             source={{ uri: heroArtUrl }}
             style={styles.backgroundArt}
             resizeMode="cover"
+            blurRadius={Platform.OS === 'ios' ? 20 : 10}
           />
         ) : (
-          <Image
-            source={require('../../assets/backgrounds/sanctum_environment_01.jpg')}
-            style={styles.backgroundArt}
-            resizeMode="cover"
+          // Gradient fallback when no art available
+          <LinearGradient
+            colors={[COLORS.navy.darkest, COLORS.navy.dark, COLORS.navy.primary]}
+            style={StyleSheet.absoluteFill}
           />
         )}
+        {/* Darken overlay for background */}
+        <View style={styles.backgroundOverlay} />
       </View>
       
       {/* LAYER 2: Atmospheric overlay (very light) */}
@@ -202,16 +251,26 @@ export default function HeroPresentationScreen() {
             styles.heroContainer,
             {
               transform: cameraTransform,
+              maxWidth: HERO_STAGE.HERO_MAX_WIDTH,
             },
           ]}
         >
           {/* Hero image with camera framing */}
-          {heroArtUrl && (
+          {heroArtUrl ? (
             <Image
               source={{ uri: heroArtUrl }}
               style={styles.heroImage}
               resizeMode="contain"
             />
+          ) : (
+            // Placeholder fallback with hero initial
+            <View style={styles.heroPlaceholder}>
+              <LinearGradient
+                colors={[COLORS.navy.medium, COLORS.navy.dark]}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text style={styles.heroInitial}>{heroData.name?.charAt(0) || '?'}</Text>
+            </View>
           )}
         </Animated.View>
       </Pressable>
@@ -222,7 +281,7 @@ export default function HeroPresentationScreen() {
       
       {/* LAYER 5: UI chrome */}
       <SafeAreaView style={styles.uiLayer} edges={['top', 'bottom']}>
-        {/* Top stats zone */}
+        {/* Top safe zone (HUD) */}
         <View style={styles.topZone}>
           {/* Back button */}
           <Pressable
@@ -233,56 +292,67 @@ export default function HeroPresentationScreen() {
             <Ionicons name="chevron-back" size={24} color={COLORS.cream.pure} />
           </Pressable>
           
-          {/* Hero name + tier */}
+          {/* Hero name + rarity */}
           <View style={styles.heroInfo}>
-            <Text style={styles.heroName}>{heroData.name}</Text>
-            <Text style={styles.heroMeta}>
-              {heroData.rarity} • Tier {tier}
-            </Text>
+            <Text style={styles.heroName} numberOfLines={1}>{heroData.name}</Text>
+            {renderRarityStars(heroData.rarity)}
           </View>
           
-          {/* Affinity indicator */}
-          <View style={styles.affinityBadge}>
-            <Ionicons name="heart" size={14} color={COLORS.gold.light} />
-            <Text style={styles.affinityText}>{hero.affinity_level || 0}</Text>
-          </View>
+          {/* Affinity indicator (optional) */}
+          {(hero.affinity_level ?? 0) > 0 && (
+            <View style={styles.affinityBadge}>
+              <Ionicons name="heart" size={14} color={COLORS.gold.light} />
+              <Text style={styles.affinityText}>{hero.affinity_level}</Text>
+            </View>
+          )}
         </View>
         
-        {/* Bottom actions zone */}
+        {/* Bottom safe zone (actions) */}
         <View style={styles.bottomZone}>
-          {/* Action buttons (future: upgrade, gift, etc.) */}
+          {/* Power display (single stat only) */}
+          {heroPower > 0 && (
+            <View style={styles.powerDisplay}>
+              <Ionicons name="flash" size={14} color={COLORS.gold.medium} />
+              <Text style={styles.powerValue}>{heroPower.toLocaleString()}</Text>
+            </View>
+          )}
+          
+          {/* Actions row: Upgrade (primary), Bond (secondary), Equip (tertiary), Skins (disabled) */}
           <View style={styles.actionsRow}>
-            <Pressable
-              style={styles.actionButton}
-              onPress={() => {
-                haptic('light');
-                router.push(`/hero-detail?id=${id}`);
-              }}
-            >
-              <Ionicons name="stats-chart" size={20} color={COLORS.cream.pure} />
-              <Text style={styles.actionText}>Stats</Text>
-            </Pressable>
-            
-            <Pressable
-              style={styles.actionButton}
-              onPress={() => {
-                haptic('light');
-                router.push(`/hero-upgrade?id=${id}`);
-              }}
-            >
-              <Ionicons name="arrow-up-circle" size={20} color={COLORS.cream.pure} />
-              <Text style={styles.actionText}>Upgrade</Text>
-            </Pressable>
-            
+            {/* Primary: Upgrade */}
             <Pressable
               style={[styles.actionButton, styles.actionButtonPrimary]}
-              onPress={() => {
-                haptic('medium');
-                // Future: Gift interaction
-              }}
+              onPress={handleUpgrade}
             >
-              <Ionicons name="gift" size={20} color={COLORS.navy.darkest} />
-              <Text style={[styles.actionText, styles.actionTextPrimary]}>Gift</Text>
+              <Ionicons name="arrow-up-circle" size={20} color={COLORS.navy.darkest} />
+              <Text style={[styles.actionText, styles.actionTextPrimary]}>Upgrade</Text>
+            </Pressable>
+            
+            {/* Secondary: Bond */}
+            <Pressable
+              style={styles.actionButton}
+              onPress={handleBond}
+            >
+              <Ionicons name="heart-outline" size={20} color={COLORS.cream.pure} />
+              <Text style={styles.actionText}>Bond</Text>
+            </Pressable>
+            
+            {/* Tertiary: Equip */}
+            <Pressable
+              style={styles.actionButton}
+              onPress={handleEquip}
+            >
+              <Ionicons name="shirt-outline" size={20} color={COLORS.cream.pure} />
+              <Text style={styles.actionText}>Equip</Text>
+            </Pressable>
+            
+            {/* Optional: Skins (disabled/coming soon) */}
+            <Pressable
+              style={[styles.actionButton, styles.actionButtonDisabled]}
+              disabled
+            >
+              <Ionicons name="color-palette-outline" size={18} color={COLORS.cream.dark} />
+              <Text style={[styles.actionText, styles.actionTextDisabled]}>Skins</Text>
             </Pressable>
           </View>
         </View>

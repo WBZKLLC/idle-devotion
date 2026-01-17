@@ -404,7 +404,7 @@ All guards wired to `npm run guard`:
 
 ## Upcoming Phases
 
-### Phase 3.31 — Daily Login System (Planned)
+### Phase 3.32 — Daily Login System (Planned)
 - Daily login claim with canonical receipt
 - Streak tracking
 - Monthly reward calendar

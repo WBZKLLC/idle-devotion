@@ -4571,10 +4571,18 @@ async def get_mail_summary(credentials: HTTPAuthorizationCredentials = Depends(s
         "claimed": False
     })
     
+    # Phase 3.26: Count unclaimed receipts (fallback queue)
+    receipts_available = await db.mail_receipts.count_documents({
+        "user_id": user["id"],
+        "claimed": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
     return {
         "rewardsAvailable": rewards_count,
         "unreadMessages": unread_messages,
-        "giftsAvailable": gifts_available
+        "giftsAvailable": gifts_available,
+        "receiptsAvailable": receipts_available  # Phase 3.26
     }
 
 # Legacy route for backwards compatibility (ignores username, uses auth)

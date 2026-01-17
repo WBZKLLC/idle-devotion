@@ -764,7 +764,8 @@ RewardSource = Literal[
     "mail_receipt_claim",  # Phase 3.26: Fallback queue receipts
     "daily_login_claim",
     "idle_claim",
-    "admin_grant"
+    "admin_grant",
+    "event_claim"  # Phase 3.29: Events/Quests
 ]
 
 class RewardItem(BaseModel):

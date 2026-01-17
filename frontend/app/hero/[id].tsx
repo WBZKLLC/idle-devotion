@@ -1,11 +1,14 @@
 // /app/frontend/app/hero/[id].tsx
 // Phase 3.23.9: Hero Screen Foundation
+// Phase 3.25: Hero Stage Motion v1
 //
 // A neutral, elegant stage for hero presentation.
 // Layer stack locked for future motion/intimacy upgrades.
 //
-// NOT in this phase: idle sway, breathing, intimacy, camera creep
-// "Just structure. No motion tiers yet."
+// Motion Tiers (Phase 3.25):
+// - Tier 0-1: Static (no motion)
+// - Tier 2-3: Micro breathing/sway
+// - Tier 4-5: Richer breathing + camera intimacy offset
 
 import React, { useEffect, useState, useMemo } from 'react';
 import {
@@ -17,6 +20,7 @@ import {
   ActivityIndicator,
   Platform,
   Dimensions,
+  AccessibilityInfo,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -36,13 +40,22 @@ import COLORS from '../../theme/colors';
 import { LAYOUT, RADIUS, FONT_SIZE, FONT_WEIGHT, HERO_STAGE } from '../../components/ui/tokens';
 
 // Hero foundation
-import { CAMERA, getCameraTransform, CameraMode } from '../../lib/hero/camera';
+import { CAMERA, getCameraTransform, CameraMode, isCameraModeUnlocked } from '../../lib/hero/camera';
 import { useHeroInteractions } from '../../lib/hero/interactions';
 import { 
   ContentLevel, 
   getEffectiveContentLevel,
   SCREEN_BOUNDARIES,
 } from '../../lib/hero/content-boundaries';
+
+// Phase 3.25: Motion system
+import { 
+  useHeroIdleMotion, 
+  resolveMotionTier,
+  isSeleneHero,
+  getSeleneAdjustedConfig,
+  getMotionConfig,
+} from '../../lib/hero/motion';
 
 // Tier resolution
 import { resolveTierArt, effectiveTierForHero, DisplayTier } from '../../lib/progression';

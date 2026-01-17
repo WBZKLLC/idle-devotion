@@ -59,6 +59,8 @@ import { subscribeInteraction } from '../../lib/ui/interactionSession';
 import { getTemperatureBias, getSeason } from '../../lib/ui/season';
 // Phase 3.22.12.R2: Badge selectors
 import { useRailBadges } from '../../lib/ui/badges';
+// Phase 3.23.8: Atmosphere stack for sanctuary depth
+import { AtmosphereStack } from '../../components/home/AtmosphereStack';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';

@@ -254,7 +254,8 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 - [x] Gift creates mail gift for recipient
 - [x] Daily limits enforced (5 gold, 3 stamina, 1 gem per friend)
 - [x] TypeScript compiles
-- [ ] UI integration (deferred to next session)
+- [x] UI integration complete (Gift button + GiftModal in friends.tsx)
+- [x] Guard: `npm run guard:phase-3-28` passes
 
 ### Notes
 - Gift claiming uses existing mail gift claim endpoint (canonical receipt)
@@ -263,9 +264,96 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 
 ---
 
+## Phase 3.29 — Events/Quests Scaffold v1
+
+**Status:** ✅ CLOSED
+
+**Goal:** Introduce events system using canonical receipts and sanctuary UI language.
+
+### Deliverables
+
+#### Backend
+- [x] `GET /api/events/active` - Returns active events with claimable count
+- [x] `POST /api/events/{eventId}/claim` - Canonical receipt + idempotent
+- [x] Sample events: Welcome Bonus (one-time), Daily Check-in (daily)
+- [x] `event_claim` added to RewardSource types
+
+#### Frontend
+- [x] Events screen `/app/events.tsx` integrated with quest events
+- [x] `getActiveQuests()` and `claimQuestReward()` API functions
+- [x] `handleQuestClaim()` with canonical receipt handling
+- [x] Telemetry: `EVENTS_VIEWED`, `EVENT_CLAIM_SUBMITTED`, `EVENT_CLAIM_SUCCESS/ERROR/ALREADY_CLAIMED`
+- [x] No timers/RAF in events screen
+
+### Exit Checks
+- [x] Events screen exists
+- [x] `event_claim` is valid RewardSource
+- [x] Claim returns canonical receipt
+- [x] No timers/RAF
+- [x] Guard: `npm run guard:phase-3-29` passes
+
+---
+
+## Phase 3.30 — Store & Economy Scaffold v1
+
+**Status:** ✅ CLOSED
+
+**Goal:** Store UI with purchase intent plumbing (no real billing).
+
+### Deliverables
+
+#### Backend
+- [x] `GET /api/store/catalog` - Static catalog list
+- [x] `POST /api/store/purchase-intent` - Creates intent (sku, price, currency)
+- [x] `POST /api/store/redeem-intent` - DEV-only, returns canonical receipt
+- [x] `store_redeem` added to RewardSource types
+
+#### Frontend
+- [x] Shop screen `/app/shop.tsx` with catalog grid
+- [x] `getStoreCatalog()`, `createPurchaseIntent()`, `redeemIntent()` API functions
+- [x] Purchase modal with intent creation + DEV redeem
+- [x] Telemetry: `STORE_VIEWED`, `STORE_ITEM_SELECTED`, `STORE_PURCHASE_INTENT_CREATED`, `STORE_REDEEM_*`
+- [x] No billing library imports
+
+### Exit Checks
+- [x] Shop screen exists
+- [x] No direct billing libs imported
+- [x] Intent created on Buy
+- [x] Redeem returns canonical receipt
+- [x] `store_redeem` is valid RewardSource
+- [x] Guard: `npm run guard:phase-3-30` passes
+
+---
+
+## Guard Suite Summary
+
+All guards wired to `npm run guard`:
+- `guard:hero` - Hero system invariants
+- `guard:tier` - Tier resolution
+- `guard:receipt-shape` - Canonical receipt validation
+- `guard:phase-3-22` - Sanctuary Home closure
+- `guard:phase-3-23` - Social + Mail + Friends closure
+- `guard:hero-motion` - Hero stage motion (no timers)
+- `guard:phase-3-27` - Camera drift system
+- `guard:phase-3-28` - Friends gift system
+- `guard:phase-3-29` - Events/Quests system
+- `guard:phase-3-30` - Store system
+
+---
+
+## Documentation
+
+- `docs/hero-stage-language.md` - Tier table, motion rules, parallax planes
+- `docs/reward-receipts.md` - Canonical receipt contract
+- `docs/mail-system.md` - Mail tabs, receipt queue semantics
+- `docs/friends-system.md` - Friends tabs, gift behavior
+- `docs/PHASE_TEMPLATE.md` - Template for future phases
+
+---
+
 ## Upcoming Phases
 
-### Phase 3.27 — Daily Login System (Planned)
+### Phase 3.31 — Daily Login System (Planned)
 - Daily login claim with canonical receipt
 - Streak tracking
 - Monthly reward calendar

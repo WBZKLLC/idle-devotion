@@ -232,6 +232,8 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 
 ## Phase 3.28 — Social Loop v2 (Friend Gifts)
 
+**Status:** ✅ CLOSED
+
 **Goal:** Allow friends to send gifts to each other, creating mail gifts for recipients using canonical receipts.
 
 ### Deliverables
@@ -247,7 +249,7 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 - [x] `sendFriendGift()` API function in lib/api/friends.ts
 - [x] `getFriendGiftStatus()` API function
 - [x] Telemetry: `FRIEND_GIFT_SENT`, `FRIEND_GIFT_CLAIM_SUBMITTED`
-- [ ] "Send Gift" button on friends screen (UI deferred)
+- [x] "Send Gift" button on friends screen (GiftModal with 3 gift types)
 
 ### Exit Checks
 - [x] Gift endpoints use auth-token identity

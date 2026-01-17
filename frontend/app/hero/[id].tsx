@@ -65,7 +65,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
  */
 
 // Rarity star rendering helper
-function renderRarityStars(rarity: string): React.ReactNode {
+function renderRarityStars(rarity: string) {
   const starCount = rarity === 'UR' || rarity === 'UR+' ? 5 
     : rarity === 'SSR' || rarity === 'SSR+' ? 4 
     : rarity === 'SR' ? 3 

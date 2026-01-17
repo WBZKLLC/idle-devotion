@@ -22,17 +22,28 @@ import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { ListRow } from '../components/ui/ListRow';
 import { toast } from '../components/ui/Toast';
 // Phase 3.23.2: API layer
-import { getMailSummary, getMailRewards, getMailMessages, getMailGifts, claimMailReward, claimMailGift } from '../lib/api/mail';
+import { 
+  getMailSummary, 
+  getMailRewards, 
+  getMailMessages, 
+  getMailGifts, 
+  claimMailReward, 
+  claimMailGift,
+  getMailReceipts,  // Phase 3.26
+  claimMailReceipt,  // Phase 3.26
+  MailReceipt,  // Phase 3.26
+} from '../lib/api/mail';
 import { triggerBadgeRefresh } from '../lib/ui/badges';
 // Phase 3.24: Receipt types
 import { RewardReceipt, formatReceiptItems } from '../lib/types/receipt';
 
-type MailTab = 'rewards' | 'messages' | 'gifts';
+type MailTab = 'rewards' | 'messages' | 'gifts' | 'receipts';  // Phase 3.26: Added receipts
 
 type MailSummary = {
   rewardsAvailable: number;
   unreadMessages: number;
   giftsAvailable: number;
+  receiptsAvailable: number;  // Phase 3.26
 };
 
 type RewardItem = {

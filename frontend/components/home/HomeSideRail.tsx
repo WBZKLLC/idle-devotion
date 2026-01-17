@@ -267,22 +267,22 @@ const styles = StyleSheet.create({
     right: -6,
     left: -6,
     borderRadius: RAIL.RADIUS + 4,
-    backgroundColor: COLORS.navy.dark + 'E8',
+    backgroundColor: COLORS.navy.dark + 'C8',  // 78% opacity (was E8/91%)
     borderWidth: 1,
-    borderColor: COLORS.cream.pure + '08',
+    borderColor: COLORS.cream.pure + '06',     // Softer border
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.4,
-        shadowRadius: 16,
-        shadowOffset: { width: -2, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 14,
+        shadowOffset: { width: -2, height: 6 },
       },
       android: {
-        elevation: 10,
+        elevation: 8,
       },
       web: {
-        boxShadow: '-2px 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(12px)',
+        boxShadow: '-2px 6px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)',
+        backdropFilter: 'blur(10px)',
       },
     }),
   },

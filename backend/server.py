@@ -761,6 +761,7 @@ RewardSource = Literal[
     "bond_tribute",
     "mail_reward_claim", 
     "mail_gift_claim",
+    "mail_receipt_claim",  # Phase 3.26: Fallback queue receipts
     "daily_login_claim",
     "idle_claim",
     "admin_grant"

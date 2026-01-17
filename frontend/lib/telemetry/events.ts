@@ -106,6 +106,15 @@ export const Events = {
   DAILY_CLAIM_ALREADY_CLAIMED: 'daily_claim_already_claimed',
   DAILY_CLAIM_ERROR: 'daily_claim_error',
   
+  // Phase 3.33: Gacha/Summon telemetry
+  GACHA_VIEWED: 'gacha_viewed',
+  GACHA_BANNER_SELECTED: 'gacha_banner_selected',
+  GACHA_SUMMON_SUBMITTED: 'gacha_summon_submitted',
+  GACHA_SUMMON_SUCCESS: 'gacha_summon_success',
+  GACHA_SUMMON_ERROR: 'gacha_summon_error',
+  GACHA_PITY_INCREMENTED: 'gacha_pity_incremented',
+  GACHA_PITY_TRIGGERED: 'gacha_pity_triggered',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

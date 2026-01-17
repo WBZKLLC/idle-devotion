@@ -1,6 +1,7 @@
 // /app/frontend/lib/types/receipt.ts
 // Phase 3.24: Canonical Reward Receipt Type
 // Phase 3.26: Added mail_receipt_claim source
+// Phase 3.33: Added gacha summon sources
 //
 // Single source of truth for receipt shape.
 // All reward-granting endpoints return this shape.
@@ -14,6 +15,9 @@
 // - daily_login_claim
 // - idle_claim
 // - admin_grant
+// - summon_single (Phase 3.33)
+// - summon_multi (Phase 3.33)
+// - pity_reward (Phase 3.33)
 
 /**
  * Valid reward source types (matches backend RewardSource)
@@ -28,16 +32,60 @@ export type RewardSource =
   | 'idle_claim'
   | 'admin_grant'
   | 'event_claim'  // Phase 3.29: Events/Quests
-  | 'store_redeem';  // Phase 3.30: Store dev redeem
+  | 'store_redeem'  // Phase 3.30: Store dev redeem
+  | 'summon_single'  // Phase 3.33: Single gacha pull
+  | 'summon_multi'  // Phase 3.33: Multi gacha pull
+  | 'pity_reward';  // Phase 3.33: Pity system reward
 
 /**
  * Single reward item in a receipt
  */
 export interface RewardItem {
-  type: string;  // gold, gems, coins, stamina, hero_shard, etc.
+  type: string;  // gold, gems, coins, stamina, hero_shard, hero_unlock, etc.
   amount: number;
   hero_id?: string | null;  // For hero-specific rewards
+  hero_data_id?: string | null;  // Phase 3.33: Hero pool ID (heroDataId)
   item_id?: string | null;  // For specific items
+  rarity?: string | null;  // Phase 3.33: Hero rarity
+}
+
+/**
+ * Phase 3.33: Gacha pull result item
+ */
+export interface GachaPullResult {
+  rarity: string;  // SR, SSR, SSR+, UR, UR+
+  heroDataId: string;  // Hero pool ID
+  heroName: string;  // Display name
+  outcome: 'new' | 'dupe';  // Whether this is a new unlock or duplicate
+  shardsGranted?: number;  // Shards granted if duplicate
+  imageUrl?: string | null;  // Hero portrait
+  element?: string | null;  // Fire, Water, etc.
+  heroClass?: string | null;  // Warrior, Mage, Archer
+  isPityReward?: boolean;  // True if this came from pity trigger
+  isFiller?: boolean;  // True if filler reward (not hero)
+  fillerType?: string;  // crystals, gold, shards, etc.
+  fillerAmount?: number;  // Amount for filler rewards
+}
+
+/**
+ * Phase 3.33: Gacha summon receipt (extends canonical receipt)
+ */
+export interface GachaReceipt {
+  source: 'summon_single' | 'summon_multi' | 'pity_reward';
+  sourceId: string;  // Summon transaction ID
+  bannerId: string;  // Which banner was pulled
+  pullCount: number;  // 1 or 10
+  results: GachaPullResult[];  // Individual pull results
+  pityBefore: number;  // Pity counter before this pull
+  pityAfter: number;  // Pity counter after this pull
+  pityTriggered: boolean;  // Whether pity was triggered
+  currencySpent: {
+    type: string;  // coins, crystals, divine_essence
+    amount: number;
+  };
+  balances: Balances;  // Updated balances after summon
+  items: RewardItem[];  // Canonical items array (for receipt display)
+  alreadyClaimed?: boolean;  // Idempotency check
 }
 
 /**
@@ -91,6 +139,21 @@ export function isValidReceipt(obj: unknown): obj is RewardReceipt {
 }
 
 /**
+ * Type guard: Check if an object is a valid GachaReceipt
+ */
+export function isValidGachaReceipt(obj: unknown): obj is GachaReceipt {
+  if (!isValidReceipt(obj)) return false;
+  const receipt = obj as Record<string, unknown>;
+  
+  return (
+    (receipt.source === 'summon_single' || receipt.source === 'summon_multi' || receipt.source === 'pity_reward') &&
+    typeof receipt.bannerId === 'string' &&
+    typeof receipt.pullCount === 'number' &&
+    Array.isArray(receipt.results)
+  );
+}
+
+/**
  * Validate and assert receipt shape (throws if invalid)
  */
 export function assertValidReceipt(obj: unknown, context?: string): asserts obj is RewardReceipt {
@@ -140,6 +203,8 @@ function formatRewardType(type: string): string {
     enhancement_stones: 'Enhancement Stones',
     hero_shards: 'Hero Shards',
     rune_essence: 'Rune Essence',
+    hero_unlock: 'Hero Unlock',
+    hero_shard: 'Hero Shards',
   };
   
   return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());

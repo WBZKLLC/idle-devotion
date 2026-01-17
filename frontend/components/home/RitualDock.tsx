@@ -139,19 +139,19 @@ const styles = StyleSheet.create({
     minHeight: DOCK.minHeight,
     borderRadius: DOCK.radius,
     overflow: 'hidden',
-    // Phase 3.23.6: Gold glow shadow for focal anchor
+    // Phase 3.23.8: Richer material - relic base, not card
     ...Platform.select({
       ios: {
         shadowColor: COLORS.gold.primary,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.35,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.45,
+        shadowRadius: 20,
       },
       android: {
-        elevation: 8,
+        elevation: 12,
       },
       web: {
-        boxShadow: `0 0 24px ${COLORS.gold.primary}40, 0 4px 12px rgba(0,0,0,0.25)`,
+        boxShadow: `0 0 32px ${COLORS.gold.primary}35, 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)`,
       },
     }),
   },
@@ -162,19 +162,21 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 0.5,
-    borderColor: COLORS.gold.dark + '25',
+    paddingVertical: 12,
+    // Phase 3.23.8: Richer border - gold authority edge
+    borderWidth: 1,
+    borderColor: COLORS.gold.dark + '35',
     borderRadius: DOCK.radius,
   },
   topHighlight: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
+    left: 16,
+    right: 16,
     height: 1,
     backgroundColor: COLORS.cream.pure,
-    opacity: 0.1,
+    opacity: 0.15,
+    borderRadius: 1,
   },
   content: {
     flexDirection: 'row',
@@ -185,14 +187,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: COLORS.cream.pure,
-    letterSpacing: 0.3,
+    color: COLORS.cream.soft,
+    letterSpacing: 0.4,
     marginBottom: 2,
+    textTransform: 'uppercase',
   },
   time: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: COLORS.cream.pure,
     fontVariant: ['tabular-nums'],

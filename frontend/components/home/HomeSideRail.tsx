@@ -212,11 +212,12 @@ export function HomeSideRail(props: HomeSideRailProps) {
             )}
           </Pressable>
           
-          {/* Expanded items */}
+          {/* Expanded items - includes Library (DoorsSheet) as first item */}
           <Animated.View style={[styles.expandedContent, expandedStyle]} pointerEvents={expanded ? 'auto' : 'none'}>
             {expandedItems.map((it) => {
               const badgeValue = props.badges?.[it.key];
               const showBadge = badgeValue !== undefined && badgeValue !== false && badgeValue !== 0;
+              const isAccent = 'accent' in it && it.accent;
               
               return (
                 <Pressable
@@ -231,8 +232,8 @@ export function HomeSideRail(props: HomeSideRailProps) {
                   <Ionicons
                     name={it.icon}
                     size={RAIL.ICON_SIZE}
-                    color={COLORS.cream.pure}
-                    style={{ opacity: 0.92 }}
+                    color={isAccent ? COLORS.gold.light : COLORS.cream.pure}
+                    style={{ opacity: isAccent ? 1 : 0.92 }}
                   />
                   {showBadge ? <Badge value={badgeValue!} /> : null}
                 </Pressable>

@@ -257,8 +257,13 @@ function RequestsTab({ requests, username, onUpdate }: {
   const handleAccept = async (id: string) => {
     setProcessing(id);
     try {
-      await acceptFriendRequest(username, id);
-      toast.success('Accepted.');
+      const result = await acceptFriendRequest(username, id);
+      if (result.alreadyAccepted) {
+        toast.success('Already accepted.');
+      } else {
+        toast.success('Accepted.');
+      }
+      triggerBadgeRefresh(); // Update side rail badge
       onUpdate();
     } catch {
       toast.error('Not now.');
@@ -270,8 +275,13 @@ function RequestsTab({ requests, username, onUpdate }: {
   const handleDecline = async (id: string) => {
     setProcessing(id);
     try {
-      await declineFriendRequest(username, id);
-      toast.info('Declined.');
+      const result = await declineFriendRequest(username, id);
+      if (result.alreadyDeclined) {
+        toast.info('Already declined.');
+      } else {
+        toast.info('Declined.');
+      }
+      triggerBadgeRefresh(); // Update side rail badge
       onUpdate();
     } catch {
       toast.error('Not now.');

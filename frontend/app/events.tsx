@@ -105,6 +105,10 @@ export default function EventsScreen() {
   const [eventBanners, setEventBanners] = useState<EventBanner[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'limited' | 'daily'>('all');
   const [isPulling, setIsPulling] = useState(false);
+  // Phase 3.29: Quest events state
+  const [questEvents, setQuestEvents] = useState<QuestEvent[]>([]);
+  const [questClaimable, setQuestClaimable] = useState(0);
+  const [claimingQuest, setClaimingQuest] = useState<string | null>(null);
   
   // Phase 3.19.11: Confirm modal hook
   const { openConfirm, confirmNode } = useConfirmModal();
@@ -122,6 +126,17 @@ export default function EventsScreen() {
       const data = await getEventBanners();
       const banners = data.banners || [];
       setEventBanners(banners);
+      
+      // Phase 3.29: Fetch quest events
+      const questData = await getActiveQuests();
+      setQuestEvents(questData.events);
+      setQuestClaimable(questData.claimable_count);
+      
+      // Emit telemetry
+      track(TelemetryEvents.EVENTS_VIEWED, {
+        eventCount: questData.events.length,
+        claimableCount: questData.claimable_count,
+      });
       
       // Convert banners to event format
       const bannerEvents: Event[] = banners.map((banner: EventBanner) => ({
@@ -156,6 +171,44 @@ export default function EventsScreen() {
       setRefreshing(false);
     }
   };
+  
+  // Phase 3.29: Handle quest claim with canonical receipt
+  const handleQuestClaim = useCallback(async (questId: string) => {
+    setClaimingQuest(questId);
+    
+    track(TelemetryEvents.EVENT_CLAIM_SUBMITTED, { eventId: questId });
+    
+    try {
+      const receipt = await claimQuestReward(questId);
+      
+      if (isValidReceipt(receipt)) {
+        if (receipt.alreadyClaimed) {
+          track(TelemetryEvents.EVENT_CLAIM_ALREADY_CLAIMED, { eventId: questId });
+          toast.info('Already claimed.');
+        } else {
+          track(TelemetryEvents.EVENT_CLAIM_SUCCESS, { 
+            eventId: questId,
+            itemCount: receipt.items.length,
+          });
+          toast.success(`Claimed: ${formatReceiptItems(receipt)}`);
+          await fetchUser();
+        }
+      } else {
+        toast.success('Claimed!');
+      }
+      
+      triggerBadgeRefresh();
+      loadEvents(); // Refresh events list
+    } catch (error) {
+      track(TelemetryEvents.EVENT_CLAIM_ERROR, { 
+        eventId: questId,
+        error: String(error),
+      });
+      toast.error('Not now.');
+    } finally {
+      setClaimingQuest(null);
+    }
+  }, [fetchUser]);
 
   const performEventPull = async (bannerId: string, isMulti: boolean) => {
     if (!user || isPulling) return;

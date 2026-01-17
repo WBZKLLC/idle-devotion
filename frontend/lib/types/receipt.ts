@@ -143,7 +143,7 @@ export function isValidReceipt(obj: unknown): obj is RewardReceipt {
  */
 export function isValidGachaReceipt(obj: unknown): obj is GachaReceipt {
   if (!isValidReceipt(obj)) return false;
-  const receipt = obj as Record<string, unknown>;
+  const receipt = obj as unknown as Record<string, unknown>;
   
   return (
     (receipt.source === 'summon_single' || receipt.source === 'summon_multi' || receipt.source === 'pity_reward') &&

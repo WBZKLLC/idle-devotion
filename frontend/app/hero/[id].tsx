@@ -194,7 +194,7 @@ export default function HeroPresentationScreen() {
   
   const handleBond = () => {
     haptic('light');
-    router.push(`/hero-bond?id=${id}`);
+    router.push(`/hero-bond?id=${id}` as any);
   };
   
   const handleEquip = () => {

@@ -174,8 +174,8 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 - [x] Bond screen tier ladder uses centralized `getTierTable()` (no hardcoded thresholds)
 - [x] Hero stage uses `deriveHeroStageConfig`
 - [x] `driftingFog={false}` maintained
-- [ ] Mail receipt endpoints return canonical receipt shape
-- [ ] Mail UI exposes receipts
+- [x] Mail receipt endpoints return canonical receipt shape
+- [x] Mail UI exposes receipts (tab visible when receipts available)
 - [x] Guard: `npm run guard` passes
 
 ### Notes

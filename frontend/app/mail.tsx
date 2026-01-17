@@ -365,8 +365,13 @@ function GiftsTab({ gifts, username, onClaim }: {
   const handleAccept = async (id: string) => {
     setClaiming(id);
     try {
-      await claimMailGift(username, id);
-      toast.success('Accepted.');
+      const result = await claimMailGift(username, id);
+      if (result.alreadyClaimed) {
+        toast.success('Already accepted.');
+      } else {
+        toast.success('Accepted.');
+      }
+      triggerBadgeRefresh(); // Update side rail badge
       onClaim();
     } catch {
       toast.error('Not now.');

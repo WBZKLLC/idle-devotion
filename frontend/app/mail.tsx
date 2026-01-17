@@ -238,21 +238,26 @@ function TabButton({ label, active, onPress, badge }: {
 function RewardsTab({ rewards, username, onClaim }: { 
   rewards: RewardItem[]; 
   username: string;
-  onClaim: () => void;
+  onClaim: (receipt?: RewardReceipt) => void;
 }) {
   const [claiming, setClaiming] = useState<string | null>(null);
   
   const handleClaim = async (id: string) => {
     setClaiming(id);
     try {
-      const result = await claimMailReward(username, id);
-      if (result.alreadyClaimed) {
+      const receipt = await claimMailReward(username, id);
+      
+      // Phase 3.24: Show receipt-based feedback
+      if (receipt.alreadyClaimed) {
         toast.success('Already claimed.');
+      } else if (receipt.items.length > 0) {
+        toast.success(`Claimed: ${formatReceiptItems(receipt)}`);
       } else {
         toast.success('Claimed.');
       }
+      
       triggerBadgeRefresh(); // Update side rail badge
-      onClaim();
+      onClaim(receipt);  // Pass receipt for balance application
     } catch {
       toast.error('Not now.');
     } finally {

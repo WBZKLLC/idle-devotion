@@ -3,14 +3,11 @@
 // Phase 3.25: Hero Stage Motion v1
 //
 // A neutral, elegant stage for hero presentation.
-// Layer stack locked for future motion/intimacy upgrades.
+// Motion affects hero render only - UI chrome does not move.
 //
-// Motion Tiers (Phase 3.25):
-// - Tier 0-1: Static (no motion)
-// - Tier 2-3: Micro breathing/sway
-// - Tier 4-5: Richer breathing + camera intimacy offset
+// LOCKED: No setTimeout/setInterval/RAF - Reanimated worklets only.
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -23,11 +20,7 @@ import {
   AccessibilityInfo,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -40,21 +33,18 @@ import COLORS from '../../theme/colors';
 import { LAYOUT, RADIUS, FONT_SIZE, FONT_WEIGHT, HERO_STAGE } from '../../components/ui/tokens';
 
 // Hero foundation
-import { CAMERA, getCameraTransform, CameraMode, isCameraModeUnlocked } from '../../lib/hero/camera';
+import { CAMERA, getCameraTransform } from '../../lib/hero/camera';
 import { useHeroInteractions } from '../../lib/hero/interactions';
 import { 
-  ContentLevel, 
   getEffectiveContentLevel,
-  SCREEN_BOUNDARIES,
 } from '../../lib/hero/content-boundaries';
 
-// Phase 3.25: Motion system
+// Phase 3.25: Motion system (single source of truth)
 import { 
-  useHeroIdleMotion, 
-  resolveMotionTier,
-  isSeleneHero,
-  getSeleneAdjustedConfig,
-  getMotionConfig,
+  deriveHeroStageConfig,
+  useHeroIdleMotion,
+  logHeroStageConfig,
+  HeroStageConfig,
 } from '../../lib/hero/motion';
 
 // Tier resolution

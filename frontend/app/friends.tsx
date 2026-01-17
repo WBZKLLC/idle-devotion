@@ -664,23 +664,27 @@ const styles = StyleSheet.create({
     paddingBottom: LAYOUT.TAB_BAR_HEIGHT + LAYOUT.BOTTOM_GUTTER,
   },
   section: {
-    gap: 8,
+    gap: 10,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 60,
-    gap: 12,
+    paddingTop: 80,
+    paddingHorizontal: 32,
+    gap: 16,
   },
   emptyTitle: {
     fontSize: FONT_SIZE.lg,
     fontWeight: FONT_WEIGHT.semibold,
     color: COLORS.cream.pure,
+    letterSpacing: 0.3,
   },
   emptySubtitle: {
     fontSize: FONT_SIZE.sm,
     color: COLORS.cream.dark,
     textAlign: 'center',
+    fontStyle: 'italic',
+    lineHeight: 20,
   },
   addButton: {
     flexDirection: 'row',
@@ -702,10 +706,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.navy.dark,
     borderRadius: RADIUS.md,
-    padding: 12,
+    padding: 14,
     gap: 12,
     borderWidth: 0.5,
-    borderColor: COLORS.cream.pure + '08',
+    borderColor: COLORS.cream.pure + '06',
   },
   avatar: {
     width: 44,

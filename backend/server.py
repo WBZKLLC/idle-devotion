@@ -6466,6 +6466,84 @@ async def gacha_summon_canonical(request: Request, body: GachaSummonRequest):
     return receipt
 
 
+# =============================================================================
+# PHASE 3.35: GACHA HISTORY
+# =============================================================================
+
+@api_router.get("/gacha/history")
+async def get_gacha_history(request: Request, limit: int = 50):
+    """
+    Get user's gacha summon history (Phase 3.35).
+    
+    Returns: bannerId, at, pulls summary, pityBefore/After, sourceId.
+    """
+    # Auth required
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        username = payload.get("sub") or payload.get("username")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Limit range
+    limit = min(max(1, limit), 100)
+    
+    # Fetch history from gacha_receipts
+    cursor = db.gacha_receipts.find(
+        {"username": username}
+    ).sort("createdAt", -1).limit(limit)
+    
+    history = []
+    async for receipt in cursor:
+        # Summarize pulls by rarity
+        rarity_counts = {}
+        for result in receipt.get("results", []):
+            rarity = result.get("rarity", "unknown")
+            rarity_counts[rarity] = rarity_counts.get(rarity, 0) + 1
+        
+        # Count new vs dupe
+        new_count = sum(1 for r in receipt.get("results", []) if r.get("outcome") == "new" and not r.get("isFiller"))
+        dupe_count = sum(1 for r in receipt.get("results", []) if r.get("outcome") == "dupe")
+        filler_count = sum(1 for r in receipt.get("results", []) if r.get("isFiller"))
+        
+        history.append({
+            "sourceId": receipt.get("sourceId"),
+            "bannerId": receipt.get("bannerId"),
+            "pullCount": receipt.get("pullCount", 1),
+            "at": receipt.get("createdAt").isoformat() if receipt.get("createdAt") else None,
+            "pityBefore": receipt.get("pityBefore", 0),
+            "pityAfter": receipt.get("pityAfter", 0),
+            "pityTriggered": receipt.get("pityTriggered", False),
+            "summary": {
+                "rarities": rarity_counts,
+                "newHeroes": new_count,
+                "duplicates": dupe_count,
+                "fillers": filler_count
+            },
+            "currencySpent": receipt.get("currencySpent", {}),
+            "results": [
+                {
+                    "heroDataId": r.get("heroDataId"),
+                    "heroName": r.get("heroName"),
+                    "rarity": r.get("rarity"),
+                    "outcome": r.get("outcome"),
+                    "isFiller": r.get("isFiller", False)
+                }
+                for r in receipt.get("results", [])
+            ]
+        })
+    
+    return {"history": history, "count": len(history)}
+
+
 # ==================== PLAYER CHARACTER SYSTEM (Original) ====================
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):

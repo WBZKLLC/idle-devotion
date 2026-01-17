@@ -217,7 +217,7 @@ export function HomeSideRail(props: HomeSideRailProps) {
             {expandedItems.map((it) => {
               const badgeValue = props.badges?.[it.key];
               const showBadge = badgeValue !== undefined && badgeValue !== false && badgeValue !== 0;
-              const isAccent = 'accent' in it && it.accent;
+              const isLibrary = 'isLibrary' in it && it.isLibrary;
               
               return (
                 <Pressable
@@ -232,9 +232,13 @@ export function HomeSideRail(props: HomeSideRailProps) {
                   <Ionicons
                     name={it.icon}
                     size={RAIL.ICON_SIZE}
-                    color={isAccent ? COLORS.gold.light : COLORS.cream.pure}
-                    style={{ opacity: isAccent ? 1 : 0.92 }}
+                    color={COLORS.cream.pure}
+                    style={{ opacity: 0.92 }}
                   />
+                  {/* Gold dot indicator for Library to distinguish from Doors toggle */}
+                  {isLibrary && (
+                    <View style={styles.libraryIndicator} />
+                  )}
                   {showBadge ? <Badge value={badgeValue!} /> : null}
                 </Pressable>
               );

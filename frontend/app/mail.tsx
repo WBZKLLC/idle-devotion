@@ -78,26 +78,29 @@ export default function MailScreen() {
   const [activeTab, setActiveTab] = useState<MailTab>('rewards');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [summary, setSummary] = useState<MailSummary>({ rewardsAvailable: 0, unreadMessages: 0, giftsAvailable: 0 });
+  const [summary, setSummary] = useState<MailSummary>({ rewardsAvailable: 0, unreadMessages: 0, giftsAvailable: 0, receiptsAvailable: 0 });
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
+  const [receipts, setReceipts] = useState<MailReceipt[]>([]);  // Phase 3.26
   
   const loadData = useCallback(async () => {
     if (!user?.username) return;
     
     try {
-      const [summaryData, rewardsData, messagesData, giftsData] = await Promise.all([
-        getMailSummary(user.username).catch(() => ({ rewardsAvailable: 1, unreadMessages: 0, giftsAvailable: 0 })),
+      const [summaryData, rewardsData, messagesData, giftsData, receiptsData] = await Promise.all([
+        getMailSummary(user.username).catch(() => ({ rewardsAvailable: 1, unreadMessages: 0, giftsAvailable: 0, receiptsAvailable: 0 })),
         getMailRewards(user.username).catch(() => []),
         getMailMessages(user.username).catch(() => []),
         getMailGifts(user.username).catch(() => []),
+        getMailReceipts().catch(() => []),  // Phase 3.26
       ]);
       
       setSummary(summaryData);
       setRewards(rewardsData);
       setMessages(messagesData);
       setGifts(giftsData);
+      setReceipts(receiptsData);  // Phase 3.26
     } catch {
       // Graceful degradation - use defaults
     } finally {

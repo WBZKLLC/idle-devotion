@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   currentTierText: {
     fontSize: FONT_SIZE.sm,
-    color: COLORS.cream.medium,
+    color: COLORS.cream.soft,
   },
   
   // Next Unlock Card

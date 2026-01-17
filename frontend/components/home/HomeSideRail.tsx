@@ -144,10 +144,10 @@ export function HomeSideRail(props: HomeSideRailProps) {
     }
   }, [expanded, reduceMotion, expandProgress, props]);
   
-  // Items for expanded rail - includes Doors/Library as first item
+  // Items for expanded rail - includes Library as first item (distinct from Doors toggle)
   const expandedItems = useMemo(
     () => [
-      { key: 'doors' as const, icon: 'apps' as const, onPress: props.onPressDoors, accent: true }, // Library/Grid
+      { key: 'doors' as const, icon: 'apps' as const, onPress: props.onPressDoors, isLibrary: true }, // Library/Grid - distinct styling
       { key: 'mail' as const, icon: 'mail' as const, onPress: props.onPressMail },
       { key: 'friends' as const, icon: 'people' as const, onPress: props.onPressFriends },
       { key: 'quest' as const, icon: 'map' as const, onPress: props.onPressQuest },

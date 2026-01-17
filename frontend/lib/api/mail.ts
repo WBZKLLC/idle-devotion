@@ -30,11 +30,13 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 
 /**
  * Get mail summary (badge counts) - uses auth token
+ * Phase 3.26: Includes receiptsAvailable count
  */
 export async function getMailSummary(username: string): Promise<{
   rewardsAvailable: number;
   unreadMessages: number;
   giftsAvailable: number;
+  receiptsAvailable: number;  // Phase 3.26
 }> {
   try {
     const headers = await getAuthHeaders();
@@ -42,12 +44,12 @@ export async function getMailSummary(username: string): Promise<{
     const res = await fetch(`${API_BASE}/api/mail/summary/${username}`, { headers });
     if (res.status === 401) {
       // Token invalid - return defaults, let auth layer handle logout
-      return { rewardsAvailable: 0, unreadMessages: 0, giftsAvailable: 0 };
+      return { rewardsAvailable: 0, unreadMessages: 0, giftsAvailable: 0, receiptsAvailable: 0 };
     }
     if (!res.ok) throw new Error('Failed to fetch mail summary');
     return await res.json();
   } catch {
-    return { rewardsAvailable: 0, unreadMessages: 0, giftsAvailable: 0 };
+    return { rewardsAvailable: 0, unreadMessages: 0, giftsAvailable: 0, receiptsAvailable: 0 };
   }
 }
 

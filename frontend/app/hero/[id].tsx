@@ -194,8 +194,7 @@ export default function HeroPresentationScreen() {
   
   const handleBond = () => {
     haptic('light');
-    // Future: Bond/Gift interaction
-    console.log('[HeroPresentation] Bond tapped');
+    router.push(`/hero-bond?id=${id}`);
   };
   
   const handleEquip = () => {

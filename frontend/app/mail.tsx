@@ -243,8 +243,13 @@ function RewardsTab({ rewards, username, onClaim }: {
   const handleClaim = async (id: string) => {
     setClaiming(id);
     try {
-      await claimMailReward(username, id);
-      toast.success('Claimed.');
+      const result = await claimMailReward(username, id);
+      if (result.alreadyClaimed) {
+        toast.success('Already claimed.');
+      } else {
+        toast.success('Claimed.');
+      }
+      triggerBadgeRefresh(); // Update side rail badge
       onClaim();
     } catch {
       toast.error('Not now.');

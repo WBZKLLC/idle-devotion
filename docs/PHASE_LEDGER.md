@@ -185,6 +185,51 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 
 ---
 
+## Phase 3.27 — Hero Stage Intimacy v2 (Camera Drift)
+
+**Goal:** Add tier-based camera drift to create subtle "creep" feeling at higher intimacy tiers without violating guard constraints.
+
+### Deliverables
+
+#### Motion System
+- [x] `CAMERA_DRIFT_PARAMS` table with locked values (single source of truth)
+- [x] `getCameraDriftParams(tier)` function
+- [x] `useHeroCameraDrift()` Reanimated-only hook
+- [x] Tier 0-1: No drift
+- [x] Tier 2-3: Subtle drift (standard mode)
+- [x] Tier 4-5: Intimate drift (inspect mode only)
+- [x] Reduce Motion accessibility respected
+
+#### Hero Screen Integration
+- [x] `isInspectMode` state added
+- [x] `handleInspectToggle` handler with telemetry
+- [x] Camera drift style applied to hero container
+- [x] Telemetry events emitting
+
+#### Telemetry Events
+- [x] `HERO_STAGE_VIEWED`
+- [x] `HERO_STAGE_INSPECT_TOGGLED`
+- [x] `HERO_STAGE_CAMERA_MODE_RESOLVED`
+
+#### Guards
+- [x] `guard-phase-3-27.mjs` created
+- [x] Added to `npm run guard`
+- [x] Enforces: no timers/RAF, tier gating, reduce motion support
+
+### Exit Checks
+- [x] No setTimeout/setInterval/RAF in motion files (comments excluded)
+- [x] Camera drift is tier-gated
+- [x] Intimate drift only in inspect mode
+- [x] Reduce Motion branch present
+- [x] Guard: `npm run guard:phase-3-27` passes
+
+### Notes
+- Camera drift values are very subtle (scale: 0.002-0.004, translate: 0.5-1.0px)
+- Intimate tier (4-5) drift only activates when user enters inspect mode
+- All motion uses Reanimated worklets only
+
+---
+
 ## Upcoming Phases
 
 ### Phase 3.27 — Daily Login System (Planned)

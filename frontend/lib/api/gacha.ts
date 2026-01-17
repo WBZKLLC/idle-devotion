@@ -193,3 +193,74 @@ export function generateSourceId(): string {
   sourceIdCounter = (sourceIdCounter + 1) % 10000;
   return `summon_${Date.now()}_${sourceIdCounter.toString().padStart(4, '0')}`;
 }
+
+// =============================================================================
+// PHASE 3.35: INSUFFICIENT FUNDS ERROR TYPE
+// =============================================================================
+
+export interface InsufficientFundsError {
+  code: 'INSUFFICIENT_FUNDS';
+  message: string;
+  currency: string;
+  required: number;
+  available: number;
+  deficit: number;
+}
+
+export function isInsufficientFundsError(error: unknown): error is InsufficientFundsError {
+  if (!error || typeof error !== 'object') return false;
+  return (error as Record<string, unknown>).code === 'INSUFFICIENT_FUNDS';
+}
+
+// =============================================================================
+// PHASE 3.35: GACHA HISTORY
+// =============================================================================
+
+export interface GachaHistoryItem {
+  sourceId: string;
+  bannerId: string;
+  pullCount: number;
+  at: string;
+  pityBefore: number;
+  pityAfter: number;
+  pityTriggered: boolean;
+  summary: {
+    rarities: Record<string, number>;
+    newHeroes: number;
+    duplicates: number;
+    fillers: number;
+  };
+  currencySpent: {
+    type: string;
+    amount: number;
+  };
+  results: Array<{
+    heroDataId: string;
+    heroName: string;
+    rarity: string;
+    outcome: string;
+    isFiller: boolean;
+  }>;
+}
+
+export interface GachaHistoryResponse {
+  history: GachaHistoryItem[];
+  count: number;
+}
+
+/**
+ * Get user's gacha summon history (Phase 3.35)
+ */
+export async function getGachaHistory(limit: number = 50): Promise<GachaHistoryResponse> {
+  const headers = await getAuthHeaders();
+  
+  track(Events.GACHA_HISTORY_VIEWED, { limit });
+  
+  const res = await fetch(`${API_BASE}/api/gacha/history?limit=${limit}`, { headers });
+  
+  if (!res.ok) {
+    throw new Error('Failed to fetch gacha history');
+  }
+  
+  return await res.json();
+}

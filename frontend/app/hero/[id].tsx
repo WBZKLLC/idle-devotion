@@ -531,9 +531,39 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   
-  // Layer 4: Parallax (reserved)
+  // Layer 4: Parallax (Phase 3.26)
   parallaxLayer: {
     ...StyleSheet.absoluteFillObject,
+    pointerEvents: 'none',
+  },
+  parallaxPlane: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  parallaxShelf: {
+    backgroundColor: COLORS.navy.medium,
+    top: '40%',
+    height: '60%',
+  },
+  parallaxVeil: {
+    backgroundColor: COLORS.cream.pure,
+  },
+  parallaxHalo: {
+    backgroundColor: COLORS.gold.primary,
+    borderRadius: 9999,
+    top: '10%',
+    left: '20%',
+    right: '20%',
+    bottom: '50%',
+  },
+  parallaxRim: {
+    borderWidth: 1,
+    borderColor: COLORS.gold.light,
+    borderRadius: 9999,
+    top: '5%',
+    left: '10%',
+    right: '10%',
+    bottom: '45%',
+    backgroundColor: 'transparent',
   },
   
   // Layer 5: UI Chrome
@@ -545,7 +575,7 @@ const styles = StyleSheet.create({
   // Top zone (HUD)
   topZone: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: HERO_STAGE.SIDE_PADDING,
     paddingTop: 8,
     gap: 12,
@@ -560,7 +590,7 @@ const styles = StyleSheet.create({
   },
   heroInfo: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   heroName: {
     fontSize: FONT_SIZE.xl,
@@ -568,9 +598,24 @@ const styles = StyleSheet.create({
     color: COLORS.cream.pure,
     letterSpacing: 0.5,
   },
+  heroMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   rarityStars: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  cameraLabel: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.cream.dark,
+    fontStyle: 'italic',
+  },
+  topRightBadges: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 6,
   },
   affinityBadge: {
     flexDirection: 'row',
@@ -584,6 +629,27 @@ const styles = StyleSheet.create({
   affinityText: {
     fontSize: FONT_SIZE.sm,
     fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.gold.light,
+  },
+  intimacyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: COLORS.navy.dark + '60',
+    borderRadius: 8,
+  },
+  intimacyUnlocked: {
+    backgroundColor: COLORS.gold.primary + '30',
+    borderWidth: 1,
+    borderColor: COLORS.gold.primary + '40',
+  },
+  intimacyText: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.cream.dark,
+  },
+  intimacyTextUnlocked: {
     color: COLORS.gold.light,
   },
   

@@ -74,6 +74,9 @@ export function RitualDock({ idleStatus, formatIdleTime, onPress, onReceive, onA
   
   return (
     <Animated.View style={[styles.container, breatheStyle]}>
+      {/* Pedestal glow - warm ellipse under the dock */}
+      <View style={styles.pedestalGlow} pointerEvents="none" />
+      
       <Pressable
         style={({ pressed }) => [
           styles.dock,

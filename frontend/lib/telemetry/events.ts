@@ -83,6 +83,15 @@ export const Events = {
   EVENT_CLAIM_ALREADY_CLAIMED: 'event_claim_already_claimed',
   EVENT_CLAIM_ERROR: 'event_claim_error',
   
+  // Phase 3.30: Store telemetry
+  STORE_VIEWED: 'store_viewed',
+  STORE_ITEM_SELECTED: 'store_item_selected',
+  STORE_PURCHASE_INTENT_CREATED: 'store_purchase_intent_created',
+  STORE_REDEEM_SUBMITTED: 'store_redeem_submitted',
+  STORE_REDEEM_SUCCESS: 'store_redeem_success',
+  STORE_REDEEM_ALREADY_CLAIMED: 'store_redeem_already_claimed',
+  STORE_REDEEM_ERROR: 'store_redeem_error',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

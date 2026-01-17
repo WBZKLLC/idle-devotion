@@ -143,16 +143,16 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 - [x] `getTierInfo(tier)` returns camera/motion/parallax labels
 - [x] `getTierTable()` returns full tier ladder for UI
 - [x] `getNextTierInfo(tier)` for "Next unlock at..." UI
-- [ ] Bond screen with tier ladder panel
-- [ ] Hero stage camera language microcopy
-- [ ] Locked/unlocked intimacy badge (tier >= 4)
+- [x] Bond screen with tier ladder panel (`/app/frontend/app/hero-bond.tsx`)
+- [x] Hero stage camera language microcopy (shows tier-based camera label)
+- [x] Locked/unlocked intimacy badge (tier >= 4) in hero screen
 
 #### B) Camera & Parallax Language
 - [x] `docs/hero-stage-language.md` contract document
 - [x] `PARALLAX_PLANES` table per tier
 - [x] `deriveHeroStageConfig` returns `parallaxPlanes`, `cameraLabel`, `intimacyUnlocked`
 - [x] `CameraMode` includes 'distant' (was only standard/intimate)
-- [ ] Hero stage renders static parallax planes with tier-based opacity/scale
+- [x] Hero stage renders static parallax planes with tier-based opacity/scale
 
 #### C) Mail Fallback Queue
 - [ ] Backend: `mail_queue_receipt()` helper

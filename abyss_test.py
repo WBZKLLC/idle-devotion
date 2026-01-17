@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://game-inbox-friends.preview.emergentagent.com/api"
+BASE_URL = "https://social-hero-1.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 SERVER_ID = "server_1"

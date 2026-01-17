@@ -27,7 +27,7 @@ import { getStoreCatalog, createPurchaseIntent, redeemIntent, StoreItem, Purchas
 const IS_DEV = __DEV__;
 
 export default function ShopScreen() {
-  const { user, refreshUser } = useGameStore();
+  const { user, fetchUser } = useGameStore();
   const hydrated = useHydration();
   
   const [loading, setLoading] = useState(true);

@@ -199,9 +199,6 @@ export default function SummonHubScreen() {
     finally { setIsLoading(false); }
   };
 
-  const getPityCounter = () => { if (!user) return 0; if (selectedBanner === 'divine') return user.pity_counter_divine || 0; if (selectedBanner === 'premium') return user.pity_counter_premium || 0; return user.pity_counter || 0; };
-  const getPityMax = () => selectedBanner === 'divine' ? 40 : 50;
-
   const getFillerRewardIcon = (type: string) => {
     if (type.includes('crystals')) return '💎';
     if (type.includes('divine_essence')) return '✨';

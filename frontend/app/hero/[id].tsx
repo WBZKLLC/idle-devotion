@@ -16,6 +16,7 @@ import {
   Pressable,
   ActivityIndicator,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -32,7 +33,7 @@ import { useGameStore, useHydration } from '../../stores/gameStore';
 
 // Theme
 import COLORS from '../../theme/colors';
-import { LAYOUT, RADIUS, FONT_SIZE, FONT_WEIGHT } from '../../components/ui/tokens';
+import { LAYOUT, RADIUS, FONT_SIZE, FONT_WEIGHT, HERO_STAGE } from '../../components/ui/tokens';
 
 // Hero foundation
 import { CAMERA, getCameraTransform, CameraMode } from '../../lib/hero/camera';
@@ -51,6 +52,8 @@ import { AtmosphereStack } from '../../components/home/AtmosphereStack';
 
 // Haptics
 import { haptic } from '../../lib/ui/interaction';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 /**
  * Hero Visual Layer Stack (locked order):

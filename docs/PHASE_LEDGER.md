@@ -1,0 +1,145 @@
+# Phase Ledger
+
+Tracks phase goals, deliverables, and exit criteria.  
+Each phase: Goal → Deliverables checklist → Exit checks → Notes.
+
+---
+
+## Phase 3.22 — Sanctuary Home
+
+**Goal:** Transform the home screen from "dashboard" into "sanctuary" — a calm, atmospheric space that invites the player to stay.
+
+### Deliverables
+- [x] Full-bleed background (hero art or environment)
+- [x] AtmosphereStack overlays (vignette, haze, mist, optional fog)
+- [x] RitualDock ("relic base") at bottom for idle rewards
+- [x] Collapsible HomeSideRail (Doors toggle only; Library icon opens DoorsSheet)
+- [x] DoorsSheet contains grid/dashboard content
+- [x] Tab bar "floor" styling consistent across platforms
+- [x] Reduce Motion respected for all animated overlays
+
+### Exit Checks
+- [x] Home scene feels stable + predictable
+- [x] No auto-collapse timers on rail
+- [x] AtmosphereStack has `pointerEvents="none"`
+- [x] Vignette opacity ≤ 0.35 (no "crush")
+- [x] Guard: `guard-phase-3-22-closure.mjs` passes
+
+### Notes
+- Web preview has pointer event limitations; rail interaction best tested on device via Expo Go.
+- Drifting fog disabled on Hero Stage (only used on Home).
+
+---
+
+## Phase 3.23 — Social + Mail + Friends
+
+**Goal:** Implement fully functional Mail and Friends screens with secure, idempotent endpoints.
+
+### Deliverables
+- [x] Mail screen with Rewards/Messages/Gifts tabs
+- [x] Friends screen with Requests/Friends/Search tabs
+- [x] Backend: Auth-token derived identity (not URL params)
+- [x] Backend: Idempotent claim/accept/decline endpoints
+- [x] Badge refresh is event-driven (no polling loops)
+- [x] Debounced player search with cancellation
+- [x] Desire Engine cleanup (no leaking timers/subscriptions)
+- [x] Chromatic Authority pass (warm ink + gold palette)
+
+### Exit Checks
+- [x] Mail claim flows trigger badge refresh
+- [x] Friends accept/decline are idempotent
+- [x] No setInterval in badges.ts
+- [x] Backend logs `[REWARD_GRANTED]` on claims
+- [x] Guard: `guard-phase-3-23-closure.mjs` passes
+
+### Notes
+- Backend endpoints retain `/{username}` in URL for backwards compat but ignore the param.
+- Mail/Friends APIs return stub data until backend collections are populated.
+
+---
+
+## Phase 3.24 — Canonical Reward Receipts
+
+**Goal:** Ensure ALL reward-granting endpoints return the same canonical receipt shape for consistency, idempotency, and telemetry.
+
+### Deliverables
+
+#### Backend
+- [x] `grant_rewards_canonical()` helper in server.py
+- [x] LOCKED receipt shape: `{ source, sourceId, items, balances, alreadyClaimed? }`
+- [x] LOCKED source values: `bond_tribute | mail_reward_claim | mail_gift_claim | daily_login_claim | idle_claim | admin_grant`
+- [x] Mail reward claim uses canonical receipt
+- [x] Mail gift claim uses canonical receipt
+- [x] Idle claim includes canonical fields (+ legacy fields for compat)
+- [ ] Bond tribute endpoint returns canonical receipt (endpoint not yet implemented)
+- [ ] Mail fallback queued receipts (deferred - no queue system yet)
+
+#### Frontend
+- [x] `RewardReceipt` type in `lib/types/receipt.ts`
+- [x] `isValidReceipt()` type guard
+- [x] `assertValidReceipt()` validator
+- [x] Mail API returns `Promise<RewardReceipt>`
+- [x] Mail screen uses `formatReceiptItems()` for toast
+- [ ] Balances applied ONLY from receipt (partial - store sync needed)
+- [x] Telemetry events with source + sourceId:
+  - [x] `reward_receipt_received`
+  - [x] `reward_claim_success`
+  - [x] `reward_claim_already_claimed`
+  - [x] `reward_claim_error`
+  - [x] `mail_claim_submitted`
+
+#### Guards
+- [x] `guard-receipt-shape.mjs` validates receipt fields
+- [x] Guard fails if `source` or `sourceId` missing
+
+### Exit Checks
+- [x] One receipt shape everywhere
+- [x] One balance application path (from receipts)
+- [x] Guards passing: `npm run guard:receipt-shape`
+- [x] No UI-specific reward logic outside receipt consumption
+
+### Notes
+- Bond tribute endpoint deferred to Phase 3.26 (hero bonding system).
+- Mail fallback queue deferred (no async reward queue yet).
+- Telemetry events added but analytics backend not yet connected (logs in DEV).
+
+---
+
+## Phase 3.25 — Hero Stage Motion v1
+
+**Goal:** Add tier-gated "alive" feeling to hero presentation without timers or RAF.
+
+### Deliverables
+- [x] MOTION_PARAMS table with locked values (single source of truth)
+- [x] `resolveMotionTier(affinity)` function
+- [x] `deriveHeroStageConfig()` centralized config
+- [x] `useHeroIdleMotion()` Reanimated-only hook
+- [x] Tier 0-1: Static (no motion)
+- [x] Tier 2-5: Progressive breathing/sway/bob/rotation
+- [x] Reduce Motion accessibility respected
+- [x] Selene alias resolution (`char_selene_ssr`)
+- [x] DEV logging via `logHeroStageConfig()`
+
+### Exit Checks
+- [x] No setTimeout/setInterval/RAF in motion files
+- [x] Hero screen uses `deriveHeroStageConfig`
+- [x] `driftingFog={false}` on hero AtmosphereStack
+- [x] Guard: `npm run guard:hero-motion` passes
+
+### Notes
+- Motion values locked per spec (breathingScale: 0.006/0.010/0.013/0.016).
+- Camera intimacy offset at tier 4-5 (2%/4% scale boost).
+
+---
+
+## Upcoming Phases
+
+### Phase 3.26 — Hero Bonding System (Planned)
+- Bond tribute endpoint with canonical receipt
+- Affinity level progression
+- Gift system UI
+
+### Phase 3.27 — Daily Login System (Planned)
+- Daily login claim with canonical receipt
+- Streak tracking
+- Monthly reward calendar

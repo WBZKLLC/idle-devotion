@@ -5427,6 +5427,153 @@ async def get_friend_gift_status(
     return status
 
 
+# ==================== EVENTS/QUESTS SYSTEM (Phase 3.29) ====================
+# Events scaffold with canonical receipt system
+
+# Sample active events (in production, this would be from database/admin)
+SAMPLE_EVENTS = [
+    {
+        "id": "welcome_2024",
+        "title": "Welcome Bonus",
+        "description": "Claim your welcome gift!",
+        "type": "one_time",
+        "rewards": [{"type": "gold", "amount": 500}, {"type": "gems", "amount": 10}],
+        "ends_at": None,  # Never expires
+    },
+    {
+        "id": "daily_check_in",
+        "title": "Daily Check-in",
+        "description": "Log in today for rewards",
+        "type": "daily",
+        "rewards": [{"type": "stamina", "amount": 20}],
+        "ends_at": None,
+    },
+]
+
+
+@api_router.get("/events/active")
+async def get_active_events(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get list of active events with claimable count
+    
+    Phase 3.29: Returns events the user can interact with.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    
+    events = []
+    claimable_count = 0
+    
+    for event in SAMPLE_EVENTS:
+        # Check if user already claimed this event
+        claim = await db.event_claims.find_one({
+            "user_id": user["id"],
+            "event_id": event["id"]
+        })
+        
+        # For daily events, check if claimed today
+        is_claimable = False
+        if event["type"] == "one_time":
+            is_claimable = not claim
+        elif event["type"] == "daily":
+            if claim:
+                last_claim = claim.get("claimed_at")
+                if last_claim:
+                    today = datetime.utcnow().date()
+                    is_claimable = last_claim.date() < today
+                else:
+                    is_claimable = True
+            else:
+                is_claimable = True
+        
+        if is_claimable:
+            claimable_count += 1
+        
+        events.append({
+            "id": event["id"],
+            "title": event["title"],
+            "description": event["description"],
+            "type": event["type"],
+            "rewards_preview": [f"{r['amount']} {r['type']}" for r in event["rewards"]],
+            "is_claimable": is_claimable,
+            "ends_at": event.get("ends_at"),
+        })
+    
+    return {
+        "events": events,
+        "claimable_count": claimable_count,
+    }
+
+
+@api_router.post("/events/{event_id}/claim")
+async def claim_event_reward(
+    event_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Claim event reward (idempotent - returns canonical receipt)
+    
+    Phase 3.29: Uses canonical receipt system.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    
+    # Find event
+    event = next((e for e in SAMPLE_EVENTS if e["id"] == event_id), None)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Check existing claim
+    claim = await db.event_claims.find_one({
+        "user_id": user["id"],
+        "event_id": event_id
+    })
+    
+    # Idempotency check
+    already_claimed = False
+    if claim:
+        if event["type"] == "one_time":
+            already_claimed = True
+        elif event["type"] == "daily":
+            last_claim = claim.get("claimed_at")
+            if last_claim and last_claim.date() >= datetime.utcnow().date():
+                already_claimed = True
+    
+    if already_claimed:
+        return await grant_rewards_canonical(
+            user=user,
+            source="event_claim",
+            source_id=f"{event_id}_{user['id']}",
+            rewards=[],
+            already_claimed=True,
+            message="Already claimed"
+        )
+    
+    # Record or update claim
+    if claim:
+        await db.event_claims.update_one(
+            {"_id": claim["_id"]},
+            {"$set": {"claimed_at": datetime.utcnow()}}
+        )
+    else:
+        await db.event_claims.insert_one({
+            "id": str(uuid4()),
+            "user_id": user["id"],
+            "event_id": event_id,
+            "claimed_at": datetime.utcnow(),
+        })
+    
+    if __debug__:
+        print(f"[EVENT_CLAIMED] user={user['username']} event={event_id}")
+    
+    # Grant rewards using canonical system
+    return await grant_rewards_canonical(
+        user=user,
+        source="event_claim",
+        source_id=f"{event_id}_{user['id']}",
+        rewards=event["rewards"],
+        already_claimed=False,
+        message=f"Claimed: {event['title']}"
+    )
+
+
 # ==================== PLAYER CHARACTER SYSTEM ====================
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):

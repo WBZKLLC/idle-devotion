@@ -29,8 +29,15 @@ import {
   declineFriendRequest,
   searchPlayers,
   sendFriendRequest,
+  // Phase 3.28: Gift functions
+  sendFriendGift,
+  getFriendGiftStatus,
+  GiftType,
+  GiftStatus,
 } from '../lib/api/friends';
 import { triggerBadgeRefresh } from '../lib/ui/badges';
+// Phase 3.28: Telemetry
+import { track, Events } from '../lib/telemetry/events';
 
 type FriendTab = 'requests' | 'friends' | 'search';
 

@@ -1,10 +1,11 @@
 // /app/frontend/lib/api/mail.ts
 // Phase 3.23.2.P: Mail API Layer with Auth
-// Phase 3.24: Canonical Receipt Integration
+// Phase 3.24: Canonical Receipt Integration + Telemetry
 //
 // Canonical API calls for mail system.
 // Uses auth token from gameStore for server identity.
 // Returns canonical receipts for all claim operations.
+// Emits telemetry events with source + sourceId.
 
 import { loadAuthToken } from '../authStorage';
 import { 
@@ -12,6 +13,7 @@ import {
   assertValidReceipt,
   isValidReceipt,
 } from '../types/receipt';
+import { track, Events } from '../telemetry/events';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
 

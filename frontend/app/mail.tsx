@@ -24,6 +24,8 @@ import { toast } from '../components/ui/Toast';
 // Phase 3.23.2: API layer
 import { getMailSummary, getMailRewards, getMailMessages, getMailGifts, claimMailReward, claimMailGift } from '../lib/api/mail';
 import { triggerBadgeRefresh } from '../lib/ui/badges';
+// Phase 3.24: Receipt types
+import { RewardReceipt, formatReceiptItems } from '../lib/types/receipt';
 
 type MailTab = 'rewards' | 'messages' | 'gifts';
 

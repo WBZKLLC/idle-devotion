@@ -1,5 +1,6 @@
 // /app/frontend/lib/types/receipt.ts
 // Phase 3.24: Canonical Reward Receipt Type
+// Phase 3.26: Added mail_receipt_claim source
 //
 // Single source of truth for receipt shape.
 // All reward-granting endpoints return this shape.
@@ -9,6 +10,7 @@
 // - bond_tribute
 // - mail_reward_claim
 // - mail_gift_claim
+// - mail_receipt_claim (Phase 3.26)
 // - daily_login_claim
 // - idle_claim
 // - admin_grant
@@ -20,6 +22,7 @@ export type RewardSource =
   | 'bond_tribute'
   | 'mail_reward_claim'
   | 'mail_gift_claim'
+  | 'mail_receipt_claim'  // Phase 3.26: Fallback queue receipts
   | 'daily_login_claim'
   | 'idle_claim'
   | 'admin_grant';

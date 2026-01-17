@@ -146,16 +146,113 @@ export function getHeroMotionSpecByHeroDataId(heroDataId: string | undefined): H
 // =============================================================================
 
 /**
+ * Affinity thresholds for each tier (SINGLE SOURCE OF TRUTH)
+ * UI should read from this table, not hardcode thresholds
+ */
+export const TIER_THRESHOLDS: Record<MotionTier, number> = {
+  0: 0,
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+};
+
+/**
+ * Human-readable tier info for UI display
+ */
+export interface TierInfo {
+  tier: MotionTier;
+  affinityRequired: number;
+  cameraLabel: string;
+  motionLabel: string;
+  parallaxLabel: string;
+  unlockSummary: string;
+}
+
+/**
+ * Get tier display info for UI (SINGLE SOURCE OF TRUTH)
+ */
+export function getTierInfo(tier: MotionTier): TierInfo {
+  const info: Record<MotionTier, TierInfo> = {
+    0: {
+      tier: 0,
+      affinityRequired: 0,
+      cameraLabel: 'Distant',
+      motionLabel: 'None',
+      parallaxLabel: 'None',
+      unlockSummary: 'Base presentation',
+    },
+    1: {
+      tier: 1,
+      affinityRequired: 1,
+      cameraLabel: 'Distant',
+      motionLabel: 'None',
+      parallaxLabel: 'None',
+      unlockSummary: 'Recognition begins',
+    },
+    2: {
+      tier: 2,
+      affinityRequired: 2,
+      cameraLabel: 'Standard',
+      motionLabel: 'Breath',
+      parallaxLabel: 'Shelf I',
+      unlockSummary: 'Breath animation unlocked',
+    },
+    3: {
+      tier: 3,
+      affinityRequired: 3,
+      cameraLabel: 'Standard',
+      motionLabel: 'Breath + Micro-sway',
+      parallaxLabel: 'Shelf I + Veil',
+      unlockSummary: 'Micro-sway added',
+    },
+    4: {
+      tier: 4,
+      affinityRequired: 4,
+      cameraLabel: 'Intimate',
+      motionLabel: 'Breath + Sway + Bob',
+      parallaxLabel: 'Shelf II + Halo',
+      unlockSummary: 'Intimate framing unlocked',
+    },
+    5: {
+      tier: 5,
+      affinityRequired: 5,
+      cameraLabel: 'Intimate',
+      motionLabel: 'Full presence',
+      parallaxLabel: 'Shelf II + Halo + Rim',
+      unlockSummary: 'Full presence achieved',
+    },
+  };
+  return info[tier];
+}
+
+/**
+ * Get full tier table for UI display (ladder panel)
+ */
+export function getTierTable(): TierInfo[] {
+  return [0, 1, 2, 3, 4, 5].map(t => getTierInfo(t as MotionTier));
+}
+
+/**
  * Resolve motion tier from affinity level
  * Higher affinity = more motion
  */
 export function resolveMotionTier(affinityLevel: number = 0): MotionTier {
-  if (affinityLevel >= 5) return 5;
-  if (affinityLevel >= 4) return 4;
-  if (affinityLevel >= 3) return 3;
-  if (affinityLevel >= 2) return 2;
-  if (affinityLevel >= 1) return 1;
+  if (affinityLevel >= TIER_THRESHOLDS[5]) return 5;
+  if (affinityLevel >= TIER_THRESHOLDS[4]) return 4;
+  if (affinityLevel >= TIER_THRESHOLDS[3]) return 3;
+  if (affinityLevel >= TIER_THRESHOLDS[2]) return 2;
+  if (affinityLevel >= TIER_THRESHOLDS[1]) return 1;
   return 0;
+}
+
+/**
+ * Get next tier info (for "Next unlock at..." UI)
+ */
+export function getNextTierInfo(currentTier: MotionTier): TierInfo | null {
+  if (currentTier >= 5) return null;
+  return getTierInfo((currentTier + 1) as MotionTier);
 }
 
 /**

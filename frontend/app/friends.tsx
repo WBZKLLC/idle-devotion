@@ -568,6 +568,143 @@ function SearchTab({ username, onUpdate }: { username: string; onUpdate: () => v
   );
 }
 
+// Phase 3.28: Gift Modal Component
+function GiftModal({ friend, onClose }: { friend: Friend; onClose: () => void }) {
+  const [giftStatus, setGiftStatus] = useState<Record<GiftType, GiftStatus> | null>(null);
+  const [sending, setSending] = useState<GiftType | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Load gift status on mount
+  useEffect(() => {
+    const loadStatus = async () => {
+      try {
+        const status = await getFriendGiftStatus(friend.id);
+        setGiftStatus(status);
+      } catch {
+        setGiftStatus({
+          gold: { sent_today: 0, daily_limit: 5, remaining: 5, amount: 100 },
+          stamina: { sent_today: 0, daily_limit: 3, remaining: 3, amount: 10 },
+          gems: { sent_today: 0, daily_limit: 1, remaining: 1, amount: 5 },
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStatus();
+  }, [friend.id]);
+  
+  const handleSendGift = async (giftType: GiftType) => {
+    setSending(giftType);
+    try {
+      const result = await sendFriendGift(friend.id, giftType);
+      
+      // Emit telemetry with proper payload
+      track(Events.FRIEND_GIFT_SENT, {
+        giftType,
+        toUserId: friend.id,
+        sourceId: result.gift_id,
+      });
+      
+      toast.success(`Sent ${result.amount} ${giftType} to ${result.recipient_username}!`);
+      triggerBadgeRefresh();
+      
+      // Update local status
+      if (giftStatus) {
+        setGiftStatus({
+          ...giftStatus,
+          [giftType]: {
+            ...giftStatus[giftType],
+            sent_today: giftStatus[giftType].sent_today + 1,
+            remaining: giftStatus[giftType].remaining - 1,
+          },
+        });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Not now.');
+    } finally {
+      setSending(null);
+    }
+  };
+  
+  const giftOptions: { type: GiftType; icon: keyof typeof Ionicons.glyphMap; label: string; color: string }[] = [
+    { type: 'gold', icon: 'logo-usd', label: 'Gold', color: COLORS.gold.primary },
+    { type: 'stamina', icon: 'flash', label: 'Stamina', color: COLORS.violet.light },
+    { type: 'gems', icon: 'diamond', label: 'Gems', color: COLORS.cream.soft },
+  ];
+  
+  return (
+    <Modal
+      visible={true}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Send Gift</Text>
+            <Text style={styles.modalSubtitle}>To {friend.username}</Text>
+          </View>
+          
+          {loading ? (
+            <View style={styles.modalLoading}>
+              <ActivityIndicator size="small" color={COLORS.gold.primary} />
+            </View>
+          ) : (
+            <View style={styles.giftOptions}>
+              {giftOptions.map(({ type, icon, label, color }) => {
+                const status = giftStatus?.[type];
+                const canSend = status && status.remaining > 0;
+                const isSending = sending === type;
+                
+                return (
+                  <Pressable
+                    key={type}
+                    style={({ pressed }) => [
+                      styles.giftOption,
+                      !canSend && styles.giftOptionDisabled,
+                      pressed && canSend && styles.pressed,
+                    ]}
+                    onPress={() => canSend && !isSending && handleSendGift(type)}
+                    disabled={!canSend || isSending}
+                  >
+                    <View style={[styles.giftOptionIcon, { backgroundColor: color + '20' }]}>
+                      <Ionicons name={icon} size={24} color={canSend ? color : COLORS.cream.dark} />
+                    </View>
+                    <Text style={[styles.giftOptionLabel, !canSend && styles.giftOptionLabelDisabled]}>
+                      {label}
+                    </Text>
+                    <Text style={styles.giftOptionAmount}>
+                      {status?.amount || 0}
+                    </Text>
+                    <Text style={styles.giftOptionRemaining}>
+                      {status?.remaining || 0}/{status?.daily_limit || 0} left
+                    </Text>
+                    {isSending && (
+                      <ActivityIndicator 
+                        size="small" 
+                        color={COLORS.gold.primary} 
+                        style={styles.giftOptionSpinner}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+          
+          <Pressable 
+            style={({ pressed }) => [styles.modalCloseBtn, pressed && styles.pressed]}
+            onPress={onClose}
+          >
+            <Text style={styles.modalCloseBtnText}>Close</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

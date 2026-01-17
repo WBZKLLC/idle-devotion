@@ -5576,6 +5576,206 @@ async def claim_event_reward(
     )
 
 
+# ==================== STORE & ECONOMY SYSTEM (Phase 3.30) ====================
+# Store scaffold with purchase intent plumbing (no real billing)
+
+# Static catalog (in production, this would be from database/admin)
+STORE_CATALOG = [
+    {
+        "sku": "gem_pack_small",
+        "name": "Gem Pack (Small)",
+        "desc": "100 Gems to fuel your journey",
+        "priceText": "$0.99",
+        "currency": "USD",
+        "price": 99,  # cents
+        "tag": "STARTER",
+        "rewards": [{"type": "gems", "amount": 100}],
+    },
+    {
+        "sku": "gem_pack_medium",
+        "name": "Gem Pack (Medium)",
+        "desc": "500 Gems + 50 bonus",
+        "priceText": "$4.99",
+        "currency": "USD",
+        "price": 499,
+        "tag": "POPULAR",
+        "rewards": [{"type": "gems", "amount": 550}],
+    },
+    {
+        "sku": "gem_pack_large",
+        "name": "Gem Pack (Large)",
+        "desc": "1200 Gems + 200 bonus",
+        "priceText": "$9.99",
+        "currency": "USD",
+        "price": 999,
+        "tag": "BEST VALUE",
+        "rewards": [{"type": "gems", "amount": 1400}],
+    },
+    {
+        "sku": "gold_pack",
+        "name": "Gold Chest",
+        "desc": "10,000 Gold for upgrades",
+        "priceText": "$1.99",
+        "currency": "USD",
+        "price": 199,
+        "rewards": [{"type": "gold", "amount": 10000}],
+    },
+    {
+        "sku": "stamina_pack",
+        "name": "Stamina Refill",
+        "desc": "Full stamina + 50 bonus",
+        "priceText": "$0.99",
+        "currency": "USD",
+        "price": 99,
+        "rewards": [{"type": "stamina", "amount": 150}],
+    },
+]
+
+
+@api_router.get("/store/catalog")
+async def get_store_catalog(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get store catalog (auth required for personalization)
+    
+    Phase 3.30: Returns static catalog list.
+    """
+    # Auth optional - just for personalization if needed later
+    try:
+        user, _ = await authenticate_request(credentials, require_auth=False)
+    except:
+        user = None
+    
+    # Return catalog without internal fields
+    catalog = []
+    for item in STORE_CATALOG:
+        catalog.append({
+            "sku": item["sku"],
+            "name": item["name"],
+            "desc": item.get("desc"),
+            "priceText": item["priceText"],
+            "currency": item["currency"],
+            "tag": item.get("tag"),
+        })
+    
+    return {"catalog": catalog}
+
+
+@api_router.post("/store/purchase-intent")
+async def create_purchase_intent(
+    sku: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create purchase intent (prepares for payment, no real charge)
+    
+    Phase 3.30: Returns intent for client to process.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    
+    # Find item in catalog
+    item = next((i for i in STORE_CATALOG if i["sku"] == sku), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found in catalog")
+    
+    # Create intent record
+    intent_id = str(uuid4())
+    await db.store_intents.insert_one({
+        "id": intent_id,
+        "user_id": user["id"],
+        "sku": sku,
+        "price": item["price"],
+        "currency": item["currency"],
+        "rewards": item["rewards"],
+        "status": "pending",
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(hours=24),
+    })
+    
+    if __debug__:
+        print(f"[STORE_INTENT_CREATED] user={user['username']} sku={sku} intent={intent_id}")
+    
+    return {
+        "intentId": intent_id,
+        "sku": sku,
+        "price": item["price"],
+        "priceText": item["priceText"],
+        "currency": item["currency"],
+        "createdAt": datetime.utcnow().isoformat(),
+    }
+
+
+# DEV-ONLY: Redeem intent without payment (for testing)
+@api_router.post("/store/redeem-intent")
+async def redeem_store_intent(
+    intent_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """DEV-ONLY: Redeem purchase intent without payment (canonical receipt)
+    
+    Phase 3.30: Returns canonical receipt. Idempotent.
+    Only available in dev mode.
+    """
+    # Check dev mode
+    if not os.getenv("SERVER_DEV_MODE", "").upper() == "TRUE":
+        raise HTTPException(status_code=403, detail="Not available in production")
+    
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    
+    # Find intent
+    intent = await db.store_intents.find_one({
+        "id": intent_id,
+        "user_id": user["id"]
+    })
+    
+    if not intent:
+        raise HTTPException(status_code=404, detail="Intent not found")
+    
+    # Check expiration
+    if intent.get("expires_at") and intent["expires_at"] < datetime.utcnow():
+        raise HTTPException(status_code=410, detail="Intent has expired")
+    
+    # Idempotent: if already redeemed, return alreadyClaimed
+    if intent.get("status") == "redeemed":
+        return await grant_rewards_canonical(
+            user=user,
+            source="store_redeem",
+            source_id=intent_id,
+            rewards=[],
+            already_claimed=True,
+            message="Already redeemed"
+        )
+    
+    # Mark as redeemed (atomic)
+    result = await db.store_intents.update_one(
+        {"id": intent_id, "user_id": user["id"], "status": "pending"},
+        {"$set": {"status": "redeemed", "redeemed_at": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        # Race condition or already redeemed
+        return await grant_rewards_canonical(
+            user=user,
+            source="store_redeem",
+            source_id=intent_id,
+            rewards=[],
+            already_claimed=True,
+            message="Already redeemed"
+        )
+    
+    if __debug__:
+        print(f"[STORE_INTENT_REDEEMED] user={user['username']} intent={intent_id}")
+    
+    # Grant rewards
+    return await grant_rewards_canonical(
+        user=user,
+        source="store_redeem",
+        source_id=intent_id,
+        rewards=intent.get("rewards", []),
+        already_claimed=False,
+        message="Purchase complete!"
+    )
+
+
 # ==================== PLAYER CHARACTER SYSTEM ====================
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):

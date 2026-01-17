@@ -69,24 +69,37 @@ function checkBackendReceipts() {
   
   success('Backend has grant_rewards_canonical helper');
   
-  // Check claim endpoints use canonical helper
-  const claimEndpoints = [
-    { pattern: /claim_mail_reward/, name: 'mail reward claim' },
-    { pattern: /claim_mail_gift/, name: 'mail gift claim' },
-    { pattern: /claim_idle_rewards/, name: 'idle claim' },
+  // Check claim endpoints use canonical helper or have receipt shape
+  const claimPatterns = [
+    { name: 'mail reward claim', fnName: 'claim_mail_reward' },
+    { name: 'mail gift claim', fnName: 'claim_mail_gift' },
+    { name: 'idle claim', fnName: 'claim_idle_rewards' },
   ];
   
-  for (const ep of claimEndpoints) {
-    const match = content.match(new RegExp(`async def ${ep.pattern.source}[^}]+`, 's'));
-    if (match) {
-      // Check if it uses grant_rewards_canonical or has receipt shape fields
-      const fnContent = match[0];
-      if (fnContent.includes('grant_rewards_canonical') || 
-          (fnContent.includes('"source"') && fnContent.includes('"sourceId"') && fnContent.includes('"items"') && fnContent.includes('"balances"'))) {
-        success(`${ep.name} returns canonical receipt`);
-      } else {
-        error(`${ep.name} may not return canonical receipt shape`);
-      }
+  for (const ep of claimPatterns) {
+    // Find the function in the file
+    const fnStart = content.indexOf(`async def ${ep.fnName}`);
+    if (fnStart === -1) {
+      warn(`${ep.name} function not found`);
+      continue;
+    }
+    
+    // Get next ~3000 chars of the function (rough approximation)
+    const fnContent = content.substring(fnStart, fnStart + 3000);
+    
+    // Check if it uses grant_rewards_canonical or has receipt shape return
+    const usesHelper = fnContent.includes('grant_rewards_canonical');
+    const hasSourceField = fnContent.includes('"source":') || fnContent.includes("'source':");
+    const hasSourceIdField = fnContent.includes('"sourceId":') || fnContent.includes("'sourceId':");
+    const hasItemsField = fnContent.includes('"items":') || fnContent.includes("'items':");
+    const hasBalancesField = fnContent.includes('"balances":') || fnContent.includes("'balances':");
+    
+    if (usesHelper) {
+      success(`${ep.name} uses grant_rewards_canonical helper`);
+    } else if (hasSourceField && hasSourceIdField && hasItemsField && hasBalancesField) {
+      success(`${ep.name} returns canonical receipt shape directly`);
+    } else {
+      error(`${ep.name} may not return canonical receipt shape`);
     }
   }
 }

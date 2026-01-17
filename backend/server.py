@@ -4775,6 +4775,140 @@ async def claim_mail_gift_legacy(username: str, gift_id: str, credentials: HTTPA
     """Legacy route - ignores username, uses auth"""
     return await claim_mail_gift(gift_id, credentials)
 
+
+# ==================== MAIL RECEIPTS FALLBACK QUEUE (Phase 3.26) ====================
+# When rewards cannot be granted instantly, queue them to mail_receipts for later claim.
+# Uses canonical receipt shape for consistency with Phase 3.24.
+
+async def queue_receipt_to_mail(
+    user_id: str,
+    source: str,
+    source_id: str,
+    rewards: List[Dict[str, any]],
+    description: str = "Queued reward",
+    expires_in_days: int = 30
+) -> str:
+    """
+    Queue a reward receipt to mail for later claim (Phase 3.26).
+    
+    Use when:
+    - Reward grant fails due to transient error
+    - Offline/disconnected user should receive rewards
+    - System-generated rewards that need mail delivery
+    
+    Args:
+        user_id: Target user ID
+        source: Original reward source (for tracking)
+        source_id: Original source ID (for idempotency)
+        rewards: List of {type, amount, hero_id?, item_id?}
+        description: Human-readable description for mail UI
+        expires_in_days: Days until receipt expires (default 30)
+    
+    Returns:
+        Receipt ID (for tracking)
+    """
+    receipt_id = str(uuid4())
+    
+    await db.mail_receipts.insert_one({
+        "id": receipt_id,
+        "user_id": user_id,
+        "original_source": source,
+        "original_source_id": source_id,
+        "rewards": rewards,
+        "description": description,
+        "claimed": False,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(days=expires_in_days),
+    })
+    
+    if __debug__:
+        print(f"[MAIL_RECEIPT_QUEUED] user={user_id} receipt={receipt_id} source={source}")
+    
+    return receipt_id
+
+
+@api_router.get("/mail/receipts")
+async def get_mail_receipts(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get queued receipts waiting to be claimed (auth required)
+    
+    Phase 3.26: Returns receipts that were queued via queue_receipt_to_mail().
+    Each receipt contains the rewards that will be granted on claim.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    
+    receipts = await db.mail_receipts.find({
+        "user_id": user["id"],
+        "claimed": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    }).sort("created_at", -1).to_list(50)
+    
+    return [convert_objectid(r) for r in receipts]
+
+
+@api_router.post("/mail/receipts/{receipt_id}/claim")
+async def claim_mail_receipt(receipt_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Claim a queued receipt (idempotent - already claimed returns canonical receipt)
+    
+    Phase 3.26: Returns canonical receipt shape:
+    { source, sourceId, items, balances, alreadyClaimed }
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    
+    # Check if receipt exists and belongs to user
+    receipt = await db.mail_receipts.find_one({
+        "id": receipt_id,
+        "user_id": user["id"]
+    })
+    
+    if not receipt:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    
+    # Check expiration
+    if receipt.get("expires_at") and receipt["expires_at"] < datetime.utcnow():
+        raise HTTPException(status_code=410, detail="Receipt has expired")
+    
+    # Idempotent: if already claimed, return canonical receipt with alreadyClaimed=True
+    if receipt.get("claimed"):
+        return await grant_rewards_canonical(
+            user=user,
+            source="mail_receipt_claim",
+            source_id=receipt_id,
+            rewards=[],  # Empty items for already claimed
+            already_claimed=True,
+            message="Receipt already claimed"
+        )
+    
+    # Mark as claimed (atomic check)
+    result = await db.mail_receipts.update_one(
+        {"id": receipt_id, "user_id": user["id"], "claimed": False},
+        {"$set": {"claimed": True, "claimed_at": datetime.utcnow()}}
+    )
+    
+    # Double-check atomic update succeeded (race condition protection)
+    if result.modified_count == 0:
+        return await grant_rewards_canonical(
+            user=user,
+            source="mail_receipt_claim",
+            source_id=receipt_id,
+            rewards=[],
+            already_claimed=True,
+            message="Receipt already claimed"
+        )
+    
+    # Extract rewards from the receipt
+    reward_items = receipt.get("rewards", [])
+    
+    # Grant rewards using canonical helper
+    return await grant_rewards_canonical(
+        user=user,
+        source="mail_receipt_claim",
+        source_id=receipt_id,
+        rewards=reward_items,
+        already_claimed=False,
+        message=receipt.get("description", "Reward claimed")
+    )
+
 # ==================== FRIENDS SYSTEM ====================
 # Phase 3.23.2.P: Security patch - server derives user from auth token
 

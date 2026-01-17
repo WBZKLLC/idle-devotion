@@ -67,6 +67,11 @@ export const Events = {
   MAIL_RECEIPTS_VIEWED: 'mail_receipts_viewed',
   MAIL_RECEIPT_CLAIM_SUBMITTED: 'mail_receipt_claim_submitted',
   
+  // Phase 3.27: Hero stage intimacy telemetry
+  HERO_STAGE_VIEWED: 'hero_stage_viewed',
+  HERO_STAGE_INSPECT_TOGGLED: 'hero_stage_inspect_toggled',
+  HERO_STAGE_CAMERA_MODE_RESOLVED: 'hero_stage_camera_mode_resolved',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

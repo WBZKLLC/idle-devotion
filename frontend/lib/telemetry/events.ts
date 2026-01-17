@@ -99,6 +99,13 @@ export const Events = {
   IDLE_CLAIM_SUCCESS: 'idle_claim_success',
   IDLE_CLAIM_ALREADY_CLAIMED: 'idle_claim_already_claimed',
   
+  // Phase 3.32: Daily login telemetry
+  DAILY_VIEWED: 'daily_viewed',
+  DAILY_CLAIM_SUBMITTED: 'daily_claim_submitted',
+  DAILY_CLAIM_SUCCESS: 'daily_claim_success',
+  DAILY_CLAIM_ALREADY_CLAIMED: 'daily_claim_already_claimed',
+  DAILY_CLAIM_ERROR: 'daily_claim_error',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

@@ -40,9 +40,11 @@ import {
 } from '../../lib/hero/content-boundaries';
 
 // Phase 3.25: Motion system (single source of truth)
+// Phase 3.27: Camera drift for intimacy
 import { 
   deriveHeroStageConfig,
   useHeroIdleMotion,
+  useHeroCameraDrift,  // Phase 3.27
   logHeroStageConfig,
   HeroStageConfig,
 } from '../../lib/hero/motion';
@@ -55,6 +57,9 @@ import { AtmosphereStack } from '../../components/home/AtmosphereStack';
 
 // Haptics
 import { haptic } from '../../lib/ui/interaction';
+
+// Telemetry (Phase 3.27)
+import { track, Events } from '../../lib/telemetry/events';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

@@ -107,9 +107,17 @@ export default function HeroPresentationScreen() {
   const [loading, setLoading] = useState(true);
   const [hero, setHero] = useState<any>(null);
   const [heroData, setHeroData] = useState<any>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
   
-  // Camera mode (only 'standard' active for now)
-  const [cameraMode] = useState<CameraMode>('standard');
+  // Check for reduce motion preference
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      setReduceMotion
+    );
+    return () => subscription.remove();
+  }, []);
   
   // Wire interaction hooks (no-op for now)
   const { onTap, onLongPress } = useHeroInteractions(id || '');
@@ -155,14 +163,32 @@ export default function HeroPresentationScreen() {
     return getEffectiveContentLevel('heroPresentation', affinityLevel);
   }, [hero]);
   
-  // Camera transform (static for now - will animate in future phases)
-  const cameraTransform = getCameraTransform(cameraMode);
+  // Phase 3.25: Motion tier based on affinity
+  const affinityLevel = hero?.affinity_level || 0;
+  const { animatedStyle: motionStyle, motionTier, isAnimating } = useHeroIdleMotion(
+    affinityLevel,
+    reduceMotion
+  );
+  
+  // Camera mode: standard for tier 0-3, intimate for tier 4-5 if unlocked
+  const cameraMode = useMemo<CameraMode>(() => {
+    if (motionTier >= 4 && isCameraModeUnlocked('intimate', affinityLevel)) {
+      return 'intimate';
+    }
+    return 'standard';
+  }, [motionTier, affinityLevel]);
+  
+  // Base camera transform
+  const baseCameraTransform = getCameraTransform(cameraMode);
   
   // Calculate hero power (simple single value)
   const heroPower = useMemo(() => {
     if (!hero) return 0;
     return Math.floor((hero.current_atk || 0) + (hero.current_hp || 0) / 10 + (hero.current_def || 0));
   }, [hero]);
+  
+  // Check if this is Selene for special handling
+  const isSelene = isSeleneHero(heroData?.id);
   
   // Handle back navigation
   const handleBack = () => {

@@ -115,6 +115,11 @@ export const Events = {
   GACHA_PITY_INCREMENTED: 'gacha_pity_incremented',
   GACHA_PITY_TRIGGERED: 'gacha_pity_triggered',
   
+  // Phase 3.34: Summon Results UX telemetry
+  GACHA_RESULTS_VIEWED: 'gacha_results_viewed',
+  GACHA_NEW_HERO_ACQUIRED: 'gacha_new_hero_acquired',
+  GACHA_DUPLICATE_CONVERTED: 'gacha_duplicate_converted',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

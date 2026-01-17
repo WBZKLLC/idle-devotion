@@ -1,31 +1,24 @@
 // /app/frontend/components/home/HomeSideRail.tsx
-// Phase 3.23.8: Collapsible Side Rail
+// Phase 3.23.8: Collapsible Side Rail (Manual Only)
 //
 // Collapsed by default - only Doors icon visible.
-// Tap Doors to expand, tap outside or tap Doors again to collapse.
-// Auto-collapse after 5s of no interaction.
+// Tap Doors to expand, tap Doors again OR tap outside to collapse.
+// NO auto-collapse timers. Manual tool only.
 //
 // "The rail is a tool you summon, not furniture."
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Pressable, StyleSheet, Platform, Text, AccessibilityInfo } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../theme/colors';
 import { HOME_OVERLAY, RAIL } from '../ui/tokens';
 import { haptic } from '../../lib/ui/interaction';
-
-// Press feedback constants
-const PRESS = {
-  OPACITY: 0.85,
-  SCALE: 0.97,
-};
 
 type RailKey = 'doors' | 'mail' | 'friends' | 'quest' | 'events' | 'summon' | 'shop';
 
@@ -45,9 +38,14 @@ export type HomeSideRailProps = {
   badges?: HomeSideRailBadges;
 };
 
+// Press feedback constants
+const PRESS = {
+  OPACITY: 0.85,
+  SCALE: 0.97,
+};
+
 const EXPAND_DURATION = 240;
 const COLLAPSE_DURATION = 200;
-const AUTO_COLLAPSE_DELAY = 5000; // 5 seconds
 
 function Badge({ value }: { value: number | boolean }) {
   const label =
@@ -63,7 +61,6 @@ function Badge({ value }: { value: number | boolean }) {
 export function HomeSideRail(props: HomeSideRailProps) {
   const [expanded, setExpanded] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
-  const autoCollapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Animation value: 0 = collapsed, 1 = expanded
   const expandProgress = useSharedValue(0);
@@ -78,41 +75,19 @@ export function HomeSideRail(props: HomeSideRailProps) {
     return () => subscription.remove();
   }, []);
   
-  // Clear auto-collapse timer on unmount
-  useEffect(() => {
-    return () => {
-      if (autoCollapseTimer.current) {
-        clearTimeout(autoCollapseTimer.current);
-      }
-    };
-  }, []);
-  
-  // Reset auto-collapse timer on interaction
-  const resetAutoCollapse = useCallback(() => {
-    if (autoCollapseTimer.current) {
-      clearTimeout(autoCollapseTimer.current);
-    }
-    if (expanded) {
-      autoCollapseTimer.current = setTimeout(() => {
-        setExpanded(false);
-        expandProgress.value = reduceMotion 
-          ? 0 
-          : withTiming(0, { duration: COLLAPSE_DURATION, easing: Easing.in(Easing.ease) });
-      }, AUTO_COLLAPSE_DELAY);
+  // Collapse the rail (exposed for parent to call)
+  const collapse = useCallback(() => {
+    if (!expanded) return;
+    setExpanded(false);
+    if (reduceMotion) {
+      expandProgress.value = 0;
+    } else {
+      expandProgress.value = withTiming(0, { 
+        duration: COLLAPSE_DURATION, 
+        easing: Easing.in(Easing.ease) 
+      });
     }
   }, [expanded, reduceMotion, expandProgress]);
-  
-  // Start/reset auto-collapse when expanded changes
-  useEffect(() => {
-    if (expanded) {
-      resetAutoCollapse();
-    } else {
-      if (autoCollapseTimer.current) {
-        clearTimeout(autoCollapseTimer.current);
-        autoCollapseTimer.current = null;
-      }
-    }
-  }, [expanded, resetAutoCollapse]);
   
   const toggleExpand = useCallback(() => {
     haptic('light');
@@ -134,12 +109,42 @@ export function HomeSideRail(props: HomeSideRailProps) {
     }
   }, [expanded, reduceMotion, expandProgress, props]);
   
-  const handleItemPress = useCallback((action: () => void) => {
+  // Handle item press: emit interaction, collapse rail, then navigate
+  const handleItemPress = useCallback((action: () => void, isDoors: boolean = false) => {
     haptic('light');
     props.onAnyInteraction?.();
-    resetAutoCollapse();
+    
+    // Collapse rail before navigating (except for Doors toggle)
+    if (!isDoors && expanded) {
+      collapse();
+    }
+    
+    // Execute the action
     action();
-  }, [props, resetAutoCollapse]);
+  }, [props, expanded, collapse]);
+  
+  // Handle Doors press separately (it opens DoorsSheet AND should collapse rail)
+  const handleDoorsPress = useCallback(() => {
+    haptic('light');
+    props.onAnyInteraction?.();
+    
+    if (expanded) {
+      // If expanded, collapse and open DoorsSheet
+      collapse();
+      props.onPressDoors();
+    } else {
+      // If collapsed, just expand the rail
+      setExpanded(true);
+      if (reduceMotion) {
+        expandProgress.value = 1;
+      } else {
+        expandProgress.value = withTiming(1, {
+          duration: EXPAND_DURATION,
+          easing: Easing.out(Easing.ease),
+        });
+      }
+    }
+  }, [expanded, reduceMotion, expandProgress, props, collapse]);
   
   // Items for expanded rail (excluding Doors)
   const expandedItems = useMemo(
@@ -161,7 +166,7 @@ export function HomeSideRail(props: HomeSideRailProps) {
       { translateX: (1 - expandProgress.value) * 20 },
       { scale: 0.9 + expandProgress.value * 0.1 },
     ],
-    maxHeight: expandProgress.value * 400, // Content-based height
+    maxHeight: expandProgress.value * 400,
   }));
   
   // Animated style for housing
@@ -173,60 +178,71 @@ export function HomeSideRail(props: HomeSideRailProps) {
   const hasAnyBadge = props.badges && Object.values(props.badges).some(v => v);
   
   return (
-    <View pointerEvents="box-none" style={styles.wrap}>
-      <View style={styles.railContainer}>
-        {/* Housing background */}
-        <Animated.View style={[styles.railBack, housingStyle]} />
-        
-        {/* Doors button (always visible) */}
+    <>
+      {/* Backdrop press to collapse (only when expanded) */}
+      {expanded && (
         <Pressable
-          style={({ pressed }) => [
-            styles.doorsButton,
-            pressed && styles.itemPressed,
-          ]}
-          onPress={toggleExpand}
-          hitSlop={12}
-        >
-          <Ionicons
-            name="grid"
-            size={RAIL.ICON_SIZE}
-            color={COLORS.gold.primary}
-          />
-          {/* Show dot indicator if there are badges and rail is collapsed */}
-          {!expanded && hasAnyBadge && (
-            <View style={styles.collapsedIndicator} />
-          )}
-        </Pressable>
-        
-        {/* Expanded items */}
-        <Animated.View style={[styles.expandedContent, expandedStyle]} pointerEvents={expanded ? 'auto' : 'none'}>
-          {expandedItems.map((it) => {
-            const badgeValue = props.badges?.[it.key];
-            const showBadge = badgeValue !== undefined && badgeValue !== false && badgeValue !== 0;
-            
-            return (
-              <Pressable
-                key={it.key}
-                style={({ pressed }) => [
-                  styles.item,
-                  pressed && styles.itemPressed,
-                ]}
-                onPress={() => handleItemPress(it.onPress)}
-                hitSlop={8}
-              >
-                <Ionicons
-                  name={it.icon}
-                  size={RAIL.ICON_SIZE}
-                  color={COLORS.cream.pure}
-                  style={{ opacity: 0.92 }}
-                />
-                {showBadge ? <Badge value={badgeValue!} /> : null}
-              </Pressable>
-            );
-          })}
-        </Animated.View>
+          style={StyleSheet.absoluteFill}
+          onPress={collapse}
+          pointerEvents="auto"
+        />
+      )}
+      
+      <View pointerEvents="box-none" style={styles.wrap}>
+        <View style={styles.railContainer}>
+          {/* Housing background */}
+          <Animated.View style={[styles.railBack, housingStyle]} />
+          
+          {/* Doors button (always visible) */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.doorsButton,
+              pressed && styles.itemPressed,
+            ]}
+            onPress={handleDoorsPress}
+            hitSlop={12}
+          >
+            <Ionicons
+              name="grid"
+              size={RAIL.ICON_SIZE}
+              color={COLORS.gold.primary}
+            />
+            {/* Show dot indicator if there are badges and rail is collapsed */}
+            {!expanded && hasAnyBadge && (
+              <View style={styles.collapsedIndicator} />
+            )}
+          </Pressable>
+          
+          {/* Expanded items */}
+          <Animated.View style={[styles.expandedContent, expandedStyle]} pointerEvents={expanded ? 'auto' : 'none'}>
+            {expandedItems.map((it) => {
+              const badgeValue = props.badges?.[it.key];
+              const showBadge = badgeValue !== undefined && badgeValue !== false && badgeValue !== 0;
+              
+              return (
+                <Pressable
+                  key={it.key}
+                  style={({ pressed }) => [
+                    styles.item,
+                    pressed && styles.itemPressed,
+                  ]}
+                  onPress={() => handleItemPress(it.onPress)}
+                  hitSlop={8}
+                >
+                  <Ionicons
+                    name={it.icon}
+                    size={RAIL.ICON_SIZE}
+                    color={COLORS.cream.pure}
+                    style={{ opacity: 0.92 }}
+                  />
+                  {showBadge ? <Badge value={badgeValue!} /> : null}
+                </Pressable>
+              );
+            })}
+          </Animated.View>
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 
@@ -247,7 +263,6 @@ const styles = StyleSheet.create({
     right: -6,
     left: -6,
     borderRadius: RAIL.RADIUS + 4,
-    // Phase 3.23.8: Glass/ink panel housing
     backgroundColor: COLORS.navy.dark + 'E8',
     borderWidth: 1,
     borderColor: COLORS.cream.pure + '08',

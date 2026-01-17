@@ -54,6 +54,10 @@ export default function SummonHubScreen() {
 
   useEffect(() => { if (hydrated && user) fetchUser(); }, [hydrated, user?.username]);
 
+  // Pity counter helpers - must be defined before useMemo
+  const getPityCounter = () => { if (!user) return 0; if (selectedBanner === 'divine') return user.pity_counter_divine || 0; if (selectedBanner === 'premium') return user.pity_counter_premium || 0; return user.pity_counter || 0; };
+  const getPityMax = () => selectedBanner === 'divine' ? 40 : 50;
+
   // =============================================================================
   // Phase 3.19.3: Summon Result Analysis Helpers
   // =============================================================================

@@ -132,12 +132,60 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 
 ---
 
-## Upcoming Phases
+## Phase 3.26 — Affinity Unlock Surface + Parallax Language + Mail Fallback Queue
 
-### Phase 3.26 — Hero Bonding System (Planned)
-- Bond tribute endpoint with canonical receipt
-- Affinity level progression
-- Gift system UI
+**Goal:** Make "Affinity → unlocks" visible and understandable, add tiered parallax/camera language (static first), and ensure reward receipts are never lost via a mail fallback queue.
+
+### Deliverables
+
+#### A) Affinity Unlock Surface
+- [x] `TIER_THRESHOLDS` table (single source of truth)
+- [x] `getTierInfo(tier)` returns camera/motion/parallax labels
+- [x] `getTierTable()` returns full tier ladder for UI
+- [x] `getNextTierInfo(tier)` for "Next unlock at..." UI
+- [ ] Bond screen with tier ladder panel
+- [ ] Hero stage camera language microcopy
+- [ ] Locked/unlocked intimacy badge (tier >= 4)
+
+#### B) Camera & Parallax Language
+- [x] `docs/hero-stage-language.md` contract document
+- [x] `PARALLAX_PLANES` table per tier
+- [x] `deriveHeroStageConfig` returns `parallaxPlanes`, `cameraLabel`, `intimacyUnlocked`
+- [x] `CameraMode` includes 'distant' (was only standard/intimate)
+- [ ] Hero stage renders static parallax planes with tier-based opacity/scale
+
+#### C) Mail Fallback Queue
+- [ ] Backend: `mail_queue_receipt()` helper
+- [ ] Backend: `/api/mail/receipts` list endpoint
+- [ ] Backend: `/api/mail/receipts/{id}/claim` endpoint (idempotent)
+- [ ] Backend: Mail summary includes `receiptsAvailable` count
+- [ ] Frontend: Mail API `getMailReceipts()`, `claimMailReceipt()`
+- [ ] Frontend: Mail UI Receipts tab/section
+
+#### Telemetry Events
+- [x] `BOND_VIEWED`
+- [x] `BOND_TIER_LADDER_VIEWED`
+- [x] `BOND_NEXT_UNLOCK_VIEWED`
+- [x] `BOND_TIER_ADVANCED`
+- [x] `MAIL_RECEIPTS_VIEWED`
+- [x] `MAIL_RECEIPT_CLAIM_SUBMITTED`
+
+### Exit Checks
+- [ ] Bond screen tier ladder uses centralized `getTierTable()` (no hardcoded thresholds)
+- [x] Hero stage uses `deriveHeroStageConfig`
+- [x] `driftingFog={false}` maintained
+- [ ] Mail receipt endpoints return canonical receipt shape
+- [ ] Mail UI exposes receipts
+- [x] Guard: `npm run guard` passes
+
+### Notes
+- Bond screen UI deferred pending hero-bond route creation.
+- Mail fallback queue backend deferred pending endpoint implementation.
+- Contract doc created at `docs/hero-stage-language.md`.
+
+---
+
+## Upcoming Phases
 
 ### Phase 3.27 — Daily Login System (Planned)
 - Daily login claim with canonical receipt

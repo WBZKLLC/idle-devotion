@@ -1074,4 +1074,121 @@ const styles = StyleSheet.create({
     opacity: PRESS.OPACITY,
     transform: [{ scale: PRESS.SCALE }],
   },
+  // Phase 3.28: Gift button styles
+  giftBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.gold.primary + '20',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.gold.primary + '40',
+  },
+  giftBtnPressed: {
+    opacity: PRESS.OPACITY,
+    backgroundColor: COLORS.gold.primary + '30',
+  },
+  giftBtnText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.medium,
+    color: COLORS.gold.primary,
+  },
+  // Phase 3.28: Gift modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: LAYOUT.SCREEN_PADDING,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: COLORS.navy.dark,
+    borderRadius: RADIUS.lg,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: COLORS.gold.primary + '30',
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.cream.pure,
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.cream.dark,
+  },
+  modalLoading: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  giftOptions: {
+    gap: 12,
+  },
+  giftOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.navy.darkest,
+    borderRadius: RADIUS.md,
+    padding: 14,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.cream.pure + '10',
+  },
+  giftOptionDisabled: {
+    opacity: 0.5,
+  },
+  giftOptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  giftOptionLabel: {
+    flex: 1,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.medium,
+    color: COLORS.cream.pure,
+  },
+  giftOptionLabelDisabled: {
+    color: COLORS.cream.dark,
+  },
+  giftOptionAmount: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.gold.primary,
+  },
+  giftOptionRemaining: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.cream.dark,
+    width: 55,
+    textAlign: 'right',
+  },
+  giftOptionSpinner: {
+    position: 'absolute',
+    right: 14,
+  },
+  modalCloseBtn: {
+    marginTop: 16,
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: COLORS.navy.darkest,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.cream.pure + '15',
+  },
+  modalCloseBtnText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.medium,
+    color: COLORS.cream.soft,
+  },
 });

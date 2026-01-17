@@ -171,7 +171,7 @@ Each phase: Goal → Deliverables checklist → Exit checks → Notes.
 - [x] `MAIL_RECEIPT_CLAIM_SUBMITTED`
 
 ### Exit Checks
-- [ ] Bond screen tier ladder uses centralized `getTierTable()` (no hardcoded thresholds)
+- [x] Bond screen tier ladder uses centralized `getTierTable()` (no hardcoded thresholds)
 - [x] Hero stage uses `deriveHeroStageConfig`
 - [x] `driftingFog={false}` maintained
 - [ ] Mail receipt endpoints return canonical receipt shape

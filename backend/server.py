@@ -740,6 +740,163 @@ def get_ascension_images(hero_name: str) -> dict:
     ASCENSION_CACHE[hero_name] = result
     return result
 
+# =============================================================================
+# PHASE 3.24: CANONICAL REWARD RECEIPT SYSTEM
+# =============================================================================
+# All reward-granting endpoints MUST return this shape:
+# { source, sourceId, items, balances, alreadyClaimed? }
+#
+# LOCKED source values:
+# - bond_tribute
+# - mail_reward_claim
+# - mail_gift_claim
+# - daily_login_claim
+# - idle_claim
+# - admin_grant
+# =============================================================================
+
+from typing import Literal
+
+RewardSource = Literal[
+    "bond_tribute",
+    "mail_reward_claim", 
+    "mail_gift_claim",
+    "daily_login_claim",
+    "idle_claim",
+    "admin_grant"
+]
+
+class RewardItem(BaseModel):
+    """Single reward item in a receipt"""
+    type: str  # gold, gems, coins, stamina, hero_shard, etc.
+    amount: int
+    hero_id: Optional[str] = None  # For hero-specific rewards
+    item_id: Optional[str] = None  # For specific items
+
+class RewardReceipt(BaseModel):
+    """Canonical receipt shape for all reward grants (Phase 3.24)"""
+    source: str  # RewardSource value
+    sourceId: str  # Origin record ID (tributeId, mailItemId, etc.) - ALWAYS required
+    items: List[RewardItem] = Field(default_factory=list)  # Rewards granted
+    balances: Dict[str, int] = Field(default_factory=dict)  # Current balances after grant
+    alreadyClaimed: bool = False  # True if idempotent duplicate claim
+    message: Optional[str] = None  # Optional human-readable message
+
+
+async def get_user_balances(user: dict) -> Dict[str, int]:
+    """Extract current balance snapshot from user dict"""
+    return {
+        "gold": user.get("gold", 0),
+        "coins": user.get("coins", 0),
+        "gems": user.get("gems", 0),
+        "divine_gems": user.get("divine_gems", 0),
+        "crystals": user.get("crystals", 0),
+        "stamina": user.get("stamina", 0),
+        "divine_essence": user.get("divine_essence", 0),
+        "soul_dust": user.get("soul_dust", 0),
+        "skill_essence": user.get("skill_essence", 0),
+        "enhancement_stones": user.get("enhancement_stones", 0),
+        "hero_shards": user.get("hero_shards", 0),
+        "rune_essence": user.get("rune_essence", 0),
+    }
+
+
+async def grant_rewards_canonical(
+    user: dict,
+    source: str,
+    source_id: str,
+    rewards: List[Dict[str, any]],
+    already_claimed: bool = False,
+    message: Optional[str] = None
+) -> dict:
+    """
+    Canonical reward grant helper (Phase 3.24).
+    
+    All reward endpoints MUST use this to ensure consistent receipt shape.
+    
+    Args:
+        user: User dict (must have been fetched for mutation)
+        source: RewardSource value
+        source_id: Origin record ID (MUST be provided)
+        rewards: List of {type, amount, hero_id?, item_id?}
+        already_claimed: True if this is an idempotent duplicate claim
+        message: Optional human-readable message
+    
+    Returns:
+        Canonical receipt dict with source, sourceId, items, balances, alreadyClaimed
+    """
+    # Guard: source_id is ALWAYS required
+    if not source_id:
+        raise ValueError("grant_rewards_canonical: sourceId is ALWAYS required")
+    
+    # Guard: source must be valid
+    valid_sources = ["bond_tribute", "mail_reward_claim", "mail_gift_claim", 
+                     "daily_login_claim", "idle_claim", "admin_grant"]
+    if source not in valid_sources:
+        raise ValueError(f"grant_rewards_canonical: invalid source '{source}'")
+    
+    items = []
+    inc_ops = {}
+    
+    # Process rewards if not already claimed
+    if not already_claimed and rewards:
+        for reward in rewards:
+            reward_type = reward.get("type", "")
+            amount = reward.get("amount", 0)
+            
+            if amount > 0 and reward_type:
+                # Map reward type to user field
+                field_map = {
+                    "gold": "gold",
+                    "coins": "coins",
+                    "gems": "gems",
+                    "divine_gems": "divine_gems",
+                    "crystals": "crystals",
+                    "stamina": "stamina",
+                    "divine_essence": "divine_essence",
+                    "soul_dust": "soul_dust",
+                    "skill_essence": "skill_essence",
+                    "enhancement_stones": "enhancement_stones",
+                    "hero_shards": "hero_shards",
+                    "rune_essence": "rune_essence",
+                }
+                
+                if reward_type in field_map:
+                    inc_ops[field_map[reward_type]] = inc_ops.get(field_map[reward_type], 0) + amount
+                
+                items.append({
+                    "type": reward_type,
+                    "amount": amount,
+                    "hero_id": reward.get("hero_id"),
+                    "item_id": reward.get("item_id"),
+                })
+    
+    # Apply rewards to user if any
+    if inc_ops:
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$inc": inc_ops}
+        )
+    
+    # Fetch fresh user for balance snapshot
+    fresh_user = await db.users.find_one({"id": user["id"]})
+    balances = await get_user_balances(fresh_user or user)
+    
+    # Emit telemetry event
+    if not already_claimed and items:
+        logging.info(f"[REWARD_GRANTED] source={source} sourceId={source_id} "
+                    f"user={user.get('username')} items_count={len(items)}")
+    
+    return {
+        "source": source,
+        "sourceId": source_id,
+        "items": items,
+        "balances": balances,
+        "alreadyClaimed": already_claimed,
+        "message": message,
+    }
+
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)

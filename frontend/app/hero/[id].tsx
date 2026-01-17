@@ -162,8 +162,14 @@ export default function HeroPresentationScreen() {
     });
   }, [heroData, hero?.affinity_level, reduceMotion]);
   
+  // Phase 3.27: Inspect mode state (for intimate camera drift)
+  const [isInspectMode, setIsInspectMode] = useState(false);
+  
   // Phase 3.25: Motion hook (uses stageConfig)
   const { animatedStyle: motionStyle, isAnimating } = useHeroIdleMotion(stageConfig);
+  
+  // Phase 3.27: Camera drift hook (intimate tier only in inspect mode)
+  const { cameraDriftStyle, hasDrift } = useHeroCameraDrift(stageConfig, isInspectMode);
   
   // DEV: Log config once on mount
   useEffect(() => {
@@ -172,6 +178,32 @@ export default function HeroPresentationScreen() {
       logHeroStageConfig(stageConfig);
     }
   }, [heroData, stageConfig]);
+  
+  // Phase 3.27: Track hero stage view
+  useEffect(() => {
+    if (heroData && id) {
+      track(Events.HERO_STAGE_VIEWED, {
+        heroId: id,
+        tier: stageConfig.tier,
+        cameraMode: stageConfig.cameraMode,
+      });
+      track(Events.HERO_STAGE_CAMERA_MODE_RESOLVED, {
+        tier: stageConfig.tier,
+        cameraMode: stageConfig.cameraMode,
+      });
+    }
+  }, [heroData, id, stageConfig.tier, stageConfig.cameraMode]);
+  
+  // Phase 3.27: Handle inspect mode toggle
+  const handleInspectToggle = () => {
+    const newInspect = !isInspectMode;
+    setIsInspectMode(newInspect);
+    haptic('light');
+    track(Events.HERO_STAGE_INSPECT_TOGGLED, {
+      isInspectMode: newInspect,
+      tier: stageConfig.tier,
+    });
+  };
   
   // Camera mode from stageConfig (tier-driven)
   const cameraMode = stageConfig.cameraMode;

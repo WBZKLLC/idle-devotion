@@ -5290,6 +5290,143 @@ async def collect_friend_currency(friendship_id: str, username: str):
     
     return {"friendship_points_gained": friendship_points_gained}
 
+
+# ==================== FRIEND GIFTS (Phase 3.28) ====================
+# Send gifts to friends - creates mail gift for recipient
+
+# Gift types and their values
+FRIEND_GIFT_TYPES = {
+    "gold": {"amount": 100, "daily_limit": 5},
+    "stamina": {"amount": 10, "daily_limit": 3},
+    "gems": {"amount": 5, "daily_limit": 1},
+}
+
+@api_router.post("/friends/gifts/send")
+async def send_friend_gift(
+    friend_id: str,
+    gift_type: str = "gold",
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Send a gift to a friend (creates mail gift for recipient)
+    
+    Phase 3.28: Friend gifts use canonical receipt system.
+    Returns confirmation receipt to sender.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    assert_account_active(user)
+    
+    # Validate gift type
+    if gift_type not in FRIEND_GIFT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Invalid gift type. Valid types: {list(FRIEND_GIFT_TYPES.keys())}")
+    
+    gift_config = FRIEND_GIFT_TYPES[gift_type]
+    
+    # Verify friendship exists
+    friendship = await db.friendships.find_one({
+        "$or": [
+            {"user_id": user["id"], "friend_id": friend_id},
+            {"user_id": friend_id, "friend_id": user["id"]}
+        ]
+    })
+    
+    if not friendship:
+        raise HTTPException(status_code=403, detail="Not friends with this user")
+    
+    # Check daily gift limit (per sender, per recipient, per type)
+    today = datetime.utcnow().date()
+    today_start = datetime(today.year, today.month, today.day)
+    
+    gifts_sent_today = await db.friend_gifts_log.count_documents({
+        "sender_id": user["id"],
+        "recipient_id": friend_id,
+        "gift_type": gift_type,
+        "sent_at": {"$gte": today_start}
+    })
+    
+    if gifts_sent_today >= gift_config["daily_limit"]:
+        raise HTTPException(
+            status_code=429, 
+            detail=f"Daily gift limit reached for {gift_type}. Limit: {gift_config['daily_limit']}"
+        )
+    
+    # Get recipient user info
+    recipient = await db.users.find_one({"id": friend_id})
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Friend not found")
+    
+    # Create mail gift for recipient
+    gift_id = str(uuid4())
+    await db.mail_gifts.insert_one({
+        "id": gift_id,
+        "to_user_id": friend_id,
+        "from_user_id": user["id"],
+        "from_username": user["username"],
+        "gift_type": gift_type,
+        "rewards": [{"type": gift_type, "amount": gift_config["amount"]}],
+        "title": f"Gift from {user['username']}",
+        "description": f"{user['username']} sent you a {gift_type} gift!",
+        "claimed": False,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(days=7),
+    })
+    
+    # Log the gift for limit tracking
+    await db.friend_gifts_log.insert_one({
+        "id": str(uuid4()),
+        "sender_id": user["id"],
+        "recipient_id": friend_id,
+        "gift_type": gift_type,
+        "gift_id": gift_id,
+        "sent_at": datetime.utcnow(),
+    })
+    
+    if __debug__:
+        print(f"[FRIEND_GIFT_SENT] sender={user['username']} recipient={recipient['username']} type={gift_type}")
+    
+    # Return confirmation receipt to sender
+    return {
+        "success": True,
+        "message": f"Gift sent to {recipient['username']}!",
+        "gift_id": gift_id,
+        "gift_type": gift_type,
+        "amount": gift_config["amount"],
+        "recipient_username": recipient["username"],
+    }
+
+
+@api_router.get("/friends/gifts/status")
+async def get_friend_gift_status(
+    friend_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get gift sending status for a specific friend
+    
+    Returns remaining gifts that can be sent today by type.
+    """
+    user, _ = await authenticate_request(credentials, require_auth=True)
+    
+    today = datetime.utcnow().date()
+    today_start = datetime(today.year, today.month, today.day)
+    
+    status = {}
+    for gift_type, config in FRIEND_GIFT_TYPES.items():
+        gifts_sent = await db.friend_gifts_log.count_documents({
+            "sender_id": user["id"],
+            "recipient_id": friend_id,
+            "gift_type": gift_type,
+            "sent_at": {"$gte": today_start}
+        })
+        
+        status[gift_type] = {
+            "sent_today": gifts_sent,
+            "daily_limit": config["daily_limit"],
+            "remaining": max(0, config["daily_limit"] - gifts_sent),
+            "amount": config["amount"],
+        }
+    
+    return status
+
+
 # ==================== PLAYER CHARACTER SYSTEM ====================
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):

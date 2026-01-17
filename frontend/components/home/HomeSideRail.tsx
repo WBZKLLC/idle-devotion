@@ -333,6 +333,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.navy.darkest,
   },
+  libraryIndicator: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.gold.primary,
+  },
 });
 
 export default HomeSideRail;

@@ -587,7 +587,7 @@ export default function HomeScreen() {
         opacity={1}
       />
       <SanctumAtmosphere />
-      <DivineOverlays vignette grain />
+      <DivineOverlays vignette grain bottomMist driftFog />
       
       {/* === PERIMETER HUD (top overlay, quiet) === */}
       <SafeAreaView style={styles.hudContainer} edges={['top', 'left', 'right']} pointerEvents="box-none">

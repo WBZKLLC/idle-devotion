@@ -286,32 +286,36 @@ export default function HeroPresentationScreen() {
         onLongPress={() => onLongPress()}
         delayLongPress={500}
       >
+        {/* Outer container for base camera transform */}
         <Animated.View
           style={[
             styles.heroContainer,
             {
-              transform: cameraTransform,
+              transform: baseCameraTransform,
               maxWidth: HERO_STAGE.HERO_MAX_WIDTH,
             },
           ]}
         >
-          {/* Hero image with camera framing */}
-          {heroArtUrl ? (
-            <Image
-              source={{ uri: heroArtUrl }}
-              style={styles.heroImage}
-              resizeMode="contain"
-            />
-          ) : (
-            // Placeholder fallback with hero initial
-            <View style={styles.heroPlaceholder}>
-              <LinearGradient
-                colors={[COLORS.navy.medium, COLORS.navy.dark]}
-                style={StyleSheet.absoluteFill}
+          {/* Inner container for motion animation (Phase 3.25) */}
+          <Animated.View style={[styles.heroInner, motionStyle]}>
+            {/* Hero image with camera framing */}
+            {heroArtUrl ? (
+              <Image
+                source={{ uri: heroArtUrl }}
+                style={styles.heroImage}
+                resizeMode="contain"
               />
-              <Text style={styles.heroInitial}>{heroData.name?.charAt(0) || '?'}</Text>
-            </View>
-          )}
+            ) : (
+              // Placeholder fallback with hero initial
+              <View style={styles.heroPlaceholder}>
+                <LinearGradient
+                  colors={[COLORS.navy.medium, COLORS.navy.dark]}
+                  style={StyleSheet.absoluteFill}
+                />
+                <Text style={styles.heroInitial}>{heroData.name?.charAt(0) || '?'}</Text>
+              </View>
+            )}
+          </Animated.View>
         </Animated.View>
       </Pressable>
       

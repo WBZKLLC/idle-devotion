@@ -108,8 +108,8 @@ export default function HeroPresentationScreen() {
     const loadHero = async () => {
       setLoading(true);
       try {
-        // Use canonical selector pattern
-        const userHero = await selectUserHeroById(id);
+        // Use canonical cache-first + API fallback pattern
+        const userHero = await getUserHeroById(id);
         if (userHero) {
           setHero(userHero);
           setHeroData(userHero.hero_data);
@@ -122,7 +122,7 @@ export default function HeroPresentationScreen() {
     };
     
     loadHero();
-  }, [hydrated, user, id, selectUserHeroById]);
+  }, [hydrated, user, id, getUserHeroById]);
   
   // Resolve tier art
   const tier = useMemo(() => {

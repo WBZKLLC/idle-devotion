@@ -767,7 +767,10 @@ RewardSource = Literal[
     "idle_claim",
     "admin_grant",
     "event_claim",  # Phase 3.29: Events/Quests
-    "store_redeem"  # Phase 3.30: Store dev redeem
+    "store_redeem",  # Phase 3.30: Store dev redeem
+    "summon_single",  # Phase 3.33: Single gacha pull
+    "summon_multi",  # Phase 3.33: Multi gacha pull
+    "pity_reward"  # Phase 3.33: Pity system reward
 ]
 
 class RewardItem(BaseModel):

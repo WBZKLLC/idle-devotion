@@ -349,56 +349,35 @@ export default function ArenaScreen() {
           )}
         </ScrollView>
 
-        {/* Battle Result Modal */}
-        <Modal visible={showResultModal} transparent animationType="fade" onRequestClose={() => setShowResultModal(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.resultModal}>
-              <LinearGradient
-                colors={battleResult?.victory ? ['#166534', '#14532d'] : ['#7f1d1d', '#450a0a']}
-                style={styles.resultGradient}
-              >
-                <Text style={styles.resultTitle}>
-                  {battleResult?.victory ? '🎉 VICTORY!' : '💀 DEFEAT'}
-                </Text>
-                <Text style={styles.resultVs}>vs {battleResult?.opponent_username}</Text>
-                
-                <View style={styles.resultStats}>
-                  <View style={styles.resultStatRow}>
-                    <Text style={styles.resultStatLabel}>Your Power</Text>
-                    <Text style={styles.resultStatValue}>{formatNumber(battleResult?.user_power || 0)}</Text>
-                  </View>
-                  <View style={styles.resultStatRow}>
-                    <Text style={styles.resultStatLabel}>Enemy Power</Text>
-                    <Text style={styles.resultStatValue}>{formatNumber(battleResult?.opponent_power || 0)}</Text>
-                  </View>
-                  <View style={styles.resultStatRow}>
-                    <Text style={styles.resultStatLabel}>Rating Change</Text>
-                    <Text style={[
-                      styles.resultStatValue,
-                      { color: (battleResult?.rating_change || 0) >= 0 ? '#22c55e' : '#ef4444' }
-                    ]}>
-                      {(battleResult?.rating_change || 0) >= 0 ? '+' : ''}{battleResult?.rating_change}
-                    </Text>
-                  </View>
-                </View>
+        {/* Phase 3.59: Battle Presentation Modal */}
+        <BattlePresentationModal
+          visible={showBattlePresentation}
+          victory={battleResult?.victory ?? false}
+          userPower={battleResult?.user_power ?? user?.total_power ?? 50000}
+          enemyPower={battleResult?.opponent_power ?? selectedOpponent?.power ?? 50000}
+          stageName={`PvP vs ${selectedOpponent?.username ?? 'Opponent'}`}
+          onComplete={handleBattleComplete}
+        />
 
-                {battleResult?.rewards && (
-                  <View style={styles.rewardsBox}>
-                    <Text style={styles.rewardsTitle}>Rewards</Text>
-                    <View style={styles.rewardsRow}>
-                      {battleResult.rewards.gold && <Text style={styles.rewardItem}>💰 {battleResult.rewards.gold}</Text>}
-                      {battleResult.rewards.arena_coins && <Text style={styles.rewardItem}>🏆 {battleResult.rewards.arena_coins}</Text>}
-                    </View>
-                  </View>
-                )}
-
-                <TouchableOpacity style={styles.continueButton} onPress={() => setShowResultModal(false)}>
-                  <Text style={styles.continueButtonText}>Continue</Text>
-                </TouchableOpacity>
-              </LinearGradient>
-            </View>
-          </View>
-        </Modal>
+        {/* Phase 3.59: Victory/Defeat Result Modal */}
+        <VictoryDefeatModal
+          visible={showVictoryDefeat}
+          victory={battleResult?.victory ?? false}
+          rewards={battleResult?.rewards ? {
+            gold: battleResult.rewards.gold ?? 0,
+            pvp_medals: battleResult.rewards.pvp_medals ?? 0,
+          } : undefined}
+          powerGap={battleResult ? battleResult.user_power - battleResult.opponent_power : 0}
+          recommendations={battleResult?.victory ? [] : ['Upgrade your heroes', 'Try a different opponent']}
+          onClose={handleResultClose}
+          context="pvp"
+          extraInfo={{
+            rating_change: battleResult?.rating_change,
+            new_rating: battleResult?.new_rating,
+            win_streak: battleResult?.win_streak,
+            opponent: selectedOpponent?.username,
+          }}
+        />
       </SafeAreaView>
     </LinearGradient>
   );

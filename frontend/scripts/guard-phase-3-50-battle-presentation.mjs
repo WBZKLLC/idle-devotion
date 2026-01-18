@@ -7,6 +7,7 @@
  * 2. No timers/RAF/polling introduced
  * 3. Reduce Motion path exists
  * 4. Presentation uses server result / deterministic inputs only
+ * 5. Campaign and Dungeon screens import and render the modals
  */
 
 import fs from 'fs';
@@ -21,6 +22,11 @@ const BATTLE_COMPONENTS = [
   path.join(__dirname, '..', 'components', 'battle', 'VictoryDefeatModal.tsx'),
 ];
 
+const PVE_SCREENS = [
+  { path: path.join(__dirname, '..', 'app', 'campaign.tsx'), name: 'Campaign' },
+  { path: path.join(__dirname, '..', 'app', 'dungeons.tsx'), name: 'Dungeon' },
+];
+
 const FORBIDDEN_PATTERNS = [
   { pattern: /Math\.random\s*\(/g, reason: 'No Math.random() - presentation must be deterministic' },
   { pattern: /requestAnimationFrame\s*\(/g, reason: 'No requestAnimationFrame - use Reanimated instead' },
@@ -31,6 +37,11 @@ const FORBIDDEN_PATTERNS = [
 const REQUIRED_PATTERNS = [
   { pattern: /reduceMotion|isReduceMotionEnabled/g, reason: 'Must check Reduce Motion accessibility' },
   { pattern: /PVE_BATTLE_PRESENTATION_VIEWED|PVE_VICTORY_VIEWED/g, reason: 'Must track telemetry events' },
+];
+
+const SCREEN_REQUIRED_IMPORTS = [
+  { pattern: /BattlePresentationModal/g, reason: 'Must import BattlePresentationModal' },
+  { pattern: /VictoryDefeatModal/g, reason: 'Must import VictoryDefeatModal' },
 ];
 
 let hasErrors = false;
@@ -45,6 +56,7 @@ console.log('\n============================================');
 console.log('Guard: Phase 3.50 Battle Presentation');
 console.log('============================================');
 
+// Check battle components
 for (const componentPath of BATTLE_COMPONENTS) {
   const filename = path.basename(componentPath);
   
@@ -80,6 +92,28 @@ for (const componentPath of BATTLE_COMPONENTS) {
       } else {
         console.log(`${GREEN}PASS:${RESET} ${reason}`);
       }
+    }
+  }
+}
+
+// Check PvE screens for modal integration
+console.log('\nChecking PvE screen integration:');
+for (const { path: screenPath, name } of PVE_SCREENS) {
+  if (!fs.existsSync(screenPath)) {
+    console.log(`${YELLOW}SKIP:${RESET} ${name} screen not found`);
+    continue;
+  }
+  
+  const content = fs.readFileSync(screenPath, 'utf8');
+  
+  for (const { pattern, reason } of SCREEN_REQUIRED_IMPORTS) {
+    checksRun++;
+    const matches = content.match(pattern);
+    if (!matches || matches.length === 0) {
+      console.log(`${RED}FAIL:${RESET} ${name}: ${reason}`);
+      hasErrors = true;
+    } else {
+      console.log(`${GREEN}PASS:${RESET} ${name}: ${reason}`);
     }
   }
 }

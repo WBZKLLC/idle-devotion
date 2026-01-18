@@ -77,7 +77,7 @@ interface ArenaRecord {
 
 export default function ArenaScreen() {
   const router = useRouter();
-  const { user, fetchUser } = useGameStore();
+  const { user, fetchUser, userHeroes, fetchUserHeroes } = useGameStore();
   const hydrated = useHydration();
   
   const [loading, setLoading] = useState(true);

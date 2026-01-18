@@ -7,7 +7,7 @@
 
 import { loadAuthToken } from '../authStorage';
 import { track, Events } from '../telemetry/events';
-import { API_BASE } from './config';
+import { apiUrl } from './config';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const token = await loadAuthToken();
@@ -96,7 +96,7 @@ export function isInsufficientShardsError(error: unknown): error is Insufficient
  * Get the locked progression table (read-only)
  */
 export async function getProgressionTable(): Promise<ProgressionTable> {
-  const res = await fetch(`${API_BASE}/api/hero/progression-table`);
+  const res = await fetch(apiUrl('/api/hero/progression-table'));
   
   if (!res.ok) {
     throw new Error('Failed to fetch progression table');
@@ -113,7 +113,7 @@ export async function getHeroStats(heroId: string): Promise<HeroStatsResponse> {
   
   track(Events.HERO_STATS_VIEWED, { heroId });
   
-  const res = await fetch(`${API_BASE}/api/hero/${heroId}/stats`, { headers });
+  const res = await fetch(apiUrl(`/api/hero/${heroId}/stats`), { headers });
   
   if (!res.ok) {
     throw new Error('Failed to fetch hero stats');
@@ -136,7 +136,7 @@ export async function promoteHero(
   
   track(Events.HERO_PROMOTION_SUBMITTED, { heroId, sourceId });
   
-  const res = await fetch(`${API_BASE}/api/hero/promote`, {
+  const res = await fetch(apiUrl('/api/hero/promote'), {
     method: 'POST',
     headers,
     body: JSON.stringify({

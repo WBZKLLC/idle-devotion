@@ -73,7 +73,7 @@ export default function ArenaScreen() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [selectedOpponent, setSelectedOpponent] = useState<ArenaOpponent | null>(null);
   const [battleResult, setBattleResult] = useState<any>(null);
-  const [showResultModal, setShowResultModal] = useState(false);
+  // Phase 3.59: Removed showResultModal - using VictoryDefeatModal instead
   const [activeTab, setActiveTab] = useState<'battle' | 'leaderboard'>('battle');
   
   const pulseAnim = useRef(new Animated.Value(1)).current;

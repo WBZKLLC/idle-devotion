@@ -79,7 +79,7 @@ export function PromotionModal({
       const sourceId = generatePromotionSourceId(heroId);
       const receipt = await promoteHero(heroId, sourceId);
       
-      haptic('success');
+      haptic('heavy');
       onSuccess(receipt);
       onClose();
     } catch (err: any) {

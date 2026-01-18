@@ -156,7 +156,7 @@ export default function ArenaScreen() {
 
     try {
       // Phase 3.59: Generate sourceId for idempotency
-      const sourceId = generateSourceId('pvp_match');
+      const sourceId = makeSourceId('pvp_match');
       
       // Phase 3.59: Use new server-authoritative PvP match endpoint
       const result = await executePvPMatch(opponent.id, sourceId);

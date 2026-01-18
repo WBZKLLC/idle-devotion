@@ -641,6 +641,33 @@ export default function HomeScreen() {
             coins={user.coins || 0}
             divineEssence={user.divine_essence || 0}
           />
+          {/* Phase 4.3: LiveOps Banner */}
+          {liveOpsStatus?.has_special_event && liveOpsStatus.events[0] && (
+            <TouchableOpacity 
+              style={styles.liveOpsBanner}
+              onPress={() => {
+                track(Events.LIVEOPS_BANNER_CLICKED, { 
+                  event_id: liveOpsStatus.events[0].event_id 
+                });
+                router.push('/events');
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#7c3aed', '#a855f7']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.liveOpsBannerGradient}
+              >
+                <Text style={styles.liveOpsBannerIcon}>✨</Text>
+                <View style={styles.liveOpsBannerContent}>
+                  <Text style={styles.liveOpsBannerTitle}>{liveOpsStatus.events[0].name}</Text>
+                  <Text style={styles.liveOpsBannerDesc}>{liveOpsStatus.events[0].description}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#fff" />
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
 

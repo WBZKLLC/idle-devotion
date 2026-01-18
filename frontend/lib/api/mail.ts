@@ -7,14 +7,14 @@
 // Returns canonical receipts for all claim operations.
 // Emits telemetry events with source + sourceId.
 
-import { loadAuthToken } from '../authStorage';
+// Auth handled by config.ts
 import { 
   RewardReceipt, 
   assertValidReceipt,
   isValidReceipt,
 } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-import { apiUrl } from './config';
+import { apiUrl, getAuthHeaders } from './config';
 
 /**
  * Get auth headers for API calls

@@ -276,3 +276,80 @@ This document tracks all completed phases of development with their Definition o
 - SERVER_DEV_MODE guard on dev endpoint
 
 ---
+
+## Phase 4.0: Battle Feel / Content Injection (COMPLETED)
+
+**Status**: ✅ Complete
+
+**Changes**:
+1. **Frontend**: Created `/lib/audio/sfx.ts` with safe no-op pattern
+2. **Frontend**: Updated `skillCutins.ts` with assetUri field
+3. **Frontend**: Added SFX triggers in BattlePresentationModal and VictoryDefeatModal
+4. **Frontend**: Added placeholder assets directory `/assets/skill-cutins/`
+5. **Telemetry**: Added SFX_* events for audio tracking
+6. **Guard**: Created `guard-phase-4-0-feel.mjs`
+
+**Key Features**:
+- Safe SFX wrapper that never crashes (no-op if assets missing)
+- Cut-in registry with assetUri support
+- Reduce Motion compliance
+- No timers/RAF introduced
+
+---
+
+## Phase 4.1: RevenueCat Production Wiring (STAGED)
+
+**Status**: ⚠️ Staged (webhook signature verification needs REVENUECAT_WEBHOOK_SECRET)
+
+**Changes**:
+1. **Documentation**: Created `/docs/revenuecat-production.md`
+2. **Telemetry**: Added IAP_* events for purchase tracking
+3. **Guard**: Created `guard-phase-4-1-revenuecat.mjs`
+
+**Staged Items**:
+- Full webhook implementation needs REVENUECAT_WEBHOOK_SECRET
+- Verify endpoint needs RevenueCat API key for server-side verification
+- Shop.tsx purchase flow works with existing DEV redeem endpoint
+
+---
+
+## Phase 4.2: PvP Depth (COMPLETED)
+
+**Status**: ✅ Complete
+
+**Changes**:
+1. **Backend**: Created `/core/pvp_seasons.py` with season model
+2. **Backend**: Added `GET /api/pvp/season` endpoint
+3. **Backend**: Added `GET /api/pvp/rewards/preview` endpoint
+4. **Backend**: Added `POST /api/pvp/daily/claim` endpoint (idempotent)
+5. **Backend**: Added `POST /api/pvp/season/claim` endpoint (idempotent)
+6. **Documentation**: Created `/docs/pvp-seasons.md`
+7. **Telemetry**: Added PVP_SEASON_* and PVP_DAILY_* events
+8. **Guard**: Created `guard-phase-4-2-pvp-depth.mjs`
+
+**Key Features**:
+- Monthly seasons with rank bands (Bronze → Grandmaster)
+- Daily and seasonal rewards (currency/cosmetics only)
+- No stat boosts or shop links from PvP
+- Idempotent claim endpoints with canonical receipts
+
+---
+
+## Phase 4.3: Live Ops Hooks (COMPLETED)
+
+**Status**: ✅ Complete
+
+**Changes**:
+1. **Backend**: Created `/core/liveops.py` with event/boost configuration
+2. **Backend**: Added `GET /api/liveops/status` endpoint
+3. **Documentation**: Created `/docs/liveops-system.md`
+4. **Telemetry**: Added LIVEOPS_* events
+5. **Guard**: Created `guard-phase-4-3-liveops.mjs`
+
+**Key Features**:
+- Server-driven event configuration
+- Boost types: idle_cap_multiplier, event_rewards_multiplier, gacha_rate_up, stamina_regen
+- VIP stacking with hard caps
+- Banner availability controlled server-side
+
+---

@@ -243,6 +243,12 @@ export default function ArenaScreen() {
   const startBattle = async (opponent: ArenaOpponent) => {
     if (!user || !record) return;
     
+    // SECURITY: Prevent battles without heroes (server also validates)
+    if (!userHeroes || userHeroes.length === 0) {
+      toast.warning('You need at least one hero to battle! Go to Summon to get heroes first.');
+      return;
+    }
+    
     // Track PvP match preview
     track(Events.PVP_MATCH_PREVIEW, { 
       opponent_id: opponent.id,

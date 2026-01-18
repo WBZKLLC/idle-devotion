@@ -14,8 +14,7 @@ import {
   isValidReceipt,
 } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+import { API_BASE } from './config';
 
 /**
  * Get auth headers for API calls

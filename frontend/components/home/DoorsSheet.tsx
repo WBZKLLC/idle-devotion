@@ -178,10 +178,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navy.dark,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '85%',
-    minHeight: 400, // Increased minimum height for content visibility on Android
-    // Ensure proper flexbox behavior on Android
-    flexShrink: 0,
+    // Use explicit height on Android to avoid layout issues
+    ...Platform.select({
+      android: {
+        height: SCREEN_HEIGHT * 0.75, // 75% of screen height
+      },
+      ios: {
+        maxHeight: '85%',
+      },
+      web: {
+        maxHeight: '85%',
+      },
+    }),
     // Shadow
     ...Platform.select({
       ios: {

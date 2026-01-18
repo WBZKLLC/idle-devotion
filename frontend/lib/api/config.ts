@@ -62,15 +62,20 @@ export function apiUrl(path: string): string {
 
 /**
  * Get auth headers for API requests.
+ * Single source of truth - all API modules should use this.
+ * Returns empty object if no token (prevents "Bearer undefined").
  * 
- * @param token - JWT token
- * @returns Headers object with Authorization
+ * @returns Headers object with Authorization if token exists
  */
-export function getAuthHeaders(token: string): Record<string, string> {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  };
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await loadAuthToken();
+  if (token) {
+    return { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` 
+    };
+  }
+  return { 'Content-Type': 'application/json' };
 }
 
 // Log the API base URL in development for debugging

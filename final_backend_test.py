@@ -124,18 +124,18 @@ class ComprehensiveGachaTest:
         else:
             self.log_result("Single Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
         
-        # Multi pull with gems (costs 1000 crystals, but new users only get 300)
-        # New users can't afford multi-pull, so we expect a 400 error
+        # Multi pull with gems (costs 900 crystals, but new users only get 300)
+        # After single pulls, users won't have enough for multi-pull
         pull_data = {"pull_type": "multi", "currency_type": "gems"}
         response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             result = response.json()
             self.log_result("Multi Pull (Gems)", True, 
                           f"Pulled {len(result['heroes'])} heroes, pity: {result['new_pity_counter']}")
-        elif response and response.status_code == 400:
+        elif response is not None and response.status_code == 400:
             self.log_result("Multi Pull (Gems)", True, "Insufficient crystals for multi-pull (expected for new account)")
         else:
-            self.log_result("Multi Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
+            self.log_result("Multi Pull (Gems)", False, f"Failed: {response.text if response is not None else 'No response'}")
         
         # Multi pull with coins (skip - too expensive for new account)
         # New accounts only have 10000 coins and multi-pull costs 10000

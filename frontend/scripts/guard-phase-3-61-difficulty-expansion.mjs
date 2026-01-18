@@ -15,8 +15,8 @@ const ERRORS = [];
 const WARNINGS = [];
 
 // Files to check
-const DIFFICULTY_FILE = path.resolve('./backend/core/campaign_difficulty.py');
-const SERVER_FILE = path.resolve('./backend/server.py');
+const DIFFICULTY_FILE = path.resolve('../backend/core/campaign_difficulty.py');
+const SERVER_FILE = path.resolve('../backend/server.py');
 
 // Check difficulty module
 function checkDifficultyModule() {

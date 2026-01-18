@@ -16,9 +16,9 @@ const ERRORS = [];
 const WARNINGS = [];
 
 // Files to check
-const SERVER_FILE = path.resolve('./backend/server.py');
-const ARENA_FILE = path.resolve('./frontend/app/(tabs)/arena.tsx');
-const API_FILE = path.resolve('./frontend/lib/api.ts');
+const SERVER_FILE = path.resolve('../backend/server.py');
+const ARENA_FILE = path.resolve('./app/(tabs)/arena.tsx');
+const API_FILE = path.resolve('./lib/api.ts');
 
 // Check server.py for PvP endpoints
 function checkBackendPvP() {

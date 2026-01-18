@@ -7,7 +7,7 @@
 
 // Auth handled by config.ts
 import { track, Events } from '../telemetry/events';
-import { apiUrl, getAuthHeaders } from './config';
+import { apiUrl, getJsonHeaders } from './config';
 
 // =============================================================================
 // TYPES
@@ -98,7 +98,7 @@ export async function getProgressionTable(): Promise<ProgressionTable> {
  * Get server-derived stats for a hero (Phase 3.41)
  */
 export async function getHeroStats(heroId: string): Promise<HeroStatsResponse> {
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   
   track(Events.HERO_STATS_VIEWED, { heroId });
   
@@ -121,7 +121,7 @@ export async function promoteHero(
   heroId: string,
   sourceId: string
 ): Promise<PromotionReceipt> {
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   
   track(Events.HERO_PROMOTION_SUBMITTED, { heroId, sourceId });
   

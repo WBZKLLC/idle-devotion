@@ -8,7 +8,7 @@
 // Auth handled by config.ts
 import { track, Events } from '../telemetry/events';
 import { GachaReceipt, isValidGachaReceipt } from '../types/receipt';
-import { apiUrl, getAuthHeaders } from './config';
+import { apiUrl, getJsonHeaders } from './config';
 
 // =============================================================================
 // TYPES
@@ -49,7 +49,7 @@ export interface GachaBannersResponse {
  * Get all available gacha banners + user pity state
  */
 export async function getGachaBanners(): Promise<GachaBannersResponse> {
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   const res = await fetch(apiUrl('/api/gacha/banners'), { headers });
   
   if (!res.ok) {
@@ -84,7 +84,7 @@ export async function getGachaBanners(): Promise<GachaBannersResponse> {
  * Get pity status for all banners
  */
 export async function getPityStatus(): Promise<Record<string, PityStatus>> {
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   const res = await fetch(apiUrl('/api/gacha/pity'), { headers });
   
   if (!res.ok) {
@@ -106,7 +106,7 @@ export async function summon(
   count: 1 | 10,
   sourceId?: string
 ): Promise<GachaReceipt> {
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   
   // Emit telemetry: summon submitted
   track(Events.GACHA_SUMMON_SUBMITTED, {
@@ -239,7 +239,7 @@ export interface GachaHistoryResponse {
  * Get user's gacha summon history (Phase 3.35)
  */
 export async function getGachaHistory(limit: number = 50): Promise<GachaHistoryResponse> {
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   
   track(Events.GACHA_HISTORY_VIEWED, { limit });
   

@@ -7,7 +7,7 @@
 // Auth handled by config.ts
 import { RewardReceipt, isValidReceipt } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-import { apiUrl, getAuthHeaders } from './config';
+import { apiUrl, getJsonHeaders } from './config';
 
 // Store item from catalog
 export interface StoreItem {
@@ -34,7 +34,7 @@ export interface PurchaseIntent {
  */
 export async function getStoreCatalog(): Promise<StoreItem[]> {
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl('/api/store/catalog'), { headers });
     if (!res.ok) throw new Error('Failed to fetch catalog');
     const data = await res.json();
@@ -48,7 +48,7 @@ export async function getStoreCatalog(): Promise<StoreItem[]> {
  * Create purchase intent
  */
 export async function createPurchaseIntent(sku: string): Promise<PurchaseIntent> {
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   const params = new URLSearchParams({ sku });
   
   const res = await fetch(apiUrl(`/api/store/purchase-intent?${params}`), {
@@ -79,7 +79,7 @@ export async function createPurchaseIntent(sku: string): Promise<PurchaseIntent>
 export async function redeemIntent(intentId: string): Promise<RewardReceipt> {
   track(Events.STORE_REDEEM_SUBMITTED, { intentId });
   
-  const headers = await getAuthHeaders();
+  const headers = await getJsonHeaders();
   const params = new URLSearchParams({ intent_id: intentId });
   
   const res = await fetch(apiUrl(`/api/store/redeem-intent?${params}`), {

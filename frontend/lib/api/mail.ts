@@ -14,7 +14,7 @@ import {
   isValidReceipt,
 } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-import { apiUrl, getAuthHeaders } from './config';
+import { apiUrl, getJsonHeaders } from './config';
 
 /**
  * Get mail summary (badge counts) - uses auth token
@@ -27,7 +27,7 @@ export async function getMailSummary(username: string): Promise<{
   receiptsAvailable: number;  // Phase 3.26
 }> {
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     // Use legacy route for compatibility, but server uses auth token for identity
     const res = await fetch(apiUrl(`/api/mail/summary/${username}`), { headers });
     if (res.status === 401) {
@@ -53,7 +53,7 @@ export async function getMailRewards(username: string): Promise<Array<{
   icon: string;
 }>> {
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl(`/api/mail/rewards/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch rewards');
     return await res.json();
@@ -73,7 +73,7 @@ export async function getMailMessages(username: string): Promise<Array<{
   read: boolean;
 }>> {
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl(`/api/mail/messages/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch messages');
     return await res.json();
@@ -93,7 +93,7 @@ export async function getMailGifts(username: string): Promise<Array<{
   claimed: boolean;
 }>> {
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl(`/api/mail/gifts/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch gifts');
     return await res.json();
@@ -114,7 +114,7 @@ export async function claimMailReward(username: string, rewardId: string): Promi
   });
   
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl(`/api/mail/rewards/${username}/${rewardId}/claim`), {
       method: 'POST',
       headers,
@@ -201,7 +201,7 @@ export async function claimMailGift(username: string, giftId: string): Promise<R
   });
   
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl(`/api/mail/gifts/${username}/${giftId}/claim`), {
       method: 'POST',
       headers,
@@ -299,7 +299,7 @@ export interface MailReceipt {
  */
 export async function getMailReceipts(): Promise<MailReceipt[]> {
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl('/api/mail/receipts'), { headers });
     if (!res.ok) throw new Error('Failed to fetch receipts');
     
@@ -328,7 +328,7 @@ export async function claimMailReceipt(receiptId: string): Promise<RewardReceipt
   });
   
   try {
-    const headers = await getAuthHeaders();
+    const headers = await getJsonHeaders();
     const res = await fetch(apiUrl(`/api/mail/receipts/${receiptId}/claim`), {
       method: 'POST',
       headers,

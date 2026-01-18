@@ -6,8 +6,7 @@
 // Graceful error handling — returns defaults on failure.
 
 import { loadAuthToken } from '../authStorage';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+import { API_BASE } from './config';
 
 /**
  * Get auth headers for API calls

@@ -14,7 +14,6 @@ import {
   AccessibilityInfo,
   Animated as RNAnimated,
   Easing as RNEasing,
-  AppState,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {

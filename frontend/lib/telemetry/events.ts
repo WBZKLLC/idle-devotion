@@ -125,6 +125,17 @@ export const Events = {
   GACHA_RATES_VIEWED: 'gacha_rates_viewed',
   GACHA_HISTORY_VIEWED: 'gacha_history_viewed',
   
+  // Phase 3.39-3.41: Hero Progression telemetry
+  HERO_PROMOTION_VIEWED: 'hero_promotion_viewed',
+  HERO_PROMOTION_SUBMITTED: 'hero_promotion_submitted',
+  HERO_PROMOTION_SUCCESS: 'hero_promotion_success',
+  HERO_PROMOTION_INSUFFICIENT_SHARDS: 'hero_promotion_insufficient_shards',
+  HERO_PROMOTION_FAILED: 'hero_promotion_failed',
+  HERO_STATS_VIEWED: 'hero_stats_viewed',
+  
+  // Phase 3.45: Profile telemetry
+  PROFILE_VIEWED: 'profile_viewed',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

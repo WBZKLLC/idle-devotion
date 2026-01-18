@@ -204,6 +204,16 @@ export const Events = {
   PVE_VICTORY_CEREMONY_VIEWED: 'pve_victory_ceremony_viewed',
   PVE_REWARD_RECORD_VIEWED: 'pve_reward_record_viewed',
   
+  // Phase E3: Hero Stage Live Motion telemetry
+  HERO_STAGE_VIEWED: 'hero_stage_viewed',
+  HERO_STAGE_MOTION_ENABLED: 'hero_stage_motion_enabled',
+  HERO_STAGE_MOTION_DISABLED: 'hero_stage_motion_disabled',
+  
+  // Phase E4: PvP Tournament telemetry
+  PVP_TOURNAMENT_VIEWED: 'pvp_tournament_viewed',
+  PVP_TOURNAMENT_MATCH_SELECTED: 'pvp_tournament_match_selected',
+  PVP_RULES_SHEET_OPENED: 'pvp_rules_sheet_opened',
+  
   // Phase 3.50: UI bug tracking (DEV-only)
   UI_TIMER_INVALID_SUPPRESSED: 'ui_timer_invalid_suppressed',
   

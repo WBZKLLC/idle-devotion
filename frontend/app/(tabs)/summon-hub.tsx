@@ -604,6 +604,11 @@ export default function SummonHubScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingTop: 60, paddingBottom: 100 },
+  // Phase 3.49: Header row with actions
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerActions: { flexDirection: 'row', gap: 8, marginRight: 16 },
+  headerAction: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.navy.medium + '80', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  headerActionText: { color: COLORS.cream.soft, fontSize: 12, fontWeight: '500' },
   title: { fontSize: 28, fontWeight: 'bold', color: COLORS.cream.pure, textAlign: 'center', marginBottom: 16, letterSpacing: 1 },
   currencyBar: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 20 },
   currencyBarScroll: { maxHeight: 44, marginBottom: 16 },

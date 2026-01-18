@@ -192,12 +192,15 @@ This document tracks all completed phases of development with their Definition o
 | 3.56 | `guard-phase-3-56-difficulty-table.mjs` |
 | 3.57 | `guard-phase-3-57-pvp-normalization.mjs` |
 | 3.58 | `guard-phase-3-58-pvp-ux-skeleton.mjs` |
+| 3.59 | `guard-phase-3-59-pvp-match.mjs` |
+| 3.60 | `guard-phase-3-60-skill-cutin-registry.mjs` |
+| 3.61 | `guard-phase-3-61-difficulty-expansion.mjs` |
 
-**Total Guards**: 55+ (all passing)
+**Total Guards**: 58+ (all passing)
 
 ---
 
-## Telemetry Events Added (Phases 3.50-3.58)
+## Telemetry Events Added (Phases 3.50-3.61)
 
 | Event | Phase |
 |-------|-------|
@@ -215,5 +218,61 @@ This document tracks all completed phases of development with their Definition o
 | `PVP_RULES_OPENED` | 3.58 |
 | `PVP_OPPONENT_LIST_VIEWED` | 3.58 |
 | `PVP_MATCH_PREVIEW` | 3.57 |
+| `PVP_MATCH_EXECUTED` | 3.59 |
+
+---
+
+## Phase 3.59: PvP Match Execution (COMPLETED)
+
+**Status**: ✅ Complete
+
+**Changes**:
+1. **Backend**: Added `/api/arena/opponents/{username}` endpoint with DEV NPC fallback
+2. **Backend**: Added `/api/pvp/match` endpoint with server-side deterministic resolution
+3. **Frontend**: Updated arena.tsx to use new API and battle presentation modals
+4. **API**: Added `executePvPMatch()` function in lib/api.ts
+5. **Guard**: Created `guard-phase-3-59-pvp-match.mjs`
+
+**Key Features**:
+- Server-authoritative combat resolution
+- sourceId for idempotency (prevents double-spending)
+- NPC fallback opponents when no real opponents exist
+- No monetization in PvP flow
+- Integrated with BattlePresentationModal and VictoryDefeatModal
+
+---
+
+## Phase 3.60: Skill Cut-In Registry (COMPLETED)
+
+**Status**: ✅ Complete
+
+**Changes**:
+1. **Frontend**: Created `/lib/battle/skillCutins.ts` as single source of truth
+2. **Guard**: Created `guard-phase-3-60-skill-cutin-registry.mjs`
+
+**Key Features**:
+- SKILL_CUTIN_REGISTRY: Central registry of all skill cut-ins
+- getHeroCutIns(): Get cut-ins for a specific hero
+- getCutInById(): Get cut-in by ID
+- getRandomCutIn(): Get random cut-in (deterministic with seed)
+- generateBattleCutIns(): Generate cut-ins for battle presentation
+- DEFAULT_CUTIN: Fallback for heroes without registered cut-ins
+
+---
+
+## Phase 3.61: Campaign Difficulty Expansion (COMPLETED)
+
+**Status**: ✅ Complete
+
+**Changes**:
+1. **Backend**: Expanded DIFFICULTY_TABLE from 12 to 25 chapters
+2. **Backend**: Added `dump_difficulty_table()` function
+3. **Backend**: Added DEV-only `/api/dev/difficulty/dump` endpoint
+4. **Guard**: Created `guard-phase-3-61-difficulty-expansion.mjs`
+
+**Key Features**:
+- Chapters 1-25 with progressive difficulty
+- DEV-only dump endpoint for tuning
+- SERVER_DEV_MODE guard on dev endpoint
 
 ---

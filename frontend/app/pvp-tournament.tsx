@@ -80,10 +80,11 @@ export default function PvpTournamentScreen() {
   
   // Build bracket participants (player + NPCs + placeholders)
   const participants = useMemo((): BracketParticipant[] => {
+    const userPower = (user as any)?.power || 10000;
     const player: BracketParticipant = {
       id: user?.id || 'player',
       name: user?.username || 'You',
-      power: user?.power || 10000,
+      power: userPower,
       rank: 1,
       isPlayer: true,
     };

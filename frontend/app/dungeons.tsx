@@ -303,7 +303,7 @@ export default function DungeonsScreen() {
         stageName: `${stageConfig.name} - Stage ${selectedStage}`,
         rewards: battleResult.rewards || {},
         dungeonFloor: selectedStage,
-        playerPower: battleResult.player_power || user?.power,
+        playerPower: battleResult.player_power || user?.total_power,
         enemyPower: battleResult.stage_power,
       };
       setVictoryDefeatData(vdData);

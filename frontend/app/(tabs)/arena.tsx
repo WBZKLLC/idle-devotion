@@ -124,63 +124,77 @@ export default function ArenaScreen() {
     }
   };
 
+  // Phase 3.59: Remove mock opponents - backend now provides NPC fallback
   const generateMockOpponents = (): ArenaOpponent[] => {
-    return [
-      { username: 'ShadowKnight', power: 45000, rank: 156, rating: 1250, team_preview: [{ hero_name: 'Valkyrie', rarity: 'SSR' }] },
-      { username: 'DragonSlayer', power: 52000, rank: 89, rating: 1380, team_preview: [{ hero_name: 'Titan', rarity: 'UR' }] },
-      { username: 'LightBringer', power: 38000, rank: 234, rating: 1150, team_preview: [{ hero_name: 'Paladin', rarity: 'SR' }] },
-    ];
+    // Backend provides deterministic NPCs when no real opponents exist
+    return [];
   };
 
+  // Phase 3.59: State for battle presentation flow
+  const [showBattlePresentation, setShowBattlePresentation] = useState(false);
+  const [showVictoryDefeat, setShowVictoryDefeat] = useState(false);
+
+  // Phase 3.59: Start battle with new server-authoritative flow
   const startBattle = async (opponent: ArenaOpponent) => {
     if (!user || !record) return;
-    if (record.tickets <= 0) {
+    
+    // Track PvP match preview
+    track(Events.PVP_MATCH_PREVIEW, { 
+      opponent_id: opponent.id,
+      opponent_power: opponent.power,
+      is_npc: opponent.isNpc 
+    });
+    
+    // Check tickets locally (server will also validate)
+    const userTickets = user.arena_tickets ?? record.tickets ?? 5;
+    if (userTickets <= 0) {
       toast.warning('You need arena tickets to battle. Wait for regeneration or purchase more.');
       return;
     }
 
     setSelectedOpponent(opponent);
     setBattling(true);
+    setShowBattlePresentation(true);
 
     try {
-      // Use centralized API wrapper
-      const result = await startArenaBattle(user.username, opponent.username);
+      // Phase 3.59: Generate sourceId for idempotency
+      const sourceId = generateSourceId('pvp_match');
+      
+      // Phase 3.59: Use new server-authoritative PvP match endpoint
+      const result = await executePvPMatch(opponent.id, sourceId);
       
       setBattleResult(result);
-      setShowResultModal(true);
+      
+      // Show battle presentation for 2 seconds, then show result
+      setTimeout(() => {
+        setShowBattlePresentation(false);
+        setShowVictoryDefeat(true);
+      }, 2000);
+      
       await loadArenaData();
       await fetchUser();
     } catch (error: any) {
-      // Simulate battle for MVP (fallback)
-      const userPower = user.total_power || 50000;
-      const victory = userPower > opponent.power * (0.8 + Math.random() * 0.4);
-      const ratingChange = victory ? Math.floor(15 + Math.random() * 10) : -Math.floor(10 + Math.random() * 8);
-      
-      setBattleResult({
-        victory,
-        opponent_username: opponent.username,
-        user_power: userPower,
-        opponent_power: opponent.power,
-        rating_change: ratingChange,
-        new_rating: (record?.rating || 1000) + ratingChange,
-        rewards: victory ? { gold: 5000, arena_coins: 100 } : { arena_coins: 20 },
-      });
-      setShowResultModal(true);
-      
-      // Update local record
-      if (record) {
-        setRecord({
-          ...record,
-          rating: record.rating + ratingChange,
-          wins: record.wins + (victory ? 1 : 0),
-          losses: record.losses + (victory ? 0 : 1),
-          win_streak: victory ? record.win_streak + 1 : 0,
-          tickets: record.tickets - 1,
-        });
-      }
+      console.error('PvP match error:', error);
+      setShowBattlePresentation(false);
+      toast.error(error.response?.data?.detail || 'Battle failed. Please try again.');
     } finally {
       setBattling(false);
     }
+  };
+
+  // Phase 3.59: Handle battle presentation completion
+  const handleBattleComplete = () => {
+    setShowBattlePresentation(false);
+    if (battleResult) {
+      setShowVictoryDefeat(true);
+    }
+  };
+
+  // Phase 3.59: Handle victory/defeat modal close
+  const handleResultClose = () => {
+    setShowVictoryDefeat(false);
+    setBattleResult(null);
+    setSelectedOpponent(null);
   };
 
   const getRankIcon = (rank: number) => {

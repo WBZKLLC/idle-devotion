@@ -849,6 +849,10 @@ class BackendTester:
         self.test_stages_system()  # Stage battles requiring stamina, dungeon sweeps
         self.test_campaign_system()  # Campaign battles
         
+        # NEW PHASE 3.59-3.61 TESTS (CRITICAL FOCUS)
+        self.test_pvp_match_system_phase_359()  # NEW PvP match endpoints
+        self.test_difficulty_dump_phase_361()   # NEW difficulty dump endpoint
+        
         # Additional systems
         self.test_idle_system()
         self.test_leaderboards()

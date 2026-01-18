@@ -10,18 +10,6 @@ import { track, Events } from '../telemetry/events';
 import { GachaReceipt, isValidGachaReceipt } from '../types/receipt';
 import { apiUrl, getAuthHeaders } from './config';
 
-// Auth header helper
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await loadAuthToken();
-  if (!token) {
-    return { 'Content-Type': 'application/json' };
-  }
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  };
-}
-
 // =============================================================================
 // TYPES
 // =============================================================================

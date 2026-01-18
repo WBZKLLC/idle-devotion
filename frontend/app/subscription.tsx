@@ -179,19 +179,19 @@ export default function SubscriptionScreen() {
             
             <View style={styles.benefitsList}>
               <View style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.status.success} />
+                <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
                 <Text style={styles.benefitText}>Ad-free experience</Text>
               </View>
               <View style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.status.success} />
+                <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
                 <Text style={styles.benefitText}>2x idle rewards</Text>
               </View>
               <View style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.status.success} />
+                <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
                 <Text style={styles.benefitText}>Exclusive heroes</Text>
               </View>
               <View style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.status.success} />
+                <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
                 <Text style={styles.benefitText}>Priority support</Text>
               </View>
             </View>

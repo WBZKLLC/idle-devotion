@@ -6,7 +6,7 @@
 // Graceful error handling — returns defaults on failure.
 
 import { loadAuthToken } from '../authStorage';
-import { API_BASE } from './config';
+import { apiUrl } from './config';
 
 /**
  * Get auth headers for API calls
@@ -29,7 +29,7 @@ export async function getFriendsSummary(username: string): Promise<{
   try {
     const headers = await getAuthHeaders();
     // Use legacy route for compatibility, but server uses auth token for identity
-    const res = await fetch(`${API_BASE}/api/friends/summary/${username}`, { headers });
+    const res = await fetch(apiUrl(`/api/friends/summary/${username}`), { headers });
     if (res.status === 401) {
       return { pendingRequests: 0, totalFriends: 0 };
     }
@@ -52,7 +52,7 @@ export async function getFriendsList(username: string): Promise<Array<{
 }>> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/friends/list/${username}`, { headers });
+    const res = await fetch(apiUrl(`/api/friends/list/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch friends list');
     const data = await res.json();
     // Transform backend response to frontend format
@@ -78,7 +78,7 @@ export async function getFriendRequests(username: string): Promise<Array<{
 }>> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/friends/requests/${username}`, { headers });
+    const res = await fetch(apiUrl(`/api/friends/requests/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch friend requests');
     const data = await res.json();
     // Transform to frontend format
@@ -97,7 +97,7 @@ export async function getFriendRequests(username: string): Promise<Array<{
  */
 export async function acceptFriendRequest(username: string, requestId: string): Promise<{ alreadyAccepted?: boolean }> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/friends/requests/${username}/${requestId}/accept`, {
+  const res = await fetch(apiUrl(`/api/friends/requests/${username}/${requestId}/accept`), {
     method: 'POST',
     headers,
   });
@@ -110,7 +110,7 @@ export async function acceptFriendRequest(username: string, requestId: string): 
  */
 export async function declineFriendRequest(username: string, requestId: string): Promise<{ alreadyDeclined?: boolean }> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/friends/requests/${username}/${requestId}/decline`, {
+  const res = await fetch(apiUrl(`/api/friends/requests/${username}/${requestId}/decline`), {
     method: 'POST',
     headers,
   });
@@ -135,7 +135,7 @@ export async function searchPlayers(query: string, username?: string): Promise<A
     const headers = await getAuthHeaders();
     const params = new URLSearchParams({ q: query });
     
-    const res = await fetch(`${API_BASE}/api/friends/search?${params}`, { headers });
+    const res = await fetch(apiUrl(`/api/friends/search?${params}`), { headers });
     if (!res.ok) throw new Error('Failed to search players');
     return await res.json();
   } catch {
@@ -148,7 +148,7 @@ export async function searchPlayers(query: string, username?: string): Promise<A
  */
 export async function sendFriendRequest(fromUsername: string, toUsername: string): Promise<void> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/friends/requests/send`, {
+  const res = await fetch(apiUrl('/api/friends/requests/send'), {
     method: 'POST',
     headers: { 
       ...headers,
@@ -201,7 +201,7 @@ export async function sendFriendGift(
     gift_type: giftType,
   });
   
-  const res = await fetch(`${API_BASE}/api/friends/gifts/send?${params}`, {
+  const res = await fetch(apiUrl(`/api/friends/gifts/send?${params}`), {
     method: 'POST',
     headers,
   });
@@ -223,7 +223,7 @@ export async function getFriendGiftStatus(friendId: string): Promise<Record<Gift
     const headers = await getAuthHeaders();
     const params = new URLSearchParams({ friend_id: friendId });
     
-    const res = await fetch(`${API_BASE}/api/friends/gifts/status?${params}`, { headers });
+    const res = await fetch(apiUrl(`/api/friends/gifts/status?${params}`), { headers });
     if (!res.ok) throw new Error('Failed to get gift status');
     return await res.json();
   } catch {

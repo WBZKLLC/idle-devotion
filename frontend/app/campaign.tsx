@@ -228,7 +228,6 @@ export default function CampaignScreen() {
 
     setSelectedStage(stage);
     setIsBattling(true);
-    setShowBattleModal(true);
     setBattleResult(null);
 
     try {
@@ -236,12 +235,26 @@ export default function CampaignScreen() {
       const result = await completeCampaignStage(user.username, selectedChapter.id, stage.stage, 3);
 
       setBattleResult({ ...result, victory: result.success });
+      
+      // Phase 3.50: Prepare presentation data
+      const presData: BattlePresentationData = {
+        victory: result.success,
+        enemyPower: stage.enemy_power,
+        playerPower: user.power || stage.recommended_player_power,
+        rewards: result.rewards || {},
+        stars: result.stars || 0,
+        stageName: `Chapter ${selectedChapter.id} - Stage ${stage.stage}`,
+        firstClear: result.first_clear,
+      };
+      setPresentationData(presData);
+      
+      // Show presentation modal (replaces instant battle modal)
+      setShowPresentation(true);
 
-      // Show dialogue if first clear
+      // Show dialogue if first clear (after presentation completes)
       if (result.first_clear && result.dialogue) {
         setDialogueLines(result.dialogue);
         setCurrentDialogueIndex(0);
-        setShowDialogue(true);
       }
 
       // Refresh data
@@ -252,9 +265,47 @@ export default function CampaignScreen() {
       if (!isErrorHandledGlobally(error)) {
         toast.error(error?.message || 'Unable to complete stage');
       }
-      setShowBattleModal(false);
     } finally {
       setIsBattling(false);
+    }
+  };
+  
+  // Phase 3.50: Handle presentation complete
+  const handlePresentationComplete = () => {
+    setShowPresentation(false);
+    
+    // Prepare victory/defeat data
+    if (battleResult && selectedStage && selectedChapter) {
+      const vdData: VictoryDefeatData = {
+        victory: battleResult.victory,
+        stageName: `Chapter ${selectedChapter.id} - Stage ${selectedStage.stage}`,
+        stars: battleResult.stars || 0,
+        firstClear: battleResult.first_clear,
+        rewards: battleResult.rewards || {},
+        chapterProgress: {
+          current: selectedChapter.progress.cleared,
+          total: selectedChapter.progress.total,
+        },
+        playerPower: user?.power || selectedStage.recommended_player_power,
+        enemyPower: selectedStage.enemy_power,
+        unlockMessage: battleResult.unlock_message,
+      };
+      setVictoryDefeatData(vdData);
+      setShowVictoryDefeat(true);
+    }
+  };
+  
+  // Phase 3.50: Handle victory/defeat close
+  const handleVictoryDefeatClose = () => {
+    setShowVictoryDefeat(false);
+    setVictoryDefeatData(null);
+    setPresentationData(null);
+    setBattleResult(null);
+    setSelectedStage(null);
+    
+    // Show dialogue if there was one
+    if (dialogueLines.length > 0) {
+      setShowDialogue(true);
     }
   };
 

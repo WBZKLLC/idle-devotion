@@ -161,6 +161,14 @@ export default function ShopScreen() {
         </Pressable>
         <Text style={styles.headerTitle}>Shop</Text>
         <View style={styles.headerRight}>
+          {/* Subscription/Pro link */}
+          <Pressable 
+            style={styles.proButton}
+            onPress={() => router.push('/subscription')}
+          >
+            <Ionicons name="diamond" size={18} color={COLORS.gold.primary} />
+            <Text style={styles.proButtonText}>PRO</Text>
+          </Pressable>
           {/* Phase 3.49: VIP link */}
           <Pressable 
             style={styles.vipButton}

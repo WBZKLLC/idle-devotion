@@ -81,7 +81,7 @@ export default function GuildScreen() {
   useEffect(() => {
     if (hydrated && user) {
       loadGuildData();
-      loadGuildLevelInfo();
+      // Note: loadGuildLevelInfo is only called after guildData is loaded (from loadGuildData callback)
     } else if (hydrated && !user) {
       setIsLoading(false);
     }

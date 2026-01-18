@@ -590,18 +590,30 @@ export default function ArenaScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.receiptModal}>
-              <ReceiptViewer
-                receipt={{
-                  source: lastReceipt?.source || 'pvp_daily_claim',
-                  rewards: lastReceipt?.rewards || {},
-                  balances_before: lastReceipt?.balances_before,
-                  balances_after: lastReceipt?.balances_after,
-                }}
-                title={lastReceipt?.error === 'already_claimed' 
-                  ? 'Already Claimed' 
-                  : `${lastReceipt?.rank_band?.toUpperCase() || 'PvP'} Rewards`}
-                showBalances={true}
-              />
+              <Text style={styles.receiptTitle}>
+                {lastReceipt?.error === 'already_claimed' 
+                  ? '⚠️ Already Claimed' 
+                  : `🎁 ${lastReceipt?.rank_band?.toUpperCase() || 'PvP'} Rewards`}
+              </Text>
+              
+              {lastReceipt?.rewards && !lastReceipt.error && (
+                <View style={styles.receiptRewards}>
+                  {Object.entries(lastReceipt.rewards).map(([currency, amount]) => (
+                    <View key={currency} style={styles.receiptRewardRow}>
+                      <Text style={styles.receiptCurrency}>{currency.replace('_', ' ')}</Text>
+                      <Text style={styles.receiptAmount}>+{(amount as number).toLocaleString()}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+              
+              {lastReceipt?.title && (
+                <Text style={styles.receiptBonus}>🏆 Title: {lastReceipt.title}</Text>
+              )}
+              {lastReceipt?.frame && (
+                <Text style={styles.receiptBonus}>🖼️ Frame: {lastReceipt.frame}</Text>
+              )}
+              
               <TouchableOpacity 
                 style={styles.receiptCloseButton}
                 onPress={() => {

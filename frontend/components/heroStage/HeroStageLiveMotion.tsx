@@ -25,7 +25,6 @@ import Animated, {
   withTiming,
   withSequence,
   withDelay,
-  Easing,
   cancelAnimation,
 } from 'react-native-reanimated';
 import { track, Events } from '../../lib/telemetry/events';

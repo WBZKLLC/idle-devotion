@@ -538,6 +538,82 @@ export default function ArenaScreen() {
           onContinue={handleResultClose}
           mode="arena"
         />
+
+        {/* Phase 4.2: Rewards Preview Modal */}
+        <Modal
+          visible={showRewardsModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowRewardsModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.rewardsModal}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Season Rewards</Text>
+                <TouchableOpacity onPress={() => setShowRewardsModal(false)}>
+                  <Ionicons name="close" size={24} color={COLORS.cream.pure} />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.rewardsScroll}>
+                {rewardsPreview?.rewards.map((tier) => (
+                  <View key={tier.rank_band} style={styles.rewardTier}>
+                    <View style={styles.tierHeader}>
+                      <Text style={styles.tierName}>{tier.rank_band.toUpperCase()}</Text>
+                      <Text style={styles.tierRating}>≥{tier.min_rating}</Text>
+                    </View>
+                    <View style={styles.tierRewards}>
+                      {Object.entries(tier.rewards).map(([currency, amount]) => (
+                        <Text key={currency} style={styles.tierRewardItem}>
+                          {currency}: {amount.toLocaleString()}
+                        </Text>
+                      ))}
+                      {tier.title && <Text style={styles.tierTitle}>🏆 {tier.title}</Text>}
+                      {tier.frame && <Text style={styles.tierFrame}>🖼️ {tier.frame}</Text>}
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+              <Text style={styles.rewardsNote}>{rewardsPreview?.note}</Text>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Phase 4.2: Receipt Modal for Claims */}
+        <Modal
+          visible={showReceiptModal && !!lastReceipt}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            setShowReceiptModal(false);
+            setLastReceipt(null);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.receiptModal}>
+              <ReceiptViewer
+                receipt={{
+                  source: lastReceipt?.source || 'pvp_claim',
+                  rewards: lastReceipt?.rewards || {},
+                  balances_before: lastReceipt?.balances_before,
+                  balances_after: lastReceipt?.balances_after,
+                }}
+                title={lastReceipt?.error === 'already_claimed' 
+                  ? 'Already Claimed' 
+                  : `${lastReceipt?.rank_band?.toUpperCase() || 'PvP'} Rewards`}
+                showBalances={true}
+              />
+              <TouchableOpacity 
+                style={styles.receiptCloseButton}
+                onPress={() => {
+                  setShowReceiptModal(false);
+                  setLastReceipt(null);
+                }}
+              >
+                <Text style={styles.receiptCloseText}>Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );

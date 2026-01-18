@@ -61,13 +61,16 @@ pass('STAR_TABLE has correct multipliers (1.0 → 2.25)');
 
 // Check 2: BASE_STATS_BY_RARITY exists
 console.log('\nCheck 2: BASE_STATS_BY_RARITY has all rarities...');
-const baseStatsMatch = serverCode.match(/BASE_STATS_BY_RARITY\s*=\s*\{([^}]+)\}/s);
-if (!baseStatsMatch) {
+// Find BASE_STATS_BY_RARITY section in code
+const baseStatsIdx = serverCode.indexOf('BASE_STATS_BY_RARITY');
+if (baseStatsIdx === -1) {
   fail('BASE_STATS_BY_RARITY not found in server.py');
 }
+// Get next 500 chars which should contain the dict
+const baseStatsSection = serverCode.substring(baseStatsIdx, baseStatsIdx + 500);
 const requiredRarities = ['N', 'R', 'SR', 'SSR', 'SSR+', 'UR', 'UR+'];
 for (const rarity of requiredRarities) {
-  if (!baseStatsMatch[1].includes(`"${rarity}"`)) {
+  if (!baseStatsSection.includes(`"${rarity}"`)) {
     fail(`BASE_STATS_BY_RARITY missing rarity: ${rarity}`);
   }
 }

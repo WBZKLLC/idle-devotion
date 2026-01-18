@@ -121,11 +121,22 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
       setCurrentTurn(0);
       setPhase('intro');
       setSkipped(false);
+      setShowCutIn(false);
+      setCurrentCutInIndex(0);
       fadeProgress.value = 0;
       turnProgress.value = 0;
       damageScale.value = 0;
       climaxPulse.value = 0;
       hasTrackedView.current = false;
+      
+      // Phase 3.55: Calculate deterministic combat tags based on power ratio
+      const powerRatio = (data.playerPower || 10000) / (data.enemyPower || 10000);
+      const tags: string[] = [];
+      if (powerRatio >= 1.15) tags.push('CRIT');
+      if (powerRatio <= 0.85) tags.push('GLANCING');
+      if (powerRatio >= 1.3) tags.push('DEVASTATING');
+      if (powerRatio <= 0.7) tags.push('BLOCKED');
+      setCombatTags(tags);
       
       // Start the presentation sequence
       startPresentation();

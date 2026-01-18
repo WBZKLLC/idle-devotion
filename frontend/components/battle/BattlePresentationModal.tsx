@@ -56,6 +56,12 @@ const SKILL_CALLOUTS = [
   'Righteous Fury',
 ];
 
+export type SkillCutInConfig = {
+  title: string;
+  element?: string;
+  rarity?: string;
+};
+
 export type BattlePresentationData = {
   victory: boolean;
   enemyPower?: number;
@@ -64,6 +70,10 @@ export type BattlePresentationData = {
   stars?: number;
   stageName?: string;
   firstClear?: boolean;
+  // Phase 3.54: Skill cut-ins (0-2 per battle)
+  cutIns?: SkillCutInConfig[];
+  // Phase 3.55: Key moment for result screen
+  keyMoment?: string;
 };
 
 type Props = {

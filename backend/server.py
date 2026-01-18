@@ -7363,12 +7363,16 @@ async def execute_pvp_match(
         await db.arena_records.insert_one(user_record.dict())
         user_record = await db.arena_records.find_one({"user_id": user_id})
     
-    # Calculate user power
+    # Calculate user power - REQUIRE at least one hero
     user_heroes = await db.user_heroes.find({"user_id": user_id}).to_list(1000)
+    
+    if not user_heroes or len(user_heroes) == 0:
+        raise HTTPException(status_code=400, detail="You need at least one hero to battle in PvP. Summon heroes first!")
+    
     user_power = sum(
         h.get("current_hp", 1000) + (h.get("current_atk", 100) * 2) + h.get("current_def", 100)
         for h in user_heroes[:6]
-    ) if user_heroes else 30000
+    )
     
     # Get opponent info
     is_npc = opponent_id.startswith("npc_")

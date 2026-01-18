@@ -642,6 +642,12 @@ export default function ArenaScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Phase E4: PvP Rules Sheet */}
+        <PvpRulesSheet 
+          visible={showRulesSheet} 
+          onClose={() => setShowRulesSheet(false)} 
+        />
       </SafeAreaView>
     </LinearGradient>
   );

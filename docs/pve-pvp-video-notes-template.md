@@ -24,6 +24,25 @@ Purpose: Manual annotation for video-blind audit
 | 3 | `Reference_PVE.mp4` | TBD | ⬜ Not reviewed |
 | 4 | `Reference_PVP_1.mp4` | TBD | ⬜ Not reviewed |
 | 5 | `Reference_PVP_2.mp4` | TBD | ⬜ Not reviewed |
+| 6 | `Reference_PVE_01.mp4` | ~25s | ✅ AI Analyzed |
+| 7 | `Reference_PVE_02.mp4` | ~55s | ✅ AI Analyzed |
+| 8 | `Reference_PVP_01.mp4` | ~30s | ✅ AI Analyzed |
+| 9 | `Reference_PVP_02.mp4` | ~25s | ✅ AI Analyzed |
+
+### AI-Analyzed Video Summary
+
+#### Reference_PVE_01.mp4 & Reference_PVE_02.mp4
+- **Skill Cut-Ins**: "Light of Creation", "Luminous Glories", "Celestial Domain", "Supreme Glory", "Infinity Blessing", "Abyss Sonata"
+- **Damage Numbers**: Up to -2,132,514,720 displayed prominently in red/green
+- **Victory Screen**: "VICTORY" banner with wings, crown, "Sky-tower Story 874" context
+- **Reward Display**: "Reward Record" with 41k coins, 10 enhancement potions
+
+#### Reference_PVP_01.mp4 & Reference_PVP_02.mp4
+- **Tournament Brackets**: Quarter-final → Semi-final → Final progression
+- **Opponent Info**: Power score (2735863795), rewards preview (350-400)
+- **Attempt System**: "Attempts: 4" visible
+- **Countdown Timer**: "022:26:11" creating urgency
+- **Ranking Rewards**: Daily at 21:00
 
 ---
 

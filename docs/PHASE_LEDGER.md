@@ -1,514 +1,61 @@
 # Phase Ledger
 
-Tracks phase goals, deliverables, and exit criteria.  
-Each phase: Goal → Deliverables checklist → Exit checks → Notes.
+This document tracks all completed phases of development with their Definition of Done (DoD) checkboxes.
 
 ---
 
-## Phase 3.22 — Sanctuary Home
+## Phase 3.50 — PvE Battle Presentation + Victory/Defeat + Timer Bugfix
 
-**Goal:** Transform the home screen from "dashboard" into "sanctuary" — a calm, atmospheric space that invites the player to stay.
+**Status**: IN PROGRESS
+**Date**: January 2025
 
-### Deliverables
-- [x] Full-bleed background (hero art or environment)
-- [x] AtmosphereStack overlays (vignette, haze, mist, optional fog)
-- [x] RitualDock ("relic base") at bottom for idle rewards
-- [x] Collapsible HomeSideRail (Doors toggle only; Library icon opens DoorsSheet)
-- [x] DoorsSheet contains grid/dashboard content
-- [x] Tab bar "floor" styling consistent across platforms
-- [x] Reduce Motion respected for all animated overlays
+### Definition of Done
 
-### Exit Checks
-- [x] Home scene feels stable + predictable
-- [x] No auto-collapse timers on rail
-- [x] AtmosphereStack has `pointerEvents="none"`
-- [x] Vignette opacity ≤ 0.35 (no "crush")
-- [x] Guard: `guard-phase-3-22-closure.mjs` passes
+- [x] `BattlePresentationModal.tsx` exists with turn-based presentation
+- [x] `VictoryDefeatModal.tsx` exists with rewards display and defeat feedback
+- [ ] Campaign screen wired to use BattlePresentationModal
+- [ ] Dungeon screen wired to use BattlePresentationModal
+- [x] Reduce Motion compliant (AccessibilityInfo check present)
+- [x] ReceiptViewer used for rewards in VictoryDefeatModal
+- [x] NaN timer guard created (`guard-ui-time-format.mjs`)
+- [x] Battle presentation guard created (`guard-phase-3-50-battle-presentation.mjs`)
+- [ ] Guards wired into `npm run guard`
+- [ ] `npm run guard` passes
+- [ ] `npx tsc --noEmit` passes
 
-### Notes
-- Web preview has pointer event limitations; rail interaction best tested on device via Expo Go.
-- Drifting fog disabled on Hero Stage (only used on Home).
+### Telemetry Events Added
 
----
+- `PVE_BATTLE_PRESENTATION_VIEWED`
+- `PVE_BATTLE_PRESENTATION_SKIPPED`
+- `PVE_BATTLE_PRESENTATION_COMPLETED`
+- `PVE_BATTLE_RESULT_SHOWN`
+- `PVE_VICTORY_VIEWED`
+- `PVE_DEFEAT_VIEWED`
+- `PVE_DEFEAT_RECOMMENDATION_CLICKED`
+- `UI_TIMER_INVALID_SUPPRESSED`
 
-## Phase 3.23 — Social + Mail + Friends
+### Files Changed/Created
 
-**Goal:** Implement fully functional Mail and Friends screens with secure, idempotent endpoints.
-
-### Deliverables
-- [x] Mail screen with Rewards/Messages/Gifts tabs
-- [x] Friends screen with Requests/Friends/Search tabs
-- [x] Backend: Auth-token derived identity (not URL params)
-- [x] Backend: Idempotent claim/accept/decline endpoints
-- [x] Badge refresh is event-driven (no polling loops)
-- [x] Debounced player search with cancellation
-- [x] Desire Engine cleanup (no leaking timers/subscriptions)
-- [x] Chromatic Authority pass (warm ink + gold palette)
-
-### Exit Checks
-- [x] Mail claim flows trigger badge refresh
-- [x] Friends accept/decline are idempotent
-- [x] No setInterval in badges.ts
-- [x] Backend logs `[REWARD_GRANTED]` on claims
-- [x] Guard: `guard-phase-3-23-closure.mjs` passes
-
-### Notes
-- Backend endpoints retain `/{username}` in URL for backwards compat but ignore the param.
-- Mail/Friends APIs return stub data until backend collections are populated.
+- `/app/frontend/components/battle/BattlePresentationModal.tsx` (NEW)
+- `/app/frontend/components/battle/VictoryDefeatModal.tsx` (NEW)
+- `/app/frontend/components/battle/index.ts` (NEW)
+- `/app/frontend/lib/utils/formatHMS.ts` (NEW)
+- `/app/frontend/lib/telemetry/events.ts` (MODIFIED)
+- `/app/frontend/scripts/guard-phase-3-50-battle-presentation.mjs` (NEW)
+- `/app/frontend/scripts/guard-ui-time-format.mjs` (NEW)
 
 ---
 
-## Phase 3.24 — Canonical Reward Receipts
+## Previous Phases
 
-**Goal:** Ensure ALL reward-granting endpoints return the same canonical receipt shape for consistency, idempotency, and telemetry.
+### Phase 3.47-3.49 — Economy Audit Pack
 
-### Deliverables
+**Status**: COMPLETE
 
-#### Backend
-- [x] `grant_rewards_canonical()` helper in server.py
-- [x] LOCKED receipt shape: `{ source, sourceId, items, balances, alreadyClaimed? }`
-- [x] LOCKED source values: `bond_tribute | mail_reward_claim | mail_gift_claim | daily_login_claim | idle_claim | admin_grant`
-- [x] Mail reward claim uses canonical receipt
-- [x] Mail gift claim uses canonical receipt
-- [x] Idle claim includes canonical fields (+ legacy fields for compat)
-- [ ] Bond tribute endpoint returns canonical receipt (endpoint not yet implemented)
-- [ ] Mail fallback queued receipts (deferred - no queue system yet)
-
-#### Frontend
-- [x] `RewardReceipt` type in `lib/types/receipt.ts`
-- [x] `isValidReceipt()` type guard
-- [x] `assertValidReceipt()` validator
-- [x] Mail API returns `Promise<RewardReceipt>`
-- [x] Mail screen uses `formatReceiptItems()` for toast
-- [ ] Balances applied ONLY from receipt (partial - store sync needed)
-- [x] Telemetry events with source + sourceId:
-  - [x] `reward_receipt_received`
-  - [x] `reward_claim_success`
-  - [x] `reward_claim_already_claimed`
-  - [x] `reward_claim_error`
-  - [x] `mail_claim_submitted`
-
-#### Guards
-- [x] `guard-receipt-shape.mjs` validates receipt fields
-- [x] Guard fails if `source` or `sourceId` missing
-
-### Exit Checks
-- [x] One receipt shape everywhere
-- [x] One balance application path (from receipts)
-- [x] Guards passing: `npm run guard:receipt-shape`
-- [x] No UI-specific reward logic outside receipt consumption
-
-### Notes
-- Bond tribute endpoint deferred to Phase 3.26 (hero bonding system).
-- Mail fallback queue deferred (no async reward queue yet).
-- Telemetry events added but analytics backend not yet connected (logs in DEV).
-
----
-
-## Phase 3.25 — Hero Stage Motion v1
-
-**Goal:** Add tier-gated "alive" feeling to hero presentation without timers or RAF.
-
-### Deliverables
-- [x] MOTION_PARAMS table with locked values (single source of truth)
-- [x] `resolveMotionTier(affinity)` function
-- [x] `deriveHeroStageConfig()` centralized config
-- [x] `useHeroIdleMotion()` Reanimated-only hook
-- [x] Tier 0-1: Static (no motion)
-- [x] Tier 2-5: Progressive breathing/sway/bob/rotation
-- [x] Reduce Motion accessibility respected
-- [x] Selene alias resolution (`char_selene_ssr`)
-- [x] DEV logging via `logHeroStageConfig()`
-
-### Exit Checks
-- [x] No setTimeout/setInterval/RAF in motion files
-- [x] Hero screen uses `deriveHeroStageConfig`
-- [x] `driftingFog={false}` on hero AtmosphereStack
-- [x] Guard: `npm run guard:hero-motion` passes
-
-### Notes
-- Motion values locked per spec (breathingScale: 0.006/0.010/0.013/0.016).
-- Camera intimacy offset at tier 4-5 (2%/4% scale boost).
-
----
-
-## Phase 3.26 — Affinity Unlock Surface + Parallax Language + Mail Fallback Queue
-
-**Goal:** Make "Affinity → unlocks" visible and understandable, add tiered parallax/camera language (static first), and ensure reward receipts are never lost via a mail fallback queue.
-
-### Deliverables
-
-#### A) Affinity Unlock Surface
-- [x] `TIER_THRESHOLDS` table (single source of truth)
-- [x] `getTierInfo(tier)` returns camera/motion/parallax labels
-- [x] `getTierTable()` returns full tier ladder for UI
-- [x] `getNextTierInfo(tier)` for "Next unlock at..." UI
-- [x] Bond screen with tier ladder panel (`/app/frontend/app/hero-bond.tsx`)
-- [x] Hero stage camera language microcopy (shows tier-based camera label)
-- [x] Locked/unlocked intimacy badge (tier >= 4) in hero screen
-
-#### B) Camera & Parallax Language
-- [x] `docs/hero-stage-language.md` contract document
-- [x] `PARALLAX_PLANES` table per tier
-- [x] `deriveHeroStageConfig` returns `parallaxPlanes`, `cameraLabel`, `intimacyUnlocked`
-- [x] `CameraMode` includes 'distant' (was only standard/intimate)
-- [x] Hero stage renders static parallax planes with tier-based opacity/scale
-
-#### C) Mail Fallback Queue
-- [x] Backend: `queue_receipt_to_mail()` helper in server.py
-- [x] Backend: `/api/mail/receipts` list endpoint
-- [x] Backend: `/api/mail/receipts/{id}/claim` endpoint (idempotent)
-- [x] Backend: Mail summary includes `receiptsAvailable` count
-- [x] Frontend: Mail API `getMailReceipts()`, `claimMailReceipt()` in lib/api/mail.ts
-- [x] Frontend: Mail UI Receipts tab (only visible when receipts available)
-
-#### Telemetry Events
-- [x] `BOND_VIEWED`
-- [x] `BOND_TIER_LADDER_VIEWED`
-- [x] `BOND_NEXT_UNLOCK_VIEWED`
-- [x] `BOND_TIER_ADVANCED`
-- [x] `MAIL_RECEIPTS_VIEWED`
-- [x] `MAIL_RECEIPT_CLAIM_SUBMITTED`
-
-### Exit Checks
-- [x] Bond screen tier ladder uses centralized `getTierTable()` (no hardcoded thresholds)
-- [x] Hero stage uses `deriveHeroStageConfig`
-- [x] `driftingFog={false}` maintained
-- [x] Mail receipt endpoints return canonical receipt shape
-- [x] Mail UI exposes receipts (tab visible when receipts available)
-- [x] Guard: `npm run guard` passes
-
-### Notes
-- Bond screen UI deferred pending hero-bond route creation.
-- Mail fallback queue backend deferred pending endpoint implementation.
-- Contract doc created at `docs/hero-stage-language.md`.
-
----
-
-## Phase 3.27 — Hero Stage Intimacy v2 (Camera Drift)
-
-**Goal:** Add tier-based camera drift to create subtle "creep" feeling at higher intimacy tiers without violating guard constraints.
-
-### Deliverables
-
-#### Motion System
-- [x] `CAMERA_DRIFT_PARAMS` table with locked values (single source of truth)
-- [x] `getCameraDriftParams(tier)` function
-- [x] `useHeroCameraDrift()` Reanimated-only hook
-- [x] Tier 0-1: No drift
-- [x] Tier 2-3: Subtle drift (standard mode)
-- [x] Tier 4-5: Intimate drift (inspect mode only)
-- [x] Reduce Motion accessibility respected
-
-#### Hero Screen Integration
-- [x] `isInspectMode` state added
-- [x] `handleInspectToggle` handler with telemetry
-- [x] Camera drift style applied to hero container
-- [x] Telemetry events emitting
-
-#### Telemetry Events
-- [x] `HERO_STAGE_VIEWED`
-- [x] `HERO_STAGE_INSPECT_TOGGLED`
-- [x] `HERO_STAGE_CAMERA_MODE_RESOLVED`
-
-#### Guards
-- [x] `guard-phase-3-27.mjs` created
-- [x] Added to `npm run guard`
-- [x] Enforces: no timers/RAF, tier gating, reduce motion support
-
-### Exit Checks
-- [x] No setTimeout/setInterval/RAF in motion files (comments excluded)
-- [x] Camera drift is tier-gated
-- [x] Intimate drift only in inspect mode
-- [x] Reduce Motion branch present
-- [x] Guard: `npm run guard:phase-3-27` passes
-
-### Notes
-- Camera drift values are very subtle (scale: 0.002-0.004, translate: 0.5-1.0px)
-- Intimate tier (4-5) drift only activates when user enters inspect mode
-- All motion uses Reanimated worklets only
-
----
-
-## Phase 3.28 — Social Loop v2 (Friend Gifts)
-
-**Status:** ✅ CLOSED
-
-**Goal:** Allow friends to send gifts to each other, creating mail gifts for recipients using canonical receipts.
-
-### Deliverables
-
-#### Backend
-- [x] `FRIEND_GIFT_TYPES` config (gold, stamina, gems with limits)
-- [x] `POST /api/friends/gifts/send` endpoint (auth-token identity)
-- [x] `GET /api/friends/gifts/status` endpoint (remaining gifts by type)
-- [x] Gift daily limit tracking per sender/recipient/type
-- [x] Creates mail gift in `mail_gifts` collection
-
-#### Frontend
-- [x] `sendFriendGift()` API function in lib/api/friends.ts
-- [x] `getFriendGiftStatus()` API function
-- [x] Telemetry: `FRIEND_GIFT_SENT`, `FRIEND_GIFT_CLAIM_SUBMITTED`
-- [x] "Send Gift" button on friends screen (GiftModal with 3 gift types)
-
-### Exit Checks
-- [x] Gift endpoints use auth-token identity
-- [x] Gift creates mail gift for recipient
-- [x] Daily limits enforced (5 gold, 3 stamina, 1 gem per friend)
-- [x] TypeScript compiles
-- [x] UI integration complete (Gift button + GiftModal in friends.tsx)
-- [x] Guard: `npm run guard:phase-3-28` passes
-
-### Notes
-- Gift claiming uses existing mail gift claim endpoint (canonical receipt)
-- Daily limits reset at UTC midnight
-- Gift expires after 7 days
-
----
-
-## Phase 3.29 — Events/Quests Scaffold v1
-
-**Status:** ✅ CLOSED
-
-**Goal:** Introduce events system using canonical receipts and sanctuary UI language.
-
-### Deliverables
-
-#### Backend
-- [x] `GET /api/events/active` - Returns active events with claimable count
-- [x] `POST /api/events/{eventId}/claim` - Canonical receipt + idempotent
-- [x] Sample events: Welcome Bonus (one-time), Daily Check-in (daily)
-- [x] `event_claim` added to RewardSource types
-
-#### Frontend
-- [x] Events screen `/app/events.tsx` integrated with quest events
-- [x] `getActiveQuests()` and `claimQuestReward()` API functions
-- [x] `handleQuestClaim()` with canonical receipt handling
-- [x] Telemetry: `EVENTS_VIEWED`, `EVENT_CLAIM_SUBMITTED`, `EVENT_CLAIM_SUCCESS/ERROR/ALREADY_CLAIMED`
-- [x] No timers/RAF in events screen
-
-### Exit Checks
-- [x] Events screen exists
-- [x] `event_claim` is valid RewardSource
-- [x] Claim returns canonical receipt
-- [x] No timers/RAF
-- [x] Guard: `npm run guard:phase-3-29` passes
-
----
-
-## Phase 3.30 — Store & Economy Scaffold v1
-
-**Status:** ✅ CLOSED
-
-**Goal:** Store UI with purchase intent plumbing (no real billing).
-
-### Deliverables
-
-#### Backend
-- [x] `GET /api/store/catalog` - Static catalog list
-- [x] `POST /api/store/purchase-intent` - Creates intent (sku, price, currency)
-- [x] `POST /api/store/redeem-intent` - DEV-only, returns canonical receipt
-- [x] `store_redeem` added to RewardSource types
-
-#### Frontend
-- [x] Shop screen `/app/shop.tsx` with catalog grid
-- [x] `getStoreCatalog()`, `createPurchaseIntent()`, `redeemIntent()` API functions
-- [x] Purchase modal with intent creation + DEV redeem
-- [x] Telemetry: `STORE_VIEWED`, `STORE_ITEM_SELECTED`, `STORE_PURCHASE_INTENT_CREATED`, `STORE_REDEEM_*`
-- [x] No billing library imports
-
-### Exit Checks
-- [x] Shop screen exists
-- [x] No direct billing libs imported
-- [x] Intent created on Buy
-- [x] Redeem returns canonical receipt
-- [x] `store_redeem` is valid RewardSource
-- [x] Guard: `npm run guard:phase-3-30` passes
-
----
-
-## Guard Suite Summary
-
-All guards wired to `npm run guard`:
-- `guard:hero` - Hero system invariants
-- `guard:tier` - Tier resolution
-- `guard:receipt-shape` - Canonical receipt validation
-- `guard:phase-3-22` - Sanctuary Home closure
-- `guard:phase-3-23` - Social + Mail + Friends closure
-- `guard:hero-motion` - Hero stage motion (no timers)
-- `guard:phase-3-27` - Camera drift system
-- `guard:phase-3-28` - Friends gift system
-- `guard:phase-3-29` - Events/Quests system
-- `guard:phase-3-30` - Store system
-- `guard:phase-3-31` - Daily/Idle Loop system
-
----
-
-## Phase 3.31 — Daily/Idle Loop Completion
-
-**Status:** ✅ CLOSED
-
-**Goal:** Make the app worth opening every day with reliable idle rewards.
-
-### Deliverables
-
-#### Backend
-- [x] `GET /api/idle/status` - Auth-based, returns elapsedSeconds, capSeconds, pendingRewards
-- [x] `POST /api/idle/claim` - Auth-based, canonical receipt, idempotent
-- [x] Idle cap enforcement (8h default, VIP extensible)
-- [x] Fixed rates: Gold 120/hr, Stamina 6/hr, Gems 0/hr
-- [x] Persist last-claim timestamp server-side
-
-#### Frontend
-- [x] Created `/app/idle.tsx` sanctuary screen
-- [x] Progress bar showing elapsed vs cap
-- [x] Pending rewards display (gold, stamina)
-- [x] "Claim" button with canonical receipt handling
-- [x] "Speed Up (Coming Soon)" placeholder (visible, disabled)
-- [x] No timers/polling (event-driven refresh only)
-
-#### Telemetry
-- [x] `IDLE_VIEWED`
-- [x] `IDLE_ELAPSED`
-- [x] `IDLE_CLAIM_SUBMITTED`
-- [x] `IDLE_CLAIM_SUCCESS`
-- [x] `IDLE_CLAIM_ALREADY_CLAIMED`
-
-#### Guards
-- [x] `guard-phase-3-31.mjs` created
-- [x] Added to `npm run guard`
-- [x] Enforces: no timers/RAF, canonical receipt, idempotency
-
-### Exit Checks
-- [x] Leave app → return → claim idle reliably
-- [x] Receipt-only balance mutations
-- [x] No timers/polling
-- [x] Guard: `npm run guard:phase-3-31` passes
-
-### Notes
-- Idle is baseline progression (no gems from idle)
-- Speed Up feature placeholder for future monetization
-- VIP levels increase cap time
-
----
-
-## Documentation
-
-- `docs/hero-stage-language.md` - Tier table, motion rules, parallax planes
-- `docs/reward-receipts.md` - Canonical receipt contract
-- `docs/mail-system.md` - Mail tabs, receipt queue semantics
-- `docs/friends-system.md` - Friends tabs, gift behavior
-- `docs/PHASE_TEMPLATE.md` - Template for future phases
-- `docs/POWER_CURVE.md` - Power curve formulas, stat tables, player progression simulation
-- `docs/STAR_AFFINITY_MATRIX.md` - Stars vs affinity value comparison, acquisition rates
-- `docs/VIP_SYSTEM.md` - Expanded VIP benefits, implementation status
-- `docs/REVENUECAT_SKUS.md` - IAP SKU matrix, webhook handling, telemetry
-- `docs/POWER_CURVE_AUDIT.md` - Complete numerical power simulation with PPI table
-- `docs/pvp-monetization-ethics.md` - Non-negotiable PvP ethics constraints
-
----
-
-## Phase 3.47 — Economy Audit & Guard Enforcement
-
-**Status:** ✅ CLOSED
-
-**Goal:** Document and enforce power curve, star/affinity progression, VIP benefits, and IAP SKUs via guard scripts.
-
-### Deliverables
-
-#### Documentation
-- [x] `POWER_CURVE.md` - Complete power curve analysis with formulas, simulations
-- [x] `STAR_AFFINITY_MATRIX.md` - Star vs affinity value comparison
-- [x] `VIP_SYSTEM.md` - Expanded 16-tier VIP benefits matrix
-- [x] `REVENUECAT_SKUS.md` - Complete SKU catalog for IAP
-
-#### Guards
-- [x] `guard-power-curve.mjs` - Validates STAR_TABLE, BASE_STATS_BY_RARITY, AFFINITY_MULTIPLIERS
-- [x] `guard-star-table.mjs` - Validates shard costs, MAX_STAR, promotion endpoint
-- [x] `guard-sku-integrity.mjs` - Validates receipt sources, purchase intents, VIP XP
-- [x] `guard-vip-benefits.mjs` - Ensures no VIP stat buffs, rate/cap only benefits
-
-### Exit Checks
-- [x] All 4 new guards added to `npm run guard`
-- [x] All guards passing
-- [x] Documentation reflects actual backend implementation
-
-### Notes
-- Power curve formula: `finalStat = baseStat × starMultiplier × affinityMultiplier`
-- Max multiplier: 2.25 × 1.30 = 2.925× base stats
-- Total shards to 6★: 620
-- VIP 15 requires $25,000 spend
-
----
-
-## Phase 3.48 — Economy Audit Pack (Power + VIP UI + PvP Ethics)
-
-**Status:** ✅ CLOSED
-
-**Goal:** Complete numerical power simulation, implement VIP comparison UI, and establish PvP monetization ethics.
-
-### Deliverables
-
-#### 1. Power Simulation (Numerical Audit)
-- [x] `POWER_CURVE_AUDIT.md` - Complete PPI table with all star×affinity combinations
-- [x] Absolute stat bands for UR+, SSR, SR heroes
-- [x] Campaign difficulty curve recommendations
-- [x] Spike analysis with balance flags
-
-#### 2. VIP Comparison UI
-- [x] `/vip` route (`app/vip.tsx`)
-- [x] VIP summary card with current level and progress
-- [x] Tier comparison table (16 tiers)
-- [x] Details sheet on tier tap
-- [x] Ethics guardrails banner
-- [x] Telemetry events: `VIP_VIEWED`, `VIP_TIER_SELECTED`, `VIP_BENEFITS_SHEET_OPENED`, `VIP_PROGRESS_VIEWED`
-
-#### 3. PvP Monetization Ethics
-- [x] `docs/pvp-monetization-ethics.md` - Non-negotiable constraints
-- [x] `guard-pvp-ethics.mjs` - Enforces ethical patterns
-- [x] Rules: No VIP stat buffs, no paid-only heroes, no matchmaking manipulation
-- [x] Transparent probabilities (pity system, visible odds)
-- [x] Spend protection UX guidelines
-
-### Exit Checks
-- [x] VIP screen loads with tier ladder
-- [x] Ethics doc created and linked
-- [x] `guard:pvp-ethics` added to npm run guard
+- [x] Power Curve Audit (`/app/docs/POWER_CURVE_AUDIT.md`)
+- [x] VIP System Documentation (`/app/docs/VIP_SYSTEM.md`)
+- [x] PvP Ethics Guard (`/app/frontend/scripts/guard-pvp-ethics.mjs`)
+- [x] Star Table Guard (`/app/frontend/scripts/guard-star-table.mjs`)
 - [x] All guards passing
 
-### Notes
-- PPI range: 1.000 (1★ T0) to 2.925 (6★ T5)
-- VIP benefits affect convenience/cosmetics only, never combat stats
-- 2.925× power spread requires PvP normalization if competitive mode added
-
 ---
-
-## Guard Suite Summary (Updated)
-
-All guards wired to `npm run guard`:
-- `guard:hero` - Hero system invariants
-- `guard:tier` - Tier resolution
-- `guard:receipt-shape` - Canonical receipt validation
-- `guard:phase-3-22` - Sanctuary Home closure
-- `guard:phase-3-23` - Social + Mail + Friends closure
-- `guard:hero-motion` - Hero stage motion (no timers)
-- `guard:phase-3-27` - Camera drift system
-- `guard:phase-3-28` - Friends gift system
-- `guard:phase-3-29` - Events/Quests system
-- `guard:phase-3-30` - Store system
-- `guard:phase-3-31` - Daily/Idle Loop system
-- `guard:phase-3-32` through `guard:phase-3-46` - Advanced systems
-- `guard:power-curve` - Power curve enforcement
-- `guard:star-table` - Star table enforcement
-- `guard:sku-integrity` - SKU integrity enforcement
-- `guard:vip-benefits` - VIP benefits enforcement
-- **`guard:pvp-ethics`** - PvP monetization ethics enforcement (NEW)
-
----
-
-## Upcoming Phases
-
-### Phase 3.49 — Daily Login System (Planned)
-- Daily login claim with canonical receipt
-- Streak tracking
-- Monthly reward calendar

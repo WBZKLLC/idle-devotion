@@ -7469,6 +7469,28 @@ async def execute_pvp_match(
     
     return result
 
+# Phase 3.61: DEV-only endpoint to dump difficulty table
+@api_router.get("/dev/difficulty/dump")
+async def dev_difficulty_dump():
+    """
+    Phase 3.61: DEV-only endpoint to dump the entire campaign difficulty table.
+    
+    Used for tuning and verification during development.
+    Returns 403 if SERVER_DEV_MODE is false.
+    """
+    if not SERVER_DEV_MODE:
+        raise HTTPException(
+            status_code=403,
+            detail="DEV endpoints disabled in production mode"
+        )
+    
+    return {
+        "chapters": dump_difficulty_table(),
+        "total_chapters": len(DIFFICULTY_TABLE),
+        "dev_mode": True,
+        "note": "This endpoint is DEV-only and disabled in production"
+    }
+
 @api_router.post("/arena/battle/{username}")
 async def arena_battle(username: str, request: ArenaBattleRequest):
     """Battle in arena against another player"""

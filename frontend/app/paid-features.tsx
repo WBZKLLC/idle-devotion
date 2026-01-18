@@ -294,7 +294,7 @@ export default function PaidFeaturesScreen() {
           {/* Footer Note */}
           <Text style={styles.footerNote}>
             Purchases will be verified server-side when payments are enabled.
-            {__DEV__ && ' Use DEV buttons above to test unlock flow and stat bonuses.'}
+            {__DEV__ && user?.is_admin && ' Use DEV buttons above to test unlock flow and stat bonuses.'}
           </Text>
         </ScrollView>
       </SafeAreaView>

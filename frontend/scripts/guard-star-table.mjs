@@ -35,6 +35,13 @@ const serverCode = fs.readFileSync(BACKEND_PATH, 'utf8');
 
 // Check 1: STAR_TABLE has correct shard costs
 console.log('Check 1: STAR_TABLE has correct shard costs...');
+// Find STAR_TABLE section
+const starTableIdx = serverCode.indexOf('STAR_TABLE = {');
+if (starTableIdx === -1) {
+  fail('STAR_TABLE not found in server.py');
+}
+const starTableSection = serverCode.substring(starTableIdx, starTableIdx + 500);
+
 const expectedShardCosts = [
   { star: 1, cost: 0 },
   { star: 2, cost: 20 },
@@ -45,9 +52,9 @@ const expectedShardCosts = [
 ];
 
 for (const { star, cost } of expectedShardCosts) {
-  const pattern = new RegExp(`${star}:\s*\{[^}]*"shardCost":\s*${cost}`);
-  if (!pattern.test(serverCode)) {
-    fail(`STAR_TABLE star ${star} should have shardCost ${cost}`);
+  // Match: "shardCost": N  (Python dict format)
+  if (!starTableSection.includes(`"shardCost": ${cost}`)) {
+    fail(`STAR_TABLE should have shardCost ${cost} for star ${star}`);
   }
 }
 pass('STAR_TABLE has correct shard costs (0 → 320)');

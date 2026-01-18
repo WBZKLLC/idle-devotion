@@ -132,7 +132,7 @@ export default function ArenaScreen() {
 
   // Phase 4.2: Load rewards preview
   const handleShowRewardsPreview = async () => {
-    track(Events.PVP_REWARDS_PREVIEW_OPENED, {});
+    track(Events.PVP_REWARDS_PREVIEW_VIEWED, {});
     if (!rewardsPreview) {
       try {
         const preview = await getPvpRewardsPreview();

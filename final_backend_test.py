@@ -20,6 +20,7 @@ class ComprehensiveGachaTest:
         self.base_url = BASE_URL
         self.username = TEST_USERNAME
         self.user_data = None
+        self.auth_token = None
         self.user_heroes = []
         self.teams = []
         self.test_results = {

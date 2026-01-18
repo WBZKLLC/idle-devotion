@@ -193,22 +193,28 @@ export default function HomeScreen() {
     return unsubscribe;
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      handleLogin();
-      loadCR();
-      loadIdleStatus();
-      loadInstantCooldown();
-      timerRef.current = setInterval(() => updateIdleTimer(), 1000);
-      cooldownRef.current = setInterval(() => {
-        setInstantCooldown(prev => Math.max(0, prev - 1));
-      }, 1000);
-      return () => { 
-        if (timerRef.current) clearInterval(timerRef.current);
-        if (cooldownRef.current) clearInterval(cooldownRef.current);
-      };
-    }
-  }, [user?.username]);
+  // Phase 4.3: Focus-based refresh instead of setInterval
+  // Refresh idle status and cooldown on screen focus (no 1s polling)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        handleLogin();
+        loadCR();
+        loadIdleStatus();
+        loadInstantCooldown();
+      }
+      
+      // Also refresh on app state change (foreground)
+      const subscription = AppState.addEventListener('change', (nextState) => {
+        if (nextState === 'active' && user) {
+          loadIdleStatus();
+          loadInstantCooldown();
+        }
+      });
+      
+      return () => subscription.remove();
+    }, [user?.username])
+  );
 
   const loadInstantCooldown = async () => {
     if (!user) return;

@@ -128,7 +128,7 @@ function TierDetailsSheet({ tier, currentTier, onClose }: TierDetailsSheetProps)
               <Text style={styles.statLabel}>Idle Rate</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: tier.instantCollect ? COLORS.emerald : COLORS.cream.dark }]}>
+              <Text style={[styles.statValue, { color: tier.instantCollect ? COLORS.success : COLORS.cream.dark }]}>
                 {tier.instantCollect ? '✓' : '—'}
               </Text>
               <Text style={styles.statLabel}>Instant Collect</Text>
@@ -319,7 +319,7 @@ export default function VIPScreen() {
                     <Ionicons 
                       name={tier.instantCollect ? 'checkmark-circle' : 'close-circle'}
                       size={18}
-                      color={tier.instantCollect ? COLORS.emerald : COLORS.cream.dark}
+                      color={tier.instantCollect ? COLORS.success : COLORS.cream.dark}
                     />
                   </View>
                 </TouchableOpacity>

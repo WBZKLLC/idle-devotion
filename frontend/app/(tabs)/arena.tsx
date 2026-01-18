@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Animated,
+  Modal,
+  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../../stores/gameStore';
@@ -25,6 +27,20 @@ import type { BattlePresentationData, VictoryDefeatData } from '../../components
 import { makeSourceId } from '../../lib/ids/sourceId';
 // Phase 3.59: Telemetry
 import { track, Events } from '../../lib/telemetry/events';
+// Phase 4.2: Focus-based refresh (no setInterval)
+import { useFocusEffect } from '@react-navigation/native';
+// Phase 4.2: ReceiptViewer for claim rewards
+import { ReceiptViewer } from '../../components/receipt/ReceiptViewer';
+// Phase 4.2: PvP Season API
+import { 
+  getPvpSeason, 
+  getPvpRewardsPreview, 
+  claimPvpDaily, 
+  claimPvpSeason,
+  type PvpSeasonResponse,
+  type PvpRewardsPreviewResponse,
+  type PvpClaimReceipt,
+} from '../../lib/api/pvp';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

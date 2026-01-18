@@ -8,8 +8,7 @@
 import { loadAuthToken } from '../authStorage';
 import { track, Events } from '../telemetry/events';
 import { GachaReceipt, isValidGachaReceipt } from '../types/receipt';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+import { API_BASE } from './config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {

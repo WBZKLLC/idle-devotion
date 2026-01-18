@@ -484,9 +484,9 @@ export default function GuildScreen() {
                         <Text style={[styles.attacksCounterText, attacksRemaining <= 0 && { color: '#666' }]}>
                           {attacksRemaining}/{maxAttacks} attacks today
                         </Text>
-                        {user?.vip_level && user.vip_level >= 7 && (
+                        {user?.vip_level !== undefined && user.vip_level >= 7 ? (
                           <Text style={styles.vipBonusText}>👑 VIP Bonus</Text>
-                        )}
+                        ) : null}
                       </View>
                       
                       {/* Your Contribution */}

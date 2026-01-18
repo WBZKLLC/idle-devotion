@@ -79,7 +79,7 @@ function TierDetailsSheet({ tier, currentTier, onClose }: TierDetailsSheetProps)
   const isUnlocked = tier.tier <= currentTier;
   
   useEffect(() => {
-    trackEvent(TELEMETRY_EVENTS.VIP_BENEFITS_SHEET_OPENED, {
+    track(TELEMETRY_EVENTS.VIP_BENEFITS_SHEET_OPENED, {
       viewedTier: tier.tier,
       currentTier,
       isUnlocked,
@@ -177,14 +177,14 @@ export default function VIPScreen() {
     : 100;
   
   useEffect(() => {
-    trackEvent(TELEMETRY_EVENTS.VIP_VIEWED, {
+    track(TELEMETRY_EVENTS.VIP_VIEWED, {
       currentVipLevel,
       totalSpent,
     });
   }, []);
   
   const handleTierSelect = useCallback((tier: typeof VIP_TIERS[0]) => {
-    trackEvent(TELEMETRY_EVENTS.VIP_TIER_SELECTED, {
+    track(TELEMETRY_EVENTS.VIP_TIER_SELECTED, {
       selectedTier: tier.tier,
       currentVip: currentVipLevel,
     });

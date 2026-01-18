@@ -694,6 +694,22 @@ export default function DungeonsScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Phase 3.50: Battle Presentation Modal */}
+        <BattlePresentationModal
+          visible={showPresentation}
+          data={presentationData}
+          onComplete={handlePresentationComplete}
+          mode="dungeon"
+        />
+        
+        {/* Phase 3.50: Victory/Defeat Modal */}
+        <VictoryDefeatModal
+          visible={showVictoryDefeat}
+          data={victoryDefeatData}
+          onContinue={handleVictoryDefeatClose}
+          mode="dungeon"
+        />
       </SafeAreaView>
     </LinearGradient>
   );

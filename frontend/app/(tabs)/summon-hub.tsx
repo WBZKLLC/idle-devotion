@@ -25,6 +25,8 @@ import { summon as summonGacha } from '../../lib/api/gacha';
 import { SummonResultsModal } from '../../components/gacha/SummonResultsModal';
 import { BannerDetailsSheet } from '../../components/gacha/BannerDetailsSheet';
 import { GachaReceipt } from '../../lib/types/receipt';
+// Phase 3.49: Robust sourceId generation
+import { makeSourceId } from '../../lib/ids/sourceId';
 
 // Legacy centralized API wrappers (kept for compatibility)
 import { pullGacha } from '../../lib/api';

@@ -16,17 +16,14 @@ import { Platform } from 'react-native';
  * 3. Platform-specific defaults
  */
 function getApiBaseUrl(): string {
-  // Check environment variables
-  const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  // Check environment variables - normalize trailing slashes
+  const RAW = process.env.EXPO_PUBLIC_BACKEND_URL 
+    ?? process.env.EXPO_PUBLIC_API_URL 
+    ?? '';
   
-  // Use explicitly set URLs first
-  if (backendUrl) {
-    return backendUrl;
-  }
-  
-  if (apiUrl) {
-    return apiUrl;
+  // Use explicitly set URLs first (trimmed of trailing slashes)
+  if (RAW) {
+    return RAW.replace(/\/+$/, '');
   }
   
   // Platform-specific defaults when no env var is set

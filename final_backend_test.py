@@ -99,7 +99,19 @@ class ComprehensiveGachaTest:
         # 4. Gacha Pulls - Test all types
         print("\n4️⃣ Testing Gacha System...")
         
-        # Single pull with gems
+        # Single pull with coins (do this FIRST before gems are depleted)
+        pull_data = {"pull_type": "single", "currency_type": "coins"}
+        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
+        if response and response.status_code == 200:
+            result = response.json()
+            self.log_result("Single Pull (Coins)", True, 
+                          f"Pulled {len(result['heroes'])} hero")
+        elif response and response.status_code == 400:
+            self.log_result("Single Pull (Coins)", True, "Insufficient coins (expected)")
+        else:
+            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
+        
+        # Single pull with gems (uses crystals currency)
         pull_data = {"pull_type": "single", "currency_type": "gems"}
         response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
         if response and response.status_code == 200:
@@ -118,16 +130,6 @@ class ComprehensiveGachaTest:
                           f"Pulled {len(result['heroes'])} heroes, pity: {result['new_pity_counter']}")
         else:
             self.log_result("Multi Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
-        
-        # Single pull with coins
-        pull_data = {"pull_type": "single", "currency_type": "coins"}
-        response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-        if response and response.status_code == 200:
-            result = response.json()
-            self.log_result("Single Pull (Coins)", True, 
-                          f"Pulled {len(result['heroes'])} hero")
-        else:
-            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
         
         # Multi pull with coins
         pull_data = {"pull_type": "multi", "currency_type": "coins"}

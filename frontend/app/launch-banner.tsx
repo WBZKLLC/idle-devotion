@@ -10,6 +10,7 @@ import {
   Alert,
   Animated,
   Modal,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGameStore, useHydration } from '../stores/gameStore';

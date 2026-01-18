@@ -1,6 +1,7 @@
 // /app/frontend/app/hero/[id].tsx
 // Phase 3.23.9: Hero Screen Foundation
 // Phase 3.25: Hero Stage Motion v1
+// Phase 3.49: PromotionModal integration
 //
 // A neutral, elegant stage for hero presentation.
 // Motion affects hero render only - UI chrome does not move.
@@ -57,6 +58,9 @@ import { AtmosphereStack } from '../../components/home/AtmosphereStack';
 
 // Haptics
 import { haptic } from '../../lib/ui/interaction';
+
+// Phase 3.49: Promotion modal
+import { PromotionModal } from '../../components/hero/PromotionModal';
 
 // Telemetry (Phase 3.27)
 import { track, Events } from '../../lib/telemetry/events';

@@ -12702,11 +12702,15 @@ async def story_battle(username: str, chapter: int, stage: int):
     if not stage_data:
         raise HTTPException(status_code=404, detail="Stage not found")
     
+    # SECURITY: Require at least one hero to battle
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
+    if not user_heroes or len(user_heroes) == 0:
+        raise HTTPException(status_code=400, detail="You need at least one hero to battle. Summon heroes first!")
+    
     # Get user's team power
     team = await db.teams.find_one({"user_id": user["id"], "is_active": True})
     if not team:
         # Use top heroes
-        user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(100)
         team_power = 0
         for uh in user_heroes[:6]:
             hero_data = await db.heroes.find_one({"id": uh["hero_id"]})

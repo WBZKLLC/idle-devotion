@@ -106,6 +106,10 @@ export default function HomeScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
+  // Phase 4.3: LiveOps state
+  const [liveOpsStatus, setLiveOpsStatus] = useState<LiveOpsStatusResponse | null>(null);
+  const hasTrackedLiveOps = useRef(false);
+  
   // Phase 3.22.12.R2: Real badge data
   const railBadges = useRailBadges();
   

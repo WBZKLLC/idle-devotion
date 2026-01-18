@@ -826,7 +826,8 @@ class BackendTester:
         print("=" * 80)
         print(f"Testing against: {BASE_URL}")
         print(f"Test User: {TEST_USERNAME}")
-        print("Focus: Identifying the 4 failing tests (78.9% pass rate)")
+        print("FOCUS: Phase 3.59-3.61 Implementation - PvP Match & Difficulty Dump")
+        print("Critical Endpoints: /api/arena/opponents, /api/pvp/match, /api/dev/difficulty/dump")
         print("=" * 80)
         print()
         

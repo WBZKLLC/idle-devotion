@@ -8,6 +8,8 @@
 // Auth handled by config.ts
 import { track, Events } from '../telemetry/events';
 import { apiUrl, getJsonHeaders } from './config';
+// Phase 3.49: Robust sourceId generation
+import { makeSourceId } from '../ids/sourceId';
 
 // =============================================================================
 // TYPES

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
   AccessibilityInfo,
   Animated as RNAnimated,
   Easing as RNEasing,
+  AppState,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -24,6 +25,8 @@ import Animated, {
   Easing,
   interpolate,
 } from 'react-native-reanimated';
+// Phase 4.3: Focus-based refresh (no setInterval)
+import { useFocusEffect } from '@react-navigation/native';
 import { useGameStore, useHydration } from '../../stores/gameStore';
 import { isErrorHandledGlobally } from '../../lib/api';
 import { Ionicons } from '@expo/vector-icons';

@@ -240,7 +240,7 @@ export default function CampaignScreen() {
       const presData: BattlePresentationData = {
         victory: result.success,
         enemyPower: stage.enemy_power,
-        playerPower: user.power || stage.recommended_player_power,
+        playerPower: user.total_power || stage.recommended_player_power,
         rewards: result.rewards || {},
         stars: result.stars || 0,
         stageName: `Chapter ${selectedChapter.id} - Stage ${stage.stage}`,

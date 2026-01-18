@@ -262,7 +262,19 @@ export default function DungeonsScreen() {
       const result = await battleDungeonStage(user.username, stageConfig.path, stageId);
       
       setBattleResult(result);
-      setShowResultModal(true);
+      
+      // Phase 3.50: Prepare presentation data
+      const presData: BattlePresentationData = {
+        victory: result.victory,
+        enemyPower: result.stage_power || stageId * 5000,
+        playerPower: result.player_power || user.power || 10000,
+        rewards: result.rewards || {},
+        stageName: `${stageConfig.name} - Stage ${stageId}`,
+      };
+      setPresentationData(presData);
+      
+      // Show presentation modal
+      setShowPresentation(true);
       
       // Refresh data
       await Promise.all([
@@ -277,6 +289,34 @@ export default function DungeonsScreen() {
     } finally {
       setIsBattling(false);
     }
+  };
+  
+  // Phase 3.50: Handle presentation complete
+  const handlePresentationComplete = () => {
+    setShowPresentation(false);
+    
+    // Prepare victory/defeat data
+    if (battleResult && selectedStage !== null) {
+      const stageConfig = STAGE_TYPES[selectedType];
+      const vdData: VictoryDefeatData = {
+        victory: battleResult.victory,
+        stageName: `${stageConfig.name} - Stage ${selectedStage}`,
+        rewards: battleResult.rewards || {},
+        dungeonFloor: selectedStage,
+        playerPower: battleResult.player_power || user?.power,
+        enemyPower: battleResult.stage_power,
+      };
+      setVictoryDefeatData(vdData);
+      setShowVictoryDefeat(true);
+    }
+  };
+  
+  // Phase 3.50: Handle victory/defeat close
+  const handleVictoryDefeatClose = () => {
+    setShowVictoryDefeat(false);
+    setVictoryDefeatData(null);
+    setPresentationData(null);
+    setBattleResult(null);
   };
 
   const sweepStage = async (stageId: number) => {

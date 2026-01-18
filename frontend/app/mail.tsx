@@ -395,26 +395,24 @@ function MessagesTab({ messages }: { messages: MessageItem[] }) {
   );
 }
 
+// Phase 3.49: GiftsTab with ReceiptViewer
 function GiftsTab({ gifts, username, onClaim }: { 
   gifts: GiftItem[]; 
   username: string;
   onClaim: (receipt?: RewardReceipt) => void;
 }) {
   const [claiming, setClaiming] = useState<string | null>(null);
+  const [lastReceipt, setLastReceipt] = useState<RewardReceipt | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
   
   const handleAccept = async (id: string) => {
     setClaiming(id);
     try {
       const receipt = await claimMailGift(username, id);
       
-      // Phase 3.24: Show receipt-based feedback
-      if (receipt.alreadyClaimed) {
-        toast.success('Already accepted.');
-      } else if (receipt.items.length > 0) {
-        toast.success(`Accepted: ${formatReceiptItems(receipt)}`);
-      } else {
-        toast.success('Accepted.');
-      }
+      // Phase 3.49: Show via ReceiptViewer instead of toast
+      setLastReceipt(receipt);
+      setShowReceipt(true);
       
       triggerBadgeRefresh(); // Update side rail badge
       onClaim(receipt);  // Pass receipt for balance application
@@ -462,6 +460,14 @@ function GiftsTab({ gifts, username, onClaim }: {
           )}
         </Pressable>
       ))}
+      
+      {/* Phase 3.49: ReceiptViewer for claimed gifts */}
+      <ReceiptViewer
+        visible={showReceipt}
+        onClose={() => setShowReceipt(false)}
+        receipt={lastReceipt}
+        title={lastReceipt?.alreadyClaimed ? 'Already Claimed' : 'Gift Received'}
+      />
     </View>
   );
 }

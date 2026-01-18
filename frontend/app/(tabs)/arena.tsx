@@ -350,31 +350,29 @@ export default function ArenaScreen() {
         {/* Phase 3.59: Battle Presentation Modal */}
         <BattlePresentationModal
           visible={showBattlePresentation}
-          victory={battleResult?.victory ?? false}
-          userPower={battleResult?.user_power ?? user?.total_power ?? 50000}
-          enemyPower={battleResult?.opponent_power ?? selectedOpponent?.power ?? 50000}
-          stageName={`PvP vs ${selectedOpponent?.username ?? 'Opponent'}`}
+          data={battleResult ? {
+            victory: battleResult.victory,
+            playerPower: battleResult.user_power ?? user?.total_power ?? 50000,
+            enemyPower: battleResult.opponent_power ?? selectedOpponent?.power ?? 50000,
+            stageName: `PvP vs ${selectedOpponent?.username ?? 'Opponent'}`,
+            rewards: battleResult.rewards,
+          } : null}
           onComplete={handleBattleComplete}
+          mode="arena"
         />
 
         {/* Phase 3.59: Victory/Defeat Result Modal */}
         <VictoryDefeatModal
           visible={showVictoryDefeat}
-          victory={battleResult?.victory ?? false}
-          rewards={battleResult?.rewards ? {
-            gold: battleResult.rewards.gold ?? 0,
-            pvp_medals: battleResult.rewards.pvp_medals ?? 0,
-          } : undefined}
-          powerGap={battleResult ? battleResult.user_power - battleResult.opponent_power : 0}
-          recommendations={battleResult?.victory ? [] : ['Upgrade your heroes', 'Try a different opponent']}
-          onClose={handleResultClose}
-          context="pvp"
-          extraInfo={{
-            rating_change: battleResult?.rating_change,
-            new_rating: battleResult?.new_rating,
-            win_streak: battleResult?.win_streak,
-            opponent: selectedOpponent?.username,
-          }}
+          data={battleResult ? {
+            victory: battleResult.victory,
+            stageName: `vs ${battleResult.opponent_username ?? selectedOpponent?.username ?? 'Opponent'}`,
+            rewards: battleResult.rewards,
+            playerPower: battleResult.user_power,
+            enemyPower: battleResult.opponent_power,
+          } : null}
+          onContinue={handleResultClose}
+          mode="arena"
         />
       </SafeAreaView>
     </LinearGradient>

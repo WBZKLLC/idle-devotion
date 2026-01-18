@@ -403,6 +403,8 @@ All guards wired to `npm run guard`:
 - `docs/STAR_AFFINITY_MATRIX.md` - Stars vs affinity value comparison, acquisition rates
 - `docs/VIP_SYSTEM.md` - Expanded VIP benefits, implementation status
 - `docs/REVENUECAT_SKUS.md` - IAP SKU matrix, webhook handling, telemetry
+- `docs/POWER_CURVE_AUDIT.md` - Complete numerical power simulation with PPI table
+- `docs/pvp-monetization-ethics.md` - Non-negotiable PvP ethics constraints
 
 ---
 
@@ -439,6 +441,48 @@ All guards wired to `npm run guard`:
 
 ---
 
+## Phase 3.48 — Economy Audit Pack (Power + VIP UI + PvP Ethics)
+
+**Status:** ✅ CLOSED
+
+**Goal:** Complete numerical power simulation, implement VIP comparison UI, and establish PvP monetization ethics.
+
+### Deliverables
+
+#### 1. Power Simulation (Numerical Audit)
+- [x] `POWER_CURVE_AUDIT.md` - Complete PPI table with all star×affinity combinations
+- [x] Absolute stat bands for UR+, SSR, SR heroes
+- [x] Campaign difficulty curve recommendations
+- [x] Spike analysis with balance flags
+
+#### 2. VIP Comparison UI
+- [x] `/vip` route (`app/vip.tsx`)
+- [x] VIP summary card with current level and progress
+- [x] Tier comparison table (16 tiers)
+- [x] Details sheet on tier tap
+- [x] Ethics guardrails banner
+- [x] Telemetry events: `VIP_VIEWED`, `VIP_TIER_SELECTED`, `VIP_BENEFITS_SHEET_OPENED`, `VIP_PROGRESS_VIEWED`
+
+#### 3. PvP Monetization Ethics
+- [x] `docs/pvp-monetization-ethics.md` - Non-negotiable constraints
+- [x] `guard-pvp-ethics.mjs` - Enforces ethical patterns
+- [x] Rules: No VIP stat buffs, no paid-only heroes, no matchmaking manipulation
+- [x] Transparent probabilities (pity system, visible odds)
+- [x] Spend protection UX guidelines
+
+### Exit Checks
+- [x] VIP screen loads with tier ladder
+- [x] Ethics doc created and linked
+- [x] `guard:pvp-ethics` added to npm run guard
+- [x] All guards passing
+
+### Notes
+- PPI range: 1.000 (1★ T0) to 2.925 (6★ T5)
+- VIP benefits affect convenience/cosmetics only, never combat stats
+- 2.925× power spread requires PvP normalization if competitive mode added
+
+---
+
 ## Guard Suite Summary (Updated)
 
 All guards wired to `npm run guard`:
@@ -454,16 +498,17 @@ All guards wired to `npm run guard`:
 - `guard:phase-3-30` - Store system
 - `guard:phase-3-31` - Daily/Idle Loop system
 - `guard:phase-3-32` through `guard:phase-3-46` - Advanced systems
-- **`guard:power-curve`** - Power curve enforcement (NEW)
-- **`guard:star-table`** - Star table enforcement (NEW)
-- **`guard:sku-integrity`** - SKU integrity enforcement (NEW)
-- **`guard:vip-benefits`** - VIP benefits enforcement (NEW)
+- `guard:power-curve` - Power curve enforcement
+- `guard:star-table` - Star table enforcement
+- `guard:sku-integrity` - SKU integrity enforcement
+- `guard:vip-benefits` - VIP benefits enforcement
+- **`guard:pvp-ethics`** - PvP monetization ethics enforcement (NEW)
 
 ---
 
 ## Upcoming Phases
 
-### Phase 3.48 — Daily Login System (Planned)
+### Phase 3.49 — Daily Login System (Planned)
 - Daily login claim with canonical receipt
 - Streak tracking
 - Monthly reward calendar

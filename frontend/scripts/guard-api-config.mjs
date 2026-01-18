@@ -56,6 +56,19 @@ if (!configContent.includes('EXPO_PUBLIC_BACKEND_URL')) {
 }
 pass('Config uses EXPO_PUBLIC_BACKEND_URL');
 
+// Check 2.5: Legacy lib/api.ts uses correct env var
+console.log('\nCheck 2.5: Legacy lib/api.ts uses EXPO_PUBLIC_BACKEND_URL...');
+const legacyApiPath = path.resolve(__dirname, '../lib/api.ts');
+if (fs.existsSync(legacyApiPath)) {
+  const legacyContent = fs.readFileSync(legacyApiPath, 'utf8');
+  if (legacyContent.includes('axios.create') && !legacyContent.includes('EXPO_PUBLIC_BACKEND_URL')) {
+    fail('lib/api.ts has axios.create but does not use EXPO_PUBLIC_BACKEND_URL');
+  }
+  pass('Legacy lib/api.ts uses EXPO_PUBLIC_BACKEND_URL');
+} else {
+  pass('No legacy lib/api.ts (OK)');
+}
+
 // Check 3: No hardcoded API_BASE in lib/api files (except config)
 console.log('\nCheck 3: No hardcoded API_BASE in lib/api/ files...');
 const apiFiles = glob.sync(path.join(LIB_API_PATH, '*.ts'));
@@ -80,6 +93,11 @@ for (const file of apiFiles) {
   // Check for relative API calls (fetch('/api/... or fetch("/api/...)
   if (/fetch\s*\(\s*['"]\/api\//.test(content)) {
     violations.push(`${filename}: relative fetch('/api/...) call (should use apiUrl())`);
+  }
+  
+  // Check for inline axios.create with hardcoded baseURL
+  if (/axios\.create\s*\(\s*\{[^}]*baseURL\s*:\s*['"]/.test(content)) {
+    violations.push(`${filename}: axios.create with hardcoded baseURL`);
   }
 }
 

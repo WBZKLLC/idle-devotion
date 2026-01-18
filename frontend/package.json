@@ -56,7 +56,10 @@
     "guard:cinematics-codec": "node scripts/guard-cinematics-codec.mjs",
     "guard:sourceid-strength": "node scripts/guard-sourceid-strength.mjs",
     "guard:phase-3-50-battle": "node scripts/guard-phase-3-50-battle-presentation.mjs",
-    "guard:ui-time-format": "node scripts/guard-ui-time-format.mjs"
+    "guard:ui-time-format": "node scripts/guard-ui-time-format.mjs",
+    "guard:phase-3-51-pve-clarity": "node scripts/guard-phase-3-51-pve-clarity.mjs",
+    "guard:phase-3-52-pve-celebration": "node scripts/guard-phase-3-52-pve-celebration.mjs",
+    "guard:phase-3-53-pvp-review": "node scripts/guard-phase-3-53-pvp-review.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",

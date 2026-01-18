@@ -81,6 +81,7 @@ export default function ArenaScreen() {
   const hydrated = useHydration();
   
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [battling, setBattling] = useState(false);
   const [record, setRecord] = useState<ArenaRecord | null>(null);
   const [opponents, setOpponents] = useState<ArenaOpponent[]>([]);
@@ -89,6 +90,15 @@ export default function ArenaScreen() {
   const [battleResult, setBattleResult] = useState<any>(null);
   // Phase 3.59: Removed showResultModal - using VictoryDefeatModal instead
   const [activeTab, setActiveTab] = useState<'battle' | 'leaderboard'>('battle');
+  
+  // Phase 4.2: Season state
+  const [season, setSeason] = useState<PvpSeasonResponse | null>(null);
+  const [rewardsPreview, setRewardsPreview] = useState<PvpRewardsPreviewResponse | null>(null);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const [claimingDaily, setClaimingDaily] = useState(false);
+  const [claimingSeason, setClaimingSeason] = useState(false);
+  const [lastReceipt, setLastReceipt] = useState<PvpClaimReceipt | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
 

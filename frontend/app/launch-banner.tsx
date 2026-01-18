@@ -391,6 +391,7 @@ const styles = StyleSheet.create({
   heroCard: { backgroundColor: '#1a0500', borderRadius: 18, padding: 20, alignItems: 'center' },
   rarityBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#FFD700', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   rarityText: { fontSize: 12, fontWeight: 'bold', color: '#1a0500' },
+  heroImage: { width: 100, height: 100, borderRadius: 50, marginBottom: 12, borderWidth: 3, borderColor: '#FFD700' },
   heroEmoji: { fontSize: 60, marginBottom: 12 },
   heroName: { fontSize: 22, fontWeight: 'bold', color: '#FFD700', textAlign: 'center', marginBottom: 4 },
   heroElement: { fontSize: 14, color: '#FF6B00', marginBottom: 16 },

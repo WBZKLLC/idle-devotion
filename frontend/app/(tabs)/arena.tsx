@@ -21,22 +21,31 @@ import COLORS from '../../theme/colors';
 import { toast } from '../../components/ui/Toast';
 // Phase 3.22.3: Canonical button
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
+// Phase 3.59: Battle presentation modals
+import { BattlePresentationModal, VictoryDefeatModal } from '../../components/battle';
+// Phase 3.49: Canonical sourceId generation
+import { generateSourceId } from '../../lib/ids/sourceId';
+// Phase 3.59: Telemetry
+import { track, Events } from '../../lib/telemetry/events';
 
 // Centralized API wrappers (no raw axios in screens)
 import {
   getArenaRecord,
   getArenaOpponents,
-  startArenaBattle,
+  executePvPMatch,
   getLeaderboard,
 } from '../../lib/api';
 
 // API_BASE removed - using centralized lib/api.ts wrappers
 
+// Phase 3.59: Updated interface to match backend
 interface ArenaOpponent {
+  id: string;
   username: string;
   power: number;
   rank: number;
   rating: number;
+  isNpc: boolean;
   team_preview: { hero_name: string; rarity: string }[];
 }
 

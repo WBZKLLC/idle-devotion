@@ -142,6 +142,18 @@ export const Events = {
   VIP_BENEFITS_SHEET_OPENED: 'vip_benefits_sheet_opened',
   VIP_PROGRESS_VIEWED: 'vip_progress_viewed',
   
+  // Phase 3.50: Battle Presentation telemetry
+  PVE_BATTLE_PRESENTATION_VIEWED: 'pve_battle_presentation_viewed',
+  PVE_BATTLE_PRESENTATION_SKIPPED: 'pve_battle_presentation_skipped',
+  PVE_BATTLE_PRESENTATION_COMPLETED: 'pve_battle_presentation_completed',
+  PVE_BATTLE_RESULT_SHOWN: 'pve_battle_result_shown',
+  PVE_VICTORY_VIEWED: 'pve_victory_viewed',
+  PVE_DEFEAT_VIEWED: 'pve_defeat_viewed',
+  PVE_DEFEAT_RECOMMENDATION_CLICKED: 'pve_defeat_recommendation_clicked',
+  
+  // Phase 3.50: UI bug tracking (DEV-only)
+  UI_TIMER_INVALID_SUPPRESSED: 'ui_timer_invalid_suppressed',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

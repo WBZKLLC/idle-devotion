@@ -68,7 +68,7 @@ class ComprehensiveGachaTest:
         print("\n1️⃣ Testing User Registration...")
         register_data = {"username": self.username, "password": "testpassword123"}
         response = self.make_request("POST", "/user/register", json=register_data)
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             result = response.json()
             self.user_data = result.get('user', result)  # Handle both formats
             self.auth_token = result.get('access_token')  # Store token for authenticated requests
@@ -83,7 +83,7 @@ class ComprehensiveGachaTest:
         # 2. Get All Heroes
         print("\n2️⃣ Testing Hero Pool...")
         response = self.make_request("GET", "/heroes")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             heroes = response.json()
             self.log_result("Get Heroes Pool", True, f"Retrieved {len(heroes)} heroes")
         else:
@@ -93,7 +93,7 @@ class ComprehensiveGachaTest:
         # 3. Daily Login
         print("\n3️⃣ Testing Daily Login...")
         response = self.make_request("POST", f"/user/{self.username}/login")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             rewards = response.json()
             self.log_result("Daily Login", True, f"Received {rewards['coins']} coins, {rewards['gold']} gold")
         else:
@@ -105,24 +105,24 @@ class ComprehensiveGachaTest:
         # Single pull with coins (do this FIRST before gems are depleted)
         pull_data = {"pull_type": "single", "currency_type": "coins"}
         response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             result = response.json()
             self.log_result("Single Pull (Coins)", True, 
                           f"Pulled {len(result['heroes'])} hero")
-        elif response and response.status_code == 400:
+        elif response is not None and response.status_code == 400:
             self.log_result("Single Pull (Coins)", True, "Insufficient coins (expected)")
         else:
-            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response else 'No response'}")
+            self.log_result("Single Pull (Coins)", False, f"Failed: {response.text if response is not None else 'No response'}")
         
         # Single pull with gems (uses crystals currency)
         pull_data = {"pull_type": "single", "currency_type": "gems"}
         response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             result = response.json()
             self.log_result("Single Pull (Gems)", True, 
                           f"Pulled {len(result['heroes'])} hero, pity: {result['new_pity_counter']}")
         else:
-            self.log_result("Single Pull (Gems)", False, f"Failed: {response.text if response else 'No response'}")
+            self.log_result("Single Pull (Gems)", False, f"Failed: {response.text if response is not None else 'No response'}")
         
         # Multi pull with gems (costs 900 crystals, but new users only get 300)
         # After single pulls, users won't have enough for multi-pull
@@ -144,7 +144,7 @@ class ComprehensiveGachaTest:
         # 5. Get User Heroes
         print("\n5️⃣ Testing Hero Collection...")
         response = self.make_request("GET", f"/user/{self.username}/heroes")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             self.user_heroes = response.json()
             self.log_result("Get User Heroes", True, f"User has {len(self.user_heroes)} heroes")
         else:
@@ -155,7 +155,7 @@ class ComprehensiveGachaTest:
         
         # Create team
         response = self.make_request("POST", f"/team/create?username={self.username}&team_name=MainTeam")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             team = response.json()
             self.log_result("Create Team", True, f"Created team: {team['name']}")
             team_id = team['id']
@@ -165,7 +165,7 @@ class ComprehensiveGachaTest:
         
         # Get teams
         response = self.make_request("GET", f"/team/{self.username}")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             self.teams = response.json()
             self.log_result("Get Teams", True, f"User has {len(self.teams)} teams")
         else:
@@ -175,7 +175,7 @@ class ComprehensiveGachaTest:
         if self.user_heroes and len(self.user_heroes) > 0:
             hero_ids = [hero['id'] for hero in self.user_heroes[:6]]  # Max 6 heroes
             response = self.make_request("PUT", f"/team/{team_id}/heroes", json=hero_ids)
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 self.log_result("Update Team Heroes", True, f"Added {len(hero_ids)} heroes to team")
             else:
                 self.log_result("Update Team Heroes", False, "Failed")
@@ -192,38 +192,38 @@ class ComprehensiveGachaTest:
             
             if hero_to_upgrade:
                 response = self.make_request("POST", f"/user/{self.username}/heroes/{hero_to_upgrade['id']}/upgrade")
-                if response and response.status_code == 200:
+                if response is not None and response.status_code == 200:
                     self.log_result("Hero Upgrade", True, "Hero upgraded successfully")
                 else:
-                    self.log_result("Hero Upgrade", False, f"Failed: {response.text if response else 'No response'}")
+                    self.log_result("Hero Upgrade", False, f"Failed: {response.text if response is not None else 'No response'}")
             else:
                 self.log_result("Hero Upgrade", True, "No heroes with sufficient duplicates (expected)")
         
         # 8. Idle Rewards
         print("\n8️⃣ Testing Idle Rewards...")
         response = self.make_request("POST", f"/idle/claim?username={self.username}", auth=True)
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             rewards = response.json()
             gold_earned = rewards.get('items', {}).get('gold', rewards.get('gold_earned', 0))
             self.log_result("Idle Rewards", True, f"Claimed {gold_earned} gold")
-        elif response and response.status_code == 400:
+        elif response is not None and response.status_code == 400:
             # Might be "already claimed" or "no rewards to claim" which is valid
             self.log_result("Idle Rewards", True, "No idle rewards to claim (expected for new account)")
         else:
-            self.log_result("Idle Rewards", False, f"Failed: {response.text if response else 'No response'}")
+            self.log_result("Idle Rewards", False, f"Failed: {response.text if response is not None else 'No response'}")
         
         # 9. Test insufficient funds
         print("\n9️⃣ Testing Error Handling...")
         # Try to pull when out of gems - should get 400
         pull_data = {"pull_type": "multi", "currency_type": "gems"}
         response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-        if response and response.status_code == 400:
+        if response is not None and response.status_code == 400:
             self.log_result("Insufficient Funds Error", True, "Correctly rejected pull with insufficient gems")
-        elif response and response.status_code == 200:
+        elif response is not None and response.status_code == 200:
             # User still has gems, try again
             for _ in range(5):
                 response = self.make_request("POST", f"/gacha/pull?username={self.username}", json=pull_data)
-                if response and response.status_code == 400:
+                if response is not None and response.status_code == 400:
                     self.log_result("Insufficient Funds Error", True, "Correctly rejected pull with insufficient gems")
                     break
             else:
@@ -234,7 +234,7 @@ class ComprehensiveGachaTest:
         # 10. Final user state
         print("\n🔟 Final User State...")
         response = self.make_request("GET", f"/user/{self.username}")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             final_user = response.json()
             crystals = final_user.get('crystals', final_user.get('gems', 0))
             self.log_result("Final User State", True, 

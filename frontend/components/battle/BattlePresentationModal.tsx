@@ -85,9 +85,16 @@ type Props = {
 
 export function BattlePresentationModal({ visible, data, onComplete, mode = 'campaign' }: Props) {
   const [currentTurn, setCurrentTurn] = useState(0);
-  const [phase, setPhase] = useState<'intro' | 'battle' | 'climax' | 'result'>('intro');
+  const [phase, setPhase] = useState<'intro' | 'battle' | 'cutin' | 'climax' | 'result'>('intro');
   const [reduceMotion, setReduceMotion] = useState(false);
   const [skipped, setSkipped] = useState(false);
+  
+  // Phase 3.54: Cut-in state
+  const [showCutIn, setShowCutIn] = useState(false);
+  const [currentCutInIndex, setCurrentCutInIndex] = useState(0);
+  
+  // Phase 3.55: Combat tags (deterministic based on power ratio)
+  const [combatTags, setCombatTags] = useState<string[]>([]);
   
   // Total turns for presentation (deterministic based on victory)
   const totalTurns = data?.victory ? 4 : 3;

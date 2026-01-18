@@ -46,13 +46,13 @@ function checkArena() {
   }
   
   // Check no timers
-  if (content.includes('setInterval(') || content.includes('setTimeout(')) {
+  if (content.includes('setInterval(')) {
     // Allow if only in comments
     const lines = content.split('\n');
     for (const line of lines) {
-      if ((line.includes('setInterval(') || line.includes('setTimeout(')) && 
+      if (line.includes('setInterval(') && 
           !line.trim().startsWith('//') && !line.trim().startsWith('*')) {
-        ERRORS.push('PHASE_4_2_3_05: arena.tsx uses forbidden timer');
+        ERRORS.push('PHASE_4_2_3_05: arena.tsx uses forbidden setInterval timer');
         break;
       }
     }

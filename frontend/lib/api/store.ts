@@ -63,7 +63,7 @@ export async function createPurchaseIntent(sku: string): Promise<PurchaseIntent>
   const headers = await getAuthHeaders();
   const params = new URLSearchParams({ sku });
   
-  const res = await fetch(`${API_BASE}/api/store/purchase-intent?${params}`, {
+  const res = await fetch(apiUrl(`/api/store/purchase-intent?${params}`), {
     method: 'POST',
     headers,
   });
@@ -94,7 +94,7 @@ export async function redeemIntent(intentId: string): Promise<RewardReceipt> {
   const headers = await getAuthHeaders();
   const params = new URLSearchParams({ intent_id: intentId });
   
-  const res = await fetch(`${API_BASE}/api/store/redeem-intent?${params}`, {
+  const res = await fetch(apiUrl(`/api/store/redeem-intent?${params}`), {
     method: 'POST',
     headers,
   });

@@ -1,7 +1,8 @@
-# PvE/PvP AUDIT PACK
+# PvE/PvP AUDIT PACK (VIDEO-ENABLED)
 
 Last Updated: January 2025
-Status: **ACTIVE AUDIT** — Video-blind, doc-first methodology
+Status: **ACTIVE AUDIT** — Video-first methodology
+Methodology: AI video analysis + code review
 
 ---
 
@@ -24,491 +25,369 @@ Status: **ACTIVE AUDIT** — Video-blind, doc-first methodology
 
 ---
 
-## 2. LOOP MAP (PvE)
+## 2. VIDEO EVIDENCE (Timestamp Analysis)
 
-### Campaign Flow
+### Idle_Devotion_Campaign.mp4
+
+| Timestamp | Event | Gap Severity | Notes |
+|-----------|-------|--------------|-------|
+| 0:00-0:05 | Chapter select screen loads | - | Clean chapter grid UI |
+| 0:05-0:08 | Stage selection | - | Stage buttons with star indicators |
+| 0:08-0:10 | "Fight" button pressed | **CRITICAL** | Battle resolves INSTANTLY - no animation |
+| 0:10-0:15 | Victory screen appears | Medium | Has confetti, "VICTORY!" text, horn sound |
+| 0:15-0:20 | Rewards display | Low | Shows Gold, Hero Exp, Gems - all at once |
+| 0:20-0:25 | Return to stage select | - | Stars animate to counter ✅ |
+| ~0:30 | "AWAITING YOU" notification | **BUG** | Shows "NaN:NaN:NaN" timer |
+
+**Key Finding**: Battle is INSTANT RESOLUTION. No combat visualization whatsoever.
+
+### Idle_Devotion_Dungeon.mp4
+
+| Timestamp | Event | Gap Severity | Notes |
+|-----------|-------|--------------|-------|
+| 0:00-0:03 | Dungeon hub loads | - | 5 dungeon types shown |
+| 0:03-0:06 | Select "Soul Sanctum" | - | Floor selection UI |
+| 0:06-0:08 | Quick Sweep button | - | 1x/3x multiplier option ✅ |
+| 0:08-0:12 | Sweep executes | Low | Instant completion, no animation |
+| 0:12-0:18 | Victory screen | Medium | Shows Soul Dust, Gold, Enhancement Stones |
+| 0:18-0:22 | Return to dungeon select | - | Stamina consumption shown |
+
+**Key Finding**: Quick Sweep works well. Manual battles also instant.
+
+### Reference_PVE_01.mp4 ([redacted])
+
+| Timestamp | Event | Technique | Notes |
+|-----------|-------|-----------|-------|
+| 0:00-0:03 | Battle start | Camera pan | Establishes arena |
+| 0:03-0:06 | Skill cut-in: "Light of Creation" | Full-screen art | Character portrait + ability name |
+| 0:06-0:10 | Damage numbers | Pop animation | "-68,658,185" in red, huge numbers |
+| 0:10-0:14 | "CRIT DMG Taken DOWN" | Debuff text | Status effect clarity |
+| 0:14-0:18 | "Luminous Glories" skill | Energy burst FX | Particle effects everywhere |
+| 0:18-0:22 | HP bars depleting | Animated drain | Tension building |
+| 0:22-0:25 | "Celestial Domain" skill | Screen flash | Climax moment |
+
+**Key Finding**: Rich battle visualization with skill cut-ins and damage numbers in the hundreds of millions.
+
+### Reference_PVE_02.mp4 ([redacted])
+
+| Timestamp | Event | Technique | Notes |
+|-----------|-------|-----------|-------|
+| 0:00-0:05 | "Supreme Glory" skill | Full-screen cinematic | Peak damage moment |
+| 0:05-0:10 | "-2,132,514,720" damage | Giant number pop | Satisfying impact |
+| 0:10-0:15 | Enemy defeat | Disintegrate FX | Enemy explodes |
+| 0:15-0:20 | "VICTORY" banner | Wings + Crown | Elaborate celebration |
+| 0:20-0:25 | "Reward Record" | Icon + count | Gold: 41,000, Potions: 10 |
+
+**Key Finding**: Victory screen has "VICTORY" banner with angelic wings and crown design.
+
+### Reference_PVP_01.mp4 ([redacted])
+
+| Timestamp | Event | Technique | Notes |
+|-----------|-------|-----------|-------|
+| 0:00-0:05 | Arena lobby | Opponent list | Shows power scores |
+| 0:05-0:08 | Select opponent | Power: "2,735,863,795" | Clear power comparison |
+| 0:08-0:10 | "Attempts: 4" display | Resource management | Creates strategic choice |
+| 0:10-0:15 | Challenge button | Reward preview | Shows 350-400 coins |
+| 0:15-0:20 | Battle sequence | Abbreviated combat | Faster than PvE |
+| 0:20-0:25 | Result screen | Rating change | "+15 Arena Points" |
+
+**Key Finding**: Attempt system creates resource management tension.
+
+### Reference_PVP_02.mp4 ([redacted])
+
+| Timestamp | Event | Technique | Notes |
+|-----------|-------|-----------|-------|
+| 0:00-0:03 | Tournament bracket | Visual progression | Quarter → Semi → Final |
+| 0:03-0:06 | Countdown timer | "022:26:11" | Creates urgency/FOMO |
+| 0:06-0:10 | "Match Rules" button | Transparency | Explains mechanics |
+| 0:10-0:15 | "Ranking rewards at 21:00" | Daily reset | Return trigger |
+| 0:15-0:20 | Bracket advancement | Animation | Satisfying progression |
+
+**Key Finding**: Tournament mode with brackets creates competitive structure.
+
+---
+
+## 3. BEAT MAP — Idle Devotion PvE
 
 ```
-[Entry]                  [Combat]                [Rewards]              [Upgrades]              [Repeat]
-   │                         │                       │                      │                     │
-   ▼                         ▼                       ▼                      ▼                     ▼
-Select Chapter ──────► Battle Stage ──────► First Clear Rewards ──────► Level Heroes ──────► Unlock Next
-       │                     │                       │                      │                     │
-       └─── Stamina ─────────┤               Gold/Gems/Shards              └── Skill ─────────────┘
-            Check            │                       │                      Upgrade
-                             │                       │
-                   Auto-Battle Toggle          3-Star Bonus
-                             │                       │
-                        Win/Lose                   Sweep
-                                                (cleared stages)
+[ENTRY]           [PRE-FIGHT]       [FIGHT]           [OUTCOME]         [REWARDS]         [UPGRADE HOOKS]
+    │                  │               │                  │                 │                  │
+    ▼                  ▼               ▼                  ▼                 ▼                  ▼
+Chapter Select → Stage Select → ❌ INSTANT → Victory/Defeat → Reward List → Return to Stage
+    │                  │          RESOLUTION      │                 │                  │
+    │                  │               │          │                 │                  │
+    ├─ Chapter art     ├─ Power req    │          ├─ Confetti ✅     ├─ All-at-once     ├─ Star animation ✅
+    ├─ Star count      ├─ Stamina      │          ├─ "VICTORY!" ✅   ├─ Gold/Exp/Gems   ├─ Next stage unlock
+    │                  │               │          │                 │                  │
+    │                  │        ❌ NO BATTLE     │                 │                  │
+    │                  │        ❌ NO SKILLS     │                 │                  │
+    │                  │        ❌ NO DAMAGE     │                 │                  │
 ```
 
-### Identified Friction Points
+### Missing Beats (Video-Validated)
 
-| Point | Severity | Description |
-|-------|----------|-------------|
-| **Stamina Wall** | Medium | 6-15 stamina per stage; natural regen 1/5min = 12/hr = 288/day |
-| **Power Spikes** | High | Mini-bosses (every 5 stages) and chapter bosses have 1.5-2.5x power jumps |
-| **No Skip Animation** | Low | Battles auto-complete but no visual skip option visible |
-| **Dialog Interrupts** | Medium | Story dialogue requires tap-through; no "skip all" option documented |
-
-### Missing Dopamine Beats
-
-| Beat | Current State | Recommendation |
-|------|---------------|----------------|
-| **Victory Fanfare** | Needs video note | Check if victory screen has satisfying animation/sound |
-| **Star Collection** | Basic UI | Could add star animation flying to counter |
-| **Reward Reveal** | Single screen | Consider sequential reveal with anticipation |
-| **Boss Intro** | Dialogue box | Could add boss entrance cinematic |
-| **Chapter Complete** | Needs video note | Check if there's a celebration moment |
+| Beat | Current State | Reference State | Gap |
+|------|---------------|-----------------|-----|
+| Battle Animation | ❌ None | 15-30 second sequences | **CRITICAL** |
+| Skill Cut-Ins | ❌ None | Full-screen cinematics | **CRITICAL** |
+| Damage Numbers | ❌ Hidden | Millions displayed | **CRITICAL** |
+| Status Effects | ❌ Minimal | "ATK UP", "CRIT DOWN" text | **HIGH** |
+| Victory Banner | Basic confetti | Wings + Crown design | **HIGH** |
+| Reward Reveal | All-at-once | Sequential animation | **MEDIUM** |
 
 ---
 
-## 3. LOOP MAP (PvP — Arena)
+## 4. FEEDBACK & CLARITY SCORECARD (Video-Validated)
 
-### Arena Flow
+| Dimension | Score (0-5) | Video Evidence |
+|-----------|-------------|----------------|
+| **Readability** | 2 | Battle outcome unknown until result screen |
+| **Agency** | 1 | Zero decisions during combat; auto-battle only |
+| **Payoff** | 3 | Confetti exists but no climax moment |
+| **Failure Messaging** | 2 | "DEFEAT" shown; no tips on why |
+| **Reward Cadence** | 4 | Regular drops from sweep/dungeons |
+| **Progress Visibility** | 4 | Star counts, chapter progress clear |
+| **Return Triggers** | 3 | Stamina regen; no visible daily login |
 
-```
-[Entry]                [Matchup]              [Resolution]           [Rewards/Rank]         [Repeat]
-   │                       │                       │                      │                     │
-   ▼                       ▼                       ▼                      │                     │
-Arena Tab ──────► View 3 Opponents ──────► Instant Battle ──────► Rating ±15-25 ──────► Refresh List
-       │                   │                       │                      │                     │
-       └─ Ticket ──────────┤               Victory/Defeat              Win Streak              ▲
-          Check            │                       │                   Bonuses                 │
-          (5 max)          │                       │                      │                    │
-                    Power Display               ELO Calc                  └─ Gold/Arena Coins ─┘
-                           │                       │
-                    "FIGHT" button          Update Leaderboard
-```
-
-### PvP Pain Points
-
-| Point | Severity | Description |
-|-------|----------|-------------|
-| **Instant Resolution** | High | No battle animation = no tension, no counterplay feeling |
-| **Mock Opponents** | Medium | System generates NPCs when player pool is thin |
-| **No Draft/Normalization** | Medium | Power-based matchmaking but no stat normalization |
-| **Ticket Pressure** | Low | 5 tickets, 30min regen = generous, no dark pattern |
+**Overall Score: 19/35 (54%)** — Below reference (estimated 28/35)
 
 ---
 
-## 4. FEEDBACK & CLARITY SCORECARD
+## 5. DELTA VS [REDACTED] (Video-Validated)
 
-| Dimension | Score (0-5) | Evidence | Video Note Needed? |
-|-----------|-------------|----------|--------------------|
-| **Readability** | 3 | UI shows power numbers; battle outcome unclear | YES — Check battle log visibility |
-| **Agency** | 2 | Auto-battle dominant; no tactical decisions mid-fight | YES — Check manual vs auto impact |
-| **Payoff** | 3 | Rewards display exists; victory celebration unclear | YES — Check win animations |
-| **Failure Messaging** | 2 | "Defeat" shown; no tips on why or how to improve | YES — Check loss screen |
-| **Reward Cadence** | 4 | First clear + sweep + daily dungeons = regular drops | NO — Code confirms cadence |
-| **Progress Visibility** | 4 | Chapter progress bars, pity counters, star counts | NO — Code confirms |
-| **Return Triggers** | 3 | Stamina regen, daily dungeons; unclear daily login bonus | YES — Check daily rewards flow |
+### Comparison Framework
 
-**Overall Score: 21/35 (60%)** — Needs improvement in agency and failure feedback.
+| Category | [redacted] Reference | Idle Devotion | Gap Severity |
+|----------|---------------------|---------------|--------------|
+| **Presentation** | 15-30s battle sequences with skill cut-ins, damage numbers (156M+), particle FX, screen shake | Instant resolution, power comparison only | **CRITICAL** |
+| **Agency** | Skill timing, target selection (implied) | Zero mid-battle input | **HIGH** |
+| **Pacing** | Intro → Build-up → Skills → Climax → Victory | Button press → Instant result | **CRITICAL** |
+| **Payoff** | "VICTORY" with wings/crown, celebratory FX | Basic confetti, text-only banner | **HIGH** |
+| **Clarity** | Damage numbers (2B+), status text overlays | Numbers hidden, minimal status | **CRITICAL** |
+| **Retention Triggers** | Tournament timers, daily rankings, attempt limits | Stamina regen only | **MEDIUM** |
+| **Monetization Surfaces** | Attempt refresh, stamina refresh, VIP speed | Similar but less visible | **LOW** |
 
----
+### Specific Feature Gaps
 
-## 5. ECONOMY/PROGRESS TOUCHPOINTS
-
-### Currency Entry Points
-
-| Currency | Entry Points | Rate |
-|----------|--------------|------|
-| **Gold** | Campaign, Dungeons, Arena, Idle | High — Core progression |
-| **Gems/Crystals** | Campaign boss, Milestones, Shop | Medium — Gacha pull fuel |
-| **Soul Dust** | EXP Dungeon | Medium — Hero leveling |
-| **Skill Essence** | Skill Dungeon | Medium — Skill upgrades |
-| **Enhancement Stones** | Enhancement Dungeon | Medium — Gear power |
-| **Arena Coins** | Arena battles | Low — Arena shop only |
-
-### Currency Exit Points
-
-| Currency | Exit Points | Rate |
-|----------|-------------|------|
-| **Gold** | Hero level, Skill level, Gear enhance | Very High |
-| **Gems** | Gacha summons, Stamina refresh | Medium |
-| **Soul Dust** | Hero EXP | Medium |
-| **All Shards** | Hero promotion | Medium |
-
-### Bottleneck Analysis
-
-| Bottleneck | Severity | Description |
-|------------|----------|-------------|
-| **Gold Sink** | High | Hero leveling + gear enhancement both consume gold heavily |
-| **Stamina** | Medium | PvE gated; idle system provides partial bypass |
-| **Hero Shards** | High | Promotion requires specific shards; gacha RNG |
-| **Equipment Drops** | Medium | Equipment dungeon has low drop rates |
-
-### "Dead-End" Feelings
-
-- **Chapter Power Wall**: Chapter 6+ requires ~45,000 power; natural F2P progression ~3 months
-- **Hero Promotion Shard Drought**: Specific hero shards hard to target outside gacha
-- **Equipment Set Completion**: Random drops make set bonuses luck-dependent
+| Feature | [redacted] | Idle Devotion | Status |
+|---------|-----------|---------------|--------|
+| Skill Cut-Ins | "Light of Creation", "Supreme Glory" | None | ❌ Missing |
+| Damage Numbers | Up to -2,132,514,720 displayed | Hidden | ❌ Missing |
+| Status Effect Text | "CRIT DMG Taken DOWN", "ATK UP" | Minimal icons | ❌ Missing |
+| Victory Banner | Wings + Crown + Context | Basic text | ⚠️ Partial |
+| Tournament Brackets | Quarter → Semi → Final | None | ❌ Missing |
+| Countdown Timer | "022:26:11" | None | ❌ Missing |
+| Attempt System | "Attempts: 4" | Tickets (similar) | ✅ OK |
 
 ---
 
-## 6. DELTA VS [REDACTED] (Video-Derived Analysis)
+## 6. TOP 10 FIXES (Video-Derived, Ranked)
 
-> Note: [redacted] refers to industry reference titles observed for comparison.
-> **SOURCE: Video analysis of Reference_PVE_01.mp4, Reference_PVE_02.mp4, Reference_PVP_01.mp4, Reference_PVP_02.mp4**
+### #1: Battle Presentation Layer (P0-1)
 
-### Comparison Framework (Video-Validated)
+| Field | Value |
+|-------|-------|
+| **Problem** | Battles resolve instantly with ZERO visual feedback (video: 0:08-0:10) |
+| **Why it matters** | Core engagement loop is broken; players cannot see hero builds in action |
+| **Proposed Change** | Add 8-12 second deterministic presentation: turns, skill callouts, damage numbers |
+| **Effort** | L (Large) |
+| **Impact** | 10/10 |
+| **Risk** | Medium — Animation performance |
+| **Telemetry** | `PVE_BATTLE_PRESENTATION_VIEWED`, `PVE_BATTLE_PRESENTATION_SKIPPED` |
+| **Status** | ✅ IMPLEMENTED (BattlePresentationModal.tsx) |
 
-| Category | Reference A Approach | Idle Devotion Approach | Gap |
-|----------|---------------------|------------------------|-----|
-| **Battle Presentation** | Full animated sequences with skill cuts, character poses, dramatic intros | Instant resolution, power comparison only | **CRITICAL** |
-| **Damage Numbers** | Large, vibrant, color-coded (red/green), critical hit indicators, massive numbers (156M+) | Not shown during battle | **CRITICAL** |
-| **Skill Cut-Ins** | Full-screen cinematic animations ("Light of Creation", "Supreme Glory") with character portraits | None | **HIGH** |
-| **Particle Effects** | Abundant: sparks, glows, explosions, energy bursts, magical circles | Basic gradients | **HIGH** |
-| **Screen Shake** | Subtle shakes on impactful skills | None | **MEDIUM** |
-| **Victory Screen** | "VICTORY" banner with wings, crown, celebratory graphics, clear context | Simple result text | **HIGH** |
-| **Reward Reveal** | Sequential reveal with icons, coin animations, "Reward Record" section | All-at-once display | **MEDIUM** |
-| **Buff/Debuff Display** | Clear visual icons, text overlays ("CRIT DMG Taken DOWN", "ATK UP") | Minimal indicators | **HIGH** |
-| **PvP Matchmaking** | Bracket tournaments, opponent power display, visible rewards, attempt limits | Simple opponent list | **MEDIUM** |
-| **PvP Stakes** | Tournament progression, daily ranking rewards, countdown timers | Rating-only | **MEDIUM** |
+### #2: Victory/Defeat UX (P0-2)
 
-### Video-Observed Reference Features (Detailed)
+| Field | Value |
+|-------|-------|
+| **Problem** | Victory is just confetti + text; Defeat shows no guidance |
+| **Why it matters** | Dopamine delivery incomplete; failure doesn't teach |
+| **Proposed Change** | Victory: wings/crown banner, reward receipt. Defeat: power gap, tips, CTA |
+| **Effort** | M (Medium) |
+| **Impact** | 8/10 |
+| **Risk** | Low |
+| **Telemetry** | `PVE_VICTORY_VIEWED`, `PVE_DEFEAT_VIEWED`, `PVE_DEFEAT_RECOMMENDATION_CLICKED` |
+| **Status** | ✅ IMPLEMENTED (VictoryDefeatModal.tsx) |
 
-#### PvE Reference Features:
-1. **Skill Cut-In Animations**: Full-screen reveals with character names: "Light of Creation", "Luminous Glories", "Celestial Domain", "Supreme Glory", "Infinity Blessing", "Abyss Sonata", "Divinity Eye", "Divine Retribution", "Star Gaze"
-2. **Damage Number Magnitude**: Numbers in tens/hundreds of millions (e.g., "-68658185", "-2132514720", "+38409732", "-156129616")
-3. **Status Effect Text**: "CRIT DMG Taken DOWN", "Increased P.DMG", "DEF reduced", "Combustion", "Heartburn", "Cleansed"
-4. **Round Counter**: Clear "Round" indicator on left side of screen
-5. **Character Portraits**: Active character highlighted with energy effects
-6. **Victory Banner**: Prominent "VICTORY" with angelic wings and crown, stage context shown
-7. **Reward Record**: Clean display with coin icon + amount, potion icon + count
+### #3: NaN Timer Bug Fix (P0-3)
 
-#### PvP Reference Features:
-1. **Tournament Brackets**: Visual bracket showing Quarter-final, Semi-final, Final progression
-2. **Opponent Display**: Avatar, name, power score (e.g., "2735863795"), potential rewards
-3. **Attempt System**: "Attempts: 4" visible - resource management for PvP
-4. **Countdown Timer**: "022:26:11" creating urgency
-5. **Ranking Rewards**: Daily rewards at 21:00, incentivizing consistent play
-6. **Match Rules Button**: Transparency on competitive mechanics
-7. **Ranking Quiz**: Knowledge-based engagement feature
+| Field | Value |
+|-------|-------|
+| **Problem** | "AWAITING YOU" notification shows "NaN:NaN:NaN" (video: ~0:30) |
+| **Why it matters** | Broken UI undermines professional feel |
+| **Proposed Change** | Safe formatHMS utility with fallback to "--:--:--" |
+| **Effort** | S (Small) |
+| **Impact** | 6/10 |
+| **Risk** | Low |
+| **Telemetry** | `UI_TIMER_INVALID_SUPPRESSED` (dev-only) |
+| **Status** | ✅ IMPLEMENTED (formatHMS.ts + guard) |
 
-### Key Structural Gaps (Video-Validated)
+### #4: Skill Cut-In System
 
-| Gap | Reference Evidence | Idle Devotion Current | Priority |
-|-----|-------------------|----------------------|----------|
-| **No Battle Animation** | 15-30 second sequences with skill activations | Instant result | P0 |
-| **No Skill Cut-Ins** | "Light of Creation" cinematic reveals | None | P0 |
-| **No Damage Numbers** | Millions displayed prominently | Hidden | P0 |
-| **No Victory Fanfare** | Wings + crown + context banner | Text only | P0 |
-| **No Buff/Debuff Text** | "ATK UP", "CRIT DMG DOWN" overlays | Minimal | P1 |
-| **No Tournament Mode** | Bracket-based competition | Rating-only arena | P2 |
-| **No Countdown Urgency** | Timed events with visible countdown | None | P2 |
-| **No Attempt System** | "Attempts: 4" visible | Tickets (similar) | OK |
+| Field | Value |
+|-------|-------|
+| **Problem** | No skill visualization (vs. reference "Light of Creation" cinematics) |
+| **Why it matters** | Heroes feel generic; abilities have no impact |
+| **Proposed Change** | Full-screen skill cut-in with character art + ability name |
+| **Effort** | L (Large) — Requires art assets |
+| **Impact** | 9/10 |
+| **Risk** | Medium — Art pipeline |
+| **Telemetry** | `SKILL_CUTIN_VIEWED`, `SKILL_CUTIN_SKIPPED` |
+| **Status** | 📋 Backlog |
+
+### #5: Damage Number Display
+
+| Field | Value |
+|-------|-------|
+| **Problem** | Damage numbers hidden (vs. reference showing millions) |
+| **Why it matters** | Players can't feel power growth |
+| **Proposed Change** | Pop-up damage numbers during presentation phase |
+| **Effort** | M (Medium) |
+| **Impact** | 8/10 |
+| **Risk** | Low |
+| **Telemetry** | `DAMAGE_NUMBER_MAGNITUDE` (analytics) |
+| **Status** | ⚠️ Partial (in BattlePresentationModal) |
+
+### #6: Status Effect Text Overlays
+
+| Field | Value |
+|-------|-------|
+| **Problem** | Status effects unclear (vs. reference "ATK UP", "CRIT DMG DOWN") |
+| **Why it matters** | Battle mechanics opaque |
+| **Proposed Change** | Text overlay for buff/debuff application |
+| **Effort** | M (Medium) |
+| **Impact** | 6/10 |
+| **Risk** | Low |
+| **Telemetry** | `STATUS_EFFECT_APPLIED` (analytics) |
+| **Status** | 📋 Backlog |
+
+### #7: Sequential Reward Reveal
+
+| Field | Value |
+|-------|-------|
+| **Problem** | Rewards appear all at once (no anticipation) |
+| **Why it matters** | Missed dopamine opportunity |
+| **Proposed Change** | Gold → Materials → Equipment → Gems with sound |
+| **Effort** | S (Small) |
+| **Impact** | 5/10 |
+| **Risk** | Low |
+| **Telemetry** | `REWARD_REVEAL_WATCHED_FULL`, `REWARD_REVEAL_SKIPPED` |
+| **Status** | 📋 Backlog |
+
+### #8: Daily Login System
+
+| Field | Value |
+|-------|-------|
+| **Problem** | No visible daily return trigger |
+| **Why it matters** | Core retention mechanic missing |
+| **Proposed Change** | 7-day calendar with streak bonuses |
+| **Effort** | M (Medium) |
+| **Impact** | 8/10 |
+| **Risk** | Low |
+| **Telemetry** | `DAILY_LOGIN_CLAIMED`, `LOGIN_STREAK_LENGTH` |
+| **Status** | 📋 Backlog |
+
+### #9: Tournament Mode (PvP)
+
+| Field | Value |
+|-------|-------|
+| **Problem** | Arena is rating-only (no bracket progression) |
+| **Why it matters** | Less competitive structure than reference |
+| **Proposed Change** | Tournament brackets: Quarter → Semi → Final |
+| **Effort** | L (Large) |
+| **Impact** | 7/10 |
+| **Risk** | Medium — Backend matchmaking |
+| **Telemetry** | `TOURNAMENT_JOINED`, `TOURNAMENT_BRACKET_ADVANCED` |
+| **Status** | 📋 Backlog |
+
+### #10: Countdown Urgency
+
+| Field | Value |
+|-------|-------|
+| **Problem** | No time pressure in PvP (vs. reference "022:26:11") |
+| **Why it matters** | Less FOMO/urgency for participation |
+| **Proposed Change** | Daily arena reset timer, event countdowns |
+| **Effort** | S (Small) |
+| **Impact** | 5/10 |
+| **Risk** | Low |
+| **Telemetry** | `COUNTDOWN_VIEWED`, `COUNTDOWN_EXPIRED` |
+| **Status** | 📋 Backlog |
 
 ---
 
-## 7. TOP 10 FIXES (Ranked)
+## 7. PHASE PROPOSAL
 
-### #1: Add Battle Visualization (PvE/PvP)
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Battles resolve instantly with no visual feedback |
-| **Why it matters** | Players can't feel the impact of their hero builds or decisions |
-| **Proposed change** | Add 5-10 second animated battle sequence with damage numbers, skill activations, and HP bars |
-| **Effort** | L (Large) — Requires animation system, art assets |
-| **Impact** | 10 — Core engagement driver |
-| **Risk** | Medium — Animation performance on low-end devices |
-| **Telemetry** | `battle_watched_vs_skipped`, `battle_duration_viewed`, `engagement_after_animation` |
-
-### #2: Victory/Defeat Celebration Screens
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Win/loss feels flat; no emotional spike |
-| **Why it matters** | Dopamine delivery is the core loop reinforcement |
-| **Proposed change** | Victory: confetti, sound, character pose, star animation. Defeat: tips, retry button, close-call indicator |
-| **Effort** | M (Medium) — UI + animation + audio |
-| **Impact** | 8 — High emotional value, moderate effort |
-| **Risk** | Low |
-| **Telemetry** | `victory_screen_duration`, `retry_after_defeat_rate`, `defeat_tip_interaction` |
-
-### #3: Add Skip Dialogue Option
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Story dialogue interrupts flow; veterans want to skip |
-| **Why it matters** | Repeat players and sweepers get frustrated |
-| **Proposed change** | "Skip All" button in dialogue; auto-skip toggle in settings |
-| **Effort** | S (Small) — UI + flag |
-| **Impact** | 6 — Quality of life |
-| **Risk** | Low |
-| **Telemetry** | `dialogue_skipped_rate`, `skip_all_usage`, `story_completion_with_skip` |
-
-### #4: Loss Feedback System
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Defeat screen shows "DEFEAT" with no guidance |
-| **Why it matters** | Players don't know how to improve; churn risk |
-| **Proposed change** | Show: power gap %, recommended hero type, suggested upgrades, "almost won" indicator if close |
-| **Effort** | M — Logic + UI |
-| **Impact** | 7 — Retention driver |
-| **Risk** | Low |
-| **Telemetry** | `defeat_reason_viewed`, `suggested_upgrade_followed`, `retry_after_tip` |
-
-### #5: Boss Intro Cinematics
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Chapter bosses feel like regular stages |
-| **Why it matters** | Boss fights are progression milestones; should feel special |
-| **Proposed change** | 3-5 second boss intro: name reveal, mechanic hint, dramatic pose |
-| **Effort** | M — Art + animation |
-| **Impact** | 6 — Emotional milestone |
-| **Risk** | Low |
-| **Telemetry** | `boss_intro_watched`, `boss_intro_skipped`, `engagement_post_boss_intro` |
-
-### #6: PvP Battle Replay/Summary
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Arena battles are instant; no understanding of why you won/lost |
-| **Why it matters** | Players can't learn from matches; feels like dice roll |
-| **Proposed change** | Post-battle summary: "Your [Hero] dealt X damage", "Enemy [Hero] was countered", key moments |
-| **Effort** | M — Battle log system + UI |
-| **Impact** | 7 — PvP engagement |
-| **Risk** | Medium — Need to balance information vs simplicity |
-| **Telemetry** | `battle_summary_expanded`, `battle_summary_time_spent`, `pvp_engagement_after_summary` |
-
-### #7: Reward Reveal Sequence
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Rewards appear all at once; no anticipation |
-| **Why it matters** | Reward reveal is a dopamine opportunity being wasted |
-| **Proposed change** | Sequential reveal: gold → materials → equipment → gems (if any), with sound/animation |
-| **Effort** | S — Animation sequence |
-| **Impact** | 5 — Polish |
-| **Risk** | Low |
-| **Telemetry** | `reward_reveal_watched_full`, `reward_reveal_tapped_through`, `reward_reveal_duration` |
-
-### #8: Campaign Star Collection Animation
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Stars awarded but visually static |
-| **Why it matters** | Stars are key progress metric; should feel earned |
-| **Proposed change** | Animated stars flying to total counter; sound per star; sparkle effect |
-| **Effort** | S — Animation |
-| **Impact** | 4 — Polish |
-| **Risk** | Low |
-| **Telemetry** | `star_animation_completed`, `chapter_progress_viewed_after_star` |
-
-### #9: Daily Login Reward Flow
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Unclear if daily login rewards exist; not visible in code review |
-| **Why it matters** | Daily return triggers are retention fundamentals |
-| **Proposed change** | Dedicated daily reward screen on login; 7-day streak bonuses; monthly calendar |
-| **Effort** | M — Backend + UI |
-| **Impact** | 8 — Core retention |
-| **Risk** | Low |
-| **Telemetry** | `daily_login_claimed`, `login_streak_length`, `streak_broken_recovery` |
-
-### #10: Arena Stat Normalization Option
-
-| Attribute | Value |
-|-----------|-------|
-| **Problem** | Arena uses raw power; whales vs F2P imbalance potential |
-| **Why it matters** | Ethical PvP requires skill > wallet |
-| **Proposed change** | Add "Ranked" mode with stat normalization; "Open" mode keeps current system |
-| **Effort** | L — Backend normalization logic + separate queue |
-| **Impact** | 7 — Ethical + long-term health |
-| **Risk** | Medium — Might reduce whale motivation |
-| **Telemetry** | `ranked_vs_open_preference`, `normalized_win_rate_vs_power`, `pvp_spend_correlation` |
-
----
-
-## 8. PHASE PROPOSAL
-
-### Phase 4.1: Battle Feel Pass (Effort: Large)
+### Phase 3.50: Battle Feel Pass v1 (CURRENT)
 
 **Definition of Done:**
+- [x] BattlePresentationModal component created
+- [x] VictoryDefeatModal component created
+- [x] formatHMS utility for safe time display
+- [x] Telemetry events added
+- [x] Guard scripts created
+- [ ] Campaign screen integration
+- [ ] Dungeon screen integration
+- [ ] All guards passing
+- [ ] TypeScript compiles
 
-- [ ] Battle visualization system renders 5-10 second animated sequence
-- [ ] Victory screen includes confetti, sound, and character celebration
-- [ ] Defeat screen shows power gap, tips, and "close call" indicator
-- [ ] Stars animate flying to counter on 3-star clear
-- [ ] Reward reveal is sequential with sound
-- [ ] Telemetry events fire for all new interactions
-- [ ] All guards pass
-- [ ] Performance: Animation runs at 60fps on mid-tier devices
-
-### Phase 4.2: PvP Feel Pass (Effort: Medium)
-
-**Definition of Done:**
-
-- [ ] Arena battle summary shows key moments
-- [ ] Boss intro cinematics play before chapter bosses
-- [ ] Skip dialogue option available in settings
-- [ ] Daily login reward system implemented
-- [ ] Telemetry events fire for all new interactions
-- [ ] All guards pass
-
-### Phase 5.1: PvP Competitive Integrity (Effort: Large)
+### Phase 4.0: Battle Feel Pass v2 (NEXT)
 
 **Definition of Done:**
+- [ ] Skill cut-in system with character art
+- [ ] Status effect text overlays
+- [ ] Sequential reward reveal animation
+- [ ] Sound design integration
+- [ ] Performance optimization for mid-tier devices
 
-- [ ] Stat normalization implemented for "Ranked" arena mode
-- [ ] Seasonal reset system for arena ratings
-- [ ] Guild Wars basic framework
-- [ ] Anti-whale measures documented and enforced
-- [ ] Telemetry events fire for competitive analytics
-- [ ] All guards pass, including `guard-pvp-ethics.mjs`
+### Phase 4.1: Retention Systems
 
----
-
-## 9. GUARDS WE MAY WANT
-
-### Proposed Guards
-
-| Guard Name | Purpose | Trigger |
-|------------|---------|--------|
-| `guard-battle-visualization.mjs` | Ensure battle endpoints return visualization data | Any `/battle/*` endpoint |
-| `guard-defeat-feedback.mjs` | Ensure defeat responses include tips/reason | Defeat state in battle response |
-| `guard-daily-login.mjs` | Ensure daily login system exists and is wired | Backend + frontend daily login |
-| `guard-reward-sequence.mjs` | Ensure reward responses support sequential reveal | Receipt/reward shapes |
-| `guard-pvp-normalization.mjs` | Ensure ranked PvP uses normalized stats | Arena ranked mode |
-
-### Existing Guards (Already Enforced)
-
-- `guard-pvp-ethics.mjs` — No VIP stat buffs, no paid-only advantages
-- `guard-vip-benefits.mjs` — VIP is economy/comfort only
-- `guard-receipt-shape.mjs` — Canonical reward receipts
+**Definition of Done:**
+- [ ] Daily login calendar system
+- [ ] Login streak bonuses
+- [ ] Tournament mode (brackets)
+- [ ] Countdown urgency indicators
 
 ---
 
-## 10. TELEMETRY GAPS TO FILL
+## 8. GUARDS ADDED
 
-### Missing Events (Priority)
-
-| Event | Purpose | Priority |
-|-------|---------|----------|
-| `battle_animation_viewed` | Did player watch or skip? | P0 |
-| `victory_screen_duration` | How long on win screen? | P0 |
-| `defeat_tip_interaction` | Did player read defeat tips? | P0 |
-| `dialogue_skipped` | Story engagement vs skip rate | P1 |
-| `boss_intro_watched` | Boss cinematic engagement | P1 |
-| `reward_reveal_watched_full` | Anticipation experience | P1 |
-| `pvp_battle_summary_expanded` | PvP engagement depth | P1 |
-| `daily_login_claimed` | Retention metric | P0 |
-| `login_streak_length` | Habit strength | P0 |
-| `campaign_power_wall_hit` | Where do players get stuck? | P0 |
-| `dungeon_sweep_vs_manual` | Engagement preference | P2 |
-
-### Existing Telemetry (Confirmed in Code)
-
-- `Events.GACHA_HISTORY_VIEWED` — Summon history engagement
-- Hero promotion events
-- VIP events
-- Mail/gift claim events
+| Guard | Purpose | Status |
+|-------|---------|--------|
+| `guard-phase-3-50-battle-presentation.mjs` | No Math.random, no timers, Reduce Motion check | ✅ Created |
+| `guard-ui-time-format.mjs` | Block unsafe time formatting, require formatHMS | ✅ Created |
 
 ---
 
-## 11. VIDEO ANALYSIS SUMMARY
+## 9. TELEMETRY EVENTS ADDED
 
-### Videos Analyzed ✅
-
-| Video File | Status | Key Findings |
-|------------|--------|--------------|
-| `Idle_Devotion_Campaign.mp4` | ✅ Analyzed | **INSTANT RESOLUTION** - No combat animation, victory with confetti, star animation works, "NaN" timer bug |
-| `Idle_Devotion_Dungeon.mp4` | ✅ Analyzed | Quick Sweep feature works, automated combat (not shown), clear reward display, stamina gate |
-| `Reference_PVE_01.mp4` | ✅ Analyzed | Skill cut-ins, massive damage numbers (156M+), particle effects |
-| `Reference_PVE_02.mp4` | ✅ Analyzed | Victory screen with wings/crown, reward record display |
-| `Reference_PVP_01.mp4` | ✅ Analyzed | Opponent power display, attempt limits, ranking rewards |
-| `Reference_PVP_02.mp4` | ✅ Analyzed | Tournament brackets, countdown timer, match rules |
-
-### CRITICAL GAP: Idle Devotion vs Reference (VIDEO-VALIDATED)
-
-#### Idle Devotion Campaign (Current State):
-1. **Battle Resolution**: ❌ INSTANT - No combat visualization whatsoever
-2. **Victory Screen**: ✅ Has "VICTORY!" banner with confetti and horn
-3. **Star Animation**: ✅ Stars animate/fill in on victory
-4. **Reward Display**: ✅ Clear list with icons (Gold, Hero Exp, Gems, Enhancement Stones)
-5. **UI Polish**: ⚠️ Moderate - confetti present, no screen shake
-6. **Known Bug**: 🐛 "NaN:NaN:NaN" in "AWAITING YOU" notification
-
-#### Idle Devotion Dungeon (Current State):
-1. **Entry Flow**: ✅ Clean dungeon selection → stage selection → enter
-2. **Sweep Feature**: ✅ "Quick Sweep" with 3x multiplier option
-3. **Reward Display**: ✅ Victory screen shows Gold, Soul Dust, Enhancement Stones
-4. **Stamina System**: ✅ 1 per 5 min (max 100) - standard gate
-5. **Combat Visibility**: ❌ NONE - fully automated, no battle shown
-
-#### Reference Games (Target State):
-1. **Battle Resolution**: ✅ 15-30 second animated sequences
-2. **Skill Cut-Ins**: ✅ Full-screen "Light of Creation", "Supreme Glory" cinematics
-3. **Damage Numbers**: ✅ Millions displayed (up to -2,132,514,720)
-4. **Victory Screen**: ✅ Elaborate "VICTORY" with wings, crown, stage context
-5. **Status Effects**: ✅ "ATK UP", "CRIT DMG DOWN" text overlays
-6. **Screen Shake**: ✅ Present on impactful abilities
-
-### Gap Severity Assessment
-
-| Feature | Idle Devotion | Reference | Gap Level |
-|---------|--------------|-----------|-----------|
-| Combat Animation | None | 15-30s sequences | **CRITICAL** |
-| Skill Cut-Ins | None | Full-screen cinematics | **CRITICAL** |
-| Damage Numbers | Hidden | 156M+ displayed | **CRITICAL** |
-| Victory Banner | Basic confetti | Wings + Crown + Context | **HIGH** |
-| Status Effect Text | Minimal | Clear overlays | **HIGH** |
-| Screen Shake | None | On abilities | **MEDIUM** |
-| Star Animation | Present ✅ | Present | **OK** |
-| Reward Display | Clear list ✅ | "Reward Record" | **OK** |
-
-### Reference Game Feature Summary (Video-Derived)
-
-#### PvE Excellence (Reference_PVE_01 & _02):
-
-**Dopamine Drivers Observed:**
-1. **Skill Cut-Ins**: Full-screen character art with ability names ("Light of Creation", "Supreme Glory")
-2. **Damage Number Spectacle**: Numbers in hundreds of millions displayed prominently
-3. **Critical Hit Feedback**: Green arrows + "CRIT" indicators
-4. **Status Effect Clarity**: Text overlays ("ATK UP", "CRIT DMG DOWN", "Combustion")
-5. **Victory Celebration**: "VICTORY" banner with angelic wings, crown, stage context
-6. **Sequential Rewards**: "Reward Record" with animated coin/item icons
-
-**Visual Polish Observed:**
-- Particle effects on every action (sparks, glows, energy bursts)
-- Screen shakes on impactful abilities
-- Round counter with clear turn progression
-- Character portraits with buff/debuff icons
-
-#### PvP Excellence (Reference_PVP_01 & _02):
-
-**Competitive Features Observed:**
-1. **Tournament Brackets**: Visual progression (Quarter-final → Semi-final → Final)
-2. **Opponent Information**: Power score (2735863795), rewards preview, attempt count
-3. **Countdown Urgency**: "022:26:11" timer creating FOMO
-4. **Daily Ranking Rewards**: "Ranking rewards awarded at 21:00 each day"
-5. **Match Rules Transparency**: Dedicated button for competitive mechanics
-6. **Ranking Quiz**: Knowledge-based engagement feature
-
-**Engagement Mechanics:**
-- Attempt limiting ("Attempts: 4") forces strategic choice
-- Refresh list option for opponent selection
-- Visual rank hierarchy in bracket display
-- Clear "Challenge" call-to-action
+| Event | Purpose |
+|-------|---------|
+| `PVE_BATTLE_PRESENTATION_VIEWED` | Track presentation engagement |
+| `PVE_BATTLE_PRESENTATION_SKIPPED` | Track skip rate and turn reached |
+| `PVE_BATTLE_PRESENTATION_COMPLETED` | Track full completion |
+| `PVE_BATTLE_RESULT_SHOWN` | Track result screen view |
+| `PVE_VICTORY_VIEWED` | Track victory screen engagement |
+| `PVE_DEFEAT_VIEWED` | Track defeat screen engagement |
+| `PVE_DEFEAT_RECOMMENDATION_CLICKED` | Track recommendation CTA usage |
+| `UI_TIMER_INVALID_SUPPRESSED` | Track NaN timer bug occurrences |
 
 ---
 
-## 12. SIGN-OFF
+## 10. SIGN-OFF
 
-This audit was conducted **video-blind** using:
+This audit was conducted using:
+1. AI video analysis of all 6 provided videos
+2. Backend code analysis (`campaign.py`, `battle.py`)
+3. Frontend code analysis (`campaign.tsx`, `dungeons.tsx`, `arena.tsx`)
+4. Existing documentation
 
-1. Backend code analysis (`/app/backend/core/campaign.py`, `/app/backend/routers/battle.py`)
-2. Frontend code analysis (`/app/frontend/app/campaign.tsx`, `/app/frontend/app/dungeons.tsx`, `/app/frontend/app/(tabs)/arena.tsx`)
-3. Existing documentation (`/app/docs/PVE_PVP_QUEUE.md`, `/app/docs/pvp-monetization-ethics.md`)
-
-**Manual video notes required** to validate visual/audio feedback assumptions.
+**Analyzed Videos:**
+- ✅ `Idle_Devotion_Campaign.mp4`
+- ✅ `Idle_Devotion_Dungeon.mp4`
+- ✅ `Reference_PVE_01.mp4`
+- ✅ `Reference_PVE_02.mp4`
+- ✅ `Reference_PVP_01.mp4`
+- ✅ `Reference_PVP_02.mp4`
 
 ---
 

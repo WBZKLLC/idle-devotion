@@ -1,6 +1,7 @@
 // /app/frontend/app/mail.tsx
 // Phase 3.23.1: Mail Screen with Auth Gate
 // Phase 3.23.3: Mail Screen MVP
+// Phase 3.49: GiftsTab unified to ReceiptViewer
 //
 // Consolidates all "claimable" content:
 // - Daily login rewards
@@ -21,6 +22,8 @@ import { useGameStore, useHydration } from '../stores/gameStore';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { ListRow } from '../components/ui/ListRow';
 import { toast } from '../components/ui/Toast';
+// Phase 3.38: ReceiptViewer for unified receipt display
+import { ReceiptViewer } from '../components/receipt/ReceiptViewer';
 // Phase 3.23.2: API layer
 import { 
   getMailSummary, 

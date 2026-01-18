@@ -7,7 +7,7 @@
 import { loadAuthToken } from '../authStorage';
 import { RewardReceipt, isValidReceipt } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-import { API_BASE } from './config';
+import { apiUrl } from './config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -47,7 +47,7 @@ export interface PurchaseIntent {
 export async function getStoreCatalog(): Promise<StoreItem[]> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/store/catalog`, { headers });
+    const res = await fetch(apiUrl('/api/store/catalog'), { headers });
     if (!res.ok) throw new Error('Failed to fetch catalog');
     const data = await res.json();
     return data.catalog || [];

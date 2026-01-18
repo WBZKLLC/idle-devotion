@@ -1059,7 +1059,7 @@ export async function claimLoginReward(username: string, day: number) {
 
 export async function getJourneyStatus(username: string) {
   const u = requireUsername(username);
-  const res = await api.get(`/journey/status/${encodeURIComponent(u)}`);
+  const res = await api.get(`/journey/${encodeURIComponent(u)}`);
   return res.data;
 }
 

@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
+    minHeight: 300, // Ensure minimum height for content visibility
     // Shadow
     ...Platform.select({
       ios: {

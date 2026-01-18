@@ -830,8 +830,18 @@ export async function sendChatMessage(payload: {
   server_region?: string;
 }) {
   // Server derives sender from JWT - do NOT send username
-  const res = await api.post(`/chat/send`, payload);
-  return res.data;
+  try {
+    const res = await api.post(`/chat/send`, payload);
+    return res.data;
+  } catch (error: any) {
+    // Don't let chat errors trigger force logout - just throw the error
+    // The global interceptor already handles 401, but we want to prevent
+    // force logout from a simple chat send failure on new accounts
+    if (error.response?.status === 401) {
+      throw new Error('Please try again - session may still be initializing');
+    }
+    throw error;
+  }
 }
 
 export async function equipChatBubble(username: string, bubbleId: string) {

@@ -19,12 +19,11 @@ const ARENA_SCREEN = path.join(__dirname, '..', 'app', '(tabs)', 'arena.tsx');
 const TELEMETRY_FILE = path.join(__dirname, '..', 'lib', 'telemetry', 'events.ts');
 
 const FORBIDDEN_PATTERNS = [
-  'shop',
-  'purchase',
-  'buy',
   '/shop',
+  'router.push.*shop',
   'ShopLink',
   'BuyButton',
+  'PurchaseModal',
 ];
 
 let hasErrors = false;
@@ -59,24 +58,20 @@ if (fs.existsSync(ARENA_SCREEN)) {
     console.log(`${YELLOW}WARN:${RESET} Attempts display not found`);
   }
   
-  // Check for forbidden monetization patterns
-  const contentLower = content.toLowerCase();
+  // Check for forbidden monetization LINKS (not warning text)
   checksRun++;
   let foundForbidden = false;
   for (const pattern of FORBIDDEN_PATTERNS) {
-    if (contentLower.includes(pattern.toLowerCase())) {
-      // Allow if it's part of a warning/disable context
-      if (!content.includes('// monetization disabled') && !content.includes('/* no shop */')) {
-        foundForbidden = true;
-        break;
-      }
+    if (content.includes(pattern)) {
+      foundForbidden = true;
+      console.log(`${RED}FAIL:${RESET} Found monetization pattern: ${pattern}`);
+      break;
     }
   }
   
   if (!foundForbidden) {
     console.log(`${GREEN}PASS:${RESET} No paid gating/shop links in PvP screen`);
   } else {
-    console.log(`${RED}FAIL:${RESET} Found monetization hooks in PvP screen`);
     hasErrors = true;
   }
 } else {

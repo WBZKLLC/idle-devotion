@@ -183,7 +183,7 @@ export const Events = {
   
   // Phase 4.2: PvP Depth telemetry
   PVP_SEASON_VIEWED: 'pvp_season_viewed',
-  PVP_REWARDS_PREVIEW_OPENED: 'pvp_rewards_preview_opened',
+  PVP_REWARDS_PREVIEW_VIEWED: 'pvp_rewards_preview_viewed',
   PVP_DAILY_CLAIM_SUBMITTED: 'pvp_daily_claim_submitted',
   PVP_DAILY_CLAIM_SUCCESS: 'pvp_daily_claim_success',
   PVP_DAILY_CLAIM_ALREADY_CLAIMED: 'pvp_daily_claim_already_claimed',
@@ -194,9 +194,9 @@ export const Events = {
   PVP_SEASON_CLAIM_ERROR: 'pvp_season_claim_error',
   
   // Phase 4.3: Live Ops telemetry
-  LIVEOPS_VIEWED: 'liveops_viewed',
+  LIVEOPS_STATUS_VIEWED: 'liveops_status_viewed',
   LIVEOPS_BANNER_SHOWN: 'liveops_banner_shown',
-  LIVEOPS_BANNER_CLICKED: 'liveops_banner_clicked',
+  LIVEOPS_CTA_CLICKED: 'liveops_cta_clicked',
   
   // Phase 3.50: UI bug tracking (DEV-only)
   UI_TIMER_INVALID_SUPPRESSED: 'ui_timer_invalid_suppressed',

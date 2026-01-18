@@ -47,6 +47,6 @@ export interface LiveOpsStatusResponse {
  */
 export async function getLiveOpsStatus(): Promise<LiveOpsStatusResponse> {
   const res = await api.get('/liveops/status');
-  track(Events.LIVEOPS_VIEWED, { has_special_event: res.data.has_special_event });
+  track(Events.LIVEOPS_STATUS_VIEWED, { has_special_event: res.data.has_special_event });
   return res.data;
 }

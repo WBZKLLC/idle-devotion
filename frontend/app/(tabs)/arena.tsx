@@ -99,6 +99,8 @@ export default function ArenaScreen() {
   const [claimingSeason, setClaimingSeason] = useState(false);
   const [lastReceipt, setLastReceipt] = useState<PvpClaimReceipt | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  // Phase E4: Rules sheet state
+  const [showRulesSheet, setShowRulesSheet] = useState(false);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
 

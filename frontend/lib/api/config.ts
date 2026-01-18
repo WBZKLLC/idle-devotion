@@ -61,21 +61,31 @@ export function apiUrl(path: string): string {
 }
 
 /**
- * Get auth headers for API requests.
- * Single source of truth - all API modules should use this.
- * Returns empty object if no token (prevents "Bearer undefined").
+ * Get auth headers for API requests (without Content-Type).
+ * Use this for FormData uploads where browser sets Content-Type automatically.
  * 
  * @returns Headers object with Authorization if token exists
  */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
   const token = await loadAuthToken();
   if (token) {
-    return { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` 
-    };
+    return { 'Authorization': `Bearer ${token}` };
   }
-  return { 'Content-Type': 'application/json' };
+  return {};
+}
+
+/**
+ * Get auth + JSON headers for typical API requests.
+ * Single source of truth - all API modules should use this for JSON endpoints.
+ * 
+ * @returns Headers object with Authorization (if token) + Content-Type
+ */
+export async function getJsonHeaders(): Promise<Record<string, string>> {
+  const auth = await getAuthHeaders();
+  return {
+    ...auth,
+    'Content-Type': 'application/json',
+  };
 }
 
 // Log the API base URL in development for debugging

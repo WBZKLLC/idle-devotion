@@ -3,7 +3,7 @@ module.exports = ({ config }) => {
   const baseConfig = {
     ...config,
     name: 'Idle Devotion',
-    slug: 'idle-devotion-soul-bound-fantasy',
+    slug: 'divine-heroes-gacha',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
@@ -49,7 +49,7 @@ module.exports = ({ config }) => {
         projectId: '59fe8d53-8818-4d41-a206-556a8f621bbd',
       },
       BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://pvp-evolution.preview.emergentagent.com',
-      REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_IZyOoxmCinuIynJgzhXakqWWiyY',
+      REVENUECAT_API_KEY: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '',
     },
   };
 

@@ -848,6 +848,22 @@ export default function CampaignScreen() {
             </View>
           </TouchableOpacity>
         </Modal>
+
+        {/* Phase 3.50: Battle Presentation Modal */}
+        <BattlePresentationModal
+          visible={showPresentation}
+          data={presentationData}
+          onComplete={handlePresentationComplete}
+          mode="campaign"
+        />
+        
+        {/* Phase 3.50: Victory/Defeat Modal */}
+        <VictoryDefeatModal
+          visible={showVictoryDefeat}
+          data={victoryDefeatData}
+          onContinue={handleVictoryDefeatClose}
+          mode="campaign"
+        />
       </SafeAreaView>
     </View>
   );

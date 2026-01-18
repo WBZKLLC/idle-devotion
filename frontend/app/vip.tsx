@@ -161,7 +161,7 @@ function TierDetailsSheet({ tier, currentTier, onClose }: TierDetailsSheetProps)
 
 export default function VIPScreen() {
   const router = useRouter();
-  const { user, isLoggedIn } = useGameStore();
+  const { user } = useGameStore();
   const [selectedTier, setSelectedTier] = useState<typeof VIP_TIERS[0] | null>(null);
   
   // Calculate current VIP level from total_spent
@@ -191,7 +191,7 @@ export default function VIPScreen() {
     setSelectedTier(tier);
   }, [currentVipLevel]);
   
-  if (!isLoggedIn) {
+  if (!user) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>

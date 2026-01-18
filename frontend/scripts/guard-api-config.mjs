@@ -104,6 +104,16 @@ for (const file of apiFiles) {
   if (/\$\{API_BASE\}\/api\//.test(content) || /API_BASE\s*\+\s*['"]\/api/.test(content)) {
     violations.push(`${filename}: API_BASE concatenation (should use apiUrl())`);
   }
+  
+  // Check for direct loadAuthToken usage (should use getAuthHeaders from config)
+  if (content.includes('loadAuthToken')) {
+    violations.push(`${filename}: direct loadAuthToken (should use getAuthHeaders from config)`);
+  }
+  
+  // Check for local getAuthHeaders definition (should import from config)
+  if (/async function getAuthHeaders|function getAuthHeaders/.test(content)) {
+    violations.push(`${filename}: local getAuthHeaders definition (should import from config)`);
+  }
 }
 
 if (violations.length > 0) {

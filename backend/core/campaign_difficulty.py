@@ -14,19 +14,42 @@ BAND_HARD = "hard"
 
 # Chapter difficulty scaling table
 # Format: chapter_id -> (base_enemy_power, power_per_stage, boss_multiplier)
+# Phase 3.61: Expanded to cover chapters 1-25
 DIFFICULTY_TABLE: Dict[int, Tuple[int, int, float]] = {
-    1: (5000, 500, 1.5),
+    # Early game (chapters 1-5): Gentle introduction
+    1: (5000, 500, 1.5),       # Tutorial-level
     2: (10000, 750, 1.5),
     3: (18000, 1000, 1.6),
     4: (30000, 1500, 1.6),
-    5: (45000, 2000, 1.7),
+    5: (45000, 2000, 1.7),     # First real challenge point
+    
+    # Mid game (chapters 6-10): Player should be building teams
     6: (65000, 2500, 1.7),
     7: (90000, 3000, 1.8),
     8: (120000, 4000, 1.8),
     9: (160000, 5000, 1.9),
-    10: (210000, 6000, 1.9),
+    10: (210000, 6000, 1.9),   # Second major checkpoint
+    
+    # Late game (chapters 11-15): Requires investment
     11: (270000, 7500, 2.0),
     12: (350000, 10000, 2.0),
+    13: (450000, 12500, 2.1),  # Phase 3.61: Added
+    14: (580000, 15000, 2.1),  # Phase 3.61: Added
+    15: (750000, 18000, 2.2),  # Phase 3.61: Added - major spike
+    
+    # Endgame (chapters 16-20): For dedicated players
+    16: (950000, 22000, 2.2),  # Phase 3.61: Added
+    17: (1200000, 26000, 2.3), # Phase 3.61: Added
+    18: (1500000, 32000, 2.3), # Phase 3.61: Added
+    19: (1900000, 40000, 2.4), # Phase 3.61: Added
+    20: (2400000, 50000, 2.4), # Phase 3.61: Added - endgame goal
+    
+    # Post-game / Mythic tier (chapters 21-25): Whale territory
+    21: (3000000, 60000, 2.5), # Phase 3.61: Added
+    22: (3800000, 75000, 2.5), # Phase 3.61: Added
+    23: (4800000, 90000, 2.6), # Phase 3.61: Added
+    24: (6000000, 110000, 2.6), # Phase 3.61: Added
+    25: (7500000, 140000, 2.7), # Phase 3.61: Added - final chapter
 }
 
 # Recommended power bands (percentage of enemy power)

@@ -67,7 +67,7 @@ class BackendTester:
             async with self.session.post(f"{API_BASE}/auth/login", json=login_data) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    self.auth_token = data.get("access_token")
+                    self.auth_token = data.get("token") or data.get("access_token")
                     if self.auth_token:
                         self.log_result("Authentication", True, f"Successfully logged in as {TEST_USERNAME}")
                         return True

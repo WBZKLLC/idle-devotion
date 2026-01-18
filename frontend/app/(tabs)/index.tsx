@@ -42,6 +42,8 @@ import { useConfirmModal } from '../../components/ui/useConfirmModal';
 import { toast } from '../../components/ui/Toast';
 // Phase 3.19.7: Cinematic loading screen
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
+// Phase 3.50: Safe time formatting (NaN timer bugfix)
+import { formatHMS } from '../../lib/utils/formatHMS';
 // Phase 3.22.9: Settle animation tokens
 import { SECTION_GAP, LAYOUT, INVITATION, RADIUS, FONT_SIZE, FONT_WEIGHT } from '../../components/ui/tokens';
 // Phase 3.22.8: Desire accents system

@@ -649,7 +649,8 @@ class BackendTester:
         arena_apis = [
             "Arena Record API",
             "Arena Leaderboard API",
-            "Arena Battle API"
+            "Arena Battle API",
+            "Arena Tickets Display"
         ]
         
         presentation_apis = [

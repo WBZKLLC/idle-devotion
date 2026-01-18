@@ -5,8 +5,8 @@
 // Uses auth token from gameStore for server identity.
 // Graceful error handling — returns defaults on failure.
 
-import { loadAuthToken } from '../authStorage';
-import { apiUrl } from './config';
+// Auth handled by config.ts
+import { apiUrl, getAuthHeaders } from './config';
 
 /**
  * Get auth headers for API calls

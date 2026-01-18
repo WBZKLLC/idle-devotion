@@ -42,10 +42,14 @@ class ComprehensiveGachaTest:
             self.test_results["failed"] += 1
             self.test_results["errors"].append(f"{test_name}: {message}")
     
-    def make_request(self, method, endpoint, **kwargs):
+    def make_request(self, method, endpoint, auth=False, **kwargs):
         """Make HTTP request with error handling"""
         url = f"{self.base_url}{endpoint}"
         try:
+            if auth and self.auth_token:
+                headers = kwargs.get('headers', {})
+                headers['Authorization'] = f'Bearer {self.auth_token}'
+                kwargs['headers'] = headers
             response = requests.request(method, url, timeout=30, **kwargs)
             return response
         except requests.exceptions.RequestException as e:

@@ -38,7 +38,9 @@ export type RewardSource =
   | 'pity_reward'  // Phase 3.33: Pity system reward
   | 'hero_promotion'  // Phase 3.39: Hero star promotion
   | 'hero_ascension'  // Phase 3.44: Hero ascension
-  | 'iap_purchase';  // Phase 3.42: RevenueCat IAP
+  | 'iap_purchase'  // Phase 3.42: RevenueCat IAP
+  | 'pvp_daily_claim'  // Phase 4.2: PvP daily reward
+  | 'pvp_season_claim';  // Phase 4.2: PvP season reward
 
 /**
  * Single reward item in a receipt

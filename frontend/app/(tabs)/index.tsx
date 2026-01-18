@@ -1044,6 +1044,37 @@ const styles = StyleSheet.create({
     marginLeft: 10 
   },
   pityBarFill: { height: '100%', borderRadius: 3 },
+  
+  // Phase 4.3: LiveOps Banner styles
+  liveOpsBanner: {
+    marginTop: 8,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  liveOpsBannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  liveOpsBannerIcon: {
+    fontSize: 16,
+  },
+  liveOpsBannerContent: {
+    flex: 1,
+  },
+  liveOpsBannerTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  liveOpsBannerDesc: {
+    fontSize: 10,
+    color: '#ffffffcc',
+    marginTop: 1,
+  },
 });
 
 // ============ 2DLIVE SHELL COMPONENTS (UI-only) ============

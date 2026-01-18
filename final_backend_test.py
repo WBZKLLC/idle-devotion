@@ -61,9 +61,13 @@ class ComprehensiveGachaTest:
         register_data = {"username": self.username, "password": "testpassword123"}
         response = self.make_request("POST", "/user/register", json=register_data)
         if response and response.status_code == 200:
-            self.user_data = response.json()
+            result = response.json()
+            self.user_data = result.get('user', result)  # Handle both formats
+            self.auth_token = result.get('access_token')  # Store token for authenticated requests
+            crystals = self.user_data.get('crystals', self.user_data.get('gems', 0))
+            coins = self.user_data.get('coins', 0)
             self.log_result("User Registration", True, 
-                          f"User created with {self.user_data['gems']} gems, {self.user_data['coins']} coins")
+                          f"User created with {crystals} crystals, {coins} coins")
         else:
             self.log_result("User Registration", False, f"Failed: {response.status_code if response else 'No response'}")
             return False

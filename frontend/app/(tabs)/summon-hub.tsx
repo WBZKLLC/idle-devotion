@@ -245,17 +245,6 @@ export default function SummonHubScreen() {
     setShowCanonicalResults(false);
     setLastReceipt(null);
   };
-      } else {
-        toast.success(toastMessage);
-      }
-    } catch (error: any) {
-      if (!isErrorHandledGlobally(error)) {
-        // Phase 3.18.3: Error toast instead of Alert
-        toast.error('Summon failed. Please try again.');
-      }
-    }
-    finally { setIsLoading(false); }
-  };
 
   const getFillerRewardIcon = (type: string) => {
     if (type.includes('crystals')) return '💎';

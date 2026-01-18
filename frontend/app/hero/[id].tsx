@@ -476,19 +476,24 @@ export default function HeroPresentationScreen() {
         </View>
         
         {/* Phase 3.49: Promotion Modal */}
-        <PromotionModal
-          visible={showPromotionModal}
-          onClose={() => setShowPromotionModal(false)}
-          hero={hero}
-          heroData={heroData}
-          onPromotionComplete={() => {
-            // Refresh hero data after promotion
-            if (user?.username && id) {
-              const foundHero = userHeroes.find((h: any) => h.hero_data_id === id || h._id === id);
-              if (foundHero) setHero(foundHero);
-            }
-          }}
-        />
+        {hero && (
+          <PromotionModal
+            visible={showPromotionModal}
+            onClose={() => setShowPromotionModal(false)}
+            heroId={hero._id || hero.id || id || ''}
+            heroName={heroData?.name || hero?.name || 'Hero'}
+            currentStar={hero.stars || 1}
+            nextStar={Math.min((hero.stars || 1) + 1, 6)}
+            shardCost={hero.stars >= 6 ? 0 : [0, 20, 40, 80, 160, 320][hero.stars || 1]}
+            currentShards={hero.shards || 0}
+            maxStarReached={hero.stars >= 6}
+            onSuccess={(receipt) => {
+              // Refresh hero after promotion
+              setShowPromotionModal(false);
+              // The receipt contains updated hero state
+            }}
+          />
+        )}
       </SafeAreaView>
     </View>
   );

@@ -435,7 +435,7 @@ export default function HeroPresentationScreen() {
             </View>
           )}
           
-          {/* Actions row: Upgrade (primary), Bond (secondary), Equip (tertiary), Skins (disabled) */}
+          {/* Actions row: Upgrade (primary), Promote, Bond, Equip, Skins */}
           <View style={styles.actionsRow}>
             {/* Primary: Upgrade */}
             <Pressable
@@ -444,6 +444,15 @@ export default function HeroPresentationScreen() {
             >
               <Ionicons name="arrow-up-circle" size={20} color={COLORS.navy.darkest} />
               <Text style={[styles.actionText, styles.actionTextPrimary]}>Upgrade</Text>
+            </Pressable>
+            
+            {/* Phase 3.49: Promote (star progression) */}
+            <Pressable
+              style={styles.actionButton}
+              onPress={() => setShowPromotionModal(true)}
+            >
+              <Ionicons name="star" size={20} color={COLORS.gold.primary} />
+              <Text style={styles.actionText}>Promote</Text>
             </Pressable>
             
             {/* Secondary: Bond */}
@@ -463,17 +472,23 @@ export default function HeroPresentationScreen() {
               <Ionicons name="shirt-outline" size={20} color={COLORS.cream.pure} />
               <Text style={styles.actionText}>Equip</Text>
             </Pressable>
-            
-            {/* Optional: Skins (disabled/coming soon) */}
-            <Pressable
-              style={[styles.actionButton, styles.actionButtonDisabled]}
-              disabled
-            >
-              <Ionicons name="color-palette-outline" size={18} color={COLORS.cream.dark} />
-              <Text style={[styles.actionText, styles.actionTextDisabled]}>Skins</Text>
-            </Pressable>
           </View>
         </View>
+        
+        {/* Phase 3.49: Promotion Modal */}
+        <PromotionModal
+          visible={showPromotionModal}
+          onClose={() => setShowPromotionModal(false)}
+          hero={hero}
+          heroData={heroData}
+          onPromotionComplete={() => {
+            // Refresh hero data after promotion
+            if (user?.username && id) {
+              const foundHero = userHeroes.find((h: any) => h.hero_data_id === id || h._id === id);
+              if (foundHero) setHero(foundHero);
+            }
+          }}
+        />
       </SafeAreaView>
     </View>
   );

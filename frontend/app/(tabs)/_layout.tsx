@@ -42,8 +42,9 @@ export default function TabsLayout() {
           borderTopColor: COLORS.gold.primary + '10',
           borderTopWidth: 0.5,
           // Phase 3.22.11: Slightly shorter
-          height: Platform.OS === 'web' ? 52 : 56,
-          paddingBottom: Platform.OS === 'web' ? 4 : Math.max(insets.bottom, 6),
+          // P1 Fix: Ensure adequate bottom padding for devices with gesture navigation
+          height: Platform.OS === 'web' ? 52 : 56 + Math.max(insets.bottom, 0),
+          paddingBottom: Platform.OS === 'web' ? 4 : Math.max(insets.bottom, 12),
           paddingTop: 4,
         },
         headerShown: false,

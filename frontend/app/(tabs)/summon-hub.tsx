@@ -20,8 +20,13 @@ import { AppHeader, LAYOUT } from '../../components/ui/AppHeader';
 import { CinematicLoading } from '../../components/ui/CinematicLoading';
 // Phase 3.22.4: Micro-interaction utilities
 import { PRESS, haptic } from '../../lib/ui/interaction';
+// Phase 3.49: Canonical summon flow
+import { summon as summonGacha } from '../../lib/api/gacha';
+import { SummonResultsModal } from '../../components/gacha/SummonResultsModal';
+import { BannerDetailsSheet } from '../../components/gacha/BannerDetailsSheet';
+import { GachaReceipt } from '../../lib/types/receipt';
 
-// Centralized API wrappers (no raw fetch in screens)
+// Legacy centralized API wrappers (kept for compatibility)
 import { pullGacha } from '../../lib/api';
 
 const COLORS = {

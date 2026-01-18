@@ -97,8 +97,7 @@ CHAR_SELENE_SSR = {
         "preview_power_level": "GODLIKE",  # One-shots the boss
     },
     
-    # Visual/audio
-    "image_url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+    # Visual/audio - Using the official 5+ star Selene artwork
     "banner_art": "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800",
     "theme_music": "epic_chrono_theme",
 }

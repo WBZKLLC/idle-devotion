@@ -7,8 +7,7 @@
 import { loadAuthToken } from '../authStorage';
 import { RewardReceipt, isValidReceipt } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+import { API_BASE } from './config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {

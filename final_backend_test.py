@@ -71,7 +71,7 @@ class ComprehensiveGachaTest:
         if response is not None and response.status_code == 200:
             result = response.json()
             self.user_data = result.get('user', result)  # Handle both formats
-            self.auth_token = result.get('access_token')  # Store token for authenticated requests
+            self.auth_token = result.get('token') or result.get('access_token')  # Store token for authenticated requests
             crystals = self.user_data.get('crystals', self.user_data.get('gems', 0))
             coins = self.user_data.get('coins', 0)
             self.log_result("User Registration", True, 

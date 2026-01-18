@@ -161,6 +161,14 @@ export default function ShopScreen() {
         </Pressable>
         <Text style={styles.headerTitle}>Shop</Text>
         <View style={styles.headerRight}>
+          {/* Phase 3.49: VIP link */}
+          <Pressable 
+            style={styles.vipButton}
+            onPress={() => router.push('/vip')}
+          >
+            <Ionicons name="star" size={18} color={COLORS.gold.primary} />
+            <Text style={styles.vipButtonText}>VIP</Text>
+          </Pressable>
           {IS_DEV && (
             <View style={styles.devBadge}>
               <Text style={styles.devBadgeText}>DEV</Text>

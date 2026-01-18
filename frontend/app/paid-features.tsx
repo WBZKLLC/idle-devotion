@@ -231,8 +231,8 @@ export default function PaidFeaturesScreen() {
             )}
           </View>
 
-          {/* DEV Mode - Per-Hero Ownership */}
-          {__DEV__ && (
+          {/* DEV Mode - Per-Hero Ownership - ONLY for admin (ADAM) */}
+          {__DEV__ && user?.is_admin && (
             <View style={styles.devCard}>
               <Text style={styles.devCardTitle}>DEV: Per-Hero Premium Cinematic Ownership</Text>
               <Text style={styles.devCardSubtitle}>

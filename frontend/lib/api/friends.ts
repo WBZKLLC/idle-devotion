@@ -9,17 +9,6 @@
 import { apiUrl, getAuthHeaders } from './config';
 
 /**
- * Get auth headers for API calls
- */
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await loadAuthToken();
-  if (token) {
-    return { Authorization: `Bearer ${token}` };
-  }
-  return {};
-}
-
-/**
  * Get friends summary (badge counts) - uses auth token
  */
 export async function getFriendsSummary(username: string): Promise<{

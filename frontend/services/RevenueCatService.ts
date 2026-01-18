@@ -2,10 +2,16 @@ import { Platform } from 'react-native';
 import { verifyPurchase } from '../lib/api';
 
 // RevenueCat API configuration
-const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_GHJByEeqdUHXOWbuvIWFFrQFXjB';
+const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_XatWwbfGglZHujsLmVeIhyBpMKy';
+
+// Entitlement identifier
+export const ENTITLEMENT_PRO = 'Idle Devotion Pro';
 
 // Product IDs (these need to match your App Store / Play Store products)
 export const PRODUCTS = {
+  MONTHLY: 'monthly',
+  YEARLY: 'yearly',
+  LIFETIME: 'lifetime',
   BATTLE_PASS_STANDARD: 'battle_pass_standard', // $9.99
   BATTLE_PASS_PREMIUM: 'battle_pass_premium',   // $19.99
   CRYSTAL_PACK_SMALL: 'crystal_pack_100',       // 100 crystals

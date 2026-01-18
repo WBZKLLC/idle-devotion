@@ -32,7 +32,7 @@ import { RewardReceipt, isValidReceipt, formatReceiptItems } from '../lib/types/
 import { triggerBadgeRefresh } from '../lib/ui/badges';
 import { loadAuthToken } from '../lib/authStorage';
 
-import { API_BASE } from '../lib/api/config';
+import { apiUrl } from '../lib/api/config';
 
 // Phase 3.29: Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -61,7 +61,7 @@ interface QuestEvent {
 async function getActiveQuests(): Promise<{ events: QuestEvent[]; claimable_count: number }> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/events/active`, { headers });
+    const res = await fetch(apiUrl('/api/events/active'), { headers });
     if (!res.ok) return { events: [], claimable_count: 0 };
     return await res.json();
   } catch {
@@ -71,7 +71,7 @@ async function getActiveQuests(): Promise<{ events: QuestEvent[]; claimable_coun
 
 async function claimQuestReward(eventId: string): Promise<RewardReceipt> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/events/${eventId}/claim`, {
+  const res = await fetch(apiUrl(`/api/events/${eventId}/claim`), {
     method: 'POST',
     headers,
   });

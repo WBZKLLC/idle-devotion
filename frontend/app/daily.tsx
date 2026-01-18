@@ -23,7 +23,7 @@ import { RewardReceipt, isValidReceipt, formatReceiptItems } from '../lib/types/
 import { triggerBadgeRefresh } from '../lib/ui/badges';
 import { loadAuthToken } from '../lib/authStorage';
 
-import { API_BASE } from '../lib/api/config';
+import { apiUrl } from '../lib/api/config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -62,14 +62,14 @@ interface DailyStatus {
 // API functions
 async function getDailyStatus(): Promise<DailyStatus> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/daily/status`, { headers });
+  const res = await fetch(apiUrl('/api/daily/status'), { headers });
   if (!res.ok) throw new Error('Failed to fetch daily status');
   return await res.json();
 }
 
 async function claimDailyReward(): Promise<RewardReceipt> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/daily/claim`, {
+  const res = await fetch(apiUrl('/api/daily/claim'), {
     method: 'POST',
     headers,
   });

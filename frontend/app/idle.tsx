@@ -26,7 +26,7 @@ import { RewardReceipt, isValidReceipt, formatReceiptItems } from '../lib/types/
 import { triggerBadgeRefresh } from '../lib/ui/badges';
 import { loadAuthToken } from '../lib/authStorage';
 
-import { API_BASE } from '../lib/api/config';
+import { apiUrl } from '../lib/api/config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -63,14 +63,14 @@ interface IdleStatus {
 // API functions
 async function getIdleStatus(): Promise<IdleStatus> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/idle/status`, { headers });
+  const res = await fetch(apiUrl('/api/idle/status'), { headers });
   if (!res.ok) throw new Error('Failed to fetch idle status');
   return await res.json();
 }
 
 async function claimIdleRewards(): Promise<RewardReceipt> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/idle/claim`, {
+  const res = await fetch(apiUrl('/api/idle/claim'), {
     method: 'POST',
     headers,
   });

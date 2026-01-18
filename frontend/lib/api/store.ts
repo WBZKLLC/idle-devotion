@@ -4,10 +4,10 @@
 // Catalog, purchase intent, and dev-only redeem.
 // Uses canonical receipt for redeem.
 
-import { loadAuthToken } from '../authStorage';
+// Auth handled by config.ts
 import { RewardReceipt, isValidReceipt } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-import { apiUrl } from './config';
+import { apiUrl, getAuthHeaders } from './config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {

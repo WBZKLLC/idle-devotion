@@ -348,9 +348,23 @@ export default function ArenaScreen() {
             <Ionicons name="arrow-back" size={24} color={COLORS.cream.pure} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>⚔️ PvP Arena</Text>
-          <View style={styles.ticketDisplay}>
-            <Ionicons name="ticket" size={16} color="#dc2626" />
-            <Text style={styles.ticketText}>{record?.tickets || 0}/{record?.max_tickets || 5}</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={styles.headerActionButton}
+              onPress={() => setShowRulesSheet(true)}
+            >
+              <Ionicons name="help-circle" size={20} color={COLORS.gold.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.headerActionButton}
+              onPress={() => router.push('/pvp-tournament')}
+            >
+              <Ionicons name="trophy" size={20} color={COLORS.gold.primary} />
+            </TouchableOpacity>
+            <View style={styles.ticketDisplay}>
+              <Ionicons name="ticket" size={16} color="#dc2626" />
+              <Text style={styles.ticketText}>{record?.tickets || 0}/{record?.max_tickets || 5}</Text>
+            </View>
           </View>
         </View>
 

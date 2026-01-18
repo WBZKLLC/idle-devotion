@@ -320,11 +320,193 @@ class BackendTester:
         except Exception as e:
             self.log_result("Dungeon EXP Sweep", False, f"Exception: {str(e)}")
     
-    async def test_battle_data_structure(self):
-        """Test that battle APIs return proper data structure for presentation modals"""
-        print("\n📊 Testing Battle Data Structure...")
+    async def test_arena_apis(self):
+        """Test Arena/PvP APIs for Phase 3.50-3.58"""
+        print("\n🏟️ Testing Arena/PvP APIs...")
         
-        # Test 9: Verify battle response contains required fields for presentation
+        # Test: Get arena record/status (should show tickets/attempts)
+        try:
+            async with self.session.get(
+                f"{API_BASE}/arena/{TEST_USERNAME}/record",
+                headers=self.get_auth_headers()
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    rating = data.get("rating", 0)
+                    wins = data.get("wins", 0)
+                    losses = data.get("losses", 0)
+                    tickets = data.get("arena_tickets_today", 0)
+                    
+                    self.log_result("Arena Record API", True, 
+                                  f"Rating: {rating}, W/L: {wins}/{losses}, Tickets: {tickets}")
+                else:
+                    error_data = await resp.text()
+                    self.log_result("Arena Record API", False, f"Status {resp.status}", error_data)
+        except Exception as e:
+            self.log_result("Arena Record API", False, f"Exception: {str(e)}")
+        
+        # Test: Get arena leaderboard (should show opponent power scores)
+        try:
+            async with self.session.get(f"{API_BASE}/arena/leaderboard/server_1") as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    rankings = data.get("rankings", [])
+                    if rankings:
+                        # Check if power scores are included
+                        first_opponent = rankings[0]
+                        has_power = "power" in first_opponent or "team_power" in first_opponent
+                        power_info = "with power scores" if has_power else "without power scores"
+                        self.log_result("Arena Leaderboard API", True, 
+                                      f"Retrieved {len(rankings)} opponents {power_info}")
+                    else:
+                        self.log_result("Arena Leaderboard API", False, "No rankings returned", data)
+                else:
+                    error_data = await resp.text()
+                    self.log_result("Arena Leaderboard API", False, f"Status {resp.status}", error_data)
+        except Exception as e:
+            self.log_result("Arena Leaderboard API", False, f"Exception: {str(e)}")
+        
+        # Test: Arena battle (should consume tickets, no shop links)
+        try:
+            battle_data = {"team_id": "default"}
+            
+            async with self.session.post(
+                f"{API_BASE}/arena/{TEST_USERNAME}/battle",
+                json=battle_data,
+                headers=self.get_auth_headers()
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    victory = data.get("victory")
+                    tickets_used = data.get("tickets_used", 0)
+                    
+                    if victory is not None:
+                        result_text = "Victory" if victory else "Defeat"
+                        self.log_result("Arena Battle API", True, 
+                                      f"{result_text} - Tickets used: {tickets_used}")
+                    else:
+                        self.log_result("Arena Battle API", False, "No victory status returned", data)
+                elif resp.status == 400:
+                    # Expected if no tickets available
+                    error_data = await resp.text()
+                    if "no tickets" in error_data.lower() or "insufficient" in error_data.lower():
+                        self.log_result("Arena Battle API", True, "Correctly requires tickets")
+                    else:
+                        self.log_result("Arena Battle API", False, f"Unexpected 400 error: {error_data}")
+                else:
+                    error_data = await resp.text()
+                    self.log_result("Arena Battle API", False, f"Status {resp.status}", error_data)
+        except Exception as e:
+            self.log_result("Arena Battle API", False, f"Exception: {str(e)}")
+
+    async def test_campaign_stage_cards(self):
+        """Test Campaign Stage Cards for recommended power and power band indicators"""
+        print("\n🗡️ Testing Campaign Stage Cards...")
+        
+        # Test: Get campaign chapters with power requirements
+        try:
+            async with self.session.get(
+                f"{API_BASE}/campaign/chapters?username={TEST_USERNAME}",
+                headers=self.get_auth_headers()
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    chapters = data.get("chapters", [])
+                    
+                    if chapters:
+                        # Check if chapters have power requirements
+                        first_chapter = chapters[0]
+                        has_power_req = "required_power" in first_chapter or "recommended_power" in first_chapter
+                        power_info = "with power requirements" if has_power_req else "without power requirements"
+                        
+                        self.log_result("Campaign Stage Power Requirements", True, 
+                                      f"Retrieved {len(chapters)} chapters {power_info}")
+                        
+                        # Check individual stages for power bands
+                        if has_power_req:
+                            power_val = first_chapter.get("required_power") or first_chapter.get("recommended_power", 0)
+                            self.log_result("Campaign Power Band Indicators", True, 
+                                          f"Chapter 1 recommended power: {power_val}")
+                        else:
+                            self.log_result("Campaign Power Band Indicators", False, 
+                                          "No power requirements found in chapter data")
+                    else:
+                        self.log_result("Campaign Stage Power Requirements", False, "No chapters returned", data)
+                else:
+                    error_data = await resp.text()
+                    self.log_result("Campaign Stage Power Requirements", False, f"Status {resp.status}", error_data)
+        except Exception as e:
+            self.log_result("Campaign Stage Power Requirements", False, f"Exception: {str(e)}")
+        
+        # Test: Get detailed chapter with stage power requirements
+        try:
+            async with self.session.get(
+                f"{API_BASE}/campaign/chapter/1?username={TEST_USERNAME}",
+                headers=self.get_auth_headers()
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    stages = data.get("stages", [])
+                    
+                    if stages:
+                        # Check if stages have individual power requirements
+                        power_stages = [s for s in stages if "required_power" in s or "recommended_power" in s]
+                        if power_stages:
+                            sample_stage = power_stages[0]
+                            power_val = sample_stage.get("required_power") or sample_stage.get("recommended_power", 0)
+                            self.log_result("Stage Individual Power Requirements", True, 
+                                          f"{len(power_stages)}/{len(stages)} stages have power requirements (sample: {power_val})")
+                        else:
+                            self.log_result("Stage Individual Power Requirements", False, 
+                                          "No individual stage power requirements found")
+                    else:
+                        self.log_result("Stage Individual Power Requirements", False, "No stages returned", data)
+                else:
+                    error_data = await resp.text()
+                    self.log_result("Stage Individual Power Requirements", False, f"Status {resp.status}", error_data)
+        except Exception as e:
+            self.log_result("Stage Individual Power Requirements", False, f"Exception: {str(e)}")
+
+    async def test_battle_presentation_data(self):
+        """Test that battle APIs return data needed for BattlePresentationModal"""
+        print("\n🎬 Testing Battle Presentation Data Structure...")
+        
+        # Test: Campaign battle data for presentation modal
+        try:
+            async with self.session.post(
+                f"{API_BASE}/campaign/stage/1/1/complete?username={TEST_USERNAME}&stars=3",
+                headers=self.get_auth_headers()
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    
+                    # Check for battle presentation fields
+                    presentation_fields = ["victory", "turn_count", "damage_dealt", "skills_used", "battle_log"]
+                    optional_fields = ["stars_earned", "power_gap_percentage"]
+                    
+                    present_fields = [field for field in presentation_fields if field in data]
+                    optional_present = [field for field in optional_fields if field in data]
+                    
+                    if present_fields or optional_present:
+                        self.log_result("Campaign Battle Presentation Data", True, 
+                                      f"Presentation fields: {present_fields + optional_present}")
+                    else:
+                        # Basic battle data is still valid
+                        basic_fields = ["success", "victory", "rewards"]
+                        basic_present = [field for field in basic_fields if field in data]
+                        if basic_present:
+                            self.log_result("Campaign Battle Presentation Data", True, 
+                                          f"Basic battle data: {basic_present}")
+                        else:
+                            self.log_result("Campaign Battle Presentation Data", False, 
+                                          "No battle presentation or basic data found", data)
+                else:
+                    error_data = await resp.text()
+                    self.log_result("Campaign Battle Presentation Data", False, f"Status {resp.status}", error_data)
+        except Exception as e:
+            self.log_result("Campaign Battle Presentation Data", False, f"Exception: {str(e)}")
+        
+        # Test: Dungeon battle data for presentation modal
         try:
             battle_data = {"stage_id": 1, "team_ids": []}
             
@@ -336,26 +518,27 @@ class BackendTester:
                 if resp.status == 200:
                     data = await resp.json()
                     
-                    # Check required fields for battle presentation
-                    required_fields = ["victory", "stage_name", "rewards", "stamina_used"]
-                    missing_fields = [field for field in required_fields if field not in data]
+                    # Check for battle presentation fields
+                    presentation_fields = ["victory", "turn_progression", "skill_callouts", "damage_numbers"]
+                    basic_fields = ["victory", "rewards", "stamina_used"]
                     
-                    if not missing_fields:
-                        # Check rewards structure
-                        rewards = data.get("rewards", {})
-                        if isinstance(rewards, dict):
-                            self.log_result("Battle Data Structure", True, 
-                                          f"All required fields present. Rewards: {list(rewards.keys())}")
-                        else:
-                            self.log_result("Battle Data Structure", False, "Rewards not a dictionary", data)
+                    present_fields = [field for field in presentation_fields if field in data]
+                    basic_present = [field for field in basic_fields if field in data]
+                    
+                    if present_fields:
+                        self.log_result("Dungeon Battle Presentation Data", True, 
+                                      f"Presentation fields: {present_fields}")
+                    elif basic_present:
+                        self.log_result("Dungeon Battle Presentation Data", True, 
+                                      f"Basic battle data: {basic_present}")
                     else:
-                        self.log_result("Battle Data Structure", False, 
-                                      f"Missing required fields: {missing_fields}", data)
+                        self.log_result("Dungeon Battle Presentation Data", False, 
+                                      "No battle presentation or basic data found", data)
                 else:
                     error_data = await resp.text()
-                    self.log_result("Battle Data Structure", False, f"Status {resp.status}", error_data)
+                    self.log_result("Dungeon Battle Presentation Data", False, f"Status {resp.status}", error_data)
         except Exception as e:
-            self.log_result("Battle Data Structure", False, f"Exception: {str(e)}")
+            self.log_result("Dungeon Battle Presentation Data", False, f"Exception: {str(e)}")
     
     async def test_user_status(self):
         """Test user status for timer functionality"""

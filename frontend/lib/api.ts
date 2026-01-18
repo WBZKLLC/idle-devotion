@@ -614,7 +614,17 @@ export async function executePvPMatch(
 // ─────────────────────────────────────────────────────────────
 
 export async function getLeaderboard(type: string, limit: number = 50) {
-  const res = await api.get(`/leaderboard/${encodeURIComponent(type)}`, {
+  // Map type names to backend endpoint paths
+  const typeEndpoints: Record<string, string> = {
+    'arena': '/leaderboard/arena',
+    'cr': '/leaderboard/cr',
+    'power': '/leaderboard/power',
+    'abyss': '/leaderboard/abyss',
+    'campaign': '/leaderboard/campaign',
+  };
+  
+  const endpoint = typeEndpoints[type] || `/leaderboard/${encodeURIComponent(type)}`;
+  const res = await api.get(endpoint, {
     params: { limit },
   });
   return res.data;

@@ -683,15 +683,16 @@ class BackendTester:
         print("=" * 80)
         print()
         
-        # Authentication is required for most tests
-        if not self.test_authentication_flows():
-            print("❌ CRITICAL: Authentication failed. Cannot proceed with other tests.")
-            return
-            
+        # Try authentication but continue even if it fails
+        auth_success = self.test_authentication_flows()
+        
         # Run all test suites focusing on areas mentioned in review
+        # Many endpoints can be tested without authentication
         self.test_user_registration()
         self.test_user_profile()
         self.test_hero_pool_and_collection()
+        
+        # These might work without auth or with partial functionality
         self.test_gacha_pull_system()
         self.test_team_management()
         

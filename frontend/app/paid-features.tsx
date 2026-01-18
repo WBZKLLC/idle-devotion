@@ -206,8 +206,8 @@ export default function PaidFeaturesScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* DEV Mode - Pack Controls */}
-            {__DEV__ && (
+            {/* DEV Mode - Pack Controls - ONLY for admin (ADAM) */}
+            {__DEV__ && user?.is_admin && (
               <View style={styles.devSection}>
                 <Text style={styles.devLabel}>DEV MODE — Pack Controls</Text>
                 <View style={styles.devButtonRow}>

@@ -136,6 +136,12 @@ export const Events = {
   // Phase 3.45: Profile telemetry
   PROFILE_VIEWED: 'profile_viewed',
   
+  // Phase 3.47: VIP System telemetry
+  VIP_VIEWED: 'vip_viewed',
+  VIP_TIER_SELECTED: 'vip_tier_selected',
+  VIP_BENEFITS_SHEET_OPENED: 'vip_benefits_sheet_opened',
+  VIP_PROGRESS_VIEWED: 'vip_progress_viewed',
+  
   // Error events
   OFFLINE_DETECTED: 'offline_detected',
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',

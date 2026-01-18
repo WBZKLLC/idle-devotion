@@ -39,7 +39,7 @@ CHAR_SELENE_SSR = {
     "add_to_standard_pool_after_days": 180,  # 6-month exclusivity
     
     # Character image - Angelic time warrior with wings
-    "image_url": "https://images.unsplash.com/photo-1729457497650-7ee597807ca9?w=400",
+    "image_url": "https://customer-assets.emergentagent.com/job_idle-devotion-ux/artifacts/nd6vmfal_af1d466e-388c-47dc-a360-c317e4ce0be7_1.webp",
     
     # OVERPOWERED Stats - Designed to trivialize content
     "base_hp": 14500,

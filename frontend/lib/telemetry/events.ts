@@ -151,6 +151,21 @@ export const Events = {
   PVE_DEFEAT_VIEWED: 'pve_defeat_viewed',
   PVE_DEFEAT_RECOMMENDATION_CLICKED: 'pve_defeat_recommendation_clicked',
   
+  // Phase 3.54: Skill Cut-In telemetry
+  PVE_SKILL_CUTIN_SHOWN: 'pve_skill_cutin_shown',
+  
+  // Phase 3.55: Combat Readability telemetry
+  PVE_BATTLE_KEY_MOMENT_SHOWN: 'pve_battle_key_moment_shown',
+  
+  // Phase 3.56: Difficulty telemetry
+  PVE_STAGE_VIEWED: 'pve_stage_viewed',
+  
+  // Phase 3.57-3.58: PvP telemetry
+  PVP_VIEWED: 'pvp_viewed',
+  PVP_RULES_OPENED: 'pvp_rules_opened',
+  PVP_OPPONENT_LIST_VIEWED: 'pvp_opponent_list_viewed',
+  PVP_MATCH_PREVIEW: 'pvp_match_preview',
+  
   // Phase 3.50: UI bug tracking (DEV-only)
   UI_TIMER_INVALID_SUPPRESSED: 'ui_timer_invalid_suppressed',
   

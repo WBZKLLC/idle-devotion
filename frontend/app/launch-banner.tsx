@@ -228,26 +228,26 @@ export default function LaunchBannerScreen() {
                 <View style={styles.rarityBadge}>
                   <Text style={styles.rarityText}>UR+</Text>
                 </View>
-                {bannerData?.featured_hero?.image_url ? (
+                {bannerData?.banner?.featured_hero?.image_url ? (
                   <Image 
-                    source={{ uri: bannerData.featured_hero.image_url }} 
+                    source={{ uri: bannerData.banner.featured_hero.image_url }} 
                     style={styles.heroImage}
                     resizeMode="cover"
                   />
                 ) : (
                   <Text style={styles.heroEmoji}>🔥</Text>
                 )}
-                <Text style={styles.heroName}>{bannerData?.featured_hero?.name}</Text>
-                <Text style={styles.heroElement}>🔥 {bannerData?.featured_hero?.element}</Text>
+                <Text style={styles.heroName}>{bannerData?.banner?.featured_hero?.name}</Text>
+                <Text style={styles.heroElement}>🔥 {bannerData?.banner?.featured_hero?.element}</Text>
                 
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{bannerData?.featured_hero?.base_atk}</Text>
+                    <Text style={styles.statValue}>{bannerData?.banner?.featured_hero?.base_atk}</Text>
                     <Text style={styles.statLabel}>ATK</Text>
                   </View>
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{bannerData?.featured_hero?.base_hp?.toLocaleString()}</Text>
+                    <Text style={styles.statValue}>{bannerData?.banner?.featured_hero?.base_hp?.toLocaleString()}</Text>
                     <Text style={styles.statLabel}>HP</Text>
                   </View>
                 </View>

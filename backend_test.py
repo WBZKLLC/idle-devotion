@@ -349,7 +349,12 @@ class BackendTester:
             async with self.session.get(f"{API_BASE}/leaderboard/arena") as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    rankings = data.get("rankings", [])
+                    # Handle both list and dict response formats
+                    if isinstance(data, list):
+                        rankings = data
+                    else:
+                        rankings = data.get("rankings", [])
+                    
                     if rankings:
                         # Check if power scores are included
                         first_opponent = rankings[0]

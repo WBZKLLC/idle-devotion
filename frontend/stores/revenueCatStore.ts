@@ -25,10 +25,10 @@ type PurchasesOffering = any;
 type PurchasesPackage = any;
 
 // RevenueCat API Key - same for both platforms in this case
-const REVENUECAT_API_KEY = 'test_IZyOoxmCinuIynJgzhXakqWWiyY';
+const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_XatWwbfGglZHujsLmVeIhyBpMKy';
 
 // Entitlement identifier from RevenueCat dashboard
-const PRO_ENTITLEMENT_ID = 'DivineHeros Pro';
+const PRO_ENTITLEMENT_ID = 'Idle Devotion Pro';
 
 // Product identifiers
 export const PRODUCT_IDS = {

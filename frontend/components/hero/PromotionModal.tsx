@@ -88,7 +88,7 @@ export function PromotionModal({
       } else {
         setError(err.message || 'Promotion failed');
       }
-      haptic('error');
+      haptic('medium');
     } finally {
       setLoading(false);
     }

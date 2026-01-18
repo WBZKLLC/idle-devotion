@@ -38,6 +38,9 @@ CHAR_SELENE_SSR = {
     "availability_flag": "LIMITED",
     "add_to_standard_pool_after_days": 180,  # 6-month exclusivity
     
+    # Character image - Angelic time warrior
+    "image_url": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+    
     # OVERPOWERED Stats - Designed to trivialize content
     "base_hp": 14500,
     "base_atk": 520,      # 450% skill multiplier vs standard 320%

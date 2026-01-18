@@ -455,14 +455,32 @@ export default function SummonHubScreen() {
   return (
     <LinearGradient colors={[COLORS.navy.darkest, COLORS.navy.dark]} style={styles.container}>
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        {/* Phase 3.19.6: Canonical header */}
-        <AppHeader
-          title="Summon"
-          subtitle="Choose a banner"
-          left={{ type: 'back' }}
-          includeSafeArea={false}
-          centerTitle={false}
-        />
+        {/* Phase 3.19.6: Canonical header + Phase 3.49: Rates/History actions */}
+        <View style={styles.headerRow}>
+          <AppHeader
+            title="Summon"
+            subtitle="Choose a banner"
+            left={{ type: 'back' }}
+            includeSafeArea={false}
+            centerTitle={false}
+          />
+          <View style={styles.headerActions}>
+            <Pressable 
+              style={styles.headerAction}
+              onPress={() => setShowBannerDetails(true)}
+            >
+              <Ionicons name="pie-chart-outline" size={18} color={COLORS.cream.soft} />
+              <Text style={styles.headerActionText}>Rates</Text>
+            </Pressable>
+            <Pressable 
+              style={styles.headerAction}
+              onPress={() => router.push('/gacha-history')}
+            >
+              <Ionicons name="list-outline" size={18} color={COLORS.cream.soft} />
+              <Text style={styles.headerActionText}>History</Text>
+            </Pressable>
+          </View>
+        </View>
         
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Scrollable Currency Bar */}

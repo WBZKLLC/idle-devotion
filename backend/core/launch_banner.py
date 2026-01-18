@@ -36,8 +36,8 @@ EXCLUSIVE_HERO = {
     "exclusive": True,
     "exclusive_duration_months": 6,  # Won't be in standard pool for 6 months
     
-    # Character image - Divine celestial warrior
-    "image_url": "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=400",
+    # Character image - Divine celestial warrior with golden armor
+    "image_url": "https://images.unsplash.com/photo-1636654302178-da23e21243dd?w=400",
     
     # OVERPOWERED Stats (trivializes early/mid-game)
     "base_hp": 12000,

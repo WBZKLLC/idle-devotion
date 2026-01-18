@@ -361,7 +361,7 @@ export default function ArenaScreen() {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.headerActionButton}
-              onPress={() => router.push('/pvp-tournament')}
+              onPress={() => router.push('/pvp-tournament' as any)}
             >
               <Ionicons name="trophy" size={20} color={COLORS.gold.primary} />
             </TouchableOpacity>

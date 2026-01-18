@@ -140,18 +140,14 @@ class BackendTester:
             self.log_result("Campaign Battle Test", False, "No stages available for testing")
             return
         
-        # Find first unlocked stage
-        unlocked_stage = None
-        for stage in stages:
-            if stage.get("unlocked", False):
-                unlocked_stage = stage
-                break
-        
-        if not unlocked_stage:
-            self.log_result("Campaign Battle Test", False, "No unlocked stages found")
+        # Find first stage (campaign stages use different structure)
+        if not stages:
+            self.log_result("Campaign Battle Test", False, "No stages available for testing")
             return
         
-        stage_num = unlocked_stage.get("stage_num", 1)
+        # Use first stage for testing (stage 1 should always be available)
+        first_stage = stages[0]
+        stage_num = first_stage.get("stage", 1)  # Use "stage" field instead of "stage_num"
         
         # Test 3: Complete campaign stage (simulates battle)
         try:

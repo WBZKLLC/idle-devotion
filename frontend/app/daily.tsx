@@ -23,7 +23,7 @@ import { RewardReceipt, isValidReceipt, formatReceiptItems } from '../lib/types/
 import { triggerBadgeRefresh } from '../lib/ui/badges';
 import { loadAuthToken } from '../lib/authStorage';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+import { API_BASE } from '../lib/api/config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {

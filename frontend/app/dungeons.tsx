@@ -18,6 +18,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { isErrorHandledGlobally } from '../lib/api';
 // Phase 3.18.5: Toast for non-blocking feedback
 import { toast } from '../components/ui/Toast';
+// Phase 3.50: Battle Presentation + Victory/Defeat UX
+import { BattlePresentationModal, VictoryDefeatModal } from '../components/battle';
+import type { BattlePresentationData, VictoryDefeatData } from '../components/battle';
+import { track, Events } from '../lib/telemetry/events';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

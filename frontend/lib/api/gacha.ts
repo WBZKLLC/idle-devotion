@@ -5,10 +5,10 @@
 // Uses canonical receipt system.
 // Server-authoritative - NO client-side RNG.
 
-import { loadAuthToken } from '../authStorage';
+// Auth handled by config.ts
 import { track, Events } from '../telemetry/events';
 import { GachaReceipt, isValidGachaReceipt } from '../types/receipt';
-import { apiUrl } from './config';
+import { apiUrl, getAuthHeaders } from './config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {

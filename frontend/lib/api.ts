@@ -237,7 +237,12 @@ api.interceptors.response.use(
         break;
         
       default:
-        if (status && status >= 500) {
+        if (status === 520 || status === 521 || status === 522 || status === 523 || status === 524) {
+          // Cloudflare/CDN errors - these are transient infrastructure issues
+          // Don't show alarming error messages, just log for debugging
+          console.warn(`[API] CDN error (${status}) - transient infrastructure issue, may auto-recover`);
+          // Don't show toast for CDN errors - they're transient and will retry
+        } else if (status && status >= 500) {
           // Server error
           _showErrorToastOnce('error', 'Something went wrong. Please try again later.', error);
         } else if (!status) {

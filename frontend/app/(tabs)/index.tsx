@@ -636,7 +636,7 @@ export default function HomeScreen() {
             <TouchableOpacity 
               style={styles.liveOpsBanner}
               onPress={() => {
-                track(Events.LIVEOPS_BANNER_CLICKED, { 
+                track(Events.LIVEOPS_CTA_CLICKED, { 
                   event_id: liveOpsStatus.events[0].event_id 
                 });
                 router.push('/events');

@@ -38,6 +38,7 @@ import COLORS from '../theme/colors';
 import { toast } from '../components/ui/Toast';
 
 // DEV-only flag - set to false to disable DEV tools even in __DEV__ mode
+// SECURITY: Only show dev tools for admin users (ADAM)
 const ENABLE_DEV_TOOLS = __DEV__;
 
 export default function PaidFeaturesScreen() {

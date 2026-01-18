@@ -5,9 +5,9 @@
 // All mutations go through canonical receipts.
 // NO CLIENT-SIDE STAR/STAT MUTATIONS.
 
-import { loadAuthToken } from '../authStorage';
+// Auth handled by config.ts
 import { track, Events } from '../telemetry/events';
-import { apiUrl } from './config';
+import { apiUrl, getAuthHeaders } from './config';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const token = await loadAuthToken();

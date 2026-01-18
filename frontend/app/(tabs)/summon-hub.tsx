@@ -574,6 +574,28 @@ export default function SummonHubScreen() {
           </View>
         </ScrollView>
         {renderResultsModal()}
+        
+        {/* Phase 3.49: Canonical SummonResultsModal */}
+        <SummonResultsModal
+          visible={showCanonicalResults}
+          onClose={handleCloseResults}
+          receipt={lastReceipt}
+        />
+        
+        {/* Phase 3.49: BannerDetailsSheet for rates */}
+        <BannerDetailsSheet
+          visible={showBannerDetails}
+          onClose={() => setShowBannerDetails(false)}
+          banner={{
+            id: selectedBanner,
+            name: selectedBanner === 'divine' ? 'Divine Summon' : selectedBanner === 'premium' ? 'Crystal Summon' : 'Coin Summon',
+            rates: selectedBanner === 'divine' 
+              ? { UR: 5, SSR: 15, SR: 40, R: 40 }
+              : selectedBanner === 'premium'
+              ? { SSR: 3, SR: 17, R: 50, N: 30 }
+              : { SR: 5, R: 35, N: 60 },
+          }}
+        />
       </SafeAreaView>
     </LinearGradient>
   );

@@ -35,7 +35,10 @@ export type RewardSource =
   | 'store_redeem'  // Phase 3.30: Store dev redeem
   | 'summon_single'  // Phase 3.33: Single gacha pull
   | 'summon_multi'  // Phase 3.33: Multi gacha pull
-  | 'pity_reward';  // Phase 3.33: Pity system reward
+  | 'pity_reward'  // Phase 3.33: Pity system reward
+  | 'hero_promotion'  // Phase 3.39: Hero star promotion
+  | 'hero_ascension'  // Phase 3.44: Hero ascension
+  | 'iap_purchase';  // Phase 3.42: RevenueCat IAP
 
 /**
  * Single reward item in a receipt

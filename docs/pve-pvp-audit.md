@@ -148,27 +148,58 @@ Arena Tab ──────► View 3 Opponents ──────► Instant B
 
 ---
 
-## 6. DELTA VS [REDACTED] (Structure Only)
+## 6. DELTA VS [REDACTED] (Video-Derived Analysis)
 
 > Note: [redacted] refers to industry reference titles observed for comparison.
+> **SOURCE: Video analysis of Reference_PVE_01.mp4, Reference_PVE_02.mp4, Reference_PVP_01.mp4, Reference_PVP_02.mp4**
 
-### Comparison Framework
+### Comparison Framework (Video-Validated)
 
 | Category | Reference A Approach | Idle Devotion Approach | Gap |
 |----------|---------------------|------------------------|-----|
-| **Presentation** | Animated battle sequences, skill cuts | Static/minimal battle visualization | High |
-| **Stakes** | PvP tournaments with visible rewards | Arena with rating + coins | Medium |
-| **Pacing** | 30s-60s battles with tension | Instant resolution | High |
-| **Rewards** | Celebration sequences, loot boxes opening | Simple reward screen | Medium |
-| **Clarity** | Damage numbers, hit feedback, combos | Power comparison only | High |
-| **UX Polish** | Particle effects, screen shake | Basic gradients | Medium |
+| **Battle Presentation** | Full animated sequences with skill cuts, character poses, dramatic intros | Instant resolution, power comparison only | **CRITICAL** |
+| **Damage Numbers** | Large, vibrant, color-coded (red/green), critical hit indicators, massive numbers (156M+) | Not shown during battle | **CRITICAL** |
+| **Skill Cut-Ins** | Full-screen cinematic animations ("Light of Creation", "Supreme Glory") with character portraits | None | **HIGH** |
+| **Particle Effects** | Abundant: sparks, glows, explosions, energy bursts, magical circles | Basic gradients | **HIGH** |
+| **Screen Shake** | Subtle shakes on impactful skills | None | **MEDIUM** |
+| **Victory Screen** | "VICTORY" banner with wings, crown, celebratory graphics, clear context | Simple result text | **HIGH** |
+| **Reward Reveal** | Sequential reveal with icons, coin animations, "Reward Record" section | All-at-once display | **MEDIUM** |
+| **Buff/Debuff Display** | Clear visual icons, text overlays ("CRIT DMG Taken DOWN", "ATK UP") | Minimal indicators | **HIGH** |
+| **PvP Matchmaking** | Bracket tournaments, opponent power display, visible rewards, attempt limits | Simple opponent list | **MEDIUM** |
+| **PvP Stakes** | Tournament progression, daily ranking rewards, countdown timers | Rating-only | **MEDIUM** |
 
-### Key Structural Gaps
+### Video-Observed Reference Features (Detailed)
 
-1. **Battle Visualization**: Reference shows blow-by-blow; Idle Devotion shows result
-2. **Skill Expression**: Reference has timing/combo input; Idle Devotion is passive
-3. **Social Integration**: Reference has guilds/clans active in PvP; Idle Devotion arena is solo
-4. **Seasonal Content**: Reference has limited-time modes; Idle Devotion is static
+#### PvE Reference Features:
+1. **Skill Cut-In Animations**: Full-screen reveals with character names: "Light of Creation", "Luminous Glories", "Celestial Domain", "Supreme Glory", "Infinity Blessing", "Abyss Sonata", "Divinity Eye", "Divine Retribution", "Star Gaze"
+2. **Damage Number Magnitude**: Numbers in tens/hundreds of millions (e.g., "-68658185", "-2132514720", "+38409732", "-156129616")
+3. **Status Effect Text**: "CRIT DMG Taken DOWN", "Increased P.DMG", "DEF reduced", "Combustion", "Heartburn", "Cleansed"
+4. **Round Counter**: Clear "Round" indicator on left side of screen
+5. **Character Portraits**: Active character highlighted with energy effects
+6. **Victory Banner**: Prominent "VICTORY" with angelic wings and crown, stage context shown
+7. **Reward Record**: Clean display with coin icon + amount, potion icon + count
+
+#### PvP Reference Features:
+1. **Tournament Brackets**: Visual bracket showing Quarter-final, Semi-final, Final progression
+2. **Opponent Display**: Avatar, name, power score (e.g., "2735863795"), potential rewards
+3. **Attempt System**: "Attempts: 4" visible - resource management for PvP
+4. **Countdown Timer**: "022:26:11" creating urgency
+5. **Ranking Rewards**: Daily rewards at 21:00, incentivizing consistent play
+6. **Match Rules Button**: Transparency on competitive mechanics
+7. **Ranking Quiz**: Knowledge-based engagement feature
+
+### Key Structural Gaps (Video-Validated)
+
+| Gap | Reference Evidence | Idle Devotion Current | Priority |
+|-----|-------------------|----------------------|----------|
+| **No Battle Animation** | 15-30 second sequences with skill activations | Instant result | P0 |
+| **No Skill Cut-Ins** | "Light of Creation" cinematic reveals | None | P0 |
+| **No Damage Numbers** | Millions displayed prominently | Hidden | P0 |
+| **No Victory Fanfare** | Wings + crown + context banner | Text only | P0 |
+| **No Buff/Debuff Text** | "ATK UP", "CRIT DMG DOWN" overlays | Minimal | P1 |
+| **No Tournament Mode** | Bracket-based competition | Rating-only arena | P2 |
+| **No Countdown Urgency** | Timed events with visible countdown | None | P2 |
+| **No Attempt System** | "Attempts: 4" visible | Tickets (similar) | OK |
 
 ---
 

@@ -12,7 +12,7 @@ import sys
 import random
 
 # Configuration
-BASE_URL = "https://pvp-evolution.preview.emergentagent.com/api"
+BASE_URL = "http://localhost:8001/api"
 TEST_USERNAME = f"testuser_{random.randint(1000, 9999)}"
 
 class ComprehensiveGachaTest:

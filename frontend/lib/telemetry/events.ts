@@ -166,6 +166,38 @@ export const Events = {
   PVP_OPPONENT_LIST_VIEWED: 'pvp_opponent_list_viewed',
   PVP_MATCH_PREVIEW: 'pvp_match_preview',
   
+  // Phase 4.0: Battle Feel telemetry
+  SFX_BATTLE_START_PLAYED: 'sfx_battle_start_played',
+  SFX_VICTORY_PLAYED: 'sfx_victory_played',
+  SFX_DEFEAT_PLAYED: 'sfx_defeat_played',
+  PVE_CUTIN_ASSET_SHOWN: 'pve_cutin_asset_shown',
+  
+  // Phase 4.1: IAP/RevenueCat telemetry
+  IAP_PURCHASE_STARTED: 'iap_purchase_started',
+  IAP_PURCHASE_SUCCESS: 'iap_purchase_success',
+  IAP_PURCHASE_ERROR: 'iap_purchase_error',
+  IAP_VERIFY_SUBMITTED: 'iap_verify_submitted',
+  IAP_VERIFY_SUCCESS: 'iap_verify_success',
+  IAP_VERIFY_ERROR: 'iap_verify_error',
+  ENTITLEMENTS_UPDATED: 'entitlements_updated',
+  
+  // Phase 4.2: PvP Depth telemetry
+  PVP_SEASON_VIEWED: 'pvp_season_viewed',
+  PVP_REWARDS_PREVIEW_OPENED: 'pvp_rewards_preview_opened',
+  PVP_DAILY_CLAIM_SUBMITTED: 'pvp_daily_claim_submitted',
+  PVP_DAILY_CLAIM_SUCCESS: 'pvp_daily_claim_success',
+  PVP_DAILY_CLAIM_ALREADY_CLAIMED: 'pvp_daily_claim_already_claimed',
+  PVP_DAILY_CLAIM_ERROR: 'pvp_daily_claim_error',
+  PVP_SEASON_CLAIM_SUBMITTED: 'pvp_season_claim_submitted',
+  PVP_SEASON_CLAIM_SUCCESS: 'pvp_season_claim_success',
+  PVP_SEASON_CLAIM_ALREADY_CLAIMED: 'pvp_season_claim_already_claimed',
+  PVP_SEASON_CLAIM_ERROR: 'pvp_season_claim_error',
+  
+  // Phase 4.3: Live Ops telemetry
+  LIVEOPS_VIEWED: 'liveops_viewed',
+  LIVEOPS_BANNER_SHOWN: 'liveops_banner_shown',
+  LIVEOPS_BANNER_CLICKED: 'liveops_banner_clicked',
+  
   // Phase 3.50: UI bug tracking (DEV-only)
   UI_TIMER_INVALID_SUPPRESSED: 'ui_timer_invalid_suppressed',
   

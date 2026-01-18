@@ -1,5 +1,5 @@
 /**
- * Phase 3.50: Victory/Defeat UX Modal
+ * Phase 3.50 + 4.0: Victory/Defeat UX Modal
  * 
  * Victory Screen:
  * - Title + hero portrait header
@@ -11,9 +11,11 @@
  * - Clear failure reason labels
  * - Recommended action CTA
  * - Power comparison display
+ * 
+ * Phase 4.0: Added SFX support
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -26,6 +28,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { track, Events } from '../../lib/telemetry/events';
+// Phase 4.0: SFX support
+import { playSfx } from '../../lib/audio/sfx';
 
 const COLORS = {
   navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b' },

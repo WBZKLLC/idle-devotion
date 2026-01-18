@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://gamefix-2.preview.emergentagent.com/api"
+BASE_URL = "https://ecoaudit.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

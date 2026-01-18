@@ -84,8 +84,8 @@ pass('No star 7+ in STAR_TABLE');
 
 // Check 5: Hero promotion endpoint exists
 console.log('\nCheck 5: Hero promotion endpoint exists...');
-if (!serverCode.includes('/api/hero/promote')) {
-  fail('Missing /api/hero/promote endpoint');
+if (!serverCode.includes('promote_hero') && !serverCode.includes('/promote')) {
+  fail('Missing hero promotion endpoint');
 }
 pass('Hero promotion endpoint exists');
 

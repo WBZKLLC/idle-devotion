@@ -40,8 +40,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { track, Events } from '../../lib/telemetry/events';
 // Phase 4.0: SFX support
 import { playSfx } from '../../lib/audio/sfx';
-// Phase 4.0: Cut-in registry
-import { generateBattleCutIns, DEFAULT_CUTIN, type SkillCutInConfig } from '../../lib/battle/skillCutins';
+// Phase 4.0: Cut-in registry (generateBattleCutIns for registry-based cut-ins)
+import { generateBattleCutIns, DEFAULT_CUTIN } from '../../lib/battle/skillCutins';
 
 // Theme colors
 const COLORS = {

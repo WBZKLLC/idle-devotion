@@ -139,11 +139,11 @@ export function HeroStageLiveMotion({
       false
     );
     
-    // Subtle parallax drift (very slow)
+    // Subtle parallax drift (very slow) - using simple duration (no Easing to avoid module errors)
     parallaxX.value = withRepeat(
       withSequence(
-        withTiming(maxParallax, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-maxParallax, { duration: 8000, easing: Easing.inOut(Easing.sin) })
+        withTiming(maxParallax, { duration: 8000 }),
+        withTiming(-maxParallax, { duration: 8000 })
       ),
       -1,
       false
@@ -151,8 +151,8 @@ export function HeroStageLiveMotion({
     
     parallaxY.value = withRepeat(
       withSequence(
-        withTiming(maxParallax / 2, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-maxParallax / 2, { duration: 10000, easing: Easing.inOut(Easing.sin) })
+        withTiming(maxParallax / 2, { duration: 10000 }),
+        withTiming(-maxParallax / 2, { duration: 10000 })
       ),
       -1,
       false

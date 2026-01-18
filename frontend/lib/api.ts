@@ -168,11 +168,13 @@ api.interceptors.response.use(
         // Session expired or invalid token
         // Guard against multiple logout triggers
         // Also guard against network errors that may look like 401s (CDN/proxy issues)
-        const isRealAuthError = error.response?.data?.detail?.toLowerCase().includes('token') ||
-                                error.response?.data?.detail?.toLowerCase().includes('session') ||
-                                error.response?.data?.detail?.toLowerCase().includes('auth') ||
-                                error.response?.data?.detail?.toLowerCase().includes('invalid') ||
-                                error.response?.data?.detail?.toLowerCase().includes('expired');
+        const errorDetail = (error.response?.data?.detail || '').toLowerCase();
+        const isRealAuthError = errorDetail.includes('token') ||
+                                errorDetail.includes('session') ||
+                                errorDetail.includes('auth') ||
+                                errorDetail.includes('invalid') ||
+                                errorDetail.includes('expired') ||
+                                errorDetail.includes('unauthorized');
         
         if (!_isLoggingOut && isRealAuthError) {
           _isLoggingOut = true;

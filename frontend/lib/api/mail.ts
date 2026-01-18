@@ -41,7 +41,7 @@ export async function getMailSummary(username: string): Promise<{
   try {
     const headers = await getAuthHeaders();
     // Use legacy route for compatibility, but server uses auth token for identity
-    const res = await fetch(apiUrl('/api/mail/summary/${username}'), { headers });
+    const res = await fetch(apiUrl(`/api/mail/summary/${username}`), { headers });
     if (res.status === 401) {
       // Token invalid - return defaults, let auth layer handle logout
       return { rewardsAvailable: 0, unreadMessages: 0, giftsAvailable: 0, receiptsAvailable: 0 };
@@ -66,7 +66,7 @@ export async function getMailRewards(username: string): Promise<Array<{
 }>> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(apiUrl('/api/mail/rewards/${username}'), { headers });
+    const res = await fetch(apiUrl(`/api/mail/rewards/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch rewards');
     return await res.json();
   } catch {
@@ -86,7 +86,7 @@ export async function getMailMessages(username: string): Promise<Array<{
 }>> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(apiUrl('/api/mail/messages/${username}'), { headers });
+    const res = await fetch(apiUrl(`/api/mail/messages/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch messages');
     return await res.json();
   } catch {
@@ -106,7 +106,7 @@ export async function getMailGifts(username: string): Promise<Array<{
 }>> {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(apiUrl('/api/mail/gifts/${username}'), { headers });
+    const res = await fetch(apiUrl(`/api/mail/gifts/${username}`), { headers });
     if (!res.ok) throw new Error('Failed to fetch gifts');
     return await res.json();
   } catch {
@@ -127,7 +127,7 @@ export async function claimMailReward(username: string, rewardId: string): Promi
   
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(apiUrl('/api/mail/rewards/${username}/${rewardId}/claim'), {
+    const res = await fetch(apiUrl(`/api/mail/rewards/${username}/${rewardId}/claim`), {
       method: 'POST',
       headers,
     });
@@ -214,7 +214,7 @@ export async function claimMailGift(username: string, giftId: string): Promise<R
   
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(apiUrl('/api/mail/gifts/${username}/${giftId}/claim'), {
+    const res = await fetch(apiUrl(`/api/mail/gifts/${username}/${giftId}/claim`), {
       method: 'POST',
       headers,
     });
@@ -341,7 +341,7 @@ export async function claimMailReceipt(receiptId: string): Promise<RewardReceipt
   
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(apiUrl('/api/mail/receipts/${receiptId}/claim'), {
+    const res = await fetch(apiUrl(`/api/mail/receipts/${receiptId}/claim`), {
       method: 'POST',
       headers,
     });

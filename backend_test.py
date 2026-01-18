@@ -22,7 +22,7 @@ from typing import Dict, Any, Optional, List
 import time
 
 # Configuration
-BASE_URL = "https://pvp-evolution.preview.emergentagent.com/api"
+BASE_URL = "https://idle-devotion-ux.preview.emergentagent.com/api"
 TEST_USERNAME = "ADAM"
 TEST_PASSWORD = "`=267+HA4i4=!Af7StuS6A=eX2V3b*S1=aQL?u?H5_w$qlGU__T*0ow$lJeB*Zo9I`"
 

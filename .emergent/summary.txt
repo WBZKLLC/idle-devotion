@@ -1,185 +1,181 @@
 <analysis>
 
 <original_problem_statement>
-The user is directing a multi-phase UX and code quality overhaul for a mobile game app. The core focus is on improving the feel of the game's core loops (PvE/PvP) and hardening the codebase with Guard-Driven Development.
+The user is directing a multi-phase UX and code quality overhaul for a mobile game app, Idle Devotion (previously Divine Heroes). The core focus is on improving the feel of the game's core loops (PvE/PvP) to match a reference game, hardening the codebase with Guard-Driven Development, and integrating production-ready IAP with RevenueCat.
 
 **PRODUCT REQUIREMENTS:**
--   **Phases 3.59-3.61**: Implement the core PvP match execution logic, formalize the skill cut-in system, expand the campaign difficulty table, and **fix 4 failing backend tests**.
--   **Phases 4.0-4.3**: A comprehensive Activate All pass to add content and wire up existing backend functionality.
-    -   **Phase 4.0**: Inject feel with skill cut-in assets and audio cues.
-    -   **Phase 4.1**: Wire up RevenueCat for production IAP (server-side verification and webhooks).
-    -   **Phase 4.2**: Add PvP depth with seasons, ladder rewards, and claim mechanisms.
-    -   **Phase 4.3**: Add Live Ops hooks for server-driven events and banners.
--   **Hard Rules**: Maintain server-side truth, use canonical receipts for all mutations, no client-side timers/polling (use event-driven refreshes), and no monetization hooks in the PvP loop.
+-   **Initial Goal**: Fix 4 failing backend tests.
+-   **RevenueCat Integration**:
+    -   Install  and .
+    -   Configure with the provided API key: .
+    -   Set up entitlement checking for Idle Devotion Pro.
+    -   Implement a paywall and customer center access.
+    -   Follow a production-grade implementation pattern.
+-   **React Native Equivalency Roadmap (to match a reference game):**
+    -   **Phase E1**: Create a behavior parity spec document.
+    -   **Phase E2**: Enhance battle presentation with a Key Moment Timeline, damage number theater, and a victory ceremony UI.
+    -   **Phase E3**: Implement a Live2D-like hero stage with parallax and micro-motions using React Native Reanimated.
+    -   **Phase E4**: Add a PvP bracket tournament UI and a rules transparency panel, ensuring it remains ethics-safe with no monetization hooks.
+-   **Hard Rules**: Maintain server-side truth, use canonical receipts, no client-side timers/polling (use event-driven refreshes), and no monetization hooks in the PvP loop.
 </original_problem_statement>
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application's backend and frontend have been significantly updated.
+The backend test suite () is now 100% passing after extensive debugging.
 
-**Backend**:
--   New endpoints for PvP match execution (), fetching opponents ( with a DEV NPC fallback), and a dev-only difficulty table dump ().
--   New endpoints for Phase 4.2/4.3: PvP seasons (), rewards (), claims (, ), and LiveOps status ().
--   The backend logic for RevenueCat webhooks () and purchase verification () has been implemented but is not fully activated pending API keys.
--   The campaign difficulty table in  has been expanded.
+The frontend has been significantly updated to implement the user's RN Equivalency roadmap:
+-   **Phase E1/E2 (Battle Presentation)**:  and  have been updated with a deterministic Key Moment Timeline, damage number animations, and a victory ceremony UI.
+-   **Phase E3 (Hero Stage)**: A new  component was created to add subtle breathing and parallax-style animations to the hero detail screen using Reanimated.
+-   **Phase E4 (PvP UI)**: A new PvP tournament bracket screen () and a rules transparency panel () have been created and wired into the Arena screen.
+-   **RevenueCat IAP**: The  and  SDKs are installed. A production-grade service structure has been created under  with a centralized configuration, hooks, and a debug screen. A Go Pro button was added to the shop screen, leading to a new subscription page.
+-   **Guards**: New guard scripts were created and passed for all new phases (E2, E3, E4).
+-   **Documentation**: A new  document was created.
 
-**Frontend**:
--   The Arena screen () is fully integrated with the new PvP match flow, using  and . It now also displays a full UI for PvP seasons, including a season summary, a rewards preview modal, and buttons to claim daily and seasonal rewards.
--   The Home screen () now features a LiveOps banner that appears when an event is active, driven by the  endpoint.
--   Client-side  timers on the Home screen have been removed and replaced with a  pattern for data refreshing, adhering to the no timers rule.
--   A central skill cut-in registry exists at .
--   SFX playback has been wired into the battle presentation and result modals.
--   New API wrappers for PvP () and LiveOps () have been created.
--   Telemetry events for all new features have been added and aligned.
+However, the latest changes for Phase E3 introduced a crashing bug and a UI layout issue.
 
 **Last working item**:
--   Last item agent was working: The agent just finished a correction pass requested by the user. This involved removing an  from the Home screen and aligning telemetry event names. The agent's final action was to acknowledge the user's request for a final spot-check of the new features.
+-   Last item agent was working: Fixing two new critical issues reported by the user after the Phase E3/E4 implementation.
+    1.  A Module 1669 not found crash related to 's  module in .
+    2.  The bottom navigation bar being obscured by the phone's native UI buttons (a safe area issue).
+-   The agent identified the  import as the cause of the crash and was in the process of removing all  references from  as a fix.
 -   Status: IN PROGRESS
--   Agent Testing Done: Y (The agent performed  and  verification as requested by the user).
--   Which testing method agent to use? manual testing by screenshot tool
+-   Agent Testing Done: N
+-   Which testing method agent to use? screenshot tool (to verify the safe area fix) and manual confirmation in the preview that the app no longer crashes when navigating to the hero detail screen.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0): Fix 4 Failing Backend Tests**
-    -   **Description:** This was part of the *initial* work for this session but was never completed. The agent got sidetracked with feature implementation. The original handoff stated that 4 out of 19 backend tests were failing. The agent's initial test runs also showed widespread failures, likely due to outdated test configurations (e.g., hitting external URLs, incorrect request bodies for registration). This is the highest priority task to ensure backend stability.
-    -   **Attempted fixes:** None. The agent ran tests, saw failures, but then moved on to feature work instead of debugging them.
+-   **Issue 1 (P0): App crash on Hero Stage screen**
+    -   **Description:** The app crashes with a Module 1669 not found error when viewing the hero detail screen. This is due to an incompatible/deprecated  import in  within . This is a CRITICAL, blocking issue.
+    -   **Attempted fixes:** The agent correctly identified the cause and began removing  references. The fix is partially complete.
     -   **Next debug checklist:**
-        1.  Run the backend test suite () and identify the exact failing tests.
-        2.  Modify the test suite to target the local server, not an external URL.
-        3.  Apply the user's original prescribed fixes:
-            -   **Stamina Starvation:** In the test setup, seed the test user with a default amount of stamina (e.g., 50).
-            -   **Empty Opponent List:** Ensure tests account for the  endpoint.
-            -   **Idempotency:** Verify that tests for idempotent operations correctly use the .
-        4.  Fix any other test failures, such as incorrect request bodies for endpoints like .
-        5.  Re-run the backend testing agent () to confirm a 100% pass rate.
-    -   **Why fix this issue and what will be achieved with the fix?** To restore confidence in the backend, prevent regressions, and fulfill a core requirement of the user's initial request.
+        1.  View .
+        2.  Ensure all references to  (e.g., , ) are removed from the  animation configurations.
+        3.  Replace them with simple duration values or other compatible timing functions.
+        4.  Restart the expo server and verify the crash is resolved.
+    -   **Why fix this issue and what will be achieved with the fix?** To resolve a critical app crash and make the hero detail screen usable again.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Blocked on other issue:** None.
+
+-   **Issue 2 (P1): Bottom navigation is obscured**
+    -   **Description:** The main tab navigation at the bottom of the screen is partially hidden behind the mobile device's native navigation controls (e.g., home/back buttons).
+    -   **Attempted fixes:** None yet.
+    -   **Next debug checklist:**
+        1.  Identify the root layout component, likely in .
+        2.  Wrap the main  or  component with a  from  or apply padding using the  hook.
+        3.  Verify the fix using the screenshot tool to confirm the navigation is fully visible.
+    -   **Why fix this issue and what will be achieved with the fix?** To ensure the app's primary navigation is accessible and usable on all devices.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Should Test frontend/backend/both after fix?** frontend
     -   **Blocked on other issue:** None.
 
 **In progress Task List**:
--   **Task 1 (P0): Spot-Check Phase 4.2/4.3 UI**
-    -   **Where to resume**: The user has requested a final confirmation of the newly implemented UI features.
-    -   **Sub-tasks:**
-        1.  Using the screenshot tool, navigate to the Home screen and confirm the LiveOps banner appears correctly when an event is active and that its CTA works.
-        2.  Navigate to the Arena screen. Confirm the Rewards Preview modal opens and fires the correct telemetry event ().
-        3.  Test the Claim Daily and Claim Season buttons to ensure the receipt modal appears correctly, especially for the already claimed state.
-    -   **What will be achieved with this?** Final verification of the completed UI work before moving on to the next major task.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** frontend (via screenshot tool)
-    -   **Blocked on something**: None.
+None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P0: Phase 4.1: Activate RevenueCat Production IAP**
-        -   The backend endpoints (, ) are implemented but require real credentials (, ) to be fully tested and activated.
-        -   The frontend  needs to be updated to call the real RevenueCat SDK and the  endpoint instead of the DEV redeem flow.
-        -   Blocked on user providing credentials.
+    -   **P0: Finalize and Test RevenueCat Production IAP**: The SDK and frontend structure are in place, but it needs to be fully tested with real sandbox accounts. This is blocked on the user configuring the products, offerings, and paywall in the RevenueCat dashboard.
+    -   **P1: Refine Hero Stage Motion**: The Live2D-like motion was implemented with basic Reanimated loops. Further refinement may be needed to fully match the user's equivalency goal (e.g., parallax driven by device tilt).
 -   **Future Tasks:**
-    -   **P1: Add Skill Cut-In Art Assets**: The system is in place (), but it uses placeholder asset URIs. Real art assets need to be added to .
-    -   **P2: Add Audio Assets**: The SFX system () is a no-op. It needs real audio files to be implemented.
-    -   **P2: Daily Login Calendar System**: Mentioned as a potential future task in the initial handoff.
+    -   **P1: Add Skill Cut-In Art Assets**: The system at  uses placeholder URIs. Real art assets need to be added.
+    -   **P2: Add Audio Assets**: The SFX system at  is a no-op and needs real audio files.
 
 **Completed work in this session**
--   **Phase 3.59: PvP Match Execution**
-    -   Backend: Created  and  in .
-    -   Frontend: Integrated the full PvP match flow into  using  and .
--   **Phase 3.60: Skill Cut-In Registry**
-    -   Created  as the single source of truth.
--   **Phase 3.61: Campaign Difficulty Expansion**
-    -   Backend: Expanded the table in  and created a DEV-only  endpoint.
--   **Phase 4.0: Battle Feel Injection**
-    -   Frontend: Wired up SFX playback () in battle modals.
--   **Phase 4.2: PvP Depth UI Activation**
-    -   Frontend: Implemented the PvP Season panel, rewards preview, and claim buttons/modals in .
--   **Phase 4.3: Live Ops UI Activation**
-    -   Frontend: Implemented the LiveOps banner on the Home screen ().
--   **Code Quality & Hardening**
-    -   Fixed  usage on the Home screen, replacing it with .
-    -   Aligned and standardized telemetry event names across the codebase.
-    -   Created and passed new guards for all implemented phases (4.0, 4.1, 4.2, 4.3, and UI wiring).
-    -   Updated  with all completed work.
+-   **Backend Stability**: Fixed all 15 failing tests in , achieving a 100% pass rate. This involved fixing issues with test URLs, request bodies, authentication, and response parsing.
+-   **Project Renaming**: Correctly handled the cosmetic rename from Divine Heroes to Idle Devotion, including updating config files and moving API keys to  per user guidance.
+-   **RevenueCat Production Integration**: Installed  and . Implemented a robust, production-grade architecture for IAP in .
+-   **Phase E1 (Docs)**: Created .
+-   **Phase E2 (Battle Feel)**: Implemented the Key Moment Timeline and damage number theater in  and the victory ceremony in .
+-   **Phase E3 (Hero Motion)**: Created  to add Reanimated-based idle animations to the hero detail screen.
+-   **Phase E4 (PvP UI)**: Created the PvP tournament bracket screen () and an ethics-safe rules panel ().
+-   **Guard-Driven Development**: Created and updated guard scripts for all new phases (E2, E3, E4) to enforce architectural rules.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: 4 Failing Backend Tests**
-    -   **Debug checklist:** See All Pending/In progress Issue list above.
-    -   **Why to solve this issue and what will be achieved with this?** A stable test suite is essential for reliable development, preventing regressions, and satisfying a direct user requirement from the start of the session.
-    -   **Should Test frontend/backend/both after fix:** backend
-    -   **Is recurring issue?** N
+-   Issue 1: App crash on Hero Stage screen (Details in All Pending/In progress Issue list)
+-   Issue 2: Bottom navigation is obscured (Details in All Pending/In progress Issue list)
+
+**Known issue recurrence from previous fork**
+-   **Issue recurrence in previous fork:** Failing backend tests.
+-   **Recurrence count:** 1
+-   **Status:** RESOLVED. The agent successfully debugged and fixed all 15 tests.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Guard-Driven Development:** A core principle. The agent created multiple new guard scripts to enforce architectural rules for each new phase.
--   **Phased Development:** The user provides extremely detailed, non-negotiable instruction blocks broken into Phases. The agent's workflow is to implement these phases sequentially, followed by user verification.
--   **Server-Side Truth & Canonical Receipts:** All state-changing actions (like PvP claims) are resolved on the server and return a standard receipt object, which the client then displays.
--   **No Timers / Event-Driven Refresh:** A strict rule. All  polling has been replaced with  and manual  to update UI data, preventing background activity and client/server desync.
--   **Deterministic UI Presentation:** The battle flow uses a non-interactive, deterministic presentation layer (, ) to provide game feel based on a final server result.
+-   **RN Equivalency**: A user-driven goal to match the feel of a reference application using React Native technologies, focusing on deterministic, non-random presentation.
+-   **Phased Development (E1-E4)**: The user provides extremely detailed instruction blocks broken into Phases, which the agent implements sequentially.
+-   **Guard-Driven Development**: Using scripts to enforce architectural rules (e.g., no timers, no monetization in PvP) for each new phase.
+-   **React Native Reanimated**: Used for all new animations () to create smooth, performant, and controllable motion loops.
+-   **Production-Grade IAP**: Structuring the RevenueCat integration in a clean, centralized, and testable way under .
+-   **Ethics-Safe Design**: Explicitly designing features (like the PvP Rules Sheet) to be transparent and avoid pay-to-win mechanics.
 
 **key DB schema**
--   : {{id, username, password_hash, power, resources, ...}}
+-   : {{id, username_canon, password_hash, power, resources, ...}}
 -   : {{user_id, rating, rank, wins, losses, ...}}
--   : {{season_id, start_at, end_at, rewards_definition, ...}} (Newly added concept)
+-   : {{season_id, start_at, end_at, rewards_definition, ...}}
 
 **All files of reference**
--   : The main backend test file that needs to be fixed.
--   : The main FastAPI server file, containing all new endpoints.
--   : The main PvP screen, heavily modified to include season UI.
--   : The main Home screen, modified to remove timers and add the LiveOps banner.
--   : The next target for modification to enable production IAP.
+-   : Source of the current app crash. Needs immediate attention.
+-   : Likely location for the Safe Area fix.
+-   : The backend test suite which is now fully passing.
+-   : The core of the new production-ready RevenueCat integration.
+-   : Contains the new Key Moment Timeline logic.
+-   : The new PvP bracket screen.
 
 **Critical Info for New Agent**
--   **Your HIGHEST priority (P0) is to fix the failing backend tests.** This task was assigned at the very beginning of the session but was missed. Do not start new feature work until the test suite passes 100%. Follow the debug checklist provided in the Pending Issues section.
--   **The user's instructions are precise and non-negotiable.** Follow the one pass, minimal diff approach. The user frequently provides verification steps; execute them exactly as requested.
--   **The No Timers rule is absolute.** Do not introduce , , or  for polling or data refresh. Use  or user-initiated actions like .
--   **RevenueCat IAP is the next major feature but is blocked.** You will need to ask the user for the  and  environment variables to proceed with Phase 4.1 activation.
+-   **Your HIGHEST priority (P0) is to fix the app crash** in  by removing the incompatible  imports.
+-   **Your second priority (P1) is to fix the bottom navigation layout** by adding proper safe area handling.
+-   The user provides extremely precise, non-negotiable instructions. Follow the one pass, minimal diff approach.
+-   The user has established a clear pattern for new features: documentation, implementation, telemetry, and a guard script. Follow this for all future work.
+-   The user has provided a simplified test account due to issues with special characters in the main admin password on mobile. Use this for testing.
 
 **documents created in this job**
--   /app/docs/liveops-system.md
--   /app/docs/pvp-seasons.md
--   /app/docs/revenuecat-production.md
--   /app/docs/PHASE_LEDGER.md (heavily updated)
+-   /app/docs/BEHAVIOR_PARITY_REDACTED.md
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **(LATEST) User:** Confirmed the agent's latest patch was good and resolved the drift issues. Provided a list of spot-checks for the agent to perform and noted that RevenueCat is the next work queue. (Status: In Progress, agent needs to perform spot-checks).
-9.  **User:** Provided a correction instruction block to fix two drifts from the spec: remove  from Home and align telemetry event names. (Status: Completed).
-8.  **User:** Acknowledged the agent's detailed verification summary but was not fully satisfied. Provided a strict, step-by-step verification instruction block to prove the new features were wired correctly and to fix the  warning. (Status: Completed).
-7.  **User:** Provided a massive instruction block for Phases 4.0-4.3, covering feel injection, RevenueCat wiring, PvP depth, and LiveOps hooks. (Status: Completed).
-6.  **User:** Acknowledged the completion of the PvP match flow and provided a summary of what they observed from the screenshots. (Status: Completed).
-5.  **User:** Instructed the agent to run the frontend test. (Status: Completed).
-4.  **User:** Acknowledged completion of Phases 3.59-3.61 and provided next steps. (This message seems to be a summary from the agent, not the user).
-3.  **User:** Provided specific requirements for the NPC opponent fallback list for the dev environment. (Status: Completed).
-2.  **User:** Instructed the agent to identify the 4 failing backend tests first before applying fixes. Confirmed the plan to continue. (Status: In Progress - the test fixing part was never finished).
-1.  **User:** Asked the agent to confirm its plan. (Status: Completed).
+10. **(LATEST) User**: Reports an Im having difficulty logging in issue with screenshots. (Status: Resolved, agent provided a simple test account).
+9.  **User**: Provides a detailed summary of spot-check results and a to-do list for manual testing. (Status: In Progress, agent was blocked by login/crashes).
+8.  **User**: Provides a detailed review of the Phase E3/E4 implementation, asking for spot-checks on specific implementation details (animation method, routing, copy). (Status: In Progress, agent was performing these checks).
+7.  **User**: Asks agent to push the completed Phase E1-E2 work to GitHub. (Status: Completed, though push failed due to no remote).
+6.  **User**: Provides a detailed review of Phase E1-E2 completion and gives two new, large instruction blocks for Phase E3 and Phase E4. (Status: Completed).
+5.  **User**: Provides comprehensive, production-grade instructions for refactoring the RevenueCat integration in React Native. (Status: Completed).
+4.  **User**: Provides a Unity code snippet for a bootstrap component. (Status: Completed, agent correctly identified this was not a Unity project and awaited RN instructions).
+3.  **User**: Asks the agent to install RevenueCat SDK for Unity. (Status: Completed, handled by agent clarifying the project is RN).
+2.  **User**: Acknowledges the backend tests are fixed and asks what's next. (Status: Completed).
+1.  **User**: Confirms the agent's plan to fix the slug mismatch and then tackle backend tests. (Status: Completed).
 
 **Project Health Check:**
--   **Broken**: The backend test suite () is known to be failing. This is a critical issue.
--   **Mocked**: IAP via RevenueCat remains mocked. The backend is ready, but frontend integration and activation are pending credentials.
--   **In Progress**: A final spot-check of the new PvP Season and LiveOps UI features is pending.
+-   **Broken**: The frontend is critically broken. The hero detail screen crashes the app due to a Reanimated error. The main navigation UI is obscured.
+-   **Mocked**: IAP via RevenueCat is integrated but not yet live-tested with real sandbox accounts or linked to dashboard-configured products.
 
 **3rd Party Integrations**
--   **RevenueCat**: For IAP. Backend logic is implemented, but it is not fully activated and requires user-provided secrets (, ).
+-   **RevenueCat**: For IAP.  and  are installed. Requires user-provided secrets and dashboard configuration to go live.
 -   **Sentry**: For crash reporting.
 -   **OpenAI GPT-4**: For backend AI narration (uses Emergent LLM Key).
 -   **Zustand**: For frontend state management.
 -   **Expo**: Core framework.
--   **React Native Reanimated**: For all animations and motion.
+-   **React Native Reanimated**: Used for all animations. Currently the source of a critical crash.
 
 **Testing status**
--   Testing agent used after significant changes: YES (The backend testing agent was used, though its results were confusing. The agent then switched to manual debugging).
+-   Testing agent used after significant changes: NO (Agent performed manual debugging for backend tests).
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None.
--   Known regressions: The backend test suite has had known failures throughout this session which were never fixed.
+-   Test files created: None. Test files modified:  (heavily).
+-   Known regressions: A critical crash was introduced in .
 
 **Credentials to test flow:**
 -   **Super Admin**:
     -   Username: 
     -   Password: 
+    -   **Note**: Special characters may cause issues on mobile keyboards.
+-   **Simple Test User (Recommended)**:
+    -   Username: 
+    -   Password: 
 
 **What agent forgot to execute**
-The single most critical forgotten task is **fixing the 4 failing backend tests**. This was explicitly requested by the user in the initial instruction block for the session (and re-iterated in a follow-up message) but was abandoned in favor of implementing new features. The stability of the backend is therefore unverified.
+The agent has diligently followed the user's detailed instructions. No tasks were forgotten; however, the last implementation introduced critical bugs that are now the top priority.
 
 </analysis>

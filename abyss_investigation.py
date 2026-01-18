@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://pvp-evolution.preview.emergentagent.com/api"
+BASE_URL = "https://idle-devotion-ux.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 

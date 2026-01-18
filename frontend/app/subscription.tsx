@@ -65,7 +65,7 @@ export default function SubscriptionScreen() {
     switch (result) {
       case PAYWALL_RESULT.PURCHASED:
         toast.success('Welcome to Idle Devotion Pro!');
-        track(Events.PURCHASE_COMPLETED, { sku: 'pro_subscription' });
+        track(Events.IAP_PURCHASE_SUCCESS, { sku: 'pro_subscription' });
         break;
       case PAYWALL_RESULT.RESTORED:
         toast.success('Purchases restored successfully!');
@@ -87,7 +87,7 @@ export default function SubscriptionScreen() {
     const success = await purchasePackage(pkg);
     if (success) {
       toast.success('Welcome to Idle Devotion Pro!');
-      track(Events.PURCHASE_COMPLETED, { sku: pkg.identifier });
+      track(Events.IAP_PURCHASE_SUCCESS, { sku: pkg.identifier });
     }
   };
   

@@ -2,8 +2,8 @@
 module.exports = ({ config }) => {
   const baseConfig = {
     ...config,
-    name: 'Divine Heroes',
-    slug: 'divine-heroes-gacha',
+    name: 'Idle Devotion',
+    slug: 'idle-devotion-soul-bound-fantasy',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',

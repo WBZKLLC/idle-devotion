@@ -580,6 +580,7 @@ export default function SummonHubScreen() {
           visible={showCanonicalResults}
           onClose={handleCloseResults}
           receipt={lastReceipt}
+          pityBefore={pityBefore}
         />
         
         {/* Phase 3.49: BannerDetailsSheet for rates */}
@@ -589,11 +590,21 @@ export default function SummonHubScreen() {
           banner={{
             id: selectedBanner,
             name: selectedBanner === 'divine' ? 'Divine Summon' : selectedBanner === 'premium' ? 'Crystal Summon' : 'Coin Summon',
-            rates: selectedBanner === 'divine' 
-              ? { UR: 5, SSR: 15, SR: 40, R: 40 }
+            description: selectedBanner === 'divine' 
+              ? 'Highest chance for UR heroes'
               : selectedBanner === 'premium'
-              ? { SSR: 3, SR: 17, R: 50, N: 30 }
+              ? 'Better odds for SSR heroes'
+              : 'Standard summon pool',
+            rates: selectedBanner === 'divine' 
+              ? { UR: 5, 'UR+': 1, SSR: 14, 'SSR+': 5, SR: 35, R: 40 }
+              : selectedBanner === 'premium'
+              ? { SSR: 3, 'SSR+': 1, SR: 16, R: 50, N: 30 }
               : { SR: 5, R: 35, N: 60 },
+            currency: selectedBanner === 'divine' ? 'divine_essence' : selectedBanner === 'premium' ? 'crystals' : 'coins',
+            costSingle: selectedBanner === 'divine' ? 1 : selectedBanner === 'premium' ? 100 : 1000,
+            costMulti: selectedBanner === 'divine' ? 10 : selectedBanner === 'premium' ? 1000 : 10000,
+            pityThreshold: selectedBanner === 'divine' ? 40 : 50,
+            guaranteedRarity: selectedBanner === 'divine' ? 'UR' : 'SSR',
           }}
         />
       </SafeAreaView>

@@ -50,10 +50,13 @@ class ComprehensiveGachaTest:
                 headers = kwargs.get('headers', {})
                 headers['Authorization'] = f'Bearer {self.auth_token}'
                 kwargs['headers'] = headers
-            response = requests.request(method, url, timeout=30, **kwargs)
+            response = requests.request(method, url, timeout=10, **kwargs)
             return response
+        except requests.exceptions.Timeout:
+            print(f"   ⏱️ Request timed out: {method} {endpoint}")
+            return None
         except requests.exceptions.RequestException as e:
-            print(f"❌ Request failed: {e}")
+            print(f"   ❌ Request error: {e}")
             return None
     
     def test_complete_flow(self):

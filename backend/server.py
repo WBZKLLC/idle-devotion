@@ -7502,6 +7502,248 @@ async def dev_difficulty_dump():
         "note": "This endpoint is DEV-only and disabled in production"
     }
 
+# ══════════════════════════════════════════════════════════════════════════════
+# Phase 4.2: PvP Season Endpoints
+# ══════════════════════════════════════════════════════════════════════════════
+
+@api_router.get("/pvp/season")
+async def get_pvp_season(
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Phase 4.2: Get current PvP season info.
+    
+    Returns season timing, current rank band, and time remaining.
+    """
+    rating = 1000  # Default
+    
+    if current_user:
+        user_id = current_user.get("id")
+        arena_record = await db.arena_records.find_one({"user_id": user_id})
+        if arena_record:
+            rating = arena_record.get("rating", 1000)
+    
+    return get_season_info(rating)
+
+@api_router.get("/pvp/rewards/preview")
+async def get_pvp_rewards_preview():
+    """
+    Phase 4.2: Get preview of all rank band rewards.
+    
+    Returns complete reward table (currency/cosmetics only - no stat boosts).
+    """
+    return {
+        "rewards": get_rewards_preview(),
+        "note": "All rewards are currency/cosmetics only. No stat boosts."
+    }
+
+@api_router.post("/pvp/daily/claim")
+async def claim_pvp_daily(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Phase 4.2: Claim daily PvP participation reward.
+    
+    Idempotent - can only claim once per day.
+    Returns canonical receipt.
+    """
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    assert_account_active(current_user)
+    
+    body = await request.json()
+    source_id = body.get("source_id")
+    
+    if not source_id:
+        raise HTTPException(status_code=400, detail="source_id required for idempotency")
+    
+    user_id = current_user.get("id")
+    username = current_user.get("username")
+    
+    # Idempotency check
+    existing_claim = await db.pvp_daily_claims.find_one({"source_id": source_id})
+    if existing_claim:
+        return existing_claim.get("result", {"error": "duplicate"})
+    
+    # Check if already claimed today
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_claim = await db.pvp_daily_claims.find_one({
+        "user_id": user_id,
+        "claim_date": today
+    })
+    
+    if today_claim:
+        return {
+            "success": False,
+            "error": "already_claimed",
+            "message": "Daily reward already claimed today"
+        }
+    
+    # Get user's rank band
+    arena_record = await db.arena_records.find_one({"user_id": user_id})
+    rating = arena_record.get("rating", 1000) if arena_record else 1000
+    rank_band = get_rank_band(rating)
+    
+    # Get rewards for rank band
+    rewards = get_daily_reward_for_band(rank_band)
+    
+    # Record balances before
+    user = await db.users.find_one({"id": user_id})
+    balances_before = {
+        "pvp_medals": user.get("pvp_medals", 0),
+        "gold": user.get("gold", 0)
+    }
+    
+    # Award rewards
+    update_fields = {}
+    for currency, amount in rewards.items():
+        update_fields[currency] = amount
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$inc": update_fields}
+    )
+    
+    # Record balances after
+    user_after = await db.users.find_one({"id": user_id})
+    balances_after = {
+        "pvp_medals": user_after.get("pvp_medals", 0),
+        "gold": user_after.get("gold", 0)
+    }
+    
+    result = {
+        "success": True,
+        "source": "pvp_daily_claim",
+        "rank_band": rank_band.value,
+        "rewards": rewards,
+        "balances_before": balances_before,
+        "balances_after": balances_after,
+        "claim_date": today
+    }
+    
+    # Store for idempotency
+    await db.pvp_daily_claims.insert_one({
+        "source_id": source_id,
+        "user_id": user_id,
+        "claim_date": today,
+        "created_at": datetime.now(timezone.utc),
+        "result": result
+    })
+    
+    return result
+
+@api_router.post("/pvp/season/claim")
+async def claim_pvp_season(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Phase 4.2: Claim end-of-season PvP reward.
+    
+    Idempotent - can only claim once per season.
+    Returns canonical receipt.
+    """
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    assert_account_active(current_user)
+    
+    body = await request.json()
+    source_id = body.get("source_id")
+    season_id = body.get("season_id")
+    
+    if not source_id:
+        raise HTTPException(status_code=400, detail="source_id required for idempotency")
+    
+    user_id = current_user.get("id")
+    
+    # Idempotency check
+    existing_claim = await db.pvp_season_claims.find_one({"source_id": source_id})
+    if existing_claim:
+        return existing_claim.get("result", {"error": "duplicate"})
+    
+    # Check if already claimed this season
+    season_claim = await db.pvp_season_claims.find_one({
+        "user_id": user_id,
+        "season_id": season_id
+    })
+    
+    if season_claim:
+        return {
+            "success": False,
+            "error": "already_claimed",
+            "message": "Season reward already claimed"
+        }
+    
+    # Get user's rank band
+    arena_record = await db.arena_records.find_one({"user_id": user_id})
+    rating = arena_record.get("rating", 1000) if arena_record else 1000
+    rank_band = get_rank_band(rating)
+    
+    # Get season rewards
+    season_reward = get_season_reward_for_band(rank_band)
+    rewards = season_reward.rewards
+    
+    # Record balances before
+    user = await db.users.find_one({"id": user_id})
+    
+    # Award rewards
+    update_fields = {}
+    for currency, amount in rewards.items():
+        update_fields[currency] = amount
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$inc": update_fields}
+    )
+    
+    result = {
+        "success": True,
+        "source": "pvp_season_claim",
+        "season_id": season_id,
+        "rank_band": rank_band.value,
+        "rewards": rewards,
+        "title": season_reward.title,
+        "frame": season_reward.frame
+    }
+    
+    # Store for idempotency
+    await db.pvp_season_claims.insert_one({
+        "source_id": source_id,
+        "user_id": user_id,
+        "season_id": season_id,
+        "created_at": datetime.now(timezone.utc),
+        "result": result
+    })
+    
+    return result
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Phase 4.3: Live Ops Endpoints
+# ══════════════════════════════════════════════════════════════════════════════
+
+@api_router.get("/liveops/status")
+async def get_liveops_status_endpoint(
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Phase 4.3: Get current live ops status.
+    
+    Returns active events, boosts, and available banners.
+    Server-authoritative - client must not gate content locally.
+    """
+    is_vip = False
+    
+    if current_user:
+        user_id = current_user.get("id")
+        user = await db.users.find_one({"id": user_id})
+        # Check VIP status
+        is_vip = user.get("vip_level", 0) > 0 if user else False
+    
+    return get_liveops_status(is_vip)
+
 @api_router.post("/arena/battle/{username}")
 async def arena_battle(username: str, request: ArenaBattleRequest):
     """Battle in arena against another player"""

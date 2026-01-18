@@ -59,7 +59,12 @@
     "guard:ui-time-format": "node scripts/guard-ui-time-format.mjs",
     "guard:phase-3-51-pve-clarity": "node scripts/guard-phase-3-51-pve-clarity.mjs",
     "guard:phase-3-52-pve-celebration": "node scripts/guard-phase-3-52-pve-celebration.mjs",
-    "guard:phase-3-53-pvp-review": "node scripts/guard-phase-3-53-pvp-review.mjs"
+    "guard:phase-3-53-pvp-review": "node scripts/guard-phase-3-53-pvp-review.mjs",
+    "guard:phase-3-54-skill-cutin": "node scripts/guard-phase-3-54-skill-cutin.mjs",
+    "guard:phase-3-55-readability-v2": "node scripts/guard-phase-3-55-readability-v2.mjs",
+    "guard:phase-3-56-difficulty-table": "node scripts/guard-phase-3-56-difficulty-table.mjs",
+    "guard:phase-3-57-pvp-normalization": "node scripts/guard-phase-3-57-pvp-normalization.mjs",
+    "guard:phase-3-58-pvp-ux-skeleton": "node scripts/guard-phase-3-58-pvp-ux-skeleton.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",

@@ -105,9 +105,9 @@ for (const file of apiFiles) {
     violations.push(`${filename}: API_BASE concatenation (should use apiUrl())`);
   }
   
-  // Check for direct loadAuthToken usage (should use getAuthHeaders from config)
+  // Check for direct loadAuthToken usage (should use getJsonHeaders from config)
   if (content.includes('loadAuthToken')) {
-    violations.push(`${filename}: direct loadAuthToken (should use getAuthHeaders from config)`);
+    violations.push(`${filename}: direct loadAuthToken (should use getJsonHeaders from config)`);
   }
   
   // Check for local getAuthHeaders definition (should import from config)

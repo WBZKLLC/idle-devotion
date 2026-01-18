@@ -6548,6 +6548,294 @@ async def get_gacha_history(request: Request, limit: int = 50):
     return {"history": history, "count": len(history)}
 
 
+# =============================================================================
+# PHASE 3.39-3.41: HERO STAR PROGRESSION SYSTEM
+# =============================================================================
+# Server-authoritative hero star progression.
+# All shard deductions go through canonical receipts.
+# NO CLIENT-SIDE STAR/STAT MUTATIONS.
+# =============================================================================
+
+# LOCKED: Star progression table (1★ → 6★)
+STAR_TABLE = {
+    1: {"shardCost": 0, "statMultiplier": 1.0},      # Base
+    2: {"shardCost": 20, "statMultiplier": 1.15},    # +15%
+    3: {"shardCost": 40, "statMultiplier": 1.35},    # +20%
+    4: {"shardCost": 80, "statMultiplier": 1.60},    # +25%
+    5: {"shardCost": 160, "statMultiplier": 1.90},   # +30%
+    6: {"shardCost": 320, "statMultiplier": 2.25},   # +35%
+}
+
+MAX_STAR = 6
+
+# LOCKED: Base stats by rarity
+BASE_STATS_BY_RARITY = {
+    "N":    {"hp": 500, "atk": 50, "def": 30},
+    "R":    {"hp": 750, "atk": 75, "def": 45},
+    "SR":   {"hp": 1000, "atk": 100, "def": 60},
+    "SSR":  {"hp": 1500, "atk": 150, "def": 90},
+    "SSR+": {"hp": 2000, "atk": 200, "def": 120},
+    "UR":   {"hp": 2500, "atk": 250, "def": 150},
+    "UR+":  {"hp": 3000, "atk": 300, "def": 180},
+}
+
+# Affinity multiplier by tier
+AFFINITY_MULTIPLIERS = {
+    0: 1.0,
+    1: 1.05,
+    2: 1.10,
+    3: 1.15,
+    4: 1.20,
+    5: 1.30,
+}
+
+class HeroPromotionRequest(BaseModel):
+    """Request body for hero star promotion"""
+    hero_id: str
+    source_id: str
+
+class HeroPromotionReceipt(BaseModel):
+    """Canonical receipt for hero promotion"""
+    source: str = "hero_promotion"
+    sourceId: str
+    heroId: str
+    heroDelta: Dict[str, int]  # starBefore, starAfter
+    shardsSpent: int
+    items: List[Dict[str, Any]]
+    balances: Dict[str, int]
+    alreadyClaimed: bool = False
+
+
+def derive_hero_stats(rarity: str, star: int, affinity_tier: int = 0) -> Dict:
+    """
+    Server-side stat derivation (Phase 3.41).
+    
+    finalStat = baseStat × starMultiplier × affinityMultiplier
+    """
+    base = BASE_STATS_BY_RARITY.get(rarity, BASE_STATS_BY_RARITY["SR"])
+    star_mult = STAR_TABLE.get(star, STAR_TABLE[1])["statMultiplier"]
+    affinity_mult = AFFINITY_MULTIPLIERS.get(affinity_tier, 1.0)
+    
+    return {
+        "baseStats": base,
+        "starMultiplier": star_mult,
+        "affinityMultiplier": affinity_mult,
+        "starBonus": {
+            "hp": int(base["hp"] * (star_mult - 1)),
+            "atk": int(base["atk"] * (star_mult - 1)),
+            "def": int(base["def"] * (star_mult - 1)),
+        },
+        "affinityBonus": {
+            "hp": int(base["hp"] * star_mult * (affinity_mult - 1)),
+            "atk": int(base["atk"] * star_mult * (affinity_mult - 1)),
+            "def": int(base["def"] * star_mult * (affinity_mult - 1)),
+        },
+        "finalStats": {
+            "hp": int(base["hp"] * star_mult * affinity_mult),
+            "atk": int(base["atk"] * star_mult * affinity_mult),
+            "def": int(base["def"] * star_mult * affinity_mult),
+        },
+    }
+
+
+@api_router.get("/hero/progression-table")
+async def get_hero_progression_table():
+    """Get the locked star progression table (read-only)"""
+    return {
+        "starTable": STAR_TABLE,
+        "maxStar": MAX_STAR,
+        "baseStatsByRarity": BASE_STATS_BY_RARITY,
+        "affinityMultipliers": AFFINITY_MULTIPLIERS,
+    }
+
+
+@api_router.get("/hero/{hero_id}/stats")
+async def get_hero_derived_stats(request: Request, hero_id: str):
+    """
+    Get server-derived stats for a hero (Phase 3.41).
+    Returns read-only stats computed server-side.
+    """
+    # Auth required
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        username = payload.get("sub") or payload.get("username")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Find user's hero
+    user_hero = await db.user_heroes.find_one({
+        "user_id": user["id"],
+        "hero_id": hero_id
+    })
+    
+    if not user_hero:
+        raise HTTPException(status_code=404, detail="Hero not found in your collection")
+    
+    # Get hero definition
+    hero_def = await db.heroes.find_one({"id": hero_id})
+    rarity = hero_def.get("rarity", "SR") if hero_def else user_hero.get("rarity", "SR")
+    star = user_hero.get("stars", 1)
+    affinity_tier = user_hero.get("affinity_tier", 0)
+    
+    # Derive stats
+    stats = derive_hero_stats(rarity, star, affinity_tier)
+    
+    # Get promotion eligibility
+    next_star = star + 1
+    can_promote = star < MAX_STAR
+    promotion_cost = STAR_TABLE.get(next_star, {}).get("shardCost", 0) if can_promote else 0
+    current_shards = user_hero.get("shards", 0)
+    
+    return {
+        "heroId": hero_id,
+        "rarity": rarity,
+        "star": star,
+        "affinityTier": affinity_tier,
+        "shards": current_shards,
+        "stats": stats,
+        "promotion": {
+            "canPromote": can_promote,
+            "nextStar": next_star if can_promote else None,
+            "shardCost": promotion_cost,
+            "hasEnoughShards": current_shards >= promotion_cost,
+            "maxStarReached": star >= MAX_STAR,
+        }
+    }
+
+
+@api_router.post("/hero/promote")
+async def promote_hero(request: Request, body: HeroPromotionRequest):
+    """
+    Promote hero to next star level (Phase 3.39).
+    
+    - Checks hero exists
+    - Checks star < maxStar
+    - Checks shard balance
+    - Deducts shards
+    - Increments star
+    - Returns canonical receipt
+    
+    Idempotent by sourceId.
+    """
+    # Auth required
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        username = payload.get("sub") or payload.get("username")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check idempotency
+    existing = await db.promotion_receipts.find_one({"sourceId": body.source_id})
+    if existing:
+        balances = await get_user_balances(user)
+        return {
+            **existing,
+            "balances": balances,
+            "alreadyClaimed": True,
+        }
+    
+    # Find user's hero
+    user_hero = await db.user_heroes.find_one({
+        "user_id": user["id"],
+        "hero_id": body.hero_id
+    })
+    
+    if not user_hero:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "INVALID_HERO", "message": "Hero not found in your collection"}
+        )
+    
+    current_star = user_hero.get("stars", 1)
+    
+    # Check max star
+    if current_star >= MAX_STAR:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "STAR_MAX_REACHED", "message": f"Hero already at max star ({MAX_STAR}★)"}
+        )
+    
+    next_star = current_star + 1
+    shard_cost = STAR_TABLE[next_star]["shardCost"]
+    current_shards = user_hero.get("shards", 0)
+    
+    # Check shards
+    if current_shards < shard_cost:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "INSUFFICIENT_SHARDS",
+                "message": "Not enough shards",
+                "required": shard_cost,
+                "available": current_shards,
+                "deficit": shard_cost - current_shards,
+            }
+        )
+    
+    # Apply promotion
+    await db.user_heroes.update_one(
+        {"_id": user_hero["_id"]},
+        {
+            "$inc": {"shards": -shard_cost},
+            "$set": {"stars": next_star}
+        }
+    )
+    
+    # Get updated balances
+    updated_user = await db.users.find_one({"username": username})
+    balances = await get_user_balances(updated_user)
+    
+    # Build receipt
+    receipt = {
+        "source": "hero_promotion",
+        "sourceId": body.source_id,
+        "heroId": body.hero_id,
+        "heroDelta": {
+            "starBefore": current_star,
+            "starAfter": next_star,
+        },
+        "shardsSpent": shard_cost,
+        "items": [{"type": "shards_spent", "amount": -shard_cost, "hero_id": body.hero_id}],
+        "balances": balances,
+        "alreadyClaimed": False,
+    }
+    
+    # Store for idempotency
+    await db.promotion_receipts.insert_one({
+        **receipt,
+        "username": username,
+        "createdAt": datetime.utcnow(),
+    })
+    
+    return receipt
+
+
 # ==================== PLAYER CHARACTER SYSTEM (Original) ====================
 @api_router.get("/player-character/{username}")
 async def get_player_character(username: str):

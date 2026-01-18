@@ -54,7 +54,9 @@
     "guard:pvp-ethics": "node scripts/guard-pvp-ethics.mjs",
     "guard:api-config": "node scripts/guard-api-config.mjs",
     "guard:cinematics-codec": "node scripts/guard-cinematics-codec.mjs",
-    "guard:sourceid-strength": "node scripts/guard-sourceid-strength.mjs"
+    "guard:sourceid-strength": "node scripts/guard-sourceid-strength.mjs",
+    "guard:phase-3-50-battle": "node scripts/guard-phase-3-50-battle-presentation.mjs",
+    "guard:ui-time-format": "node scripts/guard-ui-time-format.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",

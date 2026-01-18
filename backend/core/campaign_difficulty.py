@@ -140,3 +140,33 @@ def get_stage_difficulty_info(chapter_id: int, stage_number: int, player_power: 
         "power_band": band,
         "power_gap_percent": gap_percent,
     }
+
+
+def dump_difficulty_table() -> list:
+    """
+    Phase 3.61: Dump entire difficulty table for DEV tuning.
+    Returns list of all chapter configurations.
+    
+    DEV-ONLY: Do not expose in production.
+    """
+    result = []
+    for chapter_id, (base_power, power_per_stage, boss_mult) in DIFFICULTY_TABLE.items():
+        # Sample stages for each chapter
+        stages = []
+        for stage_num in [1, 5, 10, 15, 20]:
+            enemy_power = get_stage_enemy_power(chapter_id, stage_num)
+            stages.append({
+                "stage": stage_num,
+                "enemy_power": enemy_power,
+                "is_boss": stage_num == 20,
+            })
+        
+        result.append({
+            "chapter": chapter_id,
+            "base_power": base_power,
+            "power_per_stage": power_per_stage,
+            "boss_multiplier": boss_mult,
+            "sample_stages": stages,
+        })
+    
+    return result

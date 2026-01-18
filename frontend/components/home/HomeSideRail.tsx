@@ -123,25 +123,26 @@ export function HomeSideRail(props: HomeSideRailProps) {
     action();
   }, [props, expanded, collapse]);
   
-  // Handle Doors press - ONLY toggles rail, does NOT open DoorsSheet
+  // Handle Doors press - DIRECTLY opens DoorsSheet (simpler UX)
   const handleDoorsToggle = useCallback(() => {
     haptic('light');
     props.onAnyInteraction?.();
     
-    const newExpanded = !expanded;
-    setExpanded(newExpanded);
-    
-    if (reduceMotion) {
-      expandProgress.value = newExpanded ? 1 : 0;
-    } else {
-      expandProgress.value = withTiming(
-        newExpanded ? 1 : 0,
-        {
-          duration: newExpanded ? EXPAND_DURATION : COLLAPSE_DURATION,
-          easing: newExpanded ? Easing.out(Easing.ease) : Easing.in(Easing.ease),
-        }
-      );
+    // If rail is expanded, collapse it
+    if (expanded) {
+      setExpanded(false);
+      if (reduceMotion) {
+        expandProgress.value = 0;
+      } else {
+        expandProgress.value = withTiming(0, { 
+          duration: COLLAPSE_DURATION, 
+          easing: Easing.in(Easing.ease) 
+        });
+      }
     }
+    
+    // Directly open DoorsSheet
+    props.onPressDoors();
   }, [expanded, reduceMotion, expandProgress, props]);
   
   // Items for expanded rail - includes Library as first item (distinct from Doors toggle)

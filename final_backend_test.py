@@ -58,7 +58,8 @@ class ComprehensiveGachaTest:
         
         # 1. User Registration
         print("\n1️⃣ Testing User Registration...")
-        response = self.make_request("POST", f"/user/register?username={self.username}")
+        register_data = {"username": self.username, "password": "testpassword123"}
+        response = self.make_request("POST", "/user/register", json=register_data)
         if response and response.status_code == 200:
             self.user_data = response.json()
             self.log_result("User Registration", True, 

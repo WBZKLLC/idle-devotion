@@ -212,17 +212,6 @@ export default function HomeScreen() {
         loadInstantCooldown();
         loadLiveOpsStatus();
       }
-      
-      // Also refresh on app state change (foreground)
-      const subscription = AppState.addEventListener('change', (nextState) => {
-        if (nextState === 'active' && user) {
-          loadIdleStatus();
-          loadInstantCooldown();
-          loadLiveOpsStatus();
-        }
-      });
-      
-      return () => subscription.remove();
     }, [user?.username])
   );
 

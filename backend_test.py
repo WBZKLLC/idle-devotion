@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Backend Testing for Phase 3.50 PvE Battle Presentation Flow
-Testing the backend APIs that support the battle presentation modals.
+Backend Testing for Phase 3.50-3.58 Implementation
+Testing Campaign Battle Flow, Dungeon Battle Flow, Dungeon Sweep, Campaign Stage Cards, and Arena/PvP Screen
 
 Test Focus:
-1. Campaign battle APIs (stage completion)
-2. Dungeon battle APIs (stage battles vs sweep)
-3. Authentication with ADAM credentials
-4. Battle result data structure validation
+1. Campaign Battle Flow - BattlePresentationModal with turn progression, skill callouts, damage numbers
+2. Dungeon Battle Flow - Battle vs Sweep functionality 
+3. Dungeon Sweep Test - Quick Sweep for cleared stages (no presentation modal)
+4. Campaign Stage Cards - Recommended Power values and power band indicators
+5. Arena/PvP Screen - Tickets/attempts display, no shop links, opponent power scores
+6. Authentication with ADAM credentials
+7. Battle result data structure validation for presentation modals
 """
 
 import asyncio

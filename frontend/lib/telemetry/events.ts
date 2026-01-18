@@ -205,7 +205,6 @@ export const Events = {
   PVE_REWARD_RECORD_VIEWED: 'pve_reward_record_viewed',
   
   // Phase E3: Hero Stage Live Motion telemetry
-  HERO_STAGE_VIEWED: 'hero_stage_viewed',
   HERO_STAGE_MOTION_ENABLED: 'hero_stage_motion_enabled',
   HERO_STAGE_MOTION_DISABLED: 'hero_stage_motion_disabled',
   

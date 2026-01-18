@@ -393,6 +393,22 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user, _ = await authenticate_request(credentials, require_auth=False)
     return user
 
+# Phase 4.2/4.3: Optional auth dependency (returns None if no token)
+security_optional = HTTPBearer(auto_error=False)
+
+async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security_optional)):
+    """
+    Get current user from JWT token, but don't require auth.
+    Returns None if no token provided or token invalid.
+    """
+    if not credentials:
+        return None
+    try:
+        user, _ = await authenticate_request(credentials, require_auth=False)
+        return user
+    except Exception:
+        return None
+
 # =============================================================================
 # SUPER ADMIN HELPERS (Server-authoritative, JWT-bound)
 # =============================================================================

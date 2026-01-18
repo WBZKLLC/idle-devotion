@@ -327,7 +327,7 @@ class BackendTester:
         # Test: Get arena record/status (should show tickets/attempts)
         try:
             async with self.session.get(
-                f"{API_BASE}/arena/{TEST_USERNAME}/record",
+                f"{API_BASE}/arena/record/{TEST_USERNAME}",
                 headers=self.get_auth_headers()
             ) as resp:
                 if resp.status == 200:
@@ -335,10 +335,9 @@ class BackendTester:
                     rating = data.get("rating", 0)
                     wins = data.get("wins", 0)
                     losses = data.get("losses", 0)
-                    tickets = data.get("arena_tickets_today", 0)
                     
                     self.log_result("Arena Record API", True, 
-                                  f"Rating: {rating}, W/L: {wins}/{losses}, Tickets: {tickets}")
+                                  f"Rating: {rating}, W/L: {wins}/{losses}")
                 else:
                     error_data = await resp.text()
                     self.log_result("Arena Record API", False, f"Status {resp.status}", error_data)
@@ -347,15 +346,15 @@ class BackendTester:
         
         # Test: Get arena leaderboard (should show opponent power scores)
         try:
-            async with self.session.get(f"{API_BASE}/arena/leaderboard/server_1") as resp:
+            async with self.session.get(f"{API_BASE}/leaderboard/arena") as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     rankings = data.get("rankings", [])
                     if rankings:
                         # Check if power scores are included
                         first_opponent = rankings[0]
-                        has_power = "power" in first_opponent or "team_power" in first_opponent
-                        power_info = "with power scores" if has_power else "without power scores"
+                        has_power = "power" in first_opponent or "team_power" in first_opponent or "rating" in first_opponent
+                        power_info = "with power/rating scores" if has_power else "without power scores"
                         self.log_result("Arena Leaderboard API", True, 
                                       f"Retrieved {len(rankings)} opponents {power_info}")
                     else:
@@ -371,19 +370,18 @@ class BackendTester:
             battle_data = {"team_id": "default"}
             
             async with self.session.post(
-                f"{API_BASE}/arena/{TEST_USERNAME}/battle",
+                f"{API_BASE}/arena/battle/{TEST_USERNAME}",
                 json=battle_data,
                 headers=self.get_auth_headers()
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     victory = data.get("victory")
-                    tickets_used = data.get("tickets_used", 0)
                     
                     if victory is not None:
                         result_text = "Victory" if victory else "Defeat"
                         self.log_result("Arena Battle API", True, 
-                                      f"{result_text} - Tickets used: {tickets_used}")
+                                      f"{result_text} - Arena battle completed")
                     else:
                         self.log_result("Arena Battle API", False, "No victory status returned", data)
                 elif resp.status == 400:
@@ -398,6 +396,25 @@ class BackendTester:
                     self.log_result("Arena Battle API", False, f"Status {resp.status}", error_data)
         except Exception as e:
             self.log_result("Arena Battle API", False, f"Exception: {str(e)}")
+        
+        # Test: Get user profile to check arena tickets
+        try:
+            async with self.session.get(
+                f"{API_BASE}/user/{TEST_USERNAME}",
+                headers=self.get_auth_headers()
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    tickets = data.get("arena_tickets_today", 0)
+                    arena_rank = data.get("arena_rank", 0)
+                    
+                    self.log_result("Arena Tickets Display", True, 
+                                  f"Arena tickets: {tickets}, Rank: {arena_rank}")
+                else:
+                    error_data = await resp.text()
+                    self.log_result("Arena Tickets Display", False, f"Status {resp.status}", error_data)
+        except Exception as e:
+            self.log_result("Arena Tickets Display", False, f"Exception: {str(e)}")
 
     async def test_campaign_stage_cards(self):
         """Test Campaign Stage Cards for recommended power and power band indicators"""

@@ -104,7 +104,6 @@ for (const file of apiFiles) {
   if (/\$\{API_BASE\}\/api\//.test(content) || /API_BASE\s*\+\s*['"]\/api/.test(content)) {
     violations.push(`${filename}: API_BASE concatenation (should use apiUrl())`);
   }
-  }
 }
 
 if (violations.length > 0) {

@@ -10963,19 +10963,49 @@ async def attack_guild_boss(username: str):
 # ==================== GUILD DONATION SYSTEM ====================
 
 @api_router.post("/guild/{username}/donate")
-async def donate_to_guild(username: str, currency_type: str = "coins", amount: int = 1000):
-    """Donate currency to guild"""
+async def donate_to_guild(username: str, currency_type: str = "coins", amount: int = 1000, tier: str = None):
+    """Donate currency to guild
+    
+    Supports both:
+    - Legacy: currency_type + amount params
+    - Tier-based: tier param ('small', 'medium', 'large')
+    """
     user = await get_user_for_mutation(username)  # Includes frozen check
     
     guild = await db.guilds.find_one({"member_ids": user["id"]})
     if not guild:
         raise HTTPException(status_code=400, detail="Not in a guild")
     
-    if currency_type not in ["coins", "gold"]:
-        raise HTTPException(status_code=400, detail="Can only donate coins or gold")
+    # Tier-based donation system
+    tier_configs = {
+        "small": {"currency": "gold", "amount": 10000, "guild_coins": 10, "guild_exp": 50},
+        "medium": {"currency": "gems", "amount": 50, "guild_coins": 60, "guild_exp": 300},
+        "large": {"currency": "summon_scrolls", "amount": 1, "guild_coins": 200, "guild_exp": 1000},
+    }
     
-    if user.get(currency_type, 0) < amount:
-        raise HTTPException(status_code=400, detail=f"Not enough {currency_type}")
+    if tier and tier in tier_configs:
+        # Use tier-based config
+        config = tier_configs[tier]
+        currency_type = config["currency"]
+        amount = config["amount"]
+        guild_coins_reward = config["guild_coins"]
+        guild_exp_reward = config["guild_exp"]
+    else:
+        # Legacy: calculate rewards from amount
+        if currency_type not in ["coins", "gold"]:
+            raise HTTPException(status_code=400, detail="Can only donate coins or gold")
+        guild_coins_reward = amount // 1000
+        guild_exp_reward = amount // 200
+    
+    # Check user has enough currency
+    user_balance = user.get(currency_type, 0)
+    # Handle alternative currency field names
+    if currency_type == "gems" and user_balance == 0:
+        user_balance = user.get("crystals", 0)
+        currency_type = "crystals"  # Use the actual field name
+    
+    if user_balance < amount:
+        raise HTTPException(status_code=400, detail=f"Not enough {currency_type}. You have {user_balance}, need {amount}")
     
     # Deduct from user
     await db.users.update_one(
@@ -10983,14 +11013,15 @@ async def donate_to_guild(username: str, currency_type: str = "coins", amount: i
         {"$inc": {currency_type: -amount}}
     )
     
-    # Add to guild treasury
+    # Add to guild treasury and EXP
+    treasury_key = f"treasury_{currency_type}" if currency_type in ["coins", "gold"] else "treasury_other"
     await db.guilds.update_one(
         {"id": guild["id"]},
         {
             "$inc": {
-                f"treasury_{currency_type}": amount,
+                treasury_key: amount,
                 "total_donations": amount,
-                "exp": amount // 100  # Guild gains XP from donations
+                "exp": guild_exp_reward
             }
         }
     )
@@ -11003,24 +11034,27 @@ async def donate_to_guild(username: str, currency_type: str = "coins", amount: i
         "username": username,
         "currency_type": currency_type,
         "amount": amount,
+        "tier": tier,
         "timestamp": datetime.utcnow().isoformat()
     })
     
-    # Reward donor with guild points
-    guild_points = amount // 50
+    # Reward donor with guild coins
     await db.users.update_one(
         {"username": username},
-        {"$inc": {"guild_points": guild_points}}
+        {"$inc": {"guild_coins": guild_coins_reward}}
     )
     
     return {
         "success": True,
+        "tier": tier,
         "donated": amount,
         "currency_type": currency_type,
-        "guild_points_earned": guild_points,
+        "guild_coins_earned": guild_coins_reward,
+        "guild_exp_earned": guild_exp_reward,
+        "guild_points_earned": guild_coins_reward,  # Alias for compatibility
         "guild_treasury": {
-            "coins": guild.get("treasury_coins", 0) + (amount if currency_type == "coins" else 0),
-            "gold": guild.get("treasury_gold", 0) + (amount if currency_type == "gold" else 0)
+            "coins": guild.get("treasury_coins", 0),
+            "gold": guild.get("treasury_gold", 0)
         }
     }
 

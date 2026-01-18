@@ -163,6 +163,9 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
       hasTrackedView.current = true;
     }
     
+    // Phase 4.0: Play battle start SFX
+    playSfx('battle_start');
+    
     // Animate intro fade-in
     fadeProgress.value = withTiming(1, { duration: reduceMotion ? 100 : 500 });
     

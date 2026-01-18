@@ -379,6 +379,55 @@ export default function ArenaScreen() {
           </View>
         </View>
 
+        {/* Phase 4.2: Season Panel */}
+        {season && (
+          <View style={styles.seasonPanel}>
+            <View style={styles.seasonHeader}>
+              <View>
+                <Text style={styles.seasonName}>{season.name}</Text>
+                <Text style={styles.seasonRank}>Rank: {season.current_rank_band?.toUpperCase()}</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.rewardsButton} 
+                onPress={handleShowRewardsPreview}
+              >
+                <Ionicons name="gift" size={16} color="#dc2626" />
+                <Text style={styles.rewardsButtonText}>Rewards</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.claimButtons}>
+              <TouchableOpacity 
+                style={[styles.claimButton, claimingDaily && styles.claimButtonDisabled]}
+                onPress={handleClaimDaily}
+                disabled={claimingDaily}
+              >
+                {claimingDaily ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="today" size={14} color="#fff" />
+                    <Text style={styles.claimButtonText}>Claim Daily</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.claimButton, styles.claimSeasonButton, claimingSeason && styles.claimButtonDisabled]}
+                onPress={handleClaimSeason}
+                disabled={claimingSeason}
+              >
+                {claimingSeason ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="calendar" size={14} color="#fff" />
+                    <Text style={styles.claimButtonText}>Claim Season</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Tabs */}
         <View style={styles.tabs}>
           <TouchableOpacity

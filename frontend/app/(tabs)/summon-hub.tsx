@@ -169,35 +169,82 @@ export default function SummonHubScreen() {
     }
   };
 
+  // Phase 3.49: Use canonical summon flow - no client-side recompute
   const performPull = async (pullType: 'single' | 'multi') => {
     if (!user) return;
-    let currencyType = 'coins', cost = 0, currencyBalance = 0, currencyName = 'Coins';
-    if (selectedBanner === 'divine') { currencyType = 'divine_essence'; cost = pullType === 'single' ? 1 : 10; currencyBalance = user.divine_essence || 0; currencyName = 'Divine Essence'; }
-    else if (selectedBanner === 'premium') { currencyType = 'crystals'; cost = pullType === 'single' ? 100 : 1000; currencyBalance = user.gems || 0; currencyName = 'Crystals'; }
-    else { currencyType = 'coins'; cost = pullType === 'single' ? 1000 : 10000; currencyBalance = user.coins || 0; currencyName = 'Coins'; }
+    
+    // Determine banner ID and currency for the selected banner
+    let bannerId = 'common';
+    let cost = 0;
+    let currencyBalance = 0;
+    let currencyName = 'Coins';
+    
+    if (selectedBanner === 'divine') { 
+      bannerId = 'divine';
+      cost = pullType === 'single' ? 1 : 10; 
+      currencyBalance = user.divine_essence || 0; 
+      currencyName = 'Divine Essence'; 
+    } else if (selectedBanner === 'premium') { 
+      bannerId = 'premium';
+      cost = pullType === 'single' ? 100 : 1000; 
+      currencyBalance = user.gems || 0; 
+      currencyName = 'Crystals'; 
+    } else { 
+      bannerId = 'common';
+      cost = pullType === 'single' ? 1000 : 10000; 
+      currencyBalance = user.coins || 0; 
+      currencyName = 'Coins'; 
+    }
+    
     if (currencyBalance < cost) { 
-      // Phase 3.18.3: Use toast for insufficient funds (non-blocking)
       toast.warning(`You need ${cost.toLocaleString()} ${currencyName}`);
       return; 
     }
     
-    // Phase 3.19.3: Track pity before pull for recap
-    setPityBefore(getPityCounter());
     setLastPullType(pullType);
-    
     setIsLoading(true);
+    
     try {
-      // Use centralized API wrapper
-      const data = await pullGacha(user.username, pullType, currencyType);
-      setPullResults(data.heroes || []);
-      setShowResults(true);
+      // Phase 3.49: Use canonical summon() from gacha.ts
+      // Returns GachaReceipt with all server-computed data
+      const receipt = await summonGacha(
+        bannerId,
+        pullType === 'multi' ? 10 : 1,
+        `summon-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      );
+      
+      // Store canonical receipt and show modal
+      setLastReceipt(receipt);
+      setShowCanonicalResults(true);
+      
+      // Refresh user for updated balances
       await fetchUser();
       
-      // Phase 3.18.3: Success toast with banner-appropriate variant
+      // Success feedback
       const toastVariant = (selectedBanner === 'premium' || selectedBanner === 'divine') ? 'premium' : 'success';
       const toastMessage = pullType === 'multi' ? 'x10 Summon complete!' : 'Summon complete!';
       if (toastVariant === 'premium') {
         toast.premium(toastMessage);
+      } else {
+        toast.success(toastMessage);
+      }
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error?.message?.includes('insufficient')) {
+        toast.warning(`Not enough ${currencyName}`);
+      } else if (!isErrorHandledGlobally(error)) {
+        toast.error('Summon failed. Try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Phase 3.49: Close canonical results modal
+  const handleCloseResults = () => {
+    setShowCanonicalResults(false);
+    setLastReceipt(null);
+  };
       } else {
         toast.success(toastMessage);
       }

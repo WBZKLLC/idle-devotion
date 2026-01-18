@@ -36,10 +36,14 @@ export interface PvpRewardsPreviewResponse {
   note: string;
 }
 
-export interface PvpClaimReceipt extends RewardReceipt {
+export interface PvpClaimReceipt {
   success: boolean;
+  source: 'pvp_daily_claim' | 'pvp_season_claim';
   error?: string;
   rank_band: string;
+  rewards: Record<string, number>;
+  balances_before?: Record<string, number>;
+  balances_after?: Record<string, number>;
   claim_date?: string;
   season_id?: string;
   title?: string;

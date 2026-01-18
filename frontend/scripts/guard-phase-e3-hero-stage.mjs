@@ -41,15 +41,20 @@ if (!fs.existsSync(liveMotionPath)) {
   
   const content = fs.readFileSync(liveMotionPath, 'utf-8');
   
+  // Remove comments before checking
+  const codeOnly = content
+    .replace(/\/\*[\s\S]*?\*\//g, '')  // Remove block comments
+    .replace(/\/\/.*$/gm, '');          // Remove line comments
+  
   // Check for NO Math.random
-  if (content.includes('Math.random')) {
+  if (codeOnly.includes('Math.random')) {
     fail('HeroStageLiveMotion contains Math.random (must be deterministic)');
   } else {
     pass('HeroStageLiveMotion is deterministic (no Math.random)');
   }
   
   // Check for NO setInterval
-  if (content.includes('setInterval')) {
+  if (codeOnly.includes('setInterval')) {
     fail('HeroStageLiveMotion contains setInterval (not allowed)');
   } else {
     pass('HeroStageLiveMotion has no setInterval');
@@ -58,7 +63,7 @@ if (!fs.existsSync(liveMotionPath)) {
   // Check for NO requestAnimationFrame direct usage
   // (Reanimated's internal use is fine, but explicit RAF calls are not)
   const rafPattern = /(?<!\w)requestAnimationFrame\s*\(/;
-  if (rafPattern.test(content)) {
+  if (rafPattern.test(codeOnly)) {
     fail('HeroStageLiveMotion contains direct requestAnimationFrame call');
   } else {
     pass('HeroStageLiveMotion has no direct requestAnimationFrame');

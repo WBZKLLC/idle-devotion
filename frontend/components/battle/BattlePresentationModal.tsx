@@ -1,17 +1,18 @@
 /**
- * Phase 3.50 + 4.0: Battle Presentation Modal
+ * Phase 3.50 + 4.0 + E2: Battle Presentation Modal
  * 
  * Purpose: Eliminate "instant resolution" feeling with a short, deterministic,
  * no-RNG presentation layer that shows:
- * - Turn progression (deterministic, based on result)
+ * - Key Moment Timeline (OPENING → SKILL → DAMAGE → CLUTCH → FINAL BLOW)
  * - Ability/skill callouts with visual FX
- * - Damage numbers derived from server result
+ * - Damage numbers with tags (CRIT, GLANCING, DEVASTATING, BLOCKED)
  * - Climax moment before result
  * 
  * Phase 4.0: Added SFX support and cut-in asset integration
+ * Phase E2: Key Moment Timeline + Damage Number Theater (RN equivalency)
  * 
  * Duration: ~8-12 seconds, user-skippable
- * Reduce Motion: Simplified mode with minimal transitions
+ * Reduce Motion: Collapsed to 2 beats (OPENING, FINAL BLOW)
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -50,7 +51,25 @@ const COLORS = {
   cream: { pure: '#ffffff', soft: '#f8f6f0', dark: '#e8e0d0' },
   victory: '#22c55e',
   defeat: '#ef4444',
+  crit: '#ff6b6b',
+  glancing: '#888888',
+  devastating: '#ff4757',
+  blocked: '#5f6c7b',
 };
+
+// Phase E2: Key Moment Timeline labels (deterministic, no RNG)
+const KEY_MOMENTS = {
+  OPENING: { label: '⚔️ OPENING CLASH', duration: 1500 },
+  SKILL: { label: '✨ SKILL UNLEASHED', duration: 1800 },
+  DAMAGE: { label: '💥 DAMAGE DEALT', duration: 1500 },
+  CLUTCH: { label: '🔥 CLUTCH MOMENT', duration: 1200 },
+  FINAL: { label: '⚡ FINAL BLOW', duration: 1000 },
+} as const;
+
+type KeyMomentType = keyof typeof KEY_MOMENTS;
+
+// Phase E2: Damage number tags (deterministic based on power ratio)
+type DamageTag = 'CRIT' | 'GLANCING' | 'DEVASTATING' | 'BLOCKED' | 'NORMAL';
 
 // Skill callout names - deterministic based on turn index
 const SKILL_CALLOUTS = [
@@ -90,29 +109,78 @@ type Props = {
 };
 
 export function BattlePresentationModal({ visible, data, onComplete, mode = 'campaign' }: Props) {
-  const [currentTurn, setCurrentTurn] = useState(0);
-  const [phase, setPhase] = useState<'intro' | 'battle' | 'cutin' | 'climax' | 'result'>('intro');
+  const [currentMomentIndex, setCurrentMomentIndex] = useState(0);
+  const [phase, setPhase] = useState<'intro' | 'moments' | 'climax' | 'result'>('intro');
   const [reduceMotion, setReduceMotion] = useState(false);
   const [skipped, setSkipped] = useState(false);
   
-  // Phase 3.54: Cut-in state
-  const [showCutIn, setShowCutIn] = useState(false);
-  const [currentCutInIndex, setCurrentCutInIndex] = useState(0);
-  
-  // Phase 3.55: Combat tags (deterministic based on power ratio)
-  const [combatTags, setCombatTags] = useState<string[]>([]);
-  
-  // Total turns for presentation (deterministic based on victory)
-  const totalTurns = data?.victory ? 4 : 3;
+  // Phase E2: Damage numbers state
+  const [damageNumbers, setDamageNumbers] = useState<Array<{ value: number; tag: DamageTag }>>([]);
+  const [currentDamageIndex, setCurrentDamageIndex] = useState(0);
   
   // Animation values
   const fadeProgress = useSharedValue(0);
-  const turnProgress = useSharedValue(0);
+  const momentProgress = useSharedValue(0);
   const damageScale = useSharedValue(0);
   const climaxPulse = useSharedValue(0);
   
   // Track viewed event
   const hasTrackedView = useRef(false);
+  const hasTrackedMoments = useRef(false);
+  const hasTrackedDamage = useRef(false);
+  
+  // Phase E2: Calculate key moments based on power ratio (deterministic)
+  const keyMoments = useMemo((): KeyMomentType[] => {
+    if (!data) return ['OPENING', 'FINAL'];
+    
+    const powerRatio = (data.playerPower || 10000) / (data.enemyPower || 10000);
+    
+    // Reduce motion: only 2 beats
+    if (reduceMotion) {
+      return ['OPENING', 'FINAL'];
+    }
+    
+    // Full sequence: 4-5 beats depending on power ratio
+    const moments: KeyMomentType[] = ['OPENING', 'SKILL', 'DAMAGE'];
+    
+    // Include CLUTCH moment only if power ratio is close (0.9 <= ratio <= 1.1)
+    if (powerRatio >= 0.9 && powerRatio <= 1.1) {
+      moments.push('CLUTCH');
+    }
+    
+    moments.push('FINAL');
+    return moments;
+  }, [data, reduceMotion]);
+  
+  // Phase E2: Generate deterministic damage numbers (6-12 total)
+  const generateDamageNumbers = useCallback((): Array<{ value: number; tag: DamageTag }> => {
+    if (!data) return [];
+    
+    const baseDamage = data.playerPower ?? 10000;
+    const powerRatio = baseDamage / (data.enemyPower || 10000);
+    
+    // Deterministic count based on power ratio
+    const count = powerRatio >= 1.0 ? 10 : 8;
+    
+    // Generate deterministic damage values and tags
+    const numbers: Array<{ value: number; tag: DamageTag }> = [];
+    for (let i = 0; i < count; i++) {
+      // Deterministic variation based on index
+      const variationFactor = [1.2, 0.9, 1.5, 1.1, 0.8, 1.3, 1.0, 0.95, 1.4, 1.15][i % 10];
+      const value = Math.floor(baseDamage * variationFactor * 0.1);
+      
+      // Deterministic tag based on power ratio and index
+      let tag: DamageTag = 'NORMAL';
+      if (powerRatio >= 1.3 && i % 3 === 0) tag = 'DEVASTATING';
+      else if (powerRatio >= 1.15 && i % 2 === 0) tag = 'CRIT';
+      else if (powerRatio <= 0.7 && i % 2 === 0) tag = 'BLOCKED';
+      else if (powerRatio <= 0.85 && i % 3 === 0) tag = 'GLANCING';
+      
+      numbers.push({ value, tag });
+    }
+    
+    return numbers;
+  }, [data]);
   
   // Check reduce motion preference
   useEffect(() => {
@@ -124,25 +192,20 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
   // Reset state when modal opens
   useEffect(() => {
     if (visible && data) {
-      setCurrentTurn(0);
+      setCurrentMomentIndex(0);
+      setCurrentDamageIndex(0);
       setPhase('intro');
       setSkipped(false);
-      setShowCutIn(false);
-      setCurrentCutInIndex(0);
       fadeProgress.value = 0;
-      turnProgress.value = 0;
+      momentProgress.value = 0;
       damageScale.value = 0;
       climaxPulse.value = 0;
       hasTrackedView.current = false;
+      hasTrackedMoments.current = false;
+      hasTrackedDamage.current = false;
       
-      // Phase 3.55: Calculate deterministic combat tags based on power ratio
-      const powerRatio = (data.playerPower || 10000) / (data.enemyPower || 10000);
-      const tags: string[] = [];
-      if (powerRatio >= 1.15) tags.push('CRIT');
-      if (powerRatio <= 0.85) tags.push('GLANCING');
-      if (powerRatio >= 1.3) tags.push('DEVASTATING');
-      if (powerRatio <= 0.7) tags.push('BLOCKED');
-      setCombatTags(tags);
+      // Generate damage numbers
+      setDamageNumbers(generateDamageNumbers());
       
       // Start the presentation sequence
       startPresentation();
@@ -159,6 +222,7 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
         victory: data.victory,
         playerPower: data.playerPower,
         enemyPower: data.enemyPower,
+        momentCount: keyMoments.length,
       });
       hasTrackedView.current = true;
     }
@@ -169,28 +233,47 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
     // Animate intro fade-in
     fadeProgress.value = withTiming(1, { duration: reduceMotion ? 100 : 500 });
     
-    // If reduce motion, go faster
-    const turnDuration = reduceMotion ? 500 : 1800;
-    const introDuration = reduceMotion ? 300 : 1000;
+    const introDuration = reduceMotion ? 300 : 800;
     
     // Schedule phase transitions
     setTimeout(() => {
-      setPhase('battle');
-      runBattleTurns(0, turnDuration);
+      setPhase('moments');
+      runKeyMoments(0);
     }, introDuration);
     
-  }, [data, reduceMotion, mode]);
+  }, [data, reduceMotion, mode, keyMoments]);
   
-  const runBattleTurns = (turn: number, duration: number) => {
-    if (turn >= totalTurns || skipped) {
+  // Phase E2: Run through key moments sequentially
+  const runKeyMoments = (momentIdx: number) => {
+    if (momentIdx >= keyMoments.length || skipped) {
+      // Track key moments shown
+      if (!hasTrackedMoments.current) {
+        track(Events.PVE_KEY_MOMENT_BEAT_SHOWN, {
+          mode,
+          momentsShown: keyMoments,
+          victory: data?.victory,
+        });
+        hasTrackedMoments.current = true;
+      }
+      
       // Move to climax
       setPhase('climax');
       runClimax();
       return;
     }
     
-    setCurrentTurn(turn + 1);
-    turnProgress.value = withTiming((turn + 1) / totalTurns, { duration: duration / 2 });
+    setCurrentMomentIndex(momentIdx);
+    const moment = KEY_MOMENTS[keyMoments[momentIdx]];
+    
+    // Animate moment progress
+    momentProgress.value = withTiming((momentIdx + 1) / keyMoments.length, { 
+      duration: moment.duration / 2 
+    });
+    
+    // Show damage number for DAMAGE moment
+    if (keyMoments[momentIdx] === 'DAMAGE') {
+      showDamageNumbers();
+    }
     
     // Animate damage number pop
     damageScale.value = withSequence(
@@ -198,8 +281,21 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
       withTiming(1, { duration: 200 })
     );
     
-    // Schedule next turn
-    setTimeout(() => runBattleTurns(turn + 1, duration), duration);
+    // Schedule next moment
+    const duration = reduceMotion ? moment.duration / 3 : moment.duration;
+    setTimeout(() => runKeyMoments(momentIdx + 1), duration);
+  };
+  
+  // Phase E2: Show damage numbers batch
+  const showDamageNumbers = () => {
+    if (!hasTrackedDamage.current && damageNumbers.length > 0) {
+      track(Events.PVE_DAMAGE_NUMBER_BATCH_SHOWN, {
+        mode,
+        count: damageNumbers.length,
+        tags: damageNumbers.map(d => d.tag),
+      });
+      hasTrackedDamage.current = true;
+    }
   };
   
   const runClimax = () => {
@@ -224,7 +320,7 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
     setSkipped(true);
     track(Events.PVE_BATTLE_PRESENTATION_SKIPPED, {
       mode,
-      turnReached: currentTurn,
+      momentReached: currentMomentIndex,
       phase,
     });
     setPhase('result');
@@ -238,12 +334,22 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
     onComplete();
   };
   
-  // Generate deterministic damage numbers based on power difference
-  const getDamageNumber = (turn: number): number => {
-    const baseDamage = data?.playerPower ?? 10000;
-    // Deterministic variation based on turn
-    const variation = [1.2, 0.9, 1.5, 2.0][turn % 4];
-    return Math.floor(baseDamage * variation * 0.1);
+  // Get damage number to display for current moment
+  const getCurrentDamageNumber = (): { value: number; tag: DamageTag } | null => {
+    if (damageNumbers.length === 0) return null;
+    const idx = currentMomentIndex % damageNumbers.length;
+    return damageNumbers[idx];
+  };
+  
+  // Get color for damage tag
+  const getDamageTagColor = (tag: DamageTag): string => {
+    switch (tag) {
+      case 'CRIT': return COLORS.crit;
+      case 'GLANCING': return COLORS.glancing;
+      case 'DEVASTATING': return COLORS.devastating;
+      case 'BLOCKED': return COLORS.blocked;
+      default: return data?.victory ? COLORS.victory : COLORS.defeat;
+    }
   };
   
   // Animated styles
@@ -262,6 +368,9 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
   }));
   
   if (!visible || !data) return null;
+  
+  const currentMoment = keyMoments[currentMomentIndex];
+  const currentDamage = getCurrentDamageNumber();
   
   return (
     <Modal
@@ -296,35 +405,57 @@ export function BattlePresentationModal({ visible, data, onComplete, mode = 'cam
               </View>
             )}
             
-            {/* Battle Phase */}
-            {phase === 'battle' && (
+            {/* Key Moments Phase */}
+            {phase === 'moments' && currentMoment && (
               <View style={styles.phaseContainer}>
-                {/* Turn indicator */}
+                {/* Progress indicator */}
                 <View style={styles.turnIndicator}>
-                  <Text style={styles.turnText}>Turn {currentTurn}/{totalTurns}</Text>
+                  <Text style={styles.turnText}>
+                    Beat {currentMomentIndex + 1}/{keyMoments.length}
+                  </Text>
                   <View style={styles.turnBar}>
-                    <View style={[styles.turnFill, { width: `${(currentTurn / totalTurns) * 100}%` }]} />
+                    <View style={[
+                      styles.turnFill, 
+                      { width: `${((currentMomentIndex + 1) / keyMoments.length) * 100}%` }
+                    ]} />
                   </View>
                 </View>
                 
-                {/* Skill callout */}
+                {/* Key Moment Label */}
                 <View style={styles.skillCallout}>
                   <LinearGradient
                     colors={[COLORS.gold.primary + '40', 'transparent']}
                     style={styles.skillGradient}
                   >
-                    <Text style={styles.skillName}>
-                      ✨ {SKILL_CALLOUTS[(currentTurn - 1) % SKILL_CALLOUTS.length]}
+                    <Text style={styles.momentLabel}>
+                      {KEY_MOMENTS[currentMoment].label}
                     </Text>
                   </LinearGradient>
                 </View>
                 
-                {/* Damage number */}
-                <Animated.View style={[styles.damageContainer, damageStyle]}>
-                  <Text style={[styles.damageNumber, data.victory ? styles.damageVictory : styles.damageDefeat]}>
-                    {data.victory ? '-' : '+'}{getDamageNumber(currentTurn - 1).toLocaleString()}
+                {/* Skill name (for SKILL moment) */}
+                {currentMoment === 'SKILL' && (
+                  <Text style={styles.skillName}>
+                    ✨ {SKILL_CALLOUTS[currentMomentIndex % SKILL_CALLOUTS.length]}
                   </Text>
-                </Animated.View>
+                )}
+                
+                {/* Damage number with tag */}
+                {currentDamage && (
+                  <Animated.View style={[styles.damageContainer, damageStyle]}>
+                    {currentDamage.tag !== 'NORMAL' && (
+                      <Text style={[styles.damageTag, { color: getDamageTagColor(currentDamage.tag) }]}>
+                        {currentDamage.tag}
+                      </Text>
+                    )}
+                    <Text style={[
+                      styles.damageNumber, 
+                      { color: getDamageTagColor(currentDamage.tag) }
+                    ]}>
+                      {data.victory ? '-' : '+'}{currentDamage.value.toLocaleString()}
+                    </Text>
+                  </Animated.View>
+                )}
                 
                 {/* Battle visual indicator */}
                 <View style={styles.battleVisual}>
@@ -466,32 +597,40 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   skillCallout: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   skillGradient: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
   },
+  momentLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.gold.light,
+    textAlign: 'center',
+  },
   skillName: {
     fontSize: 20,
     fontWeight: 'bold',
     color: COLORS.gold.light,
     textAlign: 'center',
+    marginBottom: 8,
   },
   damageContainer: {
     marginVertical: 20,
+    alignItems: 'center',
+  },
+  damageTag: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   damageNumber: {
     fontSize: 48,
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  damageVictory: {
-    color: COLORS.victory,
-  },
-  damageDefeat: {
-    color: COLORS.defeat,
   },
   battleVisual: {
     marginTop: 20,

@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGameStore } from '@/stores/gameStore';
-import { COLORS } from '@/constants/colors';
+import COLORS from '@/theme/colors';
 import { track, Events } from '@/lib/telemetry/events';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

@@ -14,10 +14,11 @@ import {
   isValidReceipt,
 } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
-import { API_BASE } from './config';
+import { apiUrl } from './config';
 
 /**
  * Get auth headers for API calls
+ * Returns empty object if no token (prevents "Bearer undefined")
  */
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const token = await loadAuthToken();

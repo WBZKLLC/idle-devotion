@@ -673,6 +673,153 @@ class BackendTester:
             error_msg = f"Status: {response.status_code}, Body: {response.text}" if success else str(response)
             self.log_test("Journey Status", False, "Failed to get journey status", error_msg)
 
+    def test_pvp_match_system_phase_359(self):
+        """Test NEW PvP Match System - Phase 3.59 Implementation"""
+        print("=== PVP MATCH SYSTEM TESTS (PHASE 3.59) ===")
+        
+        if not self.auth_token:
+            self.log_test("PvP Match System", False, "Authentication required for PvP endpoints", "No auth token available")
+            return
+        
+        # Test 1: GET /api/arena/opponents/{username} - Should return list of opponents (including NPC fallbacks)
+        success, response = self.make_request("GET", f"/arena/opponents/{TEST_USERNAME}")
+        opponents_list = None
+        if success and response.status_code == 200:
+            try:
+                opponents_data = response.json()
+                if isinstance(opponents_data, list):
+                    opponent_count = len(opponents_data)
+                    has_npcs = any("npc_" in str(opp.get("id", "")) for opp in opponents_data if isinstance(opp, dict))
+                    self.log_test("PvP Opponents List (Phase 3.59)", True, 
+                                f"Retrieved {opponent_count} opponents, NPCs included: {has_npcs}")
+                    opponents_list = opponents_data
+                else:
+                    self.log_test("PvP Opponents List (Phase 3.59)", False, 
+                                "Response is not a list", str(opponents_data))
+            except Exception as e:
+                self.log_test("PvP Opponents List (Phase 3.59)", False, "Invalid JSON response", str(e))
+        else:
+            error_msg = f"Status: {response.status_code}, Body: {response.text}" if success else str(response)
+            self.log_test("PvP Opponents List (Phase 3.59)", False, "Failed to get opponents list", error_msg)
+        
+        # Test 2: POST /api/pvp/match - Execute PvP match (requires auth, opponent_id, source_id)
+        if opponents_list and len(opponents_list) > 0:
+            # Use first opponent from list
+            opponent_id = opponents_list[0].get("id", "npc_3") if isinstance(opponents_list[0], dict) else "npc_3"
+        else:
+            # Fallback to default NPC as mentioned in review
+            opponent_id = "npc_3"
+        
+        source_id_1 = "test-unique-id-001"
+        match_data = {
+            "opponent_id": opponent_id,
+            "source_id": source_id_1
+        }
+        
+        success, response = self.make_request("POST", "/pvp/match", data=match_data)
+        first_match_result = None
+        if success and response.status_code == 200:
+            try:
+                match_result = response.json()
+                required_fields = ["victory", "rating_change", "rewards"]
+                has_required = all(field in match_result for field in required_fields)
+                
+                if has_required:
+                    victory = match_result.get("victory")
+                    rating_change = match_result.get("rating_change")
+                    rewards = match_result.get("rewards", {})
+                    self.log_test("PvP Match Execution (Phase 3.59)", True, 
+                                f"Victory: {victory}, Rating Change: {rating_change}, Rewards: {len(rewards)} items")
+                    first_match_result = match_result
+                else:
+                    self.log_test("PvP Match Execution (Phase 3.59)", False, 
+                                f"Missing required fields. Expected: {required_fields}, Got: {list(match_result.keys())}")
+            except Exception as e:
+                self.log_test("PvP Match Execution (Phase 3.59)", False, "Invalid JSON response", str(e))
+        else:
+            error_msg = f"Status: {response.status_code}, Body: {response.text}" if success else str(response)
+            self.log_test("PvP Match Execution (Phase 3.59)", False, "PvP match execution failed", error_msg)
+        
+        # Test 3: Idempotency - Call same endpoint with SAME source_id (should return same result)
+        if first_match_result:
+            time.sleep(1)  # Brief pause
+            success, response = self.make_request("POST", "/pvp/match", data=match_data)
+            if success and response.status_code == 200:
+                try:
+                    second_result = response.json()
+                    
+                    # Compare key fields for idempotency
+                    victory_match = first_match_result.get("victory") == second_result.get("victory")
+                    rating_match = first_match_result.get("rating_change") == second_result.get("rating_change")
+                    
+                    if victory_match and rating_match:
+                        self.log_test("PvP Match Idempotency (Phase 3.59)", True, 
+                                    "Same source_id returned identical results as expected")
+                    else:
+                        self.log_test("PvP Match Idempotency (Phase 3.59)", False, 
+                                    f"Results differ - Victory: {victory_match}, Rating: {rating_match}")
+                except Exception as e:
+                    self.log_test("PvP Match Idempotency (Phase 3.59)", False, "Invalid JSON response", str(e))
+            else:
+                error_msg = f"Status: {response.status_code}, Body: {response.text}" if success else str(response)
+                self.log_test("PvP Match Idempotency (Phase 3.59)", False, "Idempotency test failed", error_msg)
+        
+        # Test 4: Call with different source_id to get a new match
+        new_match_data = {
+            "opponent_id": opponent_id,
+            "source_id": "test-unique-id-002"
+        }
+        
+        success, response = self.make_request("POST", "/pvp/match", data=new_match_data)
+        if success and response.status_code == 200:
+            try:
+                new_result = response.json()
+                victory = new_result.get("victory")
+                rating_change = new_result.get("rating_change")
+                self.log_test("PvP Match New Source (Phase 3.59)", True, 
+                            f"New match with different source_id - Victory: {victory}, Rating Change: {rating_change}")
+            except Exception as e:
+                self.log_test("PvP Match New Source (Phase 3.59)", False, "Invalid JSON response", str(e))
+        else:
+            error_msg = f"Status: {response.status_code}, Body: {response.text}" if success else str(response)
+            self.log_test("PvP Match New Source (Phase 3.59)", False, "New match with different source_id failed", error_msg)
+
+    def test_difficulty_dump_phase_361(self):
+        """Test NEW Difficulty Dump Endpoint - Phase 3.61 Implementation"""
+        print("=== DIFFICULTY DUMP SYSTEM TESTS (PHASE 3.61) ===")
+        
+        if not self.auth_token:
+            self.log_test("Difficulty Dump System", False, "Authentication required for dev endpoints", "No auth token available")
+            return
+        
+        # Test: GET /api/dev/difficulty/dump - DEV-only difficulty table dump
+        success, response = self.make_request("GET", "/dev/difficulty/dump")
+        if success and response.status_code == 200:
+            try:
+                dump_data = response.json()
+                if isinstance(dump_data, dict) and "difficulty_table" in dump_data:
+                    table_entries = len(dump_data["difficulty_table"])
+                    self.log_test("Difficulty Table Dump (Phase 3.61)", True, 
+                                f"Retrieved difficulty table with {table_entries} entries")
+                    
+                    # Verify structure
+                    if table_entries > 0:
+                        sample_entry = list(dump_data["difficulty_table"].values())[0]
+                        if isinstance(sample_entry, dict):
+                            self.log_test("Difficulty Table Structure (Phase 3.61)", True, 
+                                        f"Table structure valid, sample keys: {list(sample_entry.keys())}")
+                        else:
+                            self.log_test("Difficulty Table Structure (Phase 3.61)", False, 
+                                        "Invalid table entry structure")
+                else:
+                    self.log_test("Difficulty Table Dump (Phase 3.61)", False, 
+                                "Invalid difficulty dump format - missing 'difficulty_table' key", str(dump_data))
+            except Exception as e:
+                self.log_test("Difficulty Table Dump (Phase 3.61)", False, "Invalid JSON response", str(e))
+        else:
+            error_msg = f"Status: {response.status_code}, Body: {response.text}" if success else str(response)
+            self.log_test("Difficulty Table Dump (Phase 3.61)", False, "Difficulty dump endpoint failed", error_msg)
+
     def run_all_tests(self):
         """Run comprehensive backend test suite"""
         print("🎮 DIVINE HEROES GACHA GAME - COMPREHENSIVE BACKEND TEST SUITE")

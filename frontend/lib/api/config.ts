@@ -79,4 +79,13 @@ export function getAuthHeaders(token: string): Record<string, string> {
 if (__DEV__) {
   console.log('[API Config] Base URL:', API_BASE || '(relative paths)');
   console.log('[API Config] Platform:', Platform.OS);
+  
+  // WARN if API_BASE is empty - likely means env var not picked up
+  if (!API_BASE) {
+    console.warn(
+      '[API Config] ⚠️ API_BASE is empty! ' +
+      'Set EXPO_PUBLIC_BACKEND_URL in .env for web preview to work. ' +
+      'Falling back to relative paths (will 404 if no proxy configured).'
+    );
+  }
 }

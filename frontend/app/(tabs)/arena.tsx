@@ -29,8 +29,6 @@ import { makeSourceId } from '../../lib/ids/sourceId';
 import { track, Events } from '../../lib/telemetry/events';
 // Phase 4.2: Focus-based refresh (no setInterval)
 import { useFocusEffect } from '@react-navigation/native';
-// Phase 4.2: ReceiptViewer for claim rewards
-import { ReceiptViewer } from '../../components/receipt/ReceiptViewer';
 // Phase 4.2: PvP Season API
 import { 
   getPvpSeason, 

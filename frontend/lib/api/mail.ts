@@ -17,18 +17,6 @@ import { track, Events } from '../telemetry/events';
 import { apiUrl, getAuthHeaders } from './config';
 
 /**
- * Get auth headers for API calls
- * Returns empty object if no token (prevents "Bearer undefined")
- */
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await loadAuthToken();
-  if (token) {
-    return { Authorization: `Bearer ${token}` };
-  }
-  return {};
-}
-
-/**
  * Get mail summary (badge counts) - uses auth token
  * Phase 3.26: Includes receiptsAvailable count
  */

@@ -208,7 +208,15 @@ export function VictoryDefeatModal({ visible, data, onContinue, mode = 'campaign
                   {/* Receipt Viewer (if canonical receipt provided) */}
                   {data.receipt && (
                     <View style={styles.receiptSection}>
-                      <ReceiptViewer receipt={data.receipt} onClaim={handleContinue} />
+                      <Text style={styles.sectionTitle}>Rewards Detail</Text>
+                      <View style={styles.rewardsGrid}>
+                        {data.receipt.items?.map((item: any, idx: number) => (
+                          <View key={idx} style={styles.rewardItem}>
+                            <Text style={styles.rewardValue}>+{(item.quantity || item.amount || 0).toLocaleString()}</Text>
+                            <Text style={styles.rewardLabel}>{(item.type || item.name || 'reward').replace(/_/g, ' ')}</Text>
+                          </View>
+                        ))}
+                      </View>
                     </View>
                   )}
                   

@@ -8,7 +8,7 @@
 // "The doors exist. You choose when to open them."
 
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Platform, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,8 @@ import COLORS from '../../theme/colors';
 import { RADIUS, SPACING, FONT_SIZE, INVITATION } from '../ui/tokens';
 import { PRESS, haptic } from '../../lib/ui/interaction';
 import { QuickLinksGrid, QuickLinkRow } from './QuickLinksGrid';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 type PityData = {
   common: { current: number; max: number };

@@ -103,6 +103,11 @@ for (const file of appFiles) {
   if (/const\s+API_BASE\s*=\s*process\.env/.test(content)) {
     violations.push(`${filename}: hardcoded API_BASE definition`);
   }
+  
+  // Check for relative API calls (fetch('/api/... or fetch("/api/...)
+  if (/fetch\s*\(\s*['"]\/api\//.test(content)) {
+    violations.push(`${filename}: relative fetch('/api/...) call (should use apiUrl())`);
+  }
 }
 
 if (violations.length > 0) {

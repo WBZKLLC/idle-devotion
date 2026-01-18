@@ -21,9 +21,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGameStore } from '@/stores/gameStore';
 import { COLORS } from '@/constants/colors';
-import { trackEvent, TELEMETRY_EVENTS } from '@/lib/telemetry/events';
+import { track, Events } from '@/lib/telemetry/events';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Alias for TELEMETRY_EVENTS used in this file
+const TELEMETRY_EVENTS = Events;
 
 // VIP Tier Data (matches backend VIP_TIERS)
 const VIP_TIERS = [

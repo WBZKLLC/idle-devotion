@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   },
   // Error display
   errorContainer: {
-    backgroundColor: COLORS.status.error + '20',
+    backgroundColor: COLORS.error + '20',
     padding: 12,
     borderRadius: RADIUS.md,
     marginTop: 16,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: FONT_SIZE.sm,
-    color: COLORS.status.error,
+    color: COLORS.error,
     marginBottom: 8,
   },
   errorDismiss: {

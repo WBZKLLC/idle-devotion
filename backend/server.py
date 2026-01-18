@@ -7181,6 +7181,289 @@ async def get_arena_record(username: str):
     
     return convert_objectid(record)
 
+# Phase 3.59: Arena opponents endpoint with DEV NPC fallback
+@api_router.get("/arena/opponents/{username}")
+async def get_arena_opponents(username: str):
+    """
+    Get list of potential arena opponents for a user.
+    
+    Phase 3.59: DEV fallback returns 5 deterministic NPC opponents
+    when no real opponents are available (unblocks UI/tests).
+    
+    NPCs are marked with isNpc: true and offer no rewards advantage.
+    """
+    user = await get_user_readonly(username)
+    
+    # Get user's arena record for rating-based matchmaking
+    user_record = await db.arena_records.find_one({"user_id": user["id"]})
+    user_rating = user_record.get("rating", 1000) if user_record else 1000
+    
+    # Calculate user's power for NPC scaling
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1000)
+    user_power = sum(
+        h.get("current_hp", 1000) + (h.get("current_atk", 100) * 2) + h.get("current_def", 100)
+        for h in user_heroes[:6]
+    ) if user_heroes else 30000  # Default power if no heroes
+    
+    # Find real opponents with similar rating
+    rating_range = 300
+    real_opponents = await db.arena_records.find({
+        "user_id": {"$ne": user["id"]},
+        "rating": {
+            "$gte": user_rating - rating_range,
+            "$lte": user_rating + rating_range
+        }
+    }).limit(5).to_list(5)
+    
+    # If not enough, expand search
+    if len(real_opponents) < 3:
+        real_opponents = await db.arena_records.find(
+            {"user_id": {"$ne": user["id"]}}
+        ).limit(5).to_list(5)
+    
+    opponents = []
+    
+    # Add real opponents
+    for opp_record in real_opponents:
+        opp_heroes = await db.user_heroes.find({"user_id": opp_record["user_id"]}).to_list(6)
+        opp_power = sum(
+            h.get("current_hp", 1000) + (h.get("current_atk", 100) * 2) + h.get("current_def", 100)
+            for h in opp_heroes
+        )
+        
+        opponents.append({
+            "id": opp_record["user_id"],
+            "username": opp_record.get("username", "Unknown"),
+            "power": opp_power,
+            "rank": opp_record.get("season_rank", 999),
+            "rating": opp_record.get("rating", 1000),
+            "isNpc": False,
+            "team_preview": [
+                {"hero_name": h.get("hero_name", "Hero"), "rarity": h.get("rarity", "SR")}
+                for h in opp_heroes[:3]
+            ]
+        })
+    
+    # Phase 3.59: DEV fallback - add NPC opponents if pool is empty
+    # These are deterministic and marked isNpc: true
+    if len(opponents) < 5:
+        npc_templates = [
+            {"id": "npc_1", "name": "Practice A", "power_mult": 0.85},
+            {"id": "npc_2", "name": "Practice B", "power_mult": 0.95},
+            {"id": "npc_3", "name": "Practice C", "power_mult": 1.00},
+            {"id": "npc_4", "name": "Practice D", "power_mult": 1.10},
+            {"id": "npc_5", "name": "Practice E", "power_mult": 1.25},
+        ]
+        
+        for template in npc_templates:
+            if len(opponents) >= 5:
+                break
+            
+            npc_power = int(user_power * template["power_mult"])
+            opponents.append({
+                "id": template["id"],
+                "username": template["name"],
+                "power": npc_power,
+                "rank": 999,
+                "rating": int(user_rating * template["power_mult"]),
+                "isNpc": True,
+                "team_preview": [
+                    {"hero_name": "Training Dummy", "rarity": "SR"}
+                ]
+            })
+    
+    return opponents
+
+# Phase 3.59: PvP Match execution endpoint
+@api_router.post("/pvp/match")
+async def execute_pvp_match(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Execute a PvP match with server-side, deterministic resolution.
+    
+    Phase 3.59 Requirements:
+    - Server-authoritative: outcome computed server-side
+    - Ticket consumption: deducts 1 arena ticket
+    - Idempotency: uses sourceId to prevent double-spending
+    - No monetization hooks
+    
+    Request body:
+    {
+        "opponent_id": str,  # ID of opponent (can be NPC id like "npc_1")
+        "source_id": str     # Client-generated idempotency key
+    }
+    """
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    assert_account_active(current_user)
+    
+    body = await request.json()
+    opponent_id = body.get("opponent_id")
+    source_id = body.get("source_id")
+    
+    if not opponent_id:
+        raise HTTPException(status_code=400, detail="opponent_id required")
+    if not source_id:
+        raise HTTPException(status_code=400, detail="source_id required for idempotency")
+    
+    user_id = current_user.get("id")
+    username = current_user.get("username")
+    
+    # Idempotency check: prevent double-spending
+    existing_match = await db.pvp_matches.find_one({"source_id": source_id})
+    if existing_match:
+        # Return cached result
+        return existing_match.get("result", {"error": "duplicate"})
+    
+    # Check arena tickets
+    user = await db.users.find_one({"id": user_id})
+    arena_tickets = user.get("arena_tickets", 5)
+    if arena_tickets <= 0:
+        raise HTTPException(status_code=400, detail="No arena tickets available")
+    
+    # Get user's arena record
+    user_record = await db.arena_records.find_one({"user_id": user_id})
+    if not user_record:
+        user_record = ArenaRecord(user_id=user_id, username=username)
+        await db.arena_records.insert_one(user_record.dict())
+        user_record = await db.arena_records.find_one({"user_id": user_id})
+    
+    # Calculate user power
+    user_heroes = await db.user_heroes.find({"user_id": user_id}).to_list(1000)
+    user_power = sum(
+        h.get("current_hp", 1000) + (h.get("current_atk", 100) * 2) + h.get("current_def", 100)
+        for h in user_heroes[:6]
+    ) if user_heroes else 30000
+    
+    # Get opponent info
+    is_npc = opponent_id.startswith("npc_")
+    
+    if is_npc:
+        # NPC opponent: deterministic power based on user
+        npc_multipliers = {
+            "npc_1": 0.85, "npc_2": 0.95, "npc_3": 1.00,
+            "npc_4": 1.10, "npc_5": 1.25
+        }
+        mult = npc_multipliers.get(opponent_id, 1.0)
+        opponent_power = int(user_power * mult)
+        opponent_rating = int(user_record.get("rating", 1000) * mult)
+        opponent_username = f"Practice {opponent_id[-1].upper()}"
+    else:
+        # Real opponent
+        opponent_record = await db.arena_records.find_one({"user_id": opponent_id})
+        if not opponent_record:
+            raise HTTPException(status_code=404, detail="Opponent not found")
+        
+        opponent_heroes = await db.user_heroes.find({"user_id": opponent_id}).to_list(6)
+        opponent_power = sum(
+            h.get("current_hp", 1000) + (h.get("current_atk", 100) * 2) + h.get("current_def", 100)
+            for h in opponent_heroes
+        )
+        opponent_rating = opponent_record.get("rating", 1000)
+        opponent_username = opponent_record.get("username", "Unknown")
+    
+    # Server-side deterministic combat resolution
+    # Use source_id as seed for determinism (same sourceId = same result)
+    import hashlib
+    seed = int(hashlib.sha256(source_id.encode()).hexdigest()[:8], 16)
+    random.seed(seed)
+    
+    power_ratio = user_power / max(opponent_power, 1)
+    base_win_chance = min(0.85, max(0.15, 0.5 + (power_ratio - 1.0) * 0.5))
+    
+    roll = random.random()
+    victory = roll < base_win_chance
+    
+    # Reset random seed
+    random.seed()
+    
+    # Calculate rating change (ELO-style)
+    k_factor = 32
+    expected_score = 1 / (1 + 10 ** ((opponent_rating - user_record.get("rating", 1000)) / 400))
+    actual_score = 1 if victory else 0
+    rating_change = int(k_factor * (actual_score - expected_score))
+    
+    # Deduct arena ticket
+    await db.users.update_one(
+        {"id": user_id},
+        {"$inc": {"arena_tickets": -1}}
+    )
+    
+    # Update user's arena record
+    new_rating = user_record.get("rating", 1000) + rating_change
+    if not victory:
+        new_rating = max(0, new_rating)
+    
+    await db.arena_records.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "rating": new_rating,
+                "win_streak": (user_record.get("win_streak", 0) + 1) if victory else 0,
+                "highest_rating": max(user_record.get("highest_rating", 1000), new_rating) if victory else user_record.get("highest_rating", 1000)
+            },
+            "$inc": {"wins": 1 if victory else 0, "losses": 0 if victory else 1}
+        }
+    )
+    
+    # Update real opponent's record (not NPCs)
+    if not is_npc:
+        if victory:
+            await db.arena_records.update_one(
+                {"user_id": opponent_id},
+                {
+                    "$set": {"win_streak": 0},
+                    "$inc": {"rating": -abs(rating_change) // 2, "losses": 1}
+                }
+            )
+        else:
+            await db.arena_records.update_one(
+                {"user_id": opponent_id},
+                {
+                    "$inc": {"rating": abs(rating_change) // 2, "wins": 1}
+                }
+            )
+    
+    # Calculate rewards (no rewards advantage from NPCs)
+    rewards = {
+        "pvp_medals": 50 if victory else 10,
+        "gold": 5000 if victory else 1000
+    }
+    
+    # Award rewards
+    await db.users.update_one(
+        {"id": user_id},
+        {"$inc": {"pvp_medals": rewards["pvp_medals"], "gold": rewards["gold"]}}
+    )
+    
+    result = {
+        "victory": victory,
+        "opponent_id": opponent_id,
+        "opponent_username": opponent_username,
+        "opponent_power": opponent_power,
+        "user_power": user_power,
+        "rating_change": rating_change,
+        "new_rating": new_rating,
+        "win_streak": (user_record.get("win_streak", 0) + 1) if victory else 0,
+        "rewards": rewards,
+        "is_npc_match": is_npc,
+        "tickets_remaining": arena_tickets - 1
+    }
+    
+    # Store match for idempotency
+    await db.pvp_matches.insert_one({
+        "source_id": source_id,
+        "user_id": user_id,
+        "opponent_id": opponent_id,
+        "created_at": datetime.now(timezone.utc),
+        "result": result
+    })
+    
+    return result
+
 @api_router.post("/arena/battle/{username}")
 async def arena_battle(username: str, request: ArenaBattleRequest):
     """Battle in arena against another player"""

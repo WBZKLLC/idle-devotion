@@ -1,11 +1,13 @@
 /**
- * Phase 3.60: Skill Cut-In Registry
+ * Phase 3.60 + 4.0: Skill Cut-In Registry
  * 
  * Single source of truth for all skill cut-in configurations.
  * This registry defines which heroes have cut-in animations, their
  * trigger conditions, and display properties.
  * 
  * Cut-ins are purely cosmetic - they don't affect battle outcomes.
+ * 
+ * Phase 4.0: Added assetUri field for real asset support.
  */
 
 export type SkillCutInConfig = {
@@ -38,6 +40,9 @@ export type SkillCutInConfig = {
   
   /** Icon to display (from Ionicons) */
   icon?: string;
+  
+  /** Phase 4.0: Asset URI for cut-in image (optional - falls back to gradient) */
+  assetUri?: string;
 };
 
 /**

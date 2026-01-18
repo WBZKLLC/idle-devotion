@@ -435,6 +435,36 @@ backend:
         agent: "testing"
         comment: "✅ ENTITLEMENTS TTL + REFRESH DISCIPLINE TESTING COMPLETE: Comprehensive backend testing of Phase 3.10 implementation completed successfully. All 3 tests passed (100% success rate). TESTED SCENARIOS: (1) Entitlements Snapshot API Structure - GET /api/entitlements/snapshot returns correct structure with server_time (ISO8601), ttl_seconds (300), version (integer), and entitlements object containing all expected keys (PREMIUM, NO_ADS, PREMIUM_CINEMATICS_PACK, STARTER_PACK). Each entitlement has valid status field. (2) Fresh Server Time Verification - Multiple requests return fresh server_time proving it's not cached. Time difference confirmed: 1.57s between consecutive requests. (3) Entitlements Data Consistency - All entitlements have valid status values (not_owned), proper key fields, and consistent data structure. Status distribution: 4 not_owned entitlements. TECHNICAL VERIFICATION: Backend provides correct data structure for client-side staleness calculations using server-authoritative timestamps. Authentication working with EntitlementTester/TestPass123!. Server-time-based TTL system fully functional - backend supports Phase 3.10 client-side staleness checks."
 
+  - task: "PvP Match System (Phase 3.59)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "🎯 PHASE 3.59 IMPLEMENTATION: New PvP match endpoints implemented. (1) GET /api/arena/opponents/{username} - Returns list of opponents including NPC fallbacks when no real opponents available. (2) POST /api/pvp/match - Execute PvP match with server-side battle calculation, requires auth, opponent_id, and source_id for idempotency. Returns victory, rating_change, rewards, etc. Idempotency ensures same source_id returns identical results."
+      - working: true
+        agent: "testing"
+        comment: "✅ PVP MATCH SYSTEM (PHASE 3.59) TESTING COMPLETE: Comprehensive testing of new PvP match endpoints completed successfully. All critical tests passed (100% success rate). AUTHENTICATION: Successfully authenticated as ADAM using provided credentials. OPPONENTS ENDPOINT: GET /api/arena/opponents/ADAM returns 5 opponents including NPC fallbacks (npc_1 through npc_5) with proper structure (id, username, power, rating, team_preview). PVP MATCH ENDPOINT: POST /api/pvp/match executes matches successfully with required fields (victory, rating_change, rewards). IDEMPOTENCY VERIFIED: Same source_id returns identical results (victory: false, rating_change: -16). NEW MATCHES WORKING: Different source_id generates new results with updated ratings. Server-side battle calculations functional, NPC fallback system working, idempotency mechanism prevents duplicate matches. Phase 3.59 implementation fully functional and ready for production."
+
+  - task: "Difficulty Dump System (Phase 3.61)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "📊 PHASE 3.61 IMPLEMENTATION: DEV-only difficulty table dump endpoint implemented. GET /api/dev/difficulty/dump returns complete campaign difficulty table with chapter-by-chapter power scaling, boss multipliers, and sample stage calculations for game balancing purposes. Requires admin authentication."
+      - working: true
+        agent: "testing"
+        comment: "✅ DIFFICULTY DUMP SYSTEM (PHASE 3.61) TESTING COMPLETE: Comprehensive testing of DEV-only difficulty dump endpoint completed successfully. GET /api/dev/difficulty/dump returns complete difficulty table with 25 chapters, proper structure including base_power, power_per_stage, boss_multiplier, and sample_stages for each chapter. Endpoint requires proper JWT authentication and is restricted to admin users. Difficulty table properly structured for campaign balancing with progressive power scaling. Phase 3.61 implementation fully functional for development and balancing purposes."
+
 frontend:
   - task: "Equipment screen UI"
     implemented: true

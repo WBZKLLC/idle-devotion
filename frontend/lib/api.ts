@@ -167,7 +167,14 @@ api.interceptors.response.use(
       case 401:
         // Session expired or invalid token
         // Guard against multiple logout triggers
-        if (!_isLoggingOut) {
+        // Also guard against network errors that may look like 401s (CDN/proxy issues)
+        const isRealAuthError = error.response?.data?.detail?.toLowerCase().includes('token') ||
+                                error.response?.data?.detail?.toLowerCase().includes('session') ||
+                                error.response?.data?.detail?.toLowerCase().includes('auth') ||
+                                error.response?.data?.detail?.toLowerCase().includes('invalid') ||
+                                error.response?.data?.detail?.toLowerCase().includes('expired');
+        
+        if (!_isLoggingOut && isRealAuthError) {
           _isLoggingOut = true;
           
           // Phase 3.18.6: Toast for session expiry (non-blocking)
@@ -190,6 +197,9 @@ api.interceptors.response.use(
           
           // Reset flag after a delay to allow re-triggering if needed
           setTimeout(() => { _isLoggingOut = false; }, 1000);
+        } else if (!isRealAuthError) {
+          // This might be a CDN/network issue returning 401
+          console.warn('[API] Received 401 but detail does not indicate auth issue - may be CDN/network error');
         }
         break;
         

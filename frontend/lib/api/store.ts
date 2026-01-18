@@ -9,18 +9,6 @@ import { RewardReceipt, isValidReceipt } from '../types/receipt';
 import { track, Events } from '../telemetry/events';
 import { apiUrl, getAuthHeaders } from './config';
 
-// Auth header helper
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await loadAuthToken();
-  if (!token) {
-    return { 'Content-Type': 'application/json' };
-  }
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  };
-}
-
 // Store item from catalog
 export interface StoreItem {
   sku: string;

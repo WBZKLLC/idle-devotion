@@ -111,11 +111,89 @@ export default function ArenaScreen() {
     ).start();
   }, []);
 
-  useEffect(() => {
-    if (hydrated && user) {
-      loadArenaData();
+  // Phase 4.2: Focus-based refresh (no setInterval)
+  useFocusEffect(
+    useCallback(() => {
+      if (hydrated && user) {
+        loadArenaData();
+        loadSeasonData();
+        track(Events.PVP_SEASON_VIEWED, { username: user.username });
+      }
+    }, [hydrated, user?.username])
+  );
+
+  // Phase 4.2: Load season data
+  const loadSeasonData = async () => {
+    try {
+      const seasonData = await getPvpSeason();
+      setSeason(seasonData);
+    } catch (error) {
+      console.error('Error loading PvP season:', error);
     }
-  }, [hydrated, user?.username]);
+  };
+
+  // Phase 4.2: Load rewards preview
+  const handleShowRewardsPreview = async () => {
+    track(Events.PVP_REWARDS_PREVIEW_OPENED, {});
+    if (!rewardsPreview) {
+      try {
+        const preview = await getPvpRewardsPreview();
+        setRewardsPreview(preview);
+      } catch (error) {
+        console.error('Error loading rewards preview:', error);
+        toast.error('Failed to load rewards preview');
+        return;
+      }
+    }
+    setShowRewardsModal(true);
+  };
+
+  // Phase 4.2: Claim daily reward
+  const handleClaimDaily = async () => {
+    if (claimingDaily) return;
+    setClaimingDaily(true);
+    try {
+      const receipt = await claimPvpDaily(makeSourceId('pvp_daily'));
+      setLastReceipt(receipt);
+      if (receipt.success) {
+        setShowReceiptModal(true);
+        await fetchUser();
+      } else if (receipt.error === 'already_claimed') {
+        toast.info('Daily reward already claimed today');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to claim daily reward');
+    } finally {
+      setClaimingDaily(false);
+    }
+  };
+
+  // Phase 4.2: Claim season reward
+  const handleClaimSeason = async () => {
+    if (claimingSeason || !season) return;
+    setClaimingSeason(true);
+    try {
+      const receipt = await claimPvpSeason(makeSourceId('pvp_season'), season.season_id);
+      setLastReceipt(receipt);
+      if (receipt.success) {
+        setShowReceiptModal(true);
+        await fetchUser();
+      } else if (receipt.error === 'already_claimed') {
+        toast.info('Season reward already claimed');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to claim season reward');
+    } finally {
+      setClaimingSeason(false);
+    }
+  };
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([loadArenaData(), loadSeasonData()]);
+    setRefreshing(false);
+  }, [user?.username]);
 
   const loadArenaData = async () => {
     if (!user) return;

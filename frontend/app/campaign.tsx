@@ -34,6 +34,10 @@ import { CinematicLoading } from '../components/ui/CinematicLoading';
 // Phase 3.22.4: Micro-interaction utilities
 import { PRESS, haptic } from '../lib/ui/interaction';
 import { LAYOUT } from '../components/ui/tokens';
+// Phase 3.50: Battle Presentation + Victory/Defeat UX
+import { BattlePresentationModal, VictoryDefeatModal } from '../components/battle';
+import type { BattlePresentationData, VictoryDefeatData } from '../components/battle';
+import { track, Events } from '../lib/telemetry/events';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

@@ -13997,6 +13997,11 @@ async def complete_campaign_stage(
     """Mark a stage as completed and grant rewards"""
     user = await get_user_for_mutation(username)  # Includes frozen check
     
+    # SECURITY: Require at least one hero to complete stages
+    user_heroes = await db.user_heroes.find({"user_id": user["id"]}).to_list(1)
+    if not user_heroes or len(user_heroes) == 0:
+        raise HTTPException(status_code=400, detail="You need at least one hero to battle. Summon heroes first!")
+    
     stage_data = generate_stage_data(chapter_id, stage_num)
     if not stage_data:
         raise HTTPException(status_code=404, detail="Stage not found")

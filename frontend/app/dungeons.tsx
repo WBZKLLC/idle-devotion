@@ -349,11 +349,15 @@ export default function DungeonsScreen() {
       // Use centralized API wrapper
       const result = await sweepDungeonStageByType(user.username, stageTypeMap[selectedType], stageId, sweepCount);
       
-      // Phase 3.18.5: Toast with summary
-      const rewardSummary = Object.entries(result.total_rewards || {})
-        .map(([key, val]) => `+${(val as number).toLocaleString()} ${key.replace(/_/g, ' ')}`)
-        .join(', ');
-      toast.success(`Sweep complete! ${rewardSummary}`);
+      // Phase 3.50: Sweep bypasses presentation, shows victory/defeat directly
+      const vdData: VictoryDefeatData = {
+        victory: true,
+        stageName: `${stageConfig.name} - Stage ${stageId} (${sweepCount}x Sweep)`,
+        rewards: result.total_rewards || {},
+        dungeonFloor: stageId,
+      };
+      setVictoryDefeatData(vdData);
+      setShowVictoryDefeat(true);
       
       await Promise.all([
         loadUserProgress(),

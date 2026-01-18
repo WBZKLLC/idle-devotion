@@ -168,10 +168,9 @@ export async function promoteHero(
 }
 
 /**
- * Generate source ID for promotion
+ * Generate a robust sourceId for hero promotion.
+ * Uses makeSourceId for collision-resistant idempotency.
  */
-let promotionCounter = 0;
 export function generatePromotionSourceId(heroId: string): string {
-  promotionCounter = (promotionCounter + 1) % 10000;
-  return `promote_${heroId}_${Date.now()}_${promotionCounter.toString().padStart(4, '0')}`;
+  return makeSourceId(`promote_${heroId}`);
 }

@@ -204,11 +204,16 @@ class ComprehensiveGachaTest:
         response = self.make_request("POST", f"/idle/claim?username={self.username}", auth=True)
         if response is not None and response.status_code == 200:
             rewards = response.json()
-            gold_earned = rewards.get('items', {}).get('gold', rewards.get('gold_earned', 0))
-            self.log_result("Idle Rewards", True, f"Claimed {gold_earned} gold")
+            # New receipt format: items is a list, balances has gold
+            items = rewards.get('items', [])
+            balances = rewards.get('balances', {})
+            gold = balances.get('gold', 0)
+            self.log_result("Idle Rewards", True, f"Claimed idle rewards (gold balance: {gold})")
         elif response is not None and response.status_code == 400:
             # Might be "already claimed" or "no rewards to claim" which is valid
             self.log_result("Idle Rewards", True, "No idle rewards to claim (expected for new account)")
+        elif response is not None and response.status_code == 401:
+            self.log_result("Idle Rewards", False, "Authentication failed - token not set correctly")
         else:
             self.log_result("Idle Rewards", False, f"Failed: {response.text if response is not None else 'No response'}")
         

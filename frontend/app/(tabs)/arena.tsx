@@ -20,8 +20,9 @@ import { toast } from '../../components/ui/Toast';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
 // Phase 3.59: Battle presentation modals
 import { BattlePresentationModal, VictoryDefeatModal } from '../../components/battle';
+import type { BattlePresentationData, VictoryDefeatData } from '../../components/battle';
 // Phase 3.49: Canonical sourceId generation
-import { generateSourceId } from '../../lib/ids/sourceId';
+import { makeSourceId } from '../../lib/ids/sourceId';
 // Phase 3.59: Telemetry
 import { track, Events } from '../../lib/telemetry/events';
 

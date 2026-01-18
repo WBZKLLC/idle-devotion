@@ -76,6 +76,11 @@ for (const file of apiFiles) {
   if (content.includes('process.env.EXPO_PUBLIC_API_URL')) {
     violations.push(`${filename}: direct env var usage (should import from config)`);
   }
+  
+  // Check for relative API calls (fetch('/api/... or fetch("/api/...)
+  if (/fetch\s*\(\s*['"]\/api\//.test(content)) {
+    violations.push(`${filename}: relative fetch('/api/...) call (should use apiUrl())`);
+  }
 }
 
 if (violations.length > 0) {
@@ -85,7 +90,7 @@ if (violations.length > 0) {
 }
 pass('No hardcoded API_BASE in lib/api/ files');
 
-// Check 4: No hardcoded API_BASE in app/ files
+// Check 4: No hardcoded API_BASE or relative API calls in app/ files
 console.log('\nCheck 4: No hardcoded API_BASE in app/ files...');
 const appFiles = glob.sync(path.join(APP_PATH, '**/*.tsx'));
 violations = [];

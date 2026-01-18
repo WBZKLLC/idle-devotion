@@ -7,7 +7,6 @@
 
 import { api } from '../api';
 import { track, Events } from '../telemetry/events';
-import type { RewardReceipt } from '../types/receipt';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // Types

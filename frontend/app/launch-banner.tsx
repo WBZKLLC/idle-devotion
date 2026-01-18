@@ -254,7 +254,7 @@ export default function LaunchBannerScreen() {
 
                 <View style={styles.skillBox}>
                   <Text style={styles.skillTitle}>⭐ Ultimate Skill</Text>
-                  <Text style={styles.skillText}>{bannerData?.featured_hero?.skill}</Text>
+                  <Text style={styles.skillText}>{bannerData?.banner?.featured_hero?.skills?.[0]?.name || 'Celestial Strike'}</Text>
                 </View>
               </View>
             </LinearGradient>

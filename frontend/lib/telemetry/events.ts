@@ -198,6 +198,12 @@ export const Events = {
   LIVEOPS_BANNER_SHOWN: 'liveops_banner_shown',
   LIVEOPS_CTA_CLICKED: 'liveops_cta_clicked',
   
+  // Phase E2: RN Equivalency telemetry
+  PVE_KEY_MOMENT_BEAT_SHOWN: 'pve_key_moment_beat_shown',
+  PVE_DAMAGE_NUMBER_BATCH_SHOWN: 'pve_damage_number_batch_shown',
+  PVE_VICTORY_CEREMONY_VIEWED: 'pve_victory_ceremony_viewed',
+  PVE_REWARD_RECORD_VIEWED: 'pve_reward_record_viewed',
+  
   // Phase 3.50: UI bug tracking (DEV-only)
   UI_TIMER_INVALID_SUPPRESSED: 'ui_timer_invalid_suppressed',
   

@@ -176,7 +176,13 @@ api.interceptors.response.use(
                                 errorDetail.includes('expired') ||
                                 errorDetail.includes('unauthorized');
         
-        if (!_isLoggingOut && isRealAuthError) {
+        // Don't force logout for certain endpoints that may fail transiently
+        const requestUrl = error.config?.url || '';
+        const isExemptEndpoint = requestUrl.includes('/chat/') || 
+                                 requestUrl.includes('/friends/summary') || 
+                                 requestUrl.includes('/mail/summary');
+        
+        if (!_isLoggingOut && isRealAuthError && !isExemptEndpoint) {
           _isLoggingOut = true;
           
           // Phase 3.18.6: Toast for session expiry (non-blocking)
@@ -199,9 +205,9 @@ api.interceptors.response.use(
           
           // Reset flag after a delay to allow re-triggering if needed
           setTimeout(() => { _isLoggingOut = false; }, 1000);
-        } else if (!isRealAuthError) {
-          // This might be a CDN/network issue returning 401
-          console.warn('[API] Received 401 but detail does not indicate auth issue - may be CDN/network error');
+        } else if (!isRealAuthError || isExemptEndpoint) {
+          // This might be a CDN/network issue returning 401 or an exempt endpoint
+          console.warn('[API] Received 401 but not triggering logout (exempt or non-auth error)');
         }
         break;
         

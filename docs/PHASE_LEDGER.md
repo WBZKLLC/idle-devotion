@@ -399,12 +399,71 @@ All guards wired to `npm run guard`:
 - `docs/mail-system.md` - Mail tabs, receipt queue semantics
 - `docs/friends-system.md` - Friends tabs, gift behavior
 - `docs/PHASE_TEMPLATE.md` - Template for future phases
+- `docs/POWER_CURVE.md` - Power curve formulas, stat tables, player progression simulation
+- `docs/STAR_AFFINITY_MATRIX.md` - Stars vs affinity value comparison, acquisition rates
+- `docs/VIP_SYSTEM.md` - Expanded VIP benefits, implementation status
+- `docs/REVENUECAT_SKUS.md` - IAP SKU matrix, webhook handling, telemetry
+
+---
+
+## Phase 3.47 — Economy Audit & Guard Enforcement
+
+**Status:** ✅ CLOSED
+
+**Goal:** Document and enforce power curve, star/affinity progression, VIP benefits, and IAP SKUs via guard scripts.
+
+### Deliverables
+
+#### Documentation
+- [x] `POWER_CURVE.md` - Complete power curve analysis with formulas, simulations
+- [x] `STAR_AFFINITY_MATRIX.md` - Star vs affinity value comparison
+- [x] `VIP_SYSTEM.md` - Expanded 16-tier VIP benefits matrix
+- [x] `REVENUECAT_SKUS.md` - Complete SKU catalog for IAP
+
+#### Guards
+- [x] `guard-power-curve.mjs` - Validates STAR_TABLE, BASE_STATS_BY_RARITY, AFFINITY_MULTIPLIERS
+- [x] `guard-star-table.mjs` - Validates shard costs, MAX_STAR, promotion endpoint
+- [x] `guard-sku-integrity.mjs` - Validates receipt sources, purchase intents, VIP XP
+- [x] `guard-vip-benefits.mjs` - Ensures no VIP stat buffs, rate/cap only benefits
+
+### Exit Checks
+- [x] All 4 new guards added to `npm run guard`
+- [x] All guards passing
+- [x] Documentation reflects actual backend implementation
+
+### Notes
+- Power curve formula: `finalStat = baseStat × starMultiplier × affinityMultiplier`
+- Max multiplier: 2.25 × 1.30 = 2.925× base stats
+- Total shards to 6★: 620
+- VIP 15 requires $25,000 spend
+
+---
+
+## Guard Suite Summary (Updated)
+
+All guards wired to `npm run guard`:
+- `guard:hero` - Hero system invariants
+- `guard:tier` - Tier resolution
+- `guard:receipt-shape` - Canonical receipt validation
+- `guard:phase-3-22` - Sanctuary Home closure
+- `guard:phase-3-23` - Social + Mail + Friends closure
+- `guard:hero-motion` - Hero stage motion (no timers)
+- `guard:phase-3-27` - Camera drift system
+- `guard:phase-3-28` - Friends gift system
+- `guard:phase-3-29` - Events/Quests system
+- `guard:phase-3-30` - Store system
+- `guard:phase-3-31` - Daily/Idle Loop system
+- `guard:phase-3-32` through `guard:phase-3-46` - Advanced systems
+- **`guard:power-curve`** - Power curve enforcement (NEW)
+- **`guard:star-table`** - Star table enforcement (NEW)
+- **`guard:sku-integrity`** - SKU integrity enforcement (NEW)
+- **`guard:vip-benefits`** - VIP benefits enforcement (NEW)
 
 ---
 
 ## Upcoming Phases
 
-### Phase 3.32 — Daily Login System (Planned)
+### Phase 3.48 — Daily Login System (Planned)
 - Daily login claim with canonical receipt
 - Streak tracking
 - Monthly reward calendar

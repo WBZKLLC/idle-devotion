@@ -119,6 +119,7 @@ export default function ArenaScreen() {
       if (hydrated && user) {
         loadArenaData();
         loadSeasonData();
+        fetchUserHeroes(); // Load heroes to check if user can battle
         track(Events.PVP_SEASON_VIEWED, { username: user.username });
       }
     }, [hydrated, user?.username])

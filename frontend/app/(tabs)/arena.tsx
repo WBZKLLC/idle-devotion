@@ -39,6 +39,8 @@ import {
   type PvpRewardsPreviewResponse,
   type PvpClaimReceipt,
 } from '../../lib/api/pvp';
+// Phase E4: PvP Rules Sheet
+import { PvpRulesSheet } from '../../components/pvp/PvpRulesSheet';
 
 // Centralized API wrappers (no raw axios in screens)
 import {

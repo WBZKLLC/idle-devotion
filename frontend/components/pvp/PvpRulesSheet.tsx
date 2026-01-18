@@ -77,7 +77,7 @@ export function PvpRulesSheet({ visible, onClose }: PvpRulesSheetProps) {
                 </View>
                 <Text style={styles.sectionText}>
                   You receive <Text style={styles.highlight}>5 arena tickets</Text> per day.
-                  Tickets refresh daily at server reset (00:00 UTC).
+                  Tickets refresh daily at server reset.
                 </Text>
                 <Text style={styles.sectionText}>
                   Each match costs 1 ticket. Use them wisely to climb the rankings!

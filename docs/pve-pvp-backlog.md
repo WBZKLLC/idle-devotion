@@ -18,27 +18,29 @@ Status: **PRIORITIZED** — Ready for sprint planning
 
 ## P0 — CRITICAL
 
-### P0-1: Battle Visualization System
+### P0-1: Battle Visualization System (VIDEO-VALIDATED ⭐)
 
 | Field | Value |
 |-------|-------|
 | **Title** | Add animated battle sequence for PvE/PvP |
 | **Area** | Shared |
 | **Player Problem** | Battles resolve instantly with no visual feedback; players can't see the impact of their hero builds |
-| **Spec** | - 5-10 second animated battle sequence<br>- Show damage numbers per hit<br>- Show skill activations with visual effects<br>- Show HP bars depleting<br>- Include skip button for veterans<br>- Auto-skip setting in options |
+| **Reference Evidence** | Reference videos show 15-30 second sequences with skill activations, damage numbers (156M+), critical hit indicators, and particle effects |
+| **Spec** | - 5-10 second animated battle sequence<br>- Show damage numbers per hit (large, vibrant, color-coded)<br>- Show skill cut-in animations with character portraits<br>- Show HP bars depleting<br>- Include skip button for veterans<br>- Auto-skip setting in options |
 | **Telemetry Events** | `battle_animation_viewed`, `battle_animation_skipped`, `battle_duration_watched`, `skip_button_usage` |
 | **Acceptance Criteria** | - Animation plays on stage completion<br>- Damage numbers are readable on all devices<br>- Skip button ends animation early<br>- Performance: 60fps on iPhone 12 equivalent<br>- Telemetry fires on view start and end |
 
-### P0-2: Victory Celebration Screen
+### P0-2: Victory Celebration Screen (VIDEO-VALIDATED ⭐)
 
 | Field | Value |
 |-------|-------|
 | **Title** | Create satisfying victory screen with confetti and sound |
 | **Area** | Shared |
 | **Player Problem** | Winning feels flat; no emotional spike on success |
-| **Spec** | - Confetti particle effect<br>- Victory sound effect (triumphant)<br>- Character celebration pose (if available)<br>- Stars animate flying to counter<br>- "First Clear!" badge if applicable<br>- Continue button with satisfying press feedback |
+| **Reference Evidence** | Reference shows "VICTORY" banner with angelic wings, crown, celebratory graphics, clear stage context ("Sky-tower Story 874") |
+| **Spec** | - "VICTORY" banner with wings/crown design<br>- Confetti particle effect<br>- Victory sound effect (triumphant)<br>- Character celebration pose (if available)<br>- Stars animate flying to counter<br>- "First Clear!" badge if applicable<br>- Stage context shown ("Campaign 3-15")<br>- Continue button with satisfying press feedback |
 | **Telemetry Events** | `victory_screen_shown`, `victory_screen_duration`, `first_clear_shown`, `continue_button_pressed` |
-| **Acceptance Criteria** | - Confetti plays on victory<br>- Sound plays (respecting mute setting)<br>- Stars animate with delay between each<br>- First Clear badge shows only once per stage<br>- Screen duration logged |
+| **Acceptance Criteria** | - Banner matches reference quality<br>- Confetti plays on victory<br>- Sound plays (respecting mute setting)<br>- Stars animate with delay between each<br>- First Clear badge shows only once per stage<br>- Screen duration logged |
 
 ### P0-3: Defeat Feedback System
 

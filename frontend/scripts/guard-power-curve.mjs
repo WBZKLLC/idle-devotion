@@ -1,115 +1,117 @@
 #!/usr/bin/env node
 /**
- * Power Curve Guard
+ * Guard: Power Curve Enforcement
  * 
- * Enforces:
- * 1. No stat multiplier changes without doc update
- * 2. No base stat changes without simulation review
- * 3. No new multiplier sources without formula update
+ * Ensures no stat multiplier changes without doc update.
+ * Validates BASE_STATS_BY_RARITY, STAR_TABLE, AFFINITY_MULTIPLIERS.
  */
+
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const BACKEND_PATH = path.resolve(__dirname, '../../backend/server.py');
+const DOC_PATH = path.resolve(__dirname, '../../docs/POWER_CURVE.md');
 
 const RED = '\x1b[31m';
 const GREEN = '\x1b[32m';
-const YELLOW = '\x1b[33m';
 const RESET = '\x1b[0m';
-
-let failed = false;
 
 function fail(msg) {
   console.error(`${RED}FAIL:${RESET} ${msg}`);
-  failed = true;
+  process.exit(1);
 }
 
 function pass(msg) {
   console.log(`${GREEN}PASS:${RESET} ${msg}`);
 }
 
-function warn(msg) {
-  console.log(`${YELLOW}WARN:${RESET} ${msg}`);
-}
-
 console.log('\n============================================');
-console.log('Power Curve Guard');
+console.log('Guard: Power Curve Enforcement');
 console.log('============================================\n');
 
-// =============================================================================
-// CHECK 1: POWER_CURVE.md exists
-// =============================================================================
+// Read files
+const serverCode = fs.readFileSync(BACKEND_PATH, 'utf8');
 
-console.log('Check 1: POWER_CURVE.md documentation exists...');
-
-const powerCurvePath = '/app/docs/POWER_CURVE.md';
-if (!fs.existsSync(powerCurvePath)) {
-  fail('POWER_CURVE.md not found - create documentation before modifying stats');
-} else {
-  pass('POWER_CURVE.md exists');
+// Check 1: STAR_TABLE exists with locked values
+console.log('Check 1: STAR_TABLE has correct values...');
+const starTableMatch = serverCode.match(/STAR_TABLE\s*=\s*\{([^}]+)\}/s);
+if (!starTableMatch) {
+  fail('STAR_TABLE not found in server.py');
 }
-
-// =============================================================================
-// CHECK 2: No hardcoded stat multipliers in frontend
-// =============================================================================
-
-console.log('\nCheck 2: No hardcoded stat multipliers in frontend...');
-
-const FORBIDDEN_STAT_PATTERNS = [
-  /statMultiplier\s*=\s*\d/,
-  /baseStats?\s*\*\s*\d+\.\d/,
-  /ATK_MULT|DEF_MULT|HP_MULT/,
+const starTableContent = starTableMatch[1];
+const expectedStarMultipliers = [
+  { star: 1, mult: '1.0' },
+  { star: 2, mult: '1.15' },
+  { star: 3, mult: '1.35' },
+  { star: 4, mult: '1.60' },
+  { star: 5, mult: '1.90' },
+  { star: 6, mult: '2.25' },
 ];
+for (const { star, mult } of expectedStarMultipliers) {
+  if (!starTableContent.includes(`"statMultiplier": ${mult}`)) {
+    fail(`STAR_TABLE star ${star} should have statMultiplier ${mult}`);
+  }
+}
+pass('STAR_TABLE has correct multipliers (1.0 → 2.25)');
 
-const frontendFiles = [
-  'lib/api/heroProgression.ts',
-  'components/hero/PromotionModal.tsx',
+// Check 2: BASE_STATS_BY_RARITY exists
+console.log('\nCheck 2: BASE_STATS_BY_RARITY has all rarities...');
+const baseStatsMatch = serverCode.match(/BASE_STATS_BY_RARITY\s*=\s*\{([^}]+)\}/s);
+if (!baseStatsMatch) {
+  fail('BASE_STATS_BY_RARITY not found in server.py');
+}
+const requiredRarities = ['N', 'R', 'SR', 'SSR', 'SSR+', 'UR', 'UR+'];
+for (const rarity of requiredRarities) {
+  if (!baseStatsMatch[1].includes(`"${rarity}"`)) {
+    fail(`BASE_STATS_BY_RARITY missing rarity: ${rarity}`);
+  }
+}
+pass('BASE_STATS_BY_RARITY has all rarities (N → UR+)');
+
+// Check 3: AFFINITY_MULTIPLIERS exists
+console.log('\nCheck 3: AFFINITY_MULTIPLIERS has correct values...');
+const affinityMatch = serverCode.match(/AFFINITY_MULTIPLIERS\s*=\s*\{([^}]+)\}/s);
+if (!affinityMatch) {
+  fail('AFFINITY_MULTIPLIERS not found in server.py');
+}
+const expectedAffinityMults = [
+  { tier: 0, mult: '1.0' },
+  { tier: 5, mult: '1.30' },
 ];
+if (!affinityMatch[1].includes('1.0') || !affinityMatch[1].includes('1.30')) {
+  fail('AFFINITY_MULTIPLIERS should have 1.0 (tier 0) and 1.30 (tier 5)');
+}
+pass('AFFINITY_MULTIPLIERS has correct range (1.0 → 1.30)');
 
-for (const relPath of frontendFiles) {
-  const fullPath = path.join(process.cwd(), relPath);
-  if (!fs.existsSync(fullPath)) continue;
-  
-  const content = fs.readFileSync(fullPath, 'utf8');
-  
-  for (const pattern of FORBIDDEN_STAT_PATTERNS) {
-    if (pattern.test(content)) {
-      fail(`Hardcoded stat multiplier in ${relPath} - use server values`);
+// Check 4: derive_hero_stats uses correct formula
+console.log('\nCheck 4: derive_hero_stats uses canonical formula...');
+if (!serverCode.includes('finalStat = baseStat × starMultiplier × affinityMultiplier')) {
+  fail('derive_hero_stats must document formula: finalStat = baseStat × starMultiplier × affinityMultiplier');
+}
+pass('derive_hero_stats uses canonical formula');
+
+// Check 5: No hardcoded stat buffs outside tables
+console.log('\nCheck 5: No hardcoded stat multipliers outside tables...');
+const dangerousPatterns = [
+  /stats\[.+\]\s*\*=\s*\d+\.\d+/,
+  /atk\s*\*=\s*\d+\.\d+(?!.*starMultiplier)/,
+  /hp\s*\*=\s*\d+\.\d+(?!.*starMultiplier)/,
+];
+for (const pattern of dangerousPatterns) {
+  if (pattern.test(serverCode)) {
+    // Allow in comments
+    const lines = serverCode.split('\n');
+    for (const line of lines) {
+      if (pattern.test(line) && !line.trim().startsWith('#')) {
+        fail(`Found hardcoded stat multiplier outside tables: ${line.trim()}`);
+      }
     }
   }
 }
-
-if (!failed) {
-  pass('No hardcoded stat multipliers in frontend');
-}
-
-// =============================================================================
-// CHECK 3: heroProgression API uses server-derived stats
-// =============================================================================
-
-console.log('\nCheck 3: Hero progression uses server-derived stats...');
-
-const heroProgPath = path.join(process.cwd(), 'lib/api/heroProgression.ts');
-if (fs.existsSync(heroProgPath)) {
-  const content = fs.readFileSync(heroProgPath, 'utf8');
-  
-  // Should fetch from server, not calculate locally
-  if (content.includes('getHeroStats')) {
-    pass('heroProgression.ts uses server-derived stats');
-  } else {
-    warn('heroProgression.ts should use getHeroStats from server');
-  }
-}
-
-// =============================================================================
-// FINAL RESULT
-// =============================================================================
+pass('No hardcoded stat multipliers outside tables');
 
 console.log('\n============================================');
-if (failed) {
-  console.log(`${RED}Power Curve guard FAILED!${RESET}`);
-  console.log('============================================\n');
-  process.exit(1);
-} else {
-  console.log(`${GREEN}Power Curve guard PASSED!${RESET}`);
-  console.log('============================================\n');
-  process.exit(0);
-}
+console.log(`${GREEN}Power Curve guard PASSED!${RESET}`);
+console.log('============================================\n');

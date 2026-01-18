@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://ecoaudit.preview.emergentagent.com/api"
+BASE_URL = "https://gameguard-5.preview.emergentagent.com/api"
 USERNAME = "Adam"
 PASSWORD = "Adam123!"
 SERVER_ID = "server_1"

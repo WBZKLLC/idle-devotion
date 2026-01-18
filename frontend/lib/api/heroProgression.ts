@@ -7,8 +7,7 @@
 
 import { loadAuthToken } from '../authStorage';
 import { track, Events } from '../telemetry/events';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || '';
+import { API_BASE } from './config';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const token = await loadAuthToken();

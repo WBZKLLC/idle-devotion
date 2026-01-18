@@ -107,6 +107,8 @@ export default function HeroPresentationScreen() {
   const [hero, setHero] = useState<any>(null);
   const [heroData, setHeroData] = useState<any>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
+  // Phase 3.49: Promotion modal state
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
   const hasLoggedConfig = useRef(false);
   
   // Check for reduce motion preference

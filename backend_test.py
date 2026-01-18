@@ -569,8 +569,9 @@ class BackendTester:
             self.log_result("User Status API", False, f"Exception: {str(e)}")
     
     async def run_all_tests(self):
-        """Run all backend tests for battle presentation flow"""
-        print("🚀 Starting Backend Tests for Phase 3.50 PvE Battle Presentation Flow")
+        """Run all backend tests for Phase 3.50-3.58 implementation"""
+        print("🚀 Starting Backend Tests for Phase 3.50-3.58 Implementation")
+        print("Testing: Campaign Battle Flow, Dungeon Battle Flow, Dungeon Sweep, Campaign Stage Cards, Arena/PvP Screen")
         print(f"Backend URL: {API_BASE}")
         print(f"Test User: {TEST_USERNAME}")
         print("=" * 80)
@@ -580,18 +581,20 @@ class BackendTester:
             print("❌ Authentication failed - cannot proceed with tests")
             return
         
-        # Run all test suites
+        # Run all test suites for Phase 3.50-3.58
         stages = await self.test_campaign_apis()
         await self.test_campaign_battle(stages)
+        await self.test_campaign_stage_cards()
         await self.test_dungeon_apis()
         await self.test_dungeon_battle()
         await self.test_dungeon_sweep()
-        await self.test_battle_data_structure()
+        await self.test_arena_apis()
+        await self.test_battle_presentation_data()
         await self.test_user_status()
         
         # Summary
         print("\n" + "=" * 80)
-        print("📋 TEST SUMMARY")
+        print("📋 PHASE 3.50-3.58 TEST SUMMARY")
         print("=" * 80)
         
         total_tests = len(self.test_results)
@@ -609,25 +612,53 @@ class BackendTester:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['details']}")
         
-        print("\n🎯 BATTLE PRESENTATION FLOW BACKEND STATUS:")
+        print("\n🎯 PHASE 3.50-3.58 FEATURE STATUS:")
         
-        # Check critical APIs for battle presentation
-        critical_apis = [
+        # Check critical APIs for each feature area
+        campaign_apis = [
             "Campaign Chapters API",
             "Campaign Chapter Detail API", 
+            "Campaign Battle Complete",
+            "Campaign Stage Power Requirements"
+        ]
+        
+        dungeon_apis = [
             "Dungeon Stages Info API",
             "Dungeon EXP Battle",
             "Dungeon Gold Battle",
-            "Battle Data Structure"
+            "Dungeon EXP Sweep"
         ]
         
-        critical_passed = sum(1 for result in self.test_results 
-                            if result["test"] in critical_apis and result["success"])
+        arena_apis = [
+            "Arena Record API",
+            "Arena Leaderboard API",
+            "Arena Battle API"
+        ]
         
-        if critical_passed == len(critical_apis):
-            print("✅ All critical battle presentation APIs are working")
-        else:
-            print(f"⚠️ {len(critical_apis) - critical_passed} critical APIs have issues")
+        presentation_apis = [
+            "Campaign Battle Presentation Data",
+            "Dungeon Battle Presentation Data"
+        ]
+        
+        # Check each feature area
+        feature_areas = [
+            ("Campaign Battle Flow", campaign_apis),
+            ("Dungeon Battle & Sweep", dungeon_apis),
+            ("Arena/PvP Screen", arena_apis),
+            ("Battle Presentation", presentation_apis)
+        ]
+        
+        for feature_name, api_list in feature_areas:
+            feature_passed = sum(1 for result in self.test_results 
+                               if result["test"] in api_list and result["success"])
+            feature_total = len(api_list)
+            
+            if feature_passed == feature_total:
+                print(f"✅ {feature_name}: All {feature_total} APIs working")
+            elif feature_passed > 0:
+                print(f"⚠️ {feature_name}: {feature_passed}/{feature_total} APIs working")
+            else:
+                print(f"❌ {feature_name}: No APIs working")
         
         return passed_tests, failed_tests
 

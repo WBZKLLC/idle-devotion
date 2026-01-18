@@ -413,17 +413,52 @@ Arena Tab ──────► View 3 Opponents ──────► Instant B
 
 ---
 
-## 11. VIDEO REFERENCE TABLE
+## 11. VIDEO ANALYSIS SUMMARY
 
-**Note:** Videos cannot be parsed directly. See `/app/docs/pve-pvp-video-notes-template.md` for manual annotation template.
+### Videos Analyzed ✅
 
-| Video File | Expected Content | Audit Questions |
-|------------|------------------|----------------|
-| `Idle_Devotion_Campaign.mp4` | Campaign gameplay | Battle animation? Star collection? Victory celebration? |
-| `Idle_Devotion_Dungeon.mp4` | Dungeon gameplay | Resource drops? Sweep vs manual? |
-| `Reference_PVE.mp4` | Reference PvE | Battle pacing? Skill cuts? Reward reveals? |
-| `Reference_PVP_1.mp4` | Reference PvP | Match tension? Counterplay? |
-| `Reference_PVP_2.mp4` | Reference PvP | Different mode? Tournament? |
+| Video File | Status | Key Findings |
+|------------|--------|--------------|
+| `Reference_PVE_01.mp4` | ✅ Analyzed | Skill cut-ins, massive damage numbers (156M+), particle effects |
+| `Reference_PVE_02.mp4` | ✅ Analyzed | Victory screen with wings/crown, reward record display |
+| `Reference_PVP_01.mp4` | ✅ Analyzed | Opponent power display, attempt limits, ranking rewards |
+| `Reference_PVP_02.mp4` | ✅ Analyzed | Tournament brackets, countdown timer, match rules |
+| `Idle_Devotion_Campaign.mp4` | ⏳ Needs review | Battle animation? Star collection? Victory celebration? |
+| `Idle_Devotion_Dungeon.mp4` | ⏳ Needs review | Resource drops? Sweep vs manual? |
+
+### Reference Game Feature Summary (Video-Derived)
+
+#### PvE Excellence (Reference_PVE_01 & _02):
+
+**Dopamine Drivers Observed:**
+1. **Skill Cut-Ins**: Full-screen character art with ability names ("Light of Creation", "Supreme Glory")
+2. **Damage Number Spectacle**: Numbers in hundreds of millions displayed prominently
+3. **Critical Hit Feedback**: Green arrows + "CRIT" indicators
+4. **Status Effect Clarity**: Text overlays ("ATK UP", "CRIT DMG DOWN", "Combustion")
+5. **Victory Celebration**: "VICTORY" banner with angelic wings, crown, stage context
+6. **Sequential Rewards**: "Reward Record" with animated coin/item icons
+
+**Visual Polish Observed:**
+- Particle effects on every action (sparks, glows, energy bursts)
+- Screen shakes on impactful abilities
+- Round counter with clear turn progression
+- Character portraits with buff/debuff icons
+
+#### PvP Excellence (Reference_PVP_01 & _02):
+
+**Competitive Features Observed:**
+1. **Tournament Brackets**: Visual progression (Quarter-final → Semi-final → Final)
+2. **Opponent Information**: Power score (2735863795), rewards preview, attempt count
+3. **Countdown Urgency**: "022:26:11" timer creating FOMO
+4. **Daily Ranking Rewards**: "Ranking rewards awarded at 21:00 each day"
+5. **Match Rules Transparency**: Dedicated button for competitive mechanics
+6. **Ranking Quiz**: Knowledge-based engagement feature
+
+**Engagement Mechanics:**
+- Attempt limiting ("Attempts: 4") forces strategic choice
+- Refresh list option for opponent selection
+- Visual rank hierarchy in bracket display
+- Clear "Challenge" call-to-action
 
 ---
 

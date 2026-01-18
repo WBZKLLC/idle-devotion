@@ -209,8 +209,8 @@ export default function SummonHubScreen() {
     try {
       // Phase 3.49: Use canonical summon() from gacha.ts
       // Returns GachaReceipt with all server-computed data
-      // Note: sourceId uses timestamp for idempotency, NOT game RNG
-      const sourceId = `summon-${user.username}-${Date.now()}`;
+      // Robust sourceId prevents collisions from multi-tap/retries
+      const sourceId = makeSourceId('summon');
       const receipt = await summonGacha(
         bannerId,
         pullType === 'multi' ? 10 : 1,

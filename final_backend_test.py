@@ -219,8 +219,9 @@ class ComprehensiveGachaTest:
         response = self.make_request("GET", f"/user/{self.username}")
         if response and response.status_code == 200:
             final_user = response.json()
+            crystals = final_user.get('crystals', final_user.get('gems', 0))
             self.log_result("Final User State", True, 
-                          f"Gems: {final_user['gems']}, Coins: {final_user['coins']}, Gold: {final_user['gold']}, Pulls: {final_user['total_pulls']}")
+                          f"Crystals: {crystals}, Coins: {final_user['coins']}, Gold: {final_user['gold']}, Pulls: {final_user['total_pulls']}")
         else:
             self.log_result("Final User State", False, "Failed")
         

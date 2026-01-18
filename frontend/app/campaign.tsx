@@ -157,6 +157,12 @@ export default function CampaignScreen() {
   const [isBattling, setIsBattling] = useState(false);
   const [battleResult, setBattleResult] = useState<any>(null);
   const [showBattleModal, setShowBattleModal] = useState(false);
+  
+  // Phase 3.50: Battle Presentation state
+  const [showPresentation, setShowPresentation] = useState(false);
+  const [showVictoryDefeat, setShowVictoryDefeat] = useState(false);
+  const [presentationData, setPresentationData] = useState<BattlePresentationData | null>(null);
+  const [victoryDefeatData, setVictoryDefeatData] = useState<VictoryDefeatData | null>(null);
 
   // Dialogue state
   const [showDialogue, setShowDialogue] = useState(false);

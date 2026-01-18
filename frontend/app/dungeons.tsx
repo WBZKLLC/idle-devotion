@@ -267,7 +267,7 @@ export default function DungeonsScreen() {
       const presData: BattlePresentationData = {
         victory: result.victory,
         enemyPower: result.stage_power || stageId * 5000,
-        playerPower: result.player_power || user.power || 10000,
+        playerPower: result.player_power || user?.total_power || 10000,
         rewards: result.rewards || {},
         stageName: `${stageConfig.name} - Stage ${stageId}`,
       };

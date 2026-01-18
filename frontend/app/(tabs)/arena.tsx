@@ -662,6 +662,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#dc262630' },
   backButton: { padding: 8 },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#dc2626' },
+  // Phase E4: Header actions container
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerActionButton: { padding: 6, borderRadius: 8, backgroundColor: '#2d1f2d' },
   ticketDisplay: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#2d1f2d', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
   ticketText: { color: COLORS.cream.pure, fontWeight: 'bold' },
 

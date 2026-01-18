@@ -52,11 +52,14 @@ export default function SummonHubScreen() {
   const hydrated = useHydration();
   const [selectedBanner, setSelectedBanner] = useState<'common' | 'premium' | 'divine'>('common');
   const [isLoading, setIsLoading] = useState(false);
-  // Phase 3.49: Store canonical receipt instead of raw results
-  const [lastReceipt, setLastReceipt] = useState<GachaReceipt | null>(null);
+  // Legacy pull results for existing modal
+  const [pullResults, setPullResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [lastPullType, setLastPullType] = useState<'single' | 'multi'>('single');
   const [pityBefore, setPityBefore] = useState(0);
+  // Phase 3.49: Canonical receipt + modal state
+  const [lastReceipt, setLastReceipt] = useState<GachaReceipt | null>(null);
+  const [showCanonicalResults, setShowCanonicalResults] = useState(false);
   // Phase 3.49: Banner details sheet state
   const [showBannerDetails, setShowBannerDetails] = useState(false);
 

@@ -471,7 +471,16 @@ export async function setActiveTeam(teamId: string, username: string) {
 export async function getIdleStatus(username: string) {
   const u = requireUsername(username);
   const res = await api.get(`/idle/status/${encodeURIComponent(u)}`);
-  return res.data;
+  // Map backend response to frontend expected format
+  const data = res.data;
+  return {
+    time_elapsed: data.elapsedSeconds ?? 0,
+    max_hours: data.capHours ?? 168,
+    gold_pending: data.pendingRewards?.gold ?? 0,
+    is_capped: data.isCapped ?? false,
+    // Keep original data for reference
+    ...data,
+  };
 }
 
 export async function instantCollectIdle(username: string) {

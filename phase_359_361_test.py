@@ -8,7 +8,7 @@ import requests
 import json
 import time
 
-BASE_URL = "https://gameguard-5.preview.emergentagent.com/api"
+BASE_URL = "https://pvp-evolution.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "username": "ADAM",
     "password": "=267+HA4i4=!Af7StuS6A=eX2V3b*S1=aQL?u?H5_w$qlGU__T*0ow$lJeB*Zo9I"

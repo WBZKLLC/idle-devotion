@@ -1,9 +1,10 @@
 /**
- * Phase 3.50 + 4.0: Victory/Defeat UX Modal
+ * Phase 3.50 + 4.0 + E2: Victory/Defeat UX Modal
  * 
  * Victory Screen:
- * - Title + hero portrait header
- * - Rewards panel using ReceiptViewer
+ * - Crown/wings badge at top (RN equivalency)
+ * - Reward Record panel (from receipt)
+ * - First Clear stamp
  * - Progress beat (chapter/dungeon progress)
  * - Single CTA: Continue
  * 
@@ -13,6 +14,7 @@
  * - Power comparison display
  * 
  * Phase 4.0: Added SFX support
+ * Phase E2: Victory ceremony with crown badge + Reward Record
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -102,13 +104,38 @@ export function VictoryDefeatModal({ visible, data, onContinue, mode = 'campaign
   
   // Phase 4.0: Play victory/defeat SFX when modal becomes visible
   const hasPlayedSfx = useRef(false);
+  const hasTrackedCeremony = useRef(false);
+  const hasTrackedRewardRecord = useRef(false);
+  
   useEffect(() => {
     if (visible && data && !hasPlayedSfx.current) {
       playSfx(data.victory ? 'victory' : 'defeat');
       hasPlayedSfx.current = true;
+      
+      // Phase E2: Track victory ceremony viewed
+      if (data.victory && !hasTrackedCeremony.current) {
+        track(Events.PVE_VICTORY_CEREMONY_VIEWED, {
+          mode,
+          stars: data.stars,
+          firstClear: data.firstClear,
+          hasReceipt: !!data.receipt,
+        });
+        hasTrackedCeremony.current = true;
+      }
+      
+      // Phase E2: Track reward record viewed
+      if (data.victory && (data.rewards || data.receipt) && !hasTrackedRewardRecord.current) {
+        track(Events.PVE_REWARD_RECORD_VIEWED, {
+          mode,
+          rewardCount: Object.keys(data.rewards || {}).length + (data.receipt?.items?.length || 0),
+        });
+        hasTrackedRewardRecord.current = true;
+      }
     }
     if (!visible) {
       hasPlayedSfx.current = false;
+      hasTrackedCeremony.current = false;
+      hasTrackedRewardRecord.current = false;
     }
   }, [visible, data]);
   
@@ -170,6 +197,13 @@ export function VictoryDefeatModal({ visible, data, onContinue, mode = 'campaign
             style={styles.gradient}
           >
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              {/* Phase E2: Crown Badge (Victory Only) */}
+              {data.victory && (
+                <View style={styles.crownBadge}>
+                  <Ionicons name="trophy" size={32} color={COLORS.gold.primary} />
+                </View>
+              )}
+              
               {/* Header */}
               <View style={styles.header}>
                 <Text style={[styles.title, data.victory ? styles.victoryText : styles.defeatText]}>
@@ -183,11 +217,11 @@ export function VictoryDefeatModal({ visible, data, onContinue, mode = 'campaign
               {data.victory ? (
                 /* Victory Content */
                 <>
-                  {/* First Clear Badge */}
+                  {/* First Clear Stamp */}
                   {data.firstClear && (
                     <View style={styles.firstClearBadge}>
-                      <Ionicons name="star" size={16} color={COLORS.gold.primary} />
-                      <Text style={styles.firstClearText}>First Clear!</Text>
+                      <Ionicons name="ribbon" size={18} color={COLORS.gold.primary} />
+                      <Text style={styles.firstClearText}>★ FIRST CLEAR ★</Text>
                     </View>
                   )}
                   
@@ -205,35 +239,43 @@ export function VictoryDefeatModal({ visible, data, onContinue, mode = 'campaign
                     </View>
                   )}
                   
-                  {/* Rewards */}
-                  {data.rewards && Object.keys(data.rewards).length > 0 && (
-                    <View style={styles.rewardsSection}>
-                      <Text style={styles.sectionTitle}>Rewards Earned</Text>
-                      <View style={styles.rewardsGrid}>
-                        {Object.entries(data.rewards).map(([key, val]) => (
-                          <View key={key} style={styles.rewardItem}>
-                            <Text style={styles.rewardValue}>+{(val as number).toLocaleString()}</Text>
-                            <Text style={styles.rewardLabel}>{key.replace(/_/g, ' ')}</Text>
-                          </View>
-                        ))}
+                  {/* Phase E2: Reward Record Panel */}
+                  {(data.rewards && Object.keys(data.rewards).length > 0) || data.receipt ? (
+                    <View style={styles.rewardRecordSection}>
+                      <View style={styles.rewardRecordHeader}>
+                        <Ionicons name="document-text" size={16} color={COLORS.gold.light} />
+                        <Text style={styles.rewardRecordTitle}>Reward Record</Text>
                       </View>
+                      
+                      {/* Rewards from data.rewards */}
+                      {data.rewards && Object.keys(data.rewards).length > 0 && (
+                        <View style={styles.rewardsGrid}>
+                          {Object.entries(data.rewards).map(([key, val]) => (
+                            <View key={key} style={styles.rewardItem}>
+                              <Text style={styles.rewardValue}>+{(val as number).toLocaleString()}</Text>
+                              <Text style={styles.rewardLabel}>{key.replace(/_/g, ' ')}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                      
+                      {/* Receipt items (canonical receipt from server) */}
+                      {data.receipt?.items && data.receipt.items.length > 0 && (
+                        <View style={styles.rewardsGrid}>
+                          {data.receipt.items.map((item: any, idx: number) => (
+                            <View key={idx} style={styles.rewardItem}>
+                              <Text style={styles.rewardValue}>
+                                +{(item.quantity || item.amount || 0).toLocaleString()}
+                              </Text>
+                              <Text style={styles.rewardLabel}>
+                                {(item.type || item.name || 'reward').replace(/_/g, ' ')}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
                     </View>
-                  )}
-                  
-                  {/* Receipt Viewer (if canonical receipt provided) */}
-                  {data.receipt && (
-                    <View style={styles.receiptSection}>
-                      <Text style={styles.sectionTitle}>Rewards Detail</Text>
-                      <View style={styles.rewardsGrid}>
-                        {data.receipt.items?.map((item: any, idx: number) => (
-                          <View key={idx} style={styles.rewardItem}>
-                            <Text style={styles.rewardValue}>+{(item.quantity || item.amount || 0).toLocaleString()}</Text>
-                            <Text style={styles.rewardLabel}>{(item.type || item.name || 'reward').replace(/_/g, ' ')}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  )}
+                  ) : null}
                   
                   {/* Progress Beat */}
                   {data.chapterProgress && (
@@ -360,6 +402,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 16,
   },
+  // Phase E2: Crown badge
+  crownBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: COLORS.gold.primary + '25',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: COLORS.gold.primary + '50',
+  },
   header: {
     alignItems: 'center',
     marginBottom: 16,
@@ -382,31 +436,46 @@ const styles = StyleSheet.create({
   firstClearBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: COLORS.gold.primary + '30',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    gap: 8,
+    backgroundColor: COLORS.gold.primary + '35',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.gold.primary + '60',
   },
   firstClearText: {
     color: COLORS.gold.primary,
     fontWeight: 'bold',
+    fontSize: 14,
+    letterSpacing: 1,
   },
   starsContainer: {
     flexDirection: 'row',
     gap: 8,
     marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 14,
-    color: COLORS.cream.dark,
-    textAlign: 'center',
+  // Phase E2: Reward Record section
+  rewardRecordSection: {
+    width: '100%',
+    backgroundColor: COLORS.navy.primary + '80',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.gold.primary + '30',
+  },
+  rewardRecordHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 12,
   },
-  rewardsSection: {
-    width: '100%',
-    marginBottom: 16,
+  rewardRecordTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.gold.light,
   },
   rewardsGrid: {
     flexDirection: 'row',
@@ -427,10 +496,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: COLORS.cream.dark,
     textTransform: 'capitalize',
-  },
-  receiptSection: {
-    width: '100%',
-    marginBottom: 16,
   },
   progressSection: {
     flexDirection: 'row',

@@ -6,6 +6,7 @@
  */
 
 import { Platform } from 'react-native';
+import { loadAuthToken } from '../authStorage';
 
 /**
  * Get the API base URL based on platform and environment.

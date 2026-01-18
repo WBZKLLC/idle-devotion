@@ -446,7 +446,18 @@ export default function ArenaScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.content} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh}
+              tintColor="#dc2626"
+              colors={['#dc2626']}
+            />
+          }
+        >
           {activeTab === 'battle' ? (
             <>
               <Text style={styles.sectionTitle}>Choose Your Opponent</Text>

@@ -36,11 +36,12 @@ const serverCode = fs.readFileSync(BACKEND_PATH, 'utf8');
 
 // Check 1: STAR_TABLE exists with locked values
 console.log('Check 1: STAR_TABLE has correct values...');
-const starTableMatch = serverCode.match(/STAR_TABLE\s*=\s*\{([^}]+)\}/s);
+// Match multiline STAR_TABLE definition
+const starTableMatch = serverCode.match(/STAR_TABLE\s*=\s*\{[\s\S]*?^\}/m);
 if (!starTableMatch) {
   fail('STAR_TABLE not found in server.py');
 }
-const starTableContent = starTableMatch[1];
+const starTableContent = starTableMatch[0];
 const expectedStarMultipliers = [
   { star: 1, mult: '1.0' },
   { star: 2, mult: '1.15' },
@@ -50,7 +51,9 @@ const expectedStarMultipliers = [
   { star: 6, mult: '2.25' },
 ];
 for (const { star, mult } of expectedStarMultipliers) {
-  if (!starTableContent.includes(`"statMultiplier": ${mult}`)) {
+  // Match Python dict format: "statMultiplier": 1.15 (no quotes around number)
+  const pattern = new RegExp(`statMultiplier["']?:\\s*${mult}`);
+  if (!pattern.test(starTableContent)) {
     fail(`STAR_TABLE star ${star} should have statMultiplier ${mult}`);
   }
 }

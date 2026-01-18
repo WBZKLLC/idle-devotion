@@ -592,7 +592,7 @@ export default function ArenaScreen() {
             <View style={styles.receiptModal}>
               <ReceiptViewer
                 receipt={{
-                  source: lastReceipt?.source || 'pvp_claim',
+                  source: lastReceipt?.source || 'pvp_daily_claim',
                   rewards: lastReceipt?.rewards || {},
                   balances_before: lastReceipt?.balances_before,
                   balances_after: lastReceipt?.balances_after,

@@ -61,6 +61,11 @@ from core.game_formulas import (
     get_subscription_status, MONTHLY_CARD_CONFIG
 )
 
+# Phase 3.61: Import campaign difficulty module
+from core.campaign_difficulty import (
+    get_stage_difficulty_info, dump_difficulty_table, DIFFICULTY_TABLE
+)
+
 # Import event banner system
 from core.event_banners import (
     CRIMSON_ECLIPSE_BANNER, EVENT_MILESTONES, EVENT_SHOP,

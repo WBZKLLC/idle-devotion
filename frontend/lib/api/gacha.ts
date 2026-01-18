@@ -8,7 +8,7 @@
 import { loadAuthToken } from '../authStorage';
 import { track, Events } from '../telemetry/events';
 import { GachaReceipt, isValidGachaReceipt } from '../types/receipt';
-import { API_BASE } from './config';
+import { apiUrl } from './config';
 
 // Auth header helper
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -62,7 +62,7 @@ export interface GachaBannersResponse {
  */
 export async function getGachaBanners(): Promise<GachaBannersResponse> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/gacha/banners`, { headers });
+  const res = await fetch(apiUrl('/api/gacha/banners'), { headers });
   
   if (!res.ok) {
     throw new Error('Failed to fetch gacha banners');
@@ -97,7 +97,7 @@ export async function getGachaBanners(): Promise<GachaBannersResponse> {
  */
 export async function getPityStatus(): Promise<Record<string, PityStatus>> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}/api/gacha/pity`, { headers });
+  const res = await fetch(apiUrl('/api/gacha/pity'), { headers });
   
   if (!res.ok) {
     throw new Error('Failed to fetch pity status');
@@ -136,7 +136,7 @@ export async function summon(
     body.source_id = sourceId;
   }
   
-  const res = await fetch(`${API_BASE}/api/gacha/summon`, {
+  const res = await fetch(apiUrl('/api/gacha/summon'), {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
@@ -255,7 +255,7 @@ export async function getGachaHistory(limit: number = 50): Promise<GachaHistoryR
   
   track(Events.GACHA_HISTORY_VIEWED, { limit });
   
-  const res = await fetch(`${API_BASE}/api/gacha/history?limit=${limit}`, { headers });
+  const res = await fetch(apiUrl(`/api/gacha/history?limit=${limit}`), { headers });
   
   if (!res.ok) {
     throw new Error('Failed to fetch gacha history');

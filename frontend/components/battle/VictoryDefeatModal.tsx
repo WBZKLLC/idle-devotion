@@ -100,6 +100,18 @@ export function VictoryDefeatModal({ visible, data, onContinue, mode = 'campaign
   
   if (!visible || !data) return null;
   
+  // Phase 4.0: Play victory/defeat SFX when modal becomes visible
+  const hasPlayedSfx = useRef(false);
+  useEffect(() => {
+    if (visible && data && !hasPlayedSfx.current) {
+      playSfx(data.victory ? 'victory' : 'defeat');
+      hasPlayedSfx.current = true;
+    }
+    if (!visible) {
+      hasPlayedSfx.current = false;
+    }
+  }, [visible, data]);
+  
   const handleContinue = () => {
     if (data.victory) {
       track(Events.PVE_VICTORY_VIEWED, { mode, stars: data.stars, firstClear: data.firstClear });

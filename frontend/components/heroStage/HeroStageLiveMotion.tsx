@@ -105,8 +105,8 @@ export function HeroStageLiveMotion({
     // Breathing animation: slow scale 1.0 -> 1.01 -> 1.0 over 4s
     breathingScale.value = withRepeat(
       withSequence(
-        withTiming(maxScale, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) })
+        withTiming(maxScale, { duration: 2000 }),
+        withTiming(1, { duration: 2000 })
       ),
       -1, // infinite
       false // don't reverse
@@ -115,10 +115,10 @@ export function HeroStageLiveMotion({
     // Subtle Y translation: 0 -> -maxY -> 0 -> +maxY -> 0 over 6s
     breathingTranslateY.value = withRepeat(
       withSequence(
-        withTiming(-maxTranslateY, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(maxTranslateY, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.sin) })
+        withTiming(-maxTranslateY, { duration: 1500 }),
+        withTiming(0, { duration: 1500 }),
+        withTiming(maxTranslateY, { duration: 1500 }),
+        withTiming(0, { duration: 1500 })
       ),
       -1,
       false

@@ -9,17 +9,6 @@
 import { track, Events } from '../telemetry/events';
 import { apiUrl, getAuthHeaders } from './config';
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await loadAuthToken();
-  if (!token) {
-    return { 'Content-Type': 'application/json' };
-  }
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  };
-}
-
 // =============================================================================
 // TYPES
 // =============================================================================

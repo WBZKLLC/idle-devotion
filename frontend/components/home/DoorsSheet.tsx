@@ -54,13 +54,20 @@ export function DoorsSheet({
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
       <View style={styles.overlay}>
         {/* Backdrop tap to close */}
         <Pressable style={styles.backdrop} onPress={onClose} />
         
-        {/* Sheet content */}
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+        {/* Sheet content - using SafeAreaView for proper inset handling on Android */}
+        <View style={[
+          styles.sheet, 
+          { 
+            paddingBottom: Math.max(insets.bottom, 16) + 16,
+            marginBottom: Platform.OS === 'android' ? 0 : 0,
+          }
+        ]}>
           {/* Handle */}
           <View style={styles.handleContainer}>
             <View style={styles.handle} />

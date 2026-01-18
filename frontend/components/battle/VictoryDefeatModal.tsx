@@ -26,7 +26,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { track, Events } from '../../lib/telemetry/events';
-import { ReceiptViewer } from '../receipt/ReceiptViewer';
 
 const COLORS = {
   navy: { darkest: '#0a1628', dark: '#0d1b2a', primary: '#1b263b' },

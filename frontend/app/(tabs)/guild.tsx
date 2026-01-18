@@ -256,7 +256,8 @@ export default function GuildScreen() {
   };
 
   const loadGuildLevelInfo = async () => {
-    if (!user) return;
+    // Only load guild level info if user is in a guild
+    if (!user || !guildData) return;
     try {
       const data = await getGuildLevelInfo(user.username);
       setGuildLevelInfo(data);

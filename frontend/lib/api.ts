@@ -571,6 +571,21 @@ export async function startArenaBattle(
   return res.data;
 }
 
+/**
+ * Phase 3.59: Execute PvP match with server-side resolution
+ * Uses sourceId for idempotency - same sourceId returns cached result
+ */
+export async function executePvPMatch(
+  opponentId: string,
+  sourceId: string
+) {
+  const res = await api.post('/pvp/match', {
+    opponent_id: opponentId,
+    source_id: sourceId,
+  });
+  return res.data;
+}
+
 // ─────────────────────────────────────────────────────────────
 // LEADERBOARD (leaderboard.tsx)
 // ─────────────────────────────────────────────────────────────

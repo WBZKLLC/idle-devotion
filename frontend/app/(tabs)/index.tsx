@@ -69,6 +69,8 @@ import { AtmosphereStack } from '../../components/home/AtmosphereStack';
 
 // Centralized API wrappers (no raw fetch in screens)
 import { fetchUser as apiFetchUser, getIdleStatus, instantCollectIdle } from '../../lib/api';
+// Phase 4.3: LiveOps API
+import { getLiveOpsStatus, type LiveOpsStatusResponse } from '../../lib/api/liveops';
 
 // Dashboard background (Sanctum environment art) - LOCAL ASSET
 // Celestial sanctum/temple environment - instant render, no flicker

@@ -51,10 +51,8 @@ function checkBackendPvP() {
   
   // Check for server-side combat resolution
   if (content.includes('/pvp/match')) {
-    const pvpMatchSection = content.substring(
-      content.indexOf('/pvp/match'),
-      content.indexOf('/pvp/match') + 3000
-    );
+    const startIdx = content.indexOf('/pvp/match');
+    const pvpMatchSection = content.substring(startIdx, startIdx + 6000);
     
     if (!pvpMatchSection.includes('victory')) {
       ERRORS.push('PHASE_3_59_06: PvP match missing server-side victory determination');

@@ -419,12 +419,50 @@ Arena Tab ──────► View 3 Opponents ──────► Instant B
 
 | Video File | Status | Key Findings |
 |------------|--------|--------------|
+| `Idle_Devotion_Campaign.mp4` | ✅ Analyzed | **INSTANT RESOLUTION** - No combat animation, victory with confetti, star animation works, "NaN" timer bug |
+| `Idle_Devotion_Dungeon.mp4` | ✅ Analyzed | Quick Sweep feature works, automated combat (not shown), clear reward display, stamina gate |
 | `Reference_PVE_01.mp4` | ✅ Analyzed | Skill cut-ins, massive damage numbers (156M+), particle effects |
 | `Reference_PVE_02.mp4` | ✅ Analyzed | Victory screen with wings/crown, reward record display |
 | `Reference_PVP_01.mp4` | ✅ Analyzed | Opponent power display, attempt limits, ranking rewards |
 | `Reference_PVP_02.mp4` | ✅ Analyzed | Tournament brackets, countdown timer, match rules |
-| `Idle_Devotion_Campaign.mp4` | ⏳ Needs review | Battle animation? Star collection? Victory celebration? |
-| `Idle_Devotion_Dungeon.mp4` | ⏳ Needs review | Resource drops? Sweep vs manual? |
+
+### CRITICAL GAP: Idle Devotion vs Reference (VIDEO-VALIDATED)
+
+#### Idle Devotion Campaign (Current State):
+1. **Battle Resolution**: ❌ INSTANT - No combat visualization whatsoever
+2. **Victory Screen**: ✅ Has "VICTORY!" banner with confetti and horn
+3. **Star Animation**: ✅ Stars animate/fill in on victory
+4. **Reward Display**: ✅ Clear list with icons (Gold, Hero Exp, Gems, Enhancement Stones)
+5. **UI Polish**: ⚠️ Moderate - confetti present, no screen shake
+6. **Known Bug**: 🐛 "NaN:NaN:NaN" in "AWAITING YOU" notification
+
+#### Idle Devotion Dungeon (Current State):
+1. **Entry Flow**: ✅ Clean dungeon selection → stage selection → enter
+2. **Sweep Feature**: ✅ "Quick Sweep" with 3x multiplier option
+3. **Reward Display**: ✅ Victory screen shows Gold, Soul Dust, Enhancement Stones
+4. **Stamina System**: ✅ 1 per 5 min (max 100) - standard gate
+5. **Combat Visibility**: ❌ NONE - fully automated, no battle shown
+
+#### Reference Games (Target State):
+1. **Battle Resolution**: ✅ 15-30 second animated sequences
+2. **Skill Cut-Ins**: ✅ Full-screen "Light of Creation", "Supreme Glory" cinematics
+3. **Damage Numbers**: ✅ Millions displayed (up to -2,132,514,720)
+4. **Victory Screen**: ✅ Elaborate "VICTORY" with wings, crown, stage context
+5. **Status Effects**: ✅ "ATK UP", "CRIT DMG DOWN" text overlays
+6. **Screen Shake**: ✅ Present on impactful abilities
+
+### Gap Severity Assessment
+
+| Feature | Idle Devotion | Reference | Gap Level |
+|---------|--------------|-----------|-----------|
+| Combat Animation | None | 15-30s sequences | **CRITICAL** |
+| Skill Cut-Ins | None | Full-screen cinematics | **CRITICAL** |
+| Damage Numbers | Hidden | 156M+ displayed | **CRITICAL** |
+| Victory Banner | Basic confetti | Wings + Crown + Context | **HIGH** |
+| Status Effect Text | Minimal | Clear overlays | **HIGH** |
+| Screen Shake | None | On abilities | **MEDIUM** |
+| Star Animation | Present ✅ | Present | **OK** |
+| Reward Display | Clear list ✅ | "Reward Record" | **OK** |
 
 ### Reference Game Feature Summary (Video-Derived)
 

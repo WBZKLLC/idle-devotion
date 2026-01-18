@@ -228,7 +228,15 @@ export default function LaunchBannerScreen() {
                 <View style={styles.rarityBadge}>
                   <Text style={styles.rarityText}>UR+</Text>
                 </View>
-                <Text style={styles.heroEmoji}>🔥</Text>
+                {bannerData?.featured_hero?.image_url ? (
+                  <Image 
+                    source={{ uri: bannerData.featured_hero.image_url }} 
+                    style={styles.heroImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text style={styles.heroEmoji}>🔥</Text>
+                )}
                 <Text style={styles.heroName}>{bannerData?.featured_hero?.name}</Text>
                 <Text style={styles.heroElement}>🔥 {bannerData?.featured_hero?.element}</Text>
                 

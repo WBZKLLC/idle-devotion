@@ -52,10 +52,13 @@ export default function SummonHubScreen() {
   const hydrated = useHydration();
   const [selectedBanner, setSelectedBanner] = useState<'common' | 'premium' | 'divine'>('common');
   const [isLoading, setIsLoading] = useState(false);
-  const [pullResults, setPullResults] = useState<any[]>([]);
+  // Phase 3.49: Store canonical receipt instead of raw results
+  const [lastReceipt, setLastReceipt] = useState<GachaReceipt | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [lastPullType, setLastPullType] = useState<'single' | 'multi'>('single');
   const [pityBefore, setPityBefore] = useState(0);
+  // Phase 3.49: Banner details sheet state
+  const [showBannerDetails, setShowBannerDetails] = useState(false);
 
   useEffect(() => { if (hydrated && user) fetchUser(); }, [hydrated, user?.username]);
 

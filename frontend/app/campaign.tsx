@@ -286,7 +286,7 @@ export default function CampaignScreen() {
           current: selectedChapter.progress.cleared,
           total: selectedChapter.progress.total,
         },
-        playerPower: user?.power || selectedStage.recommended_player_power,
+        playerPower: user?.total_power || selectedStage.recommended_player_power,
         enemyPower: selectedStage.enemy_power,
         unlockMessage: battleResult.unlock_message,
       };

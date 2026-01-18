@@ -208,6 +208,7 @@ export default function HomeScreen() {
         loadCR();
         loadIdleStatus();
         loadInstantCooldown();
+        loadLiveOpsStatus();
       }
       
       // Also refresh on app state change (foreground)
@@ -215,12 +216,32 @@ export default function HomeScreen() {
         if (nextState === 'active' && user) {
           loadIdleStatus();
           loadInstantCooldown();
+          loadLiveOpsStatus();
         }
       });
       
       return () => subscription.remove();
     }, [user?.username])
   );
+
+  // Phase 4.3: Load LiveOps status
+  const loadLiveOpsStatus = async () => {
+    try {
+      const status = await getLiveOpsStatus();
+      setLiveOpsStatus(status);
+      
+      // Track once per session
+      if (!hasTrackedLiveOps.current && status.has_special_event) {
+        track(Events.LIVEOPS_BANNER_SHOWN, { 
+          event_id: status.events[0]?.event_id,
+          event_name: status.events[0]?.name 
+        });
+        hasTrackedLiveOps.current = true;
+      }
+    } catch (error) {
+      console.error('Failed to load LiveOps status:', error);
+    }
+  };
 
   const loadInstantCooldown = async () => {
     if (!user) return;

@@ -66,6 +66,17 @@ from core.campaign_difficulty import (
     get_stage_difficulty_info, dump_difficulty_table, DIFFICULTY_TABLE
 )
 
+# Phase 4.2: Import PvP seasons module
+from core.pvp_seasons import (
+    get_season_info, get_rewards_preview, get_rank_band,
+    get_daily_reward_for_band, get_season_reward_for_band, RankBand
+)
+
+# Phase 4.3: Import live ops module
+from core.liveops import (
+    get_liveops_status, get_available_banner_ids, get_active_boosts, BoostType
+)
+
 # Import event banner system
 from core.event_banners import (
     CRIMSON_ECLIPSE_BANNER, EVENT_MILESTONES, EVENT_SHOP,

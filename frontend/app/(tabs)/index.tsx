@@ -248,12 +248,13 @@ export default function HomeScreen() {
     });
   };
 
-  const formatIdleTime = (seconds: number, maxHours: number) => {
+  // Phase 3.50: Use safe formatHMS to prevent NaN:NaN:NaN bug
+  const formatIdleTime = (seconds: number | undefined | null, maxHours: number) => {
+    if (seconds === null || seconds === undefined || !Number.isFinite(seconds)) {
+      return formatHMS(null); // Returns '--:--:--'
+    }
     const cappedSeconds = Math.min(seconds, maxHours * 3600);
-    const hours = Math.floor(cappedSeconds / 3600);
-    const minutes = Math.floor((cappedSeconds % 3600) / 60);
-    const secs = Math.floor(cappedSeconds % 60);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return formatHMS(cappedSeconds);
   };
 
   const handleClaimIdle = async () => {

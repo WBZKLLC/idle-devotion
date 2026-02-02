@@ -47,6 +47,7 @@ Core progression logic
 State transitions
 Error handling and edge cases
 Testing supported iteration and regression prevention rather than test coverage metrics.
+SQL was used as a diagnostic tool to inspect stored state, validate progression calculations, and identify edge cases during development.
 
 ---
 

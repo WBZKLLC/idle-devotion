@@ -60,6 +60,34 @@ Roadmaps and task audits documenting design intent and tradeoffs
 
 This separation was intentional to reduce coupling and make failure modes easier to reason about.
 
++--------------------+
+|    Mobile Client   |
+|    Unity (C#)      |
+|--------------------|
+| - Game Loop        |
+| - Progression      |
+| - UI / State View  |
++---------+----------+
+          |
+          | Serialized State / Events
+          |
++---------v----------+
+|   Backend Services |
+|  (Python / JS)     |
+|--------------------|
+| - Persistence      |
+| - Validation       |
+| - Async Handling   |
++---------+----------+
+          |
+          | Storage / State Records
+          |
++---------v----------+
+|   Data Store       |
+|--------------------|
+| - Player State     |
+| - Progress Metrics |
++--------------------+
 
 ---
 

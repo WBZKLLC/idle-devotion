@@ -181,6 +181,25 @@ It is intended to demonstrate systems thinking and reliability, not just impleme
 
 ---
 
+## Build & Run (Developer Overview)
+
+This project was built and tested in a local development environment and prepared for mobile store submission.
+
+### Requirements
+- Unity (compatible version per project files)
+- Python (for backend services)
+- Node.js (if applicable to supporting scripts)
+
+### High-Level Steps
+1. Open the Unity project in the Unity Editor.
+2. Configure backend service endpoints in the environment configuration.
+3. Run backend services locally.
+4. Launch the client via the Unity Editor or build targets.
+
+This repository is primarily intended as a reference implementation and system artifact rather than a contributor-focused SDK.
+
+---
+
 Contact
 
 Walter Weaver
